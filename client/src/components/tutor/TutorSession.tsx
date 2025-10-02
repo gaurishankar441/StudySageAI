@@ -22,7 +22,22 @@ import {
   AlertCircle,
   Settings,
 } from "lucide-react";
-import { Chat, Message, TutorResponse } from "@shared/schema";
+import { Chat, Message } from "@shared/schema";
+
+interface TutorResponse {
+  type: 'teach' | 'check' | 'diagnose';
+  content: string;
+  explain?: string;
+  check?: {
+    stem: string;
+    options: string[];
+    answer: string[];
+  };
+  diagnostic?: string;
+  progress?: number;
+  options?: string[];
+  meta?: any;
+}
 
 interface TutorSessionProps {
   chatId: string;

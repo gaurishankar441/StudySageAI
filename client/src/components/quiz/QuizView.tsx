@@ -144,7 +144,7 @@ export default function QuizView() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="w-12 h-12 rounded-lg bg-primary/10 flex items-center justify-center text-2xl">
-                      {getQuizIcon(quiz.subject)}
+                      {getQuizIcon(quiz.subject || undefined)}
                     </div>
                     <Badge className={statusInfo.color}>
                       {statusInfo.status}

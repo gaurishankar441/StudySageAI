@@ -13,10 +13,10 @@ export default function Tutor() {
 
   const startSessionMutation = useMutation({
     mutationFn: async (config: TutorConfig) => {
-      return apiRequest("POST", "/api/tutor/session", config);
+      const response = await apiRequest("POST", "/api/tutor/session", config);
+      return response.json();
     },
-    onSuccess: (response) => {
-      const data = response.json();
+    onSuccess: (data: any) => {
       setCurrentSessionId(data.id);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
       toast({

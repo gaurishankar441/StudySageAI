@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import NotesModal from "./NotesModal";
+import NotesModal from "@/components/notes/NotesModal";
 import {
   Plus,
   Search,
@@ -184,8 +184,8 @@ export default function NotesView() {
       {filteredNotes.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredNotes.map((note) => {
-            const TemplateIcon = getTemplateIcon(note.template);
-            const gradientClass = getTemplateColor(note.template);
+            const TemplateIcon = getTemplateIcon(note.template || undefined);
+            const gradientClass = getTemplateColor(note.template || undefined);
             
             return (
               <Card key={note.id} className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group">

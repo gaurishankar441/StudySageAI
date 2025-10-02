@@ -31,7 +31,7 @@ export default function StudyPlanView() {
 
   const activePlan = studyPlans.find(plan => plan.status === 'active');
 
-  const { data: planDetails, isLoading: tasksLoading } = useQuery({
+  const { data: planDetails, isLoading: tasksLoading } = useQuery<{ plan: StudyPlan; tasks: StudyTask[] }>({
     queryKey: [`/api/study-plans/${activePlan?.id}`],
     enabled: !!activePlan?.id,
   });

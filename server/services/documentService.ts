@@ -1,4 +1,5 @@
 import { storage } from "../storage";
+import { aiService } from "../openai";
 import { InsertDocument } from "@shared/schema";
 import * as crypto from "crypto";
 

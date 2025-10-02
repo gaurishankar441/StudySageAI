@@ -99,10 +99,10 @@ export default function DocChatView() {
 
   const startChatMutation = useMutation({
     mutationFn: async (docIds: string[]) => {
-      return apiRequest("POST", "/api/docchat/session", { docIds });
+      const response = await apiRequest("POST", "/api/docchat/session", { docIds });
+      return response.json();
     },
-    onSuccess: (response) => {
-      const chat = response.json();
+    onSuccess: (chat: any) => {
       setCurrentChatId(chat.id);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
     },
@@ -188,7 +188,7 @@ export default function DocChatView() {
                   return { method: "PUT" as const, url: uploadURL };
                 }}
                 onComplete={(result) => {
-                  const file = result.successful[0];
+                  const file = result.successful?.[0];
                   if (file && file.data) {
                     uploadDocumentMutation.mutate(file.data as File);
                   }
@@ -431,14 +431,14 @@ export default function DocChatView() {
                       {msg.role === 'assistant' ? (
                         <div className="bg-muted rounded-lg p-3 text-sm">
                           <p className="mb-2">{msg.content}</p>
-                          {msg.metadata?.sources && (
+                          {msg.metadata && typeof msg.metadata === 'object' && 'sources' in msg.metadata ? (
                             <div className="mt-2 pt-2 border-t border-border">
                               <p className="text-xs text-muted-foreground">
                                 <BookOpen className="w-3 h-3 inline mr-1" />
                                 Sources referenced
                               </p>
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       ) : (
                         <p>{msg.content}</p>

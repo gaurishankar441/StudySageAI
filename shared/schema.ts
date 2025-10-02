@@ -374,6 +374,14 @@ export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+export type AuthUser = {
+  id: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  locale?: string | null;
+};
 export type InsertDocument = typeof insertDocumentSchema._type;
 export type Document = typeof documents.$inferSelect;
 export type InsertChat = typeof insertChatSchema._type;
