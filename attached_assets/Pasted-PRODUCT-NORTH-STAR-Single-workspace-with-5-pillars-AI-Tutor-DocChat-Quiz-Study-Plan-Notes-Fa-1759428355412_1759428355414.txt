@@ -1,0 +1,512 @@
+PRODUCT NORTH STAR
+
+Single workspace with 5 pillars: AI Tutor, DocChat, Quiz, Study Plan, Notes.
+
+Fast, calm UI. No clutter. Everything is 3 clicks max.
+
+Multilingual (EN/HI first). Works with PDFs, YouTube, web links, audio/video, and text.
+
+Grounded answers (citations), never hallucinate silently.
+
+Streams everywhere. Keyboard-first. Accessible.
+
+DESIGN SYSTEM (UI CLEAN)
+
+Visual
+
+Base: neutral background #F8FAFC; cards white; shadows very light.
+
+Typography: Inter for UI, STIX Two Math for equations.
+
+Color tokens:
+
+Primary #4F46E5 (indigo), Success #16A34A, Warning #EAB308, Danger #DC2626.
+
+Density: generous padding (12–16px), 8-pt spacing grid, rounded-xl (12px).
+
+Icons: Lucide. Animations ≤200ms, ease-out.
+
+Layout
+
+App shell: left nav rail (icons + labels), content canvas, optional right drawer for “Quick Actions”.
+
+Universal Top bar: search, language, profile.
+
+Command-K palette for global actions.
+
+Common components
+
+UploadDropzone (URL or file).
+
+SourcesList (thumbnails + type badges).
+
+PDF/Media viewer + transcript pane.
+
+ChatPanel (messages, tool chips, citations).
+
+QuickActionsMenu (Summary, Highlights, Flashcards, Quiz, Export).
+
+QuizModal, StudyPlanWizard, NotesEditor (TipTap/Slate).
+
+Toaster for non-blocking feedback.
+
+ARCHITECTURE (TECH)
+
+Frontend: React + Vite + TypeScript, TanStack Query, Zustand, TipTap, pdfjs, Three.js (v2 for future avatar), WebRTC (voice), WebAssembly for on-device math rendering.
+
+Backend: FastAPI (Python 3.11), Pydantic v2, SQLAlchemy 2, Alembic, Postgres 15, Redis, Celery/RQ workers.
+
+Vector: Qdrant (BGE-M3 embeddings), hybrid BM25 + dense, bge-reranker-v2-m3.
+
+Files: S3/MinIO. Media: ffmpeg, yt-dlp.
+
+STT/TTS (for conversational tutor):
+
+v1: OpenAI Whisper small/en, Coqui-TTS or ElevenLabs for TTS.
+
+v2: Vosk/WhisperX local + neural TTS with viseme export (for lipsync).
+
+3D: Three.js + Ready Player Me (or Wolf3D) avatars; optional NVIDIA Audio2Face for high-quality lipsync.
+
+Observability: structured logs, trace IDs, OpenTelemetry, Prometheus/Grafana.
+
+Security: SSRF guard, MIME sniff, sandbox PDF, rate limits, PII redaction, content filters.
+
+i18n across prompts and UI strings.
+
+DATA MODEL (POSTGRES, SUMMARY)
+users(id, email, name, locale, created_at)
+
+documents(id, user_id, title, source_type, source_url, file_key,
+          pages, lang, tokens, status, created_at)
+
+chunks(id, doc_id, ord, text, tokens, page, section, heading, lang,
+       hash, vector(1536), metadata jsonb)
+
+chats(id, user_id, title, mode, subject, level, language, topic, created_at)
+messages(id, chat_id, role, content, tool, meta jsonb, created_at)
+
+notes(id, user_id, title, lang, template, content_json jsonb, created_at, updated_at)
+
+quizzes(id, user_id, title, source, subject, topic, lang, difficulty, total, created_at)
+quiz_questions(id, quiz_id, type, stem, options jsonb, answer jsonb, rationale, source_ref)
+
+study_plans(id, user_id, name, mode, lang, grade_level, subject, created_at)
+study_tasks(id, plan_id, due_at, duration_min, type, payload jsonb,
+            status, srs_interval, srs_due_at)
+
+
+Qdrant: vakta_chunks (1536, cosine), payload: doc_id,user_id,page,section,lang,hash.
+
+GLOBAL FLOWS
+Ingestion (URL/File → RAG)
+
+Detect type (mime + magic).
+
+Extract text/transcript (pdfminer/mammoth/pptx/yt-dlp+Whisper/readability).
+
+Normalize → sectioned text with page/heading.
+
+Chunk (400–800 tokens, 80 overlap) + embed (BGE-M3).
+
+Upsert to Qdrant, persist chunks + doc metadata.
+
+Emit progress events → UI “processing” stripe.
+
+Retrieval (RAG)
+
+Hybrid: BM25 (pg_trgm or Vespa/Meilisearch) + vector (k=24) → rerank top-8 (bge-reranker) → pass to generator with citations.
+
+Streaming
+
+Server-Sent Events for chat/tutor /notes/summary; front-end useEventStream.
+
+MODULE 1 — AI TUTOR (v1 text + v1 voice; v2 3D avatar)
+UI
+
+Tutor Launcher wizard (like your screenshots): Subject → Level → Topic → Language.
+
+Tutor room:
+
+Left: “Lesson plan” mini-outline (auto updates).
+
+Center: chat messages (assistant + user), small math rendering.
+
+Right (drawer): “Tools” (Explain, Hint, Example, Practice 5 Qs, Summary), and progress.
+
+How it works
+
+Creates a chat(mode="tutor").
+
+First message = diagnosis question; state machine tags each turn with teaching_step.
+
+Knowledge source: built-in domain schema + optional documents you attach (uses RAG if present).
+
+Every 3 steps → recap bullets + checkpoint question.
+
+Voice mode (optional): STT on mic chunks, stream reply TTS.
+
+Tutor System Prompt (core)
+SYSTEM:
+You are a patient, rigorous conversational tutor.
+Subject: {subject}. Level: {level}. Language: {lang}. Topic: {topic}.
+Rules:
+- Use the Diagnose → Teach → Check → Remediate loop.
+- One micro-concept per turn (<=120 words) + tiny example.
+- Ask a short check question (MCQ or short) every turn.
+- If the student is wrong, explain the misconception and use a simpler analogy.
+- Every 3 steps, summarize key points as bullets.
+- For math/science, render formulas in LaTeX ($...$).
+- If you cite external facts, include citations if available from DOCS. Otherwise say you’re not sure.
+- Tone: warm, encouraging, never condescending.
+ASSISTANT TOOLS AVAILABLE: {retrieve, generate_quiz, make_flashcards}
+DOCS (optional context):
+{top_k_reranked_chunks}
+
+Short check sub-prompt
+Create 1 check question (MCQ, 4 options) that tests the micro-concept just taught.
+Return JSON: {"stem":"...", "options":["A","B","C","D"], "answer":"B", "why":"..."}.
+
+Voice & 3D (v2) — Conversational Tutor with Avatar
+
+Pipeline
+
+Browser mic → WebRTC → STT (Whisper small.en / Vosk local).
+
+Text → Tutor LLM → response.
+
+Response → TTS with viseme/phoneme stream (ElevenLabs/Coqui + visemes).
+
+Visemes → Three.js avatar mouth blendshapes (Ready Player Me GLTF).
+
+Simple gaze + head nod animations; idle breathing.
+
+Latency target: <1.2s (stream partial TTS while rendering mouth).
+
+Avatar stack
+
+Three.js + WebGL2; GLTFLoader; animation mixer.
+
+Ready Player Me avatar URL per user; store avatar_url.
+
+Lipsync: map ARPAbet/viseme timecodes → morph targets (“jawOpen”, “mouthPucker”, etc.).
+
+Optional: NVIDIA Audio2Face server for higher fidelity; fallback is TTS visemes.
+
+Safety
+
+Profanity filter before TTS; “stop mic” button; consent prompt for recording.
+
+MODULE 2 — DOCCHAT (RAG on PDFs/YouTube/Web)
+UI
+
+Center: viewer (PDF pages or YouTube player with transcript).
+
+Left: Sources list + search in transcript.
+
+Right: Chat with Quick Actions: Summary, Highlights, Pinned, Generate Quiz, Generate Flashcards, View Notes.
+
+How it works
+
+chat(mode="docchat", doc_ids=[]).
+
+Every question → retrieve hybrid + rerank → answer with inline citations [Doc, p.12 §3.1].
+
+“Summary” = map-reduce per section; “Highlights” = 12–18 bullets.
+
+“Generate Quiz/Flashcards” calls Quiz/Flashcards service with source=document_id.
+
+DocChat Answer prompt
+
+SYSTEM: Ground your answer ONLY in CONTEXT below. If unsure, say so.
+Return crisp bullets; include citations like [Doc {title}, p.{page} §{heading}].
+CONTEXT:
+{reranked_chunks}
+USER:
+{question}
+
+MODULE 3 — QUIZ
+UI
+
+Create Quiz modal:
+
+Setup: Auto / Manual.
+
+Generate from: Topic | Document | YouTube | Website.
+
+Fields: name, subject/topic, question type (Mixed), count, difficulty, language.
+
+Player modal: Practice Now (shows one question at a time), “Ask Shep” explain, rationale after selection; multi-answer supported.
+
+How it works
+
+When “Generate from YouTube/Doc/Website” → normalize into a temporary document_id (so everything goes through the same RAG).
+
+Item generator obeys blueprint (Bloom’s levels, varied formats).
+
+Store items in quiz_questions.
+
+Grader: MCQ exact match; short answers via rubricic LLM (optional).
+
+Item generator prompt
+
+SYSTEM: Create {n} high-quality exam-style questions on {topic/subject} from SOURCE.
+Language: {lang}. Difficulty: {difficulty}. Types: {types}.
+For each question return JSON:
+{ "type":"mcq_single|mcq_multi|short|long|occlusion",
+  "stem":"...",
+  "options":["A","B","C","D"], 
+  "answer":["B"], 
+  "rationale":"Why this is correct and others aren't",
+  "source_ref":"Doc p.12 §3.1" }
+Constraints:
+- Single unambiguous correct answer (unless multi).
+- Plausible distractors. Spread cognitive levels.
+SOURCE CONTEXT:
+{reranked_chunks_if_any}
+
+MODULE 4 — STUDY PLAN
+UI
+
+Wizard:
+Step 1 Basics (language, grade level, subject, topics, optional notes)
+Step 2 Exam date/time (or “No date yet”)
+Step 3 Preferences (morning/evening, intensity, session duration, “Find time on Google Calendar” toggle)
+Step 4 Inclusions (Reminders, AI Tutor, Quizzes, Flashcards, DocChat, Extra Resources) → Create Plan
+
+Plan board: calendar layout + task list, filters (Today, Week, All), completion checkboxes.
+
+How it works
+
+If exam_date: back-plan from date; else weekly cadence per “intensity”.
+
+Generate tasks mix:
+
+Read/DocChat on topic resources
+
+Tutor checkpoint sessions (15–20m)
+
+Quiz tasks (10–20 qs)
+
+Flashcards review (SM-2 SRS)
+
+After each completion, recompute srs_interval and srs_due_at.
+
+Reminder emails/push (cron + Celery).
+
+Planner algorithm (sketch)
+
+days_to_exam = max((exam_date - today).days, 7)
+sessions_per_week by intensity: light=2, regular=4, intense=6
+distribute topics across sessions; inject quizzes every 2nd session
+add SRS reviews at (1d, 3d, 7d, 16d)
+
+MODULE 5 — NOTES
+UI
+
+Templates grid: Record Lectures, Write Research Paper, Review Essay, Summarize Articles, Blank Note.
+
+“Summarize Content” modal: paste URLs (one/line) OR upload PDFs/DOCX/MP3/MP4 → Generate Summary.
+
+Notes page: left Topics, center Note list, right Rich editor with Quick Actions (Audio to Note, Video to Note, URL to Note, Record, Generate Flashcards/Quiz, Export to PDF).
+
+How it works
+
+All sources get normalized into a consolidated note (Cornell style) with “Big Idea, Key Terms, Summary, Sections” + 8–12 flashcards.
+
+Auto-link formulas and definitions.
+
+“Export to PDF” uses WeasyPrint.
+
+Notes summarizer prompt
+
+SYSTEM: Produce student notes in {lang}, Cornell style.
+Sections:
+1) Big Idea (3-5 lines)
+2) Key Terms (term: definition) — 10-15 items
+3) Summary (<=180 words)
+4) Sectioned bullets per heading with examples and formulas ($...$)
+5) 8-12 flashcard pairs and 6-10 quizable facts
+Include source breadcrumbs (URL title or Doc page). Be concise.
+SOURCE:
+{normalized_text}
+
+BACKEND CONTRACTS (FASTAPI)
+# Documents
+POST /api/documents/upload        # multipart -> {document_id}
+POST /api/documents/by-url        # {url} -> {document_id}
+GET  /api/documents/{id}/status   # {status, pages, tokens}
+
+# Chats
+POST /api/chats                   # {mode, subject?, level?, language, topic?, doc_ids?} -> {chat_id}
+POST /api/chats/{id}/messages     # SSE {message} -> stream reply
+GET  /api/chats/{id}/messages     # pagination
+
+# Tutor shortcuts
+POST /api/tutor/session           # alias to /api/chats (mode="tutor")
+
+# Quiz
+POST /api/quizzes                 # {source, subject, topic, n, difficulty, lang} -> {quiz_id}
+GET  /api/quizzes/{id}
+POST /api/quizzes/{id}/grade      # {answers[]} -> {score, per_item_feedback}
+
+# Study Plans
+POST /api/study-plans
+GET  /api/study-plans/{id}
+PATCH /api/study-plans/{id}
+POST /api/study-plans/{id}/regenerate
+
+# Notes
+POST /api/notes/summarize         # {urls[], file?} -> {note_id}
+GET  /api/notes/{id}
+PATCH /api/notes/{id}
+
+FUNCTIONAL DETAILS (HOW THINGS WORK)
+Retrieval service
+retrieve(query, user_id, doc_ids=None, k=24):
+  bm25 = keyword_search(query, doc_ids)
+  dense = qdrant.search(embedding(query), filter=doc_ids)
+  union = dedupe(bm25 + dense)[:k]
+  reranked = bge_reranker(query, union)[:8]
+  return reranked
+
+Chunker
+
+Respect headings & page breaks.
+
+Target 700 tokens, soft wrap at sentence boundaries.
+
+Add metadata page, section, heading, lang.
+
+Content filters
+
+Block private IPs in URL fetch; reject >200MB; strip scripts/styles; sanitize HTML.
+
+Streaming
+
+Use FastAPI EventSourceResponse.
+
+Break responses into 20–40 token chunks.
+
+Client merges, supports abort.
+
+PROMPTS — FULL SET (copy/paste)
+0) Global system guard
+SYSTEM:
+You are VaktaAI, a grounded study assistant.
+Always cite sources when they exist. If you are unsure, say so.
+Prefer concise bullets, then examples. Use LaTeX for math ($...$).
+Language: {lang}. Keep tone friendly and clear.
+
+1) DocChat Answer
+Use only the CONTEXT. If the user asks beyond it, ask to upload/provide a source.
+Return: short answer with inline citations like [Doc {title}, p.{page} §{heading}].
+CONTEXT:
+{chunks}
+QUESTION:
+{q}
+
+2) Tutor Turn
+Context: Subject {subject}, Level {level}, Language {lang}, Topic {topic}.
+Your task this turn:
+- Teach ONE micro-concept (<=120 words) + tiny example.
+- Ask ONE check question (MCQ 4 options).
+- If we just answered a check question wrong, first explain the misconception, then re-teach briefly.
+- Every third turn, include a 3-bullet recap.
+
+Respond JSON:
+{
+ "explain":"...",
+ "check":{"stem":"...", "options":["A","B","C","D"], "answer":"B"},
+ "meta":{"step":"teach|remediate|recap"}
+}
+
+3) Quiz Generator
+
+(as above in the Quiz section)
+
+4) Notes Summarizer
+
+(as above in the Notes section)
+
+5) Study Plan Builder
+Create a 2-4 week plan for Subject {subject}, Topics {topics}, Level {level}, Language {lang}.
+Exam date: {exam_date or "none"}. Intensity: {light|regular|intense}. Session duration: {30|45|60}.
+Mix tasks: read/docchat, tutor checkpoints, quizzes (10-20 qs), flashcards with SRS.
+Return JSON list of tasks with {date, type, duration, title, description}.
+
+3D AVATAR — NEXT VERSION DETAILS
+
+Front-end
+
+AvatarStage.tsx: mounts Three.js scene, loads GLTF avatar (Ready Player Me), ambient + key light, camera framing.
+
+useLipsync(visemeStream) hook: maps viseme timeline → morph target weights per frame (60fps).
+
+useTTS(text) returns audio buffer + viseme JSON (or phoneme timestamps).
+
+Idle animation loop (breathing, blinking); nod when giving feedback; head-track pointer.
+
+Back-end Additions
+
+/api/voice/stt (WebSocket) for streaming STT.
+
+/api/voice/tts returns audio + viseme timeline.
+
+Cache TTS for repeated responses.
+
+Dev tips
+
+Start with no shadows and simple PBR materials for performance.
+
+Provide “Avatar off” toggle (battery/network friendly).
+
+Target 30–60fps; audio drift ≤50ms (use WebAudio clock).
+
+QA & METRICS
+
+DocChat grounding score: % answers with ≥1 valid citation.
+
+Tutor learning loop: % of turns containing check question; improvement delta across attempts.
+
+Quiz psychometrics: item difficulty p-value, discrimination (optional).
+
+Study Plan adherence: tasks completed / assigned; SRS latency.
+
+Notes usefulness: user thumbs + re-open rate.
+
+Latency budgets: ingest PDF <120s (100 pages), chat first token <1.5s, avatar TTFB <1.2s.
+
+SECURITY & PRIVACY
+
+PII redaction in logs; encryption at rest for notes/quizzes.
+
+Signed S3 URLs; quarantine untrusted PDFs.
+
+Abuse filters for generated content; block prompt injection with “use context only” headers.
+
+Consent banner for mic/camera; auto-delete raw audio after transcription (configurable).
+
+DELIVERY CHECKLIST
+
+ All endpoints + Pydantic models
+
+ Ingestion worker (PDF/docx/pptx/YouTube/web/audio)
+
+ Qdrant + reranker wired; hybrid retrieval
+
+ Streaming SSE; cancellation
+
+ Tutor with loop + small test set
+
+ Quiz generator + player + grader
+
+ Study Plan wizard + SRS engine
+
+ Notes summarizer + export
+
+ Voice STT/TTS (v1) behind feature flag
+
+ Avatar stage (v2 branch), viseme mapping
+
+ E2E tests + seed fixtures
