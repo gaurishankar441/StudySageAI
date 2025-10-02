@@ -2,6 +2,13 @@ import { storage } from "../storage";
 import { aiService } from "../openai";
 import { InsertDocument } from "@shared/schema";
 import * as crypto from "crypto";
+import * as mammoth from "mammoth";
+import { YoutubeTranscript } from "youtube-transcript";
+import { Readability } from "@mozilla/readability";
+import { JSDOM } from "jsdom";
+import { createRequire } from "module";
+
+const require = createRequire(import.meta.url);
 
 export interface DocumentChunk {
   text: string;
@@ -30,69 +37,96 @@ export class DocumentService {
     }
   }
 
-  // PDF text extraction (simplified - in production use pdf-parse or similar)
+  // PDF text extraction using pdf-parse (loaded via CommonJS)
   private async extractFromPDF(buffer: Buffer): Promise<{ text: string; metadata: any }> {
-    // This is a simplified version - in production you'd use pdf-parse
-    // For now, we'll simulate PDF extraction
-    const text = buffer.toString('utf8');
-    return {
-      text: text,
-      metadata: {
-        pages: Math.ceil(text.length / 2000), // rough estimate
-        extractedAt: new Date().toISOString()
+    try {
+      const pdfParse = require('pdf-parse');
+      const data = await pdfParse(buffer);
+      
+      if (!data.text || data.text.trim().length === 0) {
+        throw new Error('No text content extracted from PDF');
       }
-    };
+      
+      return {
+        text: data.text,
+        metadata: {
+          pages: data.numpages,
+          info: data.info,
+          extractedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('PDF extraction error:', error);
+      throw new Error(`Failed to extract PDF: ${error}`);
+    }
   }
 
-  // DOCX text extraction (simplified)
+  // DOCX text extraction using mammoth
   private async extractFromDOCX(buffer: Buffer): Promise<{ text: string; metadata: any }> {
-    // In production, use mammoth or similar library
-    const text = buffer.toString('utf8');
-    return {
-      text: text,
-      metadata: {
-        extractedAt: new Date().toISOString()
-      }
-    };
+    try {
+      const result = await mammoth.extractRawText({ buffer });
+      return {
+        text: result.value,
+        metadata: {
+          messages: result.messages,
+          extractedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('DOCX extraction error:', error);
+      throw new Error(`Failed to extract DOCX: ${error}`);
+    }
   }
 
-  // YouTube transcript extraction (simplified)
+  // YouTube transcript extraction using youtube-transcript
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
-    // In production, use yt-dlp or YouTube API for transcript
-    // For now, we'll simulate
-    return {
-      text: `Transcript from YouTube video: ${url}`,
-      metadata: {
-        url,
-        duration: '15:32',
-        extractedAt: new Date().toISOString()
-      }
-    };
+    try {
+      const transcript = await YoutubeTranscript.fetchTranscript(url);
+      const text = transcript.map(entry => entry.text).join(' ');
+      const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
+      
+      return {
+        text,
+        metadata: {
+          url,
+          duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
+          segments: transcript.length,
+          extractedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('YouTube transcript error:', error);
+      throw new Error(`Failed to extract YouTube transcript: ${error}`);
+    }
   }
 
-  // Web content extraction (simplified)
+  // Web content extraction using Readability
   private async extractFromWeb(url: string): Promise<{ text: string; metadata: any }> {
     try {
       const response = await fetch(url);
       const html = await response.text();
       
-      // Basic HTML cleaning - in production use readability-js or similar
-      const text = html
-        .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
-        .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
-        .replace(/<[^>]*>/g, ' ')
-        .replace(/\s+/g, ' ')
-        .trim();
+      const dom = new JSDOM(html, { url });
+      const reader = new Readability(dom.window.document);
+      const article = reader.parse();
+
+      if (!article) {
+        throw new Error('Failed to parse article content');
+      }
 
       return {
-        text,
+        text: article.textContent || '',
         metadata: {
           url,
-          title: this.extractTitle(html),
+          title: article.title || 'Untitled',
+          excerpt: article.excerpt || '',
+          byline: article.byline || '',
+          siteName: article.siteName || '',
           extractedAt: new Date().toISOString()
         }
       };
     } catch (error) {
+      console.error('Web extraction error:', error);
       throw new Error(`Failed to fetch web content: ${error}`);
     }
   }
