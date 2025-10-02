@@ -7,6 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Calculator, FlaskConical, Book, Globe, ChevronLeft, ChevronRight } from "lucide-react";
@@ -223,12 +224,12 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl" data-testid="dialog-tutor-setup">
         <DialogHeader>
           <DialogTitle className="text-xl">Start AI Tutor Session</DialogTitle>
-          <p className="text-sm text-muted-foreground">
+          <DialogDescription>
             Step {step} of 4: Set up your personalized learning experience
-          </p>
+          </DialogDescription>
         </DialogHeader>
 
         {/* Progress Indicator */}

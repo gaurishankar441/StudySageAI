@@ -178,6 +178,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get('/api/chats/:id', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+
+      const chat = await storage.getChat(id);
+      if (!chat || chat.userId !== userId) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+
+      res.json(chat);
+    } catch (error) {
+      console.error("Error fetching chat:", error);
+      res.status(500).json({ message: "Failed to fetch chat" });
+    }
+  });
+
   app.get('/api/chats/:id/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
