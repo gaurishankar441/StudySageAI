@@ -371,6 +371,11 @@ export const insertFlashcardSchema = createInsertSchema(flashcards).omit({
   createdAt: true,
 });
 
+export const insertChunkSchema = createInsertSchema(chunks).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -402,3 +407,5 @@ export type InsertStudyTask = typeof insertStudyTaskSchema._type;
 export type StudyTask = typeof studyTasks.$inferSelect;
 export type InsertFlashcard = typeof insertFlashcardSchema._type;
 export type Flashcard = typeof flashcards.$inferSelect;
+export type InsertChunk = typeof insertChunkSchema._type;
+export type Chunk = typeof chunks.$inferSelect;

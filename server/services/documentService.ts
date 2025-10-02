@@ -11,11 +11,16 @@ import { createRequire } from "module";
 const require = createRequire(import.meta.url);
 
 export interface DocumentChunk {
+  docId: string;
+  ord: number;
   text: string;
   tokens: number;
   page?: number;
   section?: string;
   heading?: string;
+  language?: string;
+  hash?: string;
+  metadata?: any;
 }
 
 export class DocumentService {
@@ -137,7 +142,7 @@ export class DocumentService {
   }
 
   // Chunk text into manageable pieces
-  chunkText(text: string, maxTokens: number = 700, overlap: number = 80): DocumentChunk[] {
+  chunkText(text: string, docId: string, language: string = 'en', maxTokens: number = 700, overlap: number = 80): DocumentChunk[] {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const chunks: DocumentChunk[] = [];
     let currentChunk = '';
@@ -148,9 +153,15 @@ export class DocumentService {
       
       if (currentTokens + sentenceTokens > maxTokens && currentChunk) {
         // Add current chunk
+        const chunkText = currentChunk.trim();
         chunks.push({
-          text: currentChunk.trim(),
-          tokens: currentTokens
+          docId,
+          ord: chunks.length,
+          text: chunkText,
+          tokens: currentTokens,
+          language,
+          hash: this.generateHash(chunkText),
+          metadata: {}
         });
 
         // Start new chunk with overlap
@@ -165,9 +176,15 @@ export class DocumentService {
 
     // Add final chunk
     if (currentChunk.trim()) {
+      const chunkText = currentChunk.trim();
       chunks.push({
-        text: currentChunk.trim(),
-        tokens: currentTokens
+        docId,
+        ord: chunks.length,
+        text: chunkText,
+        tokens: currentTokens,
+        language,
+        hash: this.generateHash(chunkText),
+        metadata: {}
       });
     }
 
@@ -218,19 +235,21 @@ export class DocumentService {
       // Analyze document
       const analysis = await aiService.analyzeDocument(title, text, sourceType);
 
+      // Chunk text
+      const chunks = this.chunkText(text, document.id, analysis.language || 'en');
+      
+      // Store chunks in database
+      await storage.createChunks(chunks);
+
       // Update document with metadata
       await storage.updateDocumentStatus(document.id, 'ready', {
         ...metadata,
         ...analysis,
-        totalTokens: this.estimateTokens(text)
+        totalTokens: this.estimateTokens(text),
+        chunkCount: chunks.length
       });
 
-      // Chunk text and generate embeddings (this would be done in background)
-      const chunks = this.chunkText(text);
-      
-      // In production, you'd store chunks in vector database and generate embeddings
-      // For now, we'll just log the processing
-      console.log(`Processed document ${document.id}: ${chunks.length} chunks`);
+      console.log(`Processed document ${document.id}: ${chunks.length} chunks stored`);
 
       return document.id;
     } catch (error) {

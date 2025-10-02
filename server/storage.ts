@@ -33,6 +33,8 @@ import {
   type StudyTask,
   type InsertFlashcard,
   type Flashcard,
+  type InsertChunk,
+  type Chunk,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray } from "drizzle-orm";
@@ -85,6 +87,12 @@ export interface IStorage {
   getFlashcardsByUser(userId: string): Promise<Flashcard[]>;
   getFlashcardsByNote(noteId: string): Promise<Flashcard[]>;
   updateFlashcard(id: string, updates: Partial<InsertFlashcard>): Promise<Flashcard>;
+  
+  // Chunk operations
+  createChunks(chunks: InsertChunk[]): Promise<Chunk[]>;
+  getChunksByDocument(docId: string): Promise<Chunk[]>;
+  deleteChunksByDocument(docId: string): Promise<void>;
+  searchChunks(query: string, limit?: number): Promise<Chunk[]>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -319,6 +327,34 @@ export class DatabaseStorage implements IStorage {
       .where(eq(flashcards.id, id))
       .returning();
     return updated;
+  }
+
+  // Chunk operations
+  async createChunks(chunkData: InsertChunk[]): Promise<Chunk[]> {
+    if (chunkData.length === 0) return [];
+    const newChunks = await db.insert(chunks).values(chunkData).returning();
+    return newChunks;
+  }
+
+  async getChunksByDocument(docId: string): Promise<Chunk[]> {
+    return await db
+      .select()
+      .from(chunks)
+      .where(eq(chunks.docId, docId))
+      .orderBy(chunks.ord);
+  }
+
+  async deleteChunksByDocument(docId: string): Promise<void> {
+    await db.delete(chunks).where(eq(chunks.docId, docId));
+  }
+
+  async searchChunks(query: string, limit: number = 10): Promise<Chunk[]> {
+    // Basic text search for now - will implement vector search later
+    // For now, just return all chunks (will be improved with embeddings)
+    return await db
+      .select()
+      .from(chunks)
+      .limit(limit);
   }
 }
 
