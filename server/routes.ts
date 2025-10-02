@@ -196,7 +196,50 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Streaming chat endpoint
+  // Streaming chat endpoint (GET for EventSource)
+  app.get('/api/chats/:id/stream', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { id } = req.params;
+      const message = req.query.message as string;
+
+      if (!message) {
+        return res.status(400).json({ message: "Message is required" });
+      }
+
+      const chat = await storage.getChat(id);
+      if (!chat || chat.userId !== userId) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+
+      // Set up Server-Sent Events
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      if (chat.mode === 'tutor') {
+        for await (const chunk of aiServiceManager.streamTutorResponse(id, message, userId)) {
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
+      } else if (chat.mode === 'docchat') {
+        const { response } = await aiServiceManager.sendDocChatMessage(id, message, userId);
+        res.write(`data: ${JSON.stringify({ type: 'complete', content: response })}\n\n`);
+      }
+
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error("Error in streaming chat:", error);
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to process message' })}\n\n`);
+      res.end();
+    }
+  });
+
+  // Streaming chat endpoint (POST for regular API calls)
   app.post('/api/chats/:id/stream', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;

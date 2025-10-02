@@ -45,7 +45,7 @@ export class DocumentService {
   // PDF text extraction using pdf-parse (loaded via CommonJS)
   private async extractFromPDF(buffer: Buffer): Promise<{ text: string; metadata: any }> {
     try {
-      const pdfParse = require('pdf-parse');
+      const pdfParse = require('pdf-parse').default || require('pdf-parse');
       const data = await pdfParse(buffer);
       
       if (!data.text || data.text.trim().length === 0) {
@@ -311,7 +311,8 @@ export class DocumentService {
         .map(chunk => {
           try {
             // Extract embedding from metadata
-            const embeddingStr = chunk.metadata?.embedding;
+            const metadata = chunk.metadata as any;
+            const embeddingStr = metadata?.embedding;
             if (!embeddingStr) {
               return null;
             }

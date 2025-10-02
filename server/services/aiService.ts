@@ -109,7 +109,9 @@ export class AIServiceManager {
     });
 
     // Get relevant context from documents
-    const docIds = chat.docIds ? JSON.parse(chat.docIds as string) : [];
+    const docIds = chat.docIds 
+      ? (typeof chat.docIds === 'string' ? JSON.parse(chat.docIds) : chat.docIds)
+      : [];
     const relevantChunks = await documentService.retrieveRelevantChunks(
       message,
       userId,
