@@ -330,7 +330,7 @@ export class AIServiceManager {
       topics,
       gradeLevel,
       language,
-      examDate,
+      examDate || undefined,
       intensity,
       sessionDuration
     );

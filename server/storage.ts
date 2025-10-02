@@ -100,10 +100,7 @@ export class DatabaseStorage implements IStorage {
       .values(userData)
       .onConflictDoUpdate({
         target: users.id,
-        set: {
-          ...userData,
-          updatedAt: new Date(),
-        },
+        set: userData,
       })
       .returning();
     return user;
@@ -131,7 +128,7 @@ export class DatabaseStorage implements IStorage {
   async updateDocumentStatus(id: string, status: string, metadata?: any): Promise<void> {
     await db
       .update(documents)
-      .set({ status, metadata, updatedAt: new Date() })
+      .set({ status, metadata })
       .where(eq(documents.id, id));
   }
 
