@@ -238,8 +238,28 @@ export class DocumentService {
       // Chunk text
       const chunks = this.chunkText(text, document.id, analysis.language || 'en');
       
+      // Generate embeddings for chunks (in batches of 100 to avoid API limits)
+      const chunkTexts = chunks.map(c => c.text);
+      const batchSize = 100;
+      let allEmbeddings: number[][] = [];
+      
+      for (let i = 0; i < chunkTexts.length; i += batchSize) {
+        const batch = chunkTexts.slice(i, i + batchSize);
+        const embeddings = await aiService.generateEmbeddings(batch);
+        allEmbeddings = allEmbeddings.concat(embeddings);
+      }
+      
+      // Add embeddings to chunks
+      const chunksWithEmbeddings = chunks.map((chunk, idx) => ({
+        ...chunk,
+        metadata: {
+          ...chunk.metadata,
+          embedding: JSON.stringify(allEmbeddings[idx])
+        }
+      }));
+      
       // Store chunks in database
-      await storage.createChunks(chunks);
+      await storage.createChunks(chunksWithEmbeddings);
 
       // Update document with metadata
       await storage.updateDocumentStatus(document.id, 'ready', {
@@ -258,8 +278,78 @@ export class DocumentService {
     }
   }
 
-  // Retrieve relevant chunks for RAG
+  // Retrieve relevant chunks for RAG using semantic search
   async retrieveRelevantChunks(
+    query: string,
+    userId: string,
+    docIds?: string[],
+    limit: number = 8
+  ): Promise<{ text: string; metadata: any; score: number }[]> {
+    try {
+      // Generate embedding for the query
+      const queryEmbedding = await aiService.generateEmbedding(query);
+      
+      // Get chunks from specified documents or all user documents
+      let chunks;
+      if (docIds && docIds.length > 0) {
+        // Get chunks from specific documents
+        const allChunks = await Promise.all(
+          docIds.map(docId => storage.getChunksByDocument(docId))
+        );
+        chunks = allChunks.flat();
+      } else {
+        // Get all chunks from user's documents
+        const userDocs = await storage.getDocumentsByUser(userId);
+        const allChunks = await Promise.all(
+          userDocs.map(doc => storage.getChunksByDocument(doc.id))
+        );
+        chunks = allChunks.flat();
+      }
+      
+      // Calculate similarity scores for each chunk
+      const scoredChunks = chunks
+        .map(chunk => {
+          try {
+            // Extract embedding from metadata
+            const embeddingStr = chunk.metadata?.embedding;
+            if (!embeddingStr) {
+              return null;
+            }
+            
+            const chunkEmbedding = JSON.parse(embeddingStr);
+            const score = aiService.cosineSimilarity(queryEmbedding, chunkEmbedding);
+            
+            return {
+              text: chunk.text,
+              metadata: {
+                docId: chunk.docId,
+                ord: chunk.ord,
+                page: chunk.page,
+                section: chunk.section,
+                heading: chunk.heading,
+                language: chunk.language
+              },
+              score
+            };
+          } catch (error) {
+            console.error('Error processing chunk:', error);
+            return null;
+          }
+        })
+        .filter(chunk => chunk !== null) as { text: string; metadata: any; score: number }[];
+      
+      // Sort by score (highest first) and return top k
+      return scoredChunks
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+    } catch (error) {
+      console.error('Error retrieving relevant chunks:', error);
+      return [];
+    }
+  }
+
+  // Legacy method - keeping for compatibility
+  async retrieveRelevantChunksLegacy(
     query: string,
     userId: string,
     docIds?: string[],

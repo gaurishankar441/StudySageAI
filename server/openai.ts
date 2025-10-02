@@ -264,16 +264,6 @@ Return JSON array of tasks with {"date": "YYYY-MM-DD", "type": "read|tutor|quiz|
     }
   }
 
-  // Generate embeddings for RAG
-  async generateEmbedding(text: string): Promise<number[]> {
-    const response = await openai.embeddings.create({
-      model: "text-embedding-3-small",
-      input: text,
-    });
-
-    return response.data[0].embedding;
-  }
-
   // Rerank search results
   async rerankResults(
     query: string,
@@ -306,6 +296,57 @@ Return JSON array of tasks with {"date": "YYYY-MM-DD", "type": "read|tutor|quiz|
     } catch {
       return results.slice(0, topK).map(r => ({ ...r, score: 1.0 }));
     }
+  }
+
+  // Generate embeddings for text chunks
+  async generateEmbedding(text: string): Promise<number[]> {
+    try {
+      const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: text,
+        encoding_format: "float"
+      });
+      
+      return response.data[0].embedding;
+    } catch (error) {
+      console.error('Embedding generation error:', error);
+      throw new Error(`Failed to generate embedding: ${error}`);
+    }
+  }
+
+  // Generate embeddings for multiple texts in batch
+  async generateEmbeddings(texts: string[]): Promise<number[][]> {
+    try {
+      const response = await openai.embeddings.create({
+        model: "text-embedding-3-small",
+        input: texts,
+        encoding_format: "float"
+      });
+      
+      return response.data.map(item => item.embedding);
+    } catch (error) {
+      console.error('Batch embedding generation error:', error);
+      throw new Error(`Failed to generate embeddings: ${error}`);
+    }
+  }
+
+  // Calculate cosine similarity between two vectors
+  cosineSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) {
+      throw new Error('Vectors must have the same length');
+    }
+    
+    let dotProduct = 0;
+    let normA = 0;
+    let normB = 0;
+    
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+      normA += vecA[i] * vecA[i];
+      normB += vecB[i] * vecB[i];
+    }
+    
+    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
   }
 }
 
