@@ -1,0 +1,328 @@
+import {
+  users,
+  documents,
+  chats,
+  messages,
+  notes,
+  quizzes,
+  quizQuestions,
+  quizAttempts,
+  studyPlans,
+  studyTasks,
+  flashcards,
+  chunks,
+  type User,
+  type UpsertUser,
+  type InsertDocument,
+  type Document,
+  type InsertChat,
+  type Chat,
+  type InsertMessage,
+  type Message,
+  type InsertNote,
+  type Note,
+  type InsertQuiz,
+  type Quiz,
+  type InsertQuizQuestion,
+  type QuizQuestion,
+  type InsertQuizAttempt,
+  type QuizAttempt,
+  type InsertStudyPlan,
+  type StudyPlan,
+  type InsertStudyTask,
+  type StudyTask,
+  type InsertFlashcard,
+  type Flashcard,
+} from "@shared/schema";
+import { db } from "./db";
+import { eq, desc, and, inArray } from "drizzle-orm";
+
+export interface IStorage {
+  // User operations (mandatory for Replit Auth)
+  getUser(id: string): Promise<User | undefined>;
+  upsertUser(user: UpsertUser): Promise<User>;
+  
+  // Document operations
+  createDocument(document: InsertDocument): Promise<Document>;
+  getDocument(id: string): Promise<Document | undefined>;
+  getDocumentsByUser(userId: string): Promise<Document[]>;
+  updateDocumentStatus(id: string, status: string, metadata?: any): Promise<void>;
+  
+  // Chat operations
+  createChat(chat: InsertChat): Promise<Chat>;
+  getChat(id: string): Promise<Chat | undefined>;
+  getChatsByUser(userId: string): Promise<Chat[]>;
+  addMessage(message: InsertMessage): Promise<Message>;
+  getChatMessages(chatId: string): Promise<Message[]>;
+  
+  // Notes operations
+  createNote(note: InsertNote): Promise<Note>;
+  getNote(id: string): Promise<Note | undefined>;
+  getNotesByUser(userId: string): Promise<Note[]>;
+  updateNote(id: string, updates: Partial<InsertNote>): Promise<Note>;
+  deleteNote(id: string): Promise<void>;
+  
+  // Quiz operations
+  createQuiz(quiz: InsertQuiz): Promise<Quiz>;
+  getQuiz(id: string): Promise<Quiz | undefined>;
+  getQuizzesByUser(userId: string): Promise<Quiz[]>;
+  addQuizQuestion(question: InsertQuizQuestion): Promise<QuizQuestion>;
+  getQuizQuestions(quizId: string): Promise<QuizQuestion[]>;
+  createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt>;
+  getQuizAttempts(quizId: string, userId: string): Promise<QuizAttempt[]>;
+  
+  // Study Plan operations
+  createStudyPlan(plan: InsertStudyPlan): Promise<StudyPlan>;
+  getStudyPlan(id: string): Promise<StudyPlan | undefined>;
+  getStudyPlansByUser(userId: string): Promise<StudyPlan[]>;
+  updateStudyPlan(id: string, updates: Partial<InsertStudyPlan>): Promise<StudyPlan>;
+  addStudyTask(task: InsertStudyTask): Promise<StudyTask>;
+  getStudyTasks(planId: string): Promise<StudyTask[]>;
+  updateStudyTask(id: string, updates: Partial<InsertStudyTask>): Promise<StudyTask>;
+  
+  // Flashcard operations
+  createFlashcard(flashcard: InsertFlashcard): Promise<Flashcard>;
+  getFlashcardsByUser(userId: string): Promise<Flashcard[]>;
+  getFlashcardsByNote(noteId: string): Promise<Flashcard[]>;
+  updateFlashcard(id: string, updates: Partial<InsertFlashcard>): Promise<Flashcard>;
+}
+
+export class DatabaseStorage implements IStorage {
+  // User operations
+  async getUser(id: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.id, id));
+    return user;
+  }
+
+  async upsertUser(userData: UpsertUser): Promise<User> {
+    const [user] = await db
+      .insert(users)
+      .values(userData)
+      .onConflictDoUpdate({
+        target: users.id,
+        set: {
+          ...userData,
+          updatedAt: new Date(),
+        },
+      })
+      .returning();
+    return user;
+  }
+
+  // Document operations
+  async createDocument(document: InsertDocument): Promise<Document> {
+    const [doc] = await db.insert(documents).values(document).returning();
+    return doc;
+  }
+
+  async getDocument(id: string): Promise<Document | undefined> {
+    const [doc] = await db.select().from(documents).where(eq(documents.id, id));
+    return doc;
+  }
+
+  async getDocumentsByUser(userId: string): Promise<Document[]> {
+    return await db
+      .select()
+      .from(documents)
+      .where(eq(documents.userId, userId))
+      .orderBy(desc(documents.createdAt));
+  }
+
+  async updateDocumentStatus(id: string, status: string, metadata?: any): Promise<void> {
+    await db
+      .update(documents)
+      .set({ status, metadata, updatedAt: new Date() })
+      .where(eq(documents.id, id));
+  }
+
+  // Chat operations
+  async createChat(chat: InsertChat): Promise<Chat> {
+    const [newChat] = await db.insert(chats).values(chat).returning();
+    return newChat;
+  }
+
+  async getChat(id: string): Promise<Chat | undefined> {
+    const [chat] = await db.select().from(chats).where(eq(chats.id, id));
+    return chat;
+  }
+
+  async getChatsByUser(userId: string): Promise<Chat[]> {
+    return await db
+      .select()
+      .from(chats)
+      .where(eq(chats.userId, userId))
+      .orderBy(desc(chats.createdAt));
+  }
+
+  async addMessage(message: InsertMessage): Promise<Message> {
+    const [msg] = await db.insert(messages).values(message).returning();
+    return msg;
+  }
+
+  async getChatMessages(chatId: string): Promise<Message[]> {
+    return await db
+      .select()
+      .from(messages)
+      .where(eq(messages.chatId, chatId))
+      .orderBy(messages.createdAt);
+  }
+
+  // Notes operations
+  async createNote(note: InsertNote): Promise<Note> {
+    const [newNote] = await db.insert(notes).values(note).returning();
+    return newNote;
+  }
+
+  async getNote(id: string): Promise<Note | undefined> {
+    const [note] = await db.select().from(notes).where(eq(notes.id, id));
+    return note;
+  }
+
+  async getNotesByUser(userId: string): Promise<Note[]> {
+    return await db
+      .select()
+      .from(notes)
+      .where(eq(notes.userId, userId))
+      .orderBy(desc(notes.updatedAt));
+  }
+
+  async updateNote(id: string, updates: Partial<InsertNote>): Promise<Note> {
+    const [updated] = await db
+      .update(notes)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(notes.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteNote(id: string): Promise<void> {
+    await db.delete(notes).where(eq(notes.id, id));
+  }
+
+  // Quiz operations
+  async createQuiz(quiz: InsertQuiz): Promise<Quiz> {
+    const [newQuiz] = await db.insert(quizzes).values(quiz).returning();
+    return newQuiz;
+  }
+
+  async getQuiz(id: string): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.id, id));
+    return quiz;
+  }
+
+  async getQuizzesByUser(userId: string): Promise<Quiz[]> {
+    return await db
+      .select()
+      .from(quizzes)
+      .where(eq(quizzes.userId, userId))
+      .orderBy(desc(quizzes.createdAt));
+  }
+
+  async addQuizQuestion(question: InsertQuizQuestion): Promise<QuizQuestion> {
+    const [q] = await db.insert(quizQuestions).values(question).returning();
+    return q;
+  }
+
+  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
+    return await db
+      .select()
+      .from(quizQuestions)
+      .where(eq(quizQuestions.quizId, quizId))
+      .orderBy(quizQuestions.order);
+  }
+
+  async createQuizAttempt(attempt: InsertQuizAttempt): Promise<QuizAttempt> {
+    const [att] = await db.insert(quizAttempts).values(attempt).returning();
+    return att;
+  }
+
+  async getQuizAttempts(quizId: string, userId: string): Promise<QuizAttempt[]> {
+    return await db
+      .select()
+      .from(quizAttempts)
+      .where(and(eq(quizAttempts.quizId, quizId), eq(quizAttempts.userId, userId)))
+      .orderBy(desc(quizAttempts.createdAt));
+  }
+
+  // Study Plan operations
+  async createStudyPlan(plan: InsertStudyPlan): Promise<StudyPlan> {
+    const [newPlan] = await db.insert(studyPlans).values(plan).returning();
+    return newPlan;
+  }
+
+  async getStudyPlan(id: string): Promise<StudyPlan | undefined> {
+    const [plan] = await db.select().from(studyPlans).where(eq(studyPlans.id, id));
+    return plan;
+  }
+
+  async getStudyPlansByUser(userId: string): Promise<StudyPlan[]> {
+    return await db
+      .select()
+      .from(studyPlans)
+      .where(eq(studyPlans.userId, userId))
+      .orderBy(desc(studyPlans.createdAt));
+  }
+
+  async updateStudyPlan(id: string, updates: Partial<InsertStudyPlan>): Promise<StudyPlan> {
+    const [updated] = await db
+      .update(studyPlans)
+      .set({ ...updates, updatedAt: new Date() })
+      .where(eq(studyPlans.id, id))
+      .returning();
+    return updated;
+  }
+
+  async addStudyTask(task: InsertStudyTask): Promise<StudyTask> {
+    const [newTask] = await db.insert(studyTasks).values(task).returning();
+    return newTask;
+  }
+
+  async getStudyTasks(planId: string): Promise<StudyTask[]> {
+    return await db
+      .select()
+      .from(studyTasks)
+      .where(eq(studyTasks.planId, planId))
+      .orderBy(studyTasks.dueAt);
+  }
+
+  async updateStudyTask(id: string, updates: Partial<InsertStudyTask>): Promise<StudyTask> {
+    const [updated] = await db
+      .update(studyTasks)
+      .set(updates)
+      .where(eq(studyTasks.id, id))
+      .returning();
+    return updated;
+  }
+
+  // Flashcard operations
+  async createFlashcard(flashcard: InsertFlashcard): Promise<Flashcard> {
+    const [card] = await db.insert(flashcards).values(flashcard).returning();
+    return card;
+  }
+
+  async getFlashcardsByUser(userId: string): Promise<Flashcard[]> {
+    return await db
+      .select()
+      .from(flashcards)
+      .where(eq(flashcards.userId, userId))
+      .orderBy(flashcards.nextReview);
+  }
+
+  async getFlashcardsByNote(noteId: string): Promise<Flashcard[]> {
+    return await db
+      .select()
+      .from(flashcards)
+      .where(eq(flashcards.noteId, noteId));
+  }
+
+  async updateFlashcard(id: string, updates: Partial<InsertFlashcard>): Promise<Flashcard> {
+    const [updated] = await db
+      .update(flashcards)
+      .set(updates)
+      .where(eq(flashcards.id, id))
+      .returning();
+    return updated;
+  }
+}
+
+export const storage = new DatabaseStorage();
