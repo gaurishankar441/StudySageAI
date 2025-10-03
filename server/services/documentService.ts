@@ -89,16 +89,21 @@ export class DocumentService {
   // YouTube transcript extraction using youtube-transcript
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
     try {
+      console.log('Processing YouTube URL:', url);
+      
       // Extract video ID from various YouTube URL formats
       const videoId = this.extractYouTubeVideoId(url);
       if (!videoId) {
+        console.error('Failed to extract video ID from URL:', url);
         throw new Error('Invalid YouTube URL - could not extract video ID');
       }
 
-      console.log('Extracting transcript for YouTube video:', videoId);
+      console.log('Extracted video ID:', videoId, '- fetching transcript...');
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
       const text = transcript.map(entry => entry.text).join(' ');
       const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
+      
+      console.log('Successfully extracted transcript:', text.length, 'characters');
       
       return {
         text,
@@ -122,41 +127,77 @@ export class DocumentService {
       // Remove any whitespace
       url = url.trim();
       
-      const urlObj = new URL(url);
-      const hostname = urlObj.hostname.toLowerCase().replace('www.', '').replace('m.', '');
+      // Try regex-based extraction first (most reliable)
+      // Matches: v=ID, /ID, embed/ID, shorts/ID
+      const regexPatterns = [
+        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+        /^([a-zA-Z0-9_-]{11})$/ // Plain video ID
+      ];
       
-      // Format: https://youtube.com/watch?v=VIDEO_ID (with or without www)
-      if (hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
-        const videoId = urlObj.searchParams.get('v');
-        // Clean video ID (remove any fragments or extra params)
-        return videoId ? videoId.split(/[&#]/)[0] : null;
+      for (const pattern of regexPatterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          console.log('Regex extracted video ID:', match[1]);
+          return match[1];
+        }
       }
       
-      // Format: https://youtu.be/VIDEO_ID
-      if (hostname === 'youtu.be') {
-        const videoId = urlObj.pathname.substring(1);
-        // Clean video ID (remove any fragments or extra params)
-        return videoId ? videoId.split(/[?&#]/)[0] : null;
-      }
-      
-      // Format: https://youtube.com/embed/VIDEO_ID
-      if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/embed/')) {
-        const videoId = urlObj.pathname.split('/')[2];
-        // Clean video ID (remove any fragments or extra params)
-        return videoId ? videoId.split(/[?&#]/)[0] : null;
-      }
-      
-      // Format: https://youtube.com/shorts/VIDEO_ID
-      if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/shorts/')) {
-        const videoId = urlObj.pathname.split('/')[2];
-        // Clean video ID (remove any fragments or extra params)
-        return videoId ? videoId.split(/[?&#]/)[0] : null;
+      // Fallback to URL parsing
+      try {
+        const urlObj = new URL(url);
+        const hostname = urlObj.hostname.toLowerCase().replace('www.', '').replace('m.', '');
+        
+        // Format: https://youtube.com/watch?v=VIDEO_ID (with or without www)
+        if (hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
+          const videoId = urlObj.searchParams.get('v');
+          // Clean video ID (remove any fragments or extra params)
+          const cleanId = videoId ? videoId.split(/[&#]/)[0] : null;
+          if (cleanId) {
+            console.log('URL parsing extracted video ID:', cleanId);
+            return cleanId;
+          }
+        }
+        
+        // Format: https://youtu.be/VIDEO_ID
+        if (hostname === 'youtu.be') {
+          const videoId = urlObj.pathname.substring(1);
+          // Clean video ID (remove any fragments or extra params)
+          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
+          if (cleanId) {
+            console.log('URL parsing extracted video ID from youtu.be:', cleanId);
+            return cleanId;
+          }
+        }
+        
+        // Format: https://youtube.com/embed/VIDEO_ID
+        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/embed/')) {
+          const videoId = urlObj.pathname.split('/')[2];
+          // Clean video ID (remove any fragments or extra params)
+          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
+          if (cleanId) {
+            console.log('URL parsing extracted video ID from embed:', cleanId);
+            return cleanId;
+          }
+        }
+        
+        // Format: https://youtube.com/shorts/VIDEO_ID
+        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/shorts/')) {
+          const videoId = urlObj.pathname.split('/')[2];
+          // Clean video ID (remove any fragments or extra params)
+          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
+          if (cleanId) {
+            console.log('URL parsing extracted video ID from shorts:', cleanId);
+            return cleanId;
+          }
+        }
+      } catch (urlError) {
+        console.log('URL parsing failed, likely not a valid URL:', urlError);
       }
       
       console.log('Could not extract video ID from URL:', url);
       return null;
     } catch (error) {
-      console.error('Error parsing YouTube URL:', error);
+      console.error('Error extracting YouTube video ID:', error);
       return null;
     }
   }
