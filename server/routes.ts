@@ -654,16 +654,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Object storage routes for file serving
   app.get("/objects/:objectPath(*)", isAuthenticated, async (req: any, res) => {
-    const userId = req.user?.claims?.sub;
+    const userId = req.user?.id;
     const objectStorageService = new ObjectStorageService();
     try {
-      const objectFile = await objectStorageService.getObjectEntityFile(req.path);
+      // Extract just the object path without the /objects/ prefix
+      const objectPath = req.params.objectPath || req.params[0];
+      console.log('Accessing object:', objectPath, 'for user:', userId);
+      
+      const objectFile = await objectStorageService.getObjectEntityFile(objectPath);
       const canAccess = await objectStorageService.canAccessObjectEntity({
         objectFile,
         userId: userId,
         requestedPermission: ObjectPermission.READ,
       });
       if (!canAccess) {
+        console.log('Access denied for object:', objectPath);
         return res.sendStatus(403);
       }
       objectStorageService.downloadObject(objectFile, res);
