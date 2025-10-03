@@ -40,8 +40,10 @@ import { db } from "./db";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
 export interface IStorage {
-  // User operations (mandatory for Replit Auth)
+  // User operations
   getUser(id: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
+  createUser(userData: { email: string; passwordHash: string; firstName?: string; lastName?: string }): Promise<string>;
   upsertUser(user: UpsertUser): Promise<User>;
   
   // Document operations
@@ -100,6 +102,16 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
+
+  async createUser(userData: { email: string; passwordHash: string; firstName?: string; lastName?: string }): Promise<string> {
+    const [user] = await db.insert(users).values(userData).returning();
+    return user.id;
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
