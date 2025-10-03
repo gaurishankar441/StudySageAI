@@ -379,9 +379,29 @@ Use the Diagnose → Teach → Check → Remediate loop. Keep responses under 12
 Be encouraging and clear. Use LaTeX for math formulas ($...$).`;
 
     let fullResponse = '';
-    for await (const chunk of aiService.streamChatResponse(history.slice(-10), systemPrompt)) {
-      fullResponse += chunk;
-      yield chunk;
+    
+    try {
+      // Try streaming first
+      for await (const chunk of aiService.streamChatResponse(history.slice(-10), systemPrompt)) {
+        fullResponse += chunk;
+        yield chunk;
+      }
+    } catch (error: any) {
+      // Fallback to non-streaming if organization not verified for streaming
+      console.warn('Streaming failed, falling back to non-streaming:', error.message);
+      
+      const response = await aiService.generateTutorResponse(
+        chat.subject || '',
+        chat.level || '',
+        chat.topic || '',
+        chat.language || 'en',
+        history.slice(-10),
+        'teach',
+        undefined
+      );
+      
+      fullResponse = JSON.stringify(response);
+      yield fullResponse;
     }
 
     // Save complete response
