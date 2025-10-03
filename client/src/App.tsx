@@ -14,6 +14,7 @@ import Quiz from "@/pages/Quiz";
 import QuizAttempt from "@/pages/QuizAttempt";
 import StudyPlan from "@/pages/StudyPlan";
 import Notes from "@/pages/Notes";
+import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -49,6 +50,7 @@ function Router() {
         <Route path="/quiz" component={Quiz} />
         <Route path="/study-plan" component={StudyPlan} />
         <Route path="/notes" component={Notes} />
+        <Route path="/settings" component={Settings} />
         <Route component={NotFound} />
       </Switch>
     </AppLayout>

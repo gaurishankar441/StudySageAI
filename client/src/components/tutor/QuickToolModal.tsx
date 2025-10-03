@@ -31,6 +31,7 @@ interface QuickToolModalProps {
   onSubmit: (toolType: ToolType, formData: any) => void;
   isStreaming: boolean;
   streamingContent: string;
+  userProfile?: any;
 }
 
 const toolConfig: Record<ToolType, {
@@ -78,12 +79,13 @@ export default function QuickToolModal({
   chat,
   onSubmit,
   isStreaming,
-  streamingContent
+  streamingContent,
+  userProfile
 }: QuickToolModalProps) {
   const [formData, setFormData] = useState<Record<string, any>>({
-    language: chat.language || 'en',
+    language: chat.language || userProfile?.locale || 'en',
     difficulty: 'medium',
-    examBoard: '',
+    examBoard: userProfile?.educationBoard || '',
     subtopic: '',
     exampleType: 'Solved Example',
     qTypes: 'mixed',
@@ -95,9 +97,9 @@ export default function QuickToolModal({
   useEffect(() => {
     if (toolType) {
       setFormData({
-        language: chat.language || 'en',
+        language: chat.language || userProfile?.locale || 'en',
         difficulty: 'medium',
-        examBoard: '',
+        examBoard: userProfile?.educationBoard || '',
         subtopic: '',
         exampleType: 'Solved Example',
         qTypes: 'mixed',
@@ -106,7 +108,7 @@ export default function QuickToolModal({
         userQuery: ''
       });
     }
-  }, [toolType, chat.language]);
+  }, [toolType, chat.language, userProfile]);
 
   if (!toolType) return null;
 

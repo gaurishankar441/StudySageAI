@@ -67,6 +67,10 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     enabled: !!chatId,
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
   const sendMessageMutation = useMutation({
     mutationFn: async (messageText: string) => {
       setIsStreaming(true);
@@ -537,6 +541,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           onSubmit={handleQuickToolSubmit}
           isStreaming={toolStreaming}
           streamingContent={toolStreamingContent}
+          userProfile={user}
         />
       )}
     </div>

@@ -49,6 +49,10 @@ export default function DocChatView() {
     queryKey: ["/api/documents"],
   });
 
+  const { data: user } = useQuery({
+    queryKey: ["/api/auth/user"],
+  });
+
   const { data: currentChat } = useQuery<Chat>({
     queryKey: [`/api/chats/${currentChatId}`],
     enabled: !!currentChatId,
@@ -843,6 +847,7 @@ export default function DocChatView() {
         onSubmit={handleDocChatActionSubmit}
         isProcessing={actionProcessing}
         streamingContent={actionContent}
+        userProfile={user}
       />
     </div>
   );

@@ -29,6 +29,7 @@ interface DocChatActionModalProps {
   onSubmit: (actionType: ActionType, formData: any) => void;
   isProcessing: boolean;
   streamingContent: string;
+  userProfile?: any;
 }
 
 const actionConfig: Record<ActionType, {
@@ -70,12 +71,13 @@ export default function DocChatActionModal({
   selectedDocs,
   onSubmit,
   isProcessing,
-  streamingContent
+  streamingContent,
+  userProfile
 }: DocChatActionModalProps) {
   const [formData, setFormData] = useState<Record<string, any>>({
-    language: 'en',
-    level: 'Class-12',
-    examBoard: '',
+    language: userProfile?.locale || 'en',
+    level: userProfile?.currentClass || 'Class-12',
+    examBoard: userProfile?.educationBoard || '',
     maxLength: 'Medium',
     density: 'Medium',
     extractQuotes: true,
@@ -89,9 +91,9 @@ export default function DocChatActionModal({
   useEffect(() => {
     if (actionType) {
       setFormData({
-        language: 'en',
-        level: 'Class-12',
-        examBoard: '',
+        language: userProfile?.locale || 'en',
+        level: userProfile?.currentClass || 'Class-12',
+        examBoard: userProfile?.educationBoard || '',
         maxLength: 'Medium',
         density: 'Medium',
         extractQuotes: true,
@@ -102,7 +104,7 @@ export default function DocChatActionModal({
         keywords: ''
       });
     }
-  }, [actionType]);
+  }, [actionType, userProfile]);
 
   if (!actionType) return null;
 

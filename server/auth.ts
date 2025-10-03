@@ -3,7 +3,7 @@ import session from 'express-session';
 import connectPg from 'connect-pg-simple';
 import type { Express, RequestHandler } from 'express';
 import { storage } from './storage';
-import type { AuthUser } from '@shared/schema';
+import type { AuthUser, User } from '@shared/schema';
 
 const SALT_ROUNDS = 10;
 
@@ -17,9 +17,9 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
 }
 
 // Sanitize user object - remove sensitive fields
-export function sanitizeUser(user: AuthUser): Omit<AuthUser, 'passwordHash'> {
+export function sanitizeUser(user: User): AuthUser {
   const { passwordHash, ...safeUser } = user;
-  return safeUser;
+  return safeUser as AuthUser;
 }
 
 // Session configuration
@@ -84,6 +84,9 @@ export function setupAuth(app: Express) {
 
       // Get user and sanitize before sending
       const user = await storage.getUser(userId);
+      if (!user) {
+        return res.status(500).json({ message: 'Failed to create user' });
+      }
       res.status(201).json(sanitizeUser(user));
     } catch (error) {
       console.error('Signup error:', error);
@@ -122,6 +125,9 @@ export function setupAuth(app: Express) {
 
       // Get user and sanitize before sending
       const user = await storage.getUser(userWithPassword.id);
+      if (!user) {
+        return res.status(500).json({ message: 'User not found' });
+      }
       res.json(sanitizeUser(user));
     } catch (error) {
       console.error('Login error:', error);
@@ -148,6 +154,43 @@ export function setupAuth(app: Express) {
     } catch (error) {
       console.error('Error fetching user:', error);
       res.status(500).json({ message: 'Failed to fetch user' });
+    }
+  });
+
+  // Update user profile endpoint
+  app.patch('/api/auth/profile', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { 
+        firstName, 
+        lastName, 
+        locale, 
+        aiProvider,
+        educationBoard,
+        examTarget,
+        currentClass,
+        subjects 
+      } = req.body;
+
+      // Update user profile
+      await storage.updateUser(userId, {
+        firstName,
+        lastName,
+        locale,
+        aiProvider,
+        educationBoard,
+        examTarget,
+        currentClass,
+        subjects,
+        updatedAt: new Date(),
+      });
+
+      // Get updated user
+      const updatedUser = await storage.getUser(userId);
+      res.json(sanitizeUser(updatedUser!));
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ message: 'Failed to update profile' });
     }
   });
 }

@@ -47,6 +47,13 @@ export const users = pgTable("users", {
   profileImageUrl: varchar("profile_image_url"),
   locale: varchar("locale").default('en'),
   aiProvider: varchar("ai_provider").default('cohere'), // 'cohere' or 'openai' - cohere is default
+  
+  // India-centric student profile fields
+  educationBoard: varchar("education_board"), // 'CBSE', 'ICSE', 'State Board', etc.
+  examTarget: varchar("exam_target"), // 'JEE', 'NEET', 'Board Exams', 'Other'
+  currentClass: varchar("current_class"), // '10th', '12th', 'BSc Year 1', etc.
+  subjects: text("subjects").array(), // Array of subjects
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
