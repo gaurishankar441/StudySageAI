@@ -9,9 +9,22 @@ import {
   integer,
   boolean,
   real,
+  customType,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
+
+const vector = customType<{ data: number[]; driverData: string }>({
+  dataType() {
+    return 'vector(1536)';
+  },
+  toDriver(value: number[]): string {
+    return JSON.stringify(value);
+  },
+  fromDriver(value: string): number[] {
+    return JSON.parse(value);
+  },
+});
 
 // Session storage table
 export const sessions = pgTable(
@@ -65,6 +78,7 @@ export const chunks = pgTable("chunks", {
   heading: varchar("heading"),
   language: varchar("lang"),
   hash: varchar("hash"),
+  embedding: vector("embedding"), // pgvector embedding (1536 dimensions for text-embedding-3-small)
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
 });
