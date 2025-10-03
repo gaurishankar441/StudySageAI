@@ -142,7 +142,7 @@ export class DocumentService {
   }
 
   // Chunk text into manageable pieces
-  chunkText(text: string, docId: string, language: string = 'en', maxTokens: number = 700, overlap: number = 80): DocumentChunk[] {
+  chunkText(text: string, docId: string, docTitle: string, language: string = 'en', maxTokens: number = 700, overlap: number = 80): DocumentChunk[] {
     const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
     const chunks: DocumentChunk[] = [];
     let currentChunk = '';
@@ -161,7 +161,12 @@ export class DocumentService {
           tokens: currentTokens,
           language,
           hash: this.generateHash(chunkText),
-          metadata: {}
+          metadata: {
+            docTitle,
+            docId,
+            page: Math.floor(chunks.length / 3) + 1, // Estimate page number
+            section: (chunks.length % 3) + 1 // Section within page
+          }
         });
 
         // Start new chunk with overlap
@@ -184,7 +189,12 @@ export class DocumentService {
         tokens: currentTokens,
         language,
         hash: this.generateHash(chunkText),
-        metadata: {}
+        metadata: {
+          docTitle,
+          docId,
+          page: Math.floor(chunks.length / 3) + 1,
+          section: (chunks.length % 3) + 1
+        }
       });
     }
 
@@ -235,8 +245,8 @@ export class DocumentService {
       // Analyze document
       const analysis = await aiService.analyzeDocument(title, text, sourceType);
 
-      // Chunk text
-      const chunks = this.chunkText(text, document.id, analysis.language || 'en');
+      // Chunk text with document title for citations
+      const chunks = this.chunkText(text, document.id, title, analysis.language || 'en');
       
       // Generate embeddings for chunks (in batches of 100 to avoid API limits)
       const chunkTexts = chunks.map(c => c.text);
@@ -249,11 +259,14 @@ export class DocumentService {
         allEmbeddings = allEmbeddings.concat(embeddings);
       }
       
-      // Add embeddings to chunks
+      // Add embeddings to chunks while preserving citation metadata
       const chunksWithEmbeddings = chunks.map((chunk, idx) => ({
         ...chunk,
         metadata: {
-          ...chunk.metadata,
+          docTitle: chunk.metadata.docTitle,
+          docId: chunk.metadata.docId,
+          page: chunk.metadata.page,
+          section: chunk.metadata.section,
           embedding: JSON.stringify(allEmbeddings[idx])
         }
       }));
@@ -323,10 +336,11 @@ export class DocumentService {
             return {
               text: chunk.text,
               metadata: {
+                docTitle: (metadata as any)?.docTitle || 'Unknown Document',
                 docId: chunk.docId,
                 ord: chunk.ord,
-                page: chunk.page,
-                section: chunk.section,
+                page: (metadata as any)?.page || chunk.page || 1,
+                section: (metadata as any)?.section || chunk.section || 1,
                 heading: chunk.heading,
                 language: chunk.language
               },
