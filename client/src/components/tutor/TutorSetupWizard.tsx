@@ -224,8 +224,8 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" data-testid="dialog-tutor-setup">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid="dialog-tutor-setup">
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle className="text-xl">Start AI Tutor Session</DialogTitle>
           <DialogDescription>
             Step {step} of 4: Set up your personalized learning experience
@@ -233,7 +233,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
         </DialogHeader>
 
         {/* Progress Indicator */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 flex-shrink-0">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div
@@ -257,11 +257,11 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
         </div>
 
         {/* Step Content */}
-        <div className="min-h-[300px] flex flex-col justify-center">
+        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-center py-4">
           {renderStep()}
         </div>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex justify-between flex-shrink-0">
           <Button
             variant="outline"
             onClick={handlePrev}
