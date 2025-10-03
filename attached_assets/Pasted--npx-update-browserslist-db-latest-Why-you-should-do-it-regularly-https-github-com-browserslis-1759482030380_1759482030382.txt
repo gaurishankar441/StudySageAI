@@ -1,0 +1,45 @@
+  npx update-browserslist-db@latest
+  Why you should do it regularly: https://github.com/browserslist/update-db#readme
+8:53:29 AM [express] GET /api/auth/user 304 in 235ms :: {"id":"27446080-a14c-4592-8bc8-9bd9a8d633cc"…
+8:53:36 AM [express] GET /api/auth/user 401 in 2ms :: {"message":"Unauthorized"}
+8:54:23 AM [express] GET /api/auth/user 401 in 1ms :: {"message":"Unauthorized"}
+8:58:43 AM [express] GET /api/auth/user 401 in 0ms :: {"message":"Unauthorized"}
+8:59:18 AM [express] GET /api/auth/user 304 in 257ms :: {"id":"27446080-a14c-4592-8bc8-9bd9a8d633cc"…
+8:59:21 AM [express] GET /api/documents 200 in 160ms :: [{"id":"c1493574-7d31-435b-9ea7-e37e76da28c5…
+8:59:35 AM [express] POST /api/objects/upload 200 in 659ms :: {"uploadURL":"https://storage.googleap…
+Processing document for user 27446080-a14c-4592-8bc8-9bd9a8d633cc: Avatar AI API – Core Capabilities.pdf (1121654 bytes)
+PDF extraction error: Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './dist/cjs' is not defined by "exports" in /home/runner/workspace/node_modules/pdf-parse/package.json
+    at exportsNotFound (node:internal/modules/esm/resolve:322:10)
+    at packageExportsResolve (node:internal/modules/esm/resolve:670:9)
+    at resolveExports (node:internal/modules/cjs/loader:636:36)
+    at Module._findPath (node:internal/modules/cjs/loader:716:31)
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1198:27)
+    at nextResolveSimple (/home/runner/workspace/node_modules/tsx/dist/register-D46fvsV_.cjs:4:1004)
+    at /home/runner/workspace/node_modules/tsx/dist/register-D46fvsV_.cjs:3:2630
+    at /home/runner/workspace/node_modules/tsx/dist/register-D46fvsV_.cjs:3:1542
+    at resolveTsPaths (/home/runner/workspace/node_modules/tsx/dist/register-D46fvsV_.cjs:4:760)
+    at /home/runner/workspace/node_modules/tsx/dist/register-D46fvsV_.cjs:4:1102
+    at m._resolveFilename (file:///home/runner/workspace/node_modules/tsx/dist/register-B7jrtLTO.mjs:1:789)
+    at Module._load (node:internal/modules/cjs/loader:1043:27)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+    at DocumentService.extractFromPDF (/home/runner/workspace/server/services/documentService.ts:51:24)
+    at DocumentService.extractText (/home/runner/workspace/server/services/documentService.ts:33:21)
+    at DocumentService.ingestDocument (/home/runner/workspace/server/services/documentService.ts:275:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:58:21) {
+  code: 'ERR_PACKAGE_PATH_NOT_EXPORTED'
+}
+Document ingestion error: Error: Failed to extract PDF: Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './dist/cjs' is not defined by "exports" in /home/runner/workspace/node_modules/pdf-parse/package.json
+    at DocumentService.extractFromPDF (/home/runner/workspace/server/services/documentService.ts:68:13)
+    at DocumentService.extractText (/home/runner/workspace/server/services/documentService.ts:33:21)
+    at DocumentService.ingestDocument (/home/runner/workspace/server/services/documentService.ts:275:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:58:21)
+Document processing error: Error: Failed to extract PDF: Error [ERR_PACKAGE_PATH_NOT_EXPORTED]: Package subpath './dist/cjs' is not defined by "exports" in /home/runner/workspace/node_modules/pdf-parse/package.json
+    at DocumentService.extractFromPDF (/home/runner/workspace/server/services/documentService.ts:68:13)
+    at DocumentService.extractText (/home/runner/workspace/server/services/documentService.ts:33:21)
+    at DocumentService.ingestDocument (/home/runner/workspace/server/services/documentService.ts:275:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:58:21)
+8:59:39 AM [express] POST /api/documents/from-upload 500 in 854ms :: {"message":"Failed to process d…

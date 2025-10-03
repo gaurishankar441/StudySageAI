@@ -47,8 +47,8 @@ export class DocumentService {
   // PDF text extraction using pdf-parse (CommonJS)
   private async extractFromPDF(buffer: Buffer): Promise<{ text: string; metadata: any }> {
     try {
-      // Use require() to load CommonJS version (package.json main points to dist/cjs)
-      const { pdf } = require('pdf-parse/dist/cjs');
+      // Use main export - automatically resolves to dist/cjs/index.js via package.json exports
+      const { pdf } = require('pdf-parse');
       const data = await pdf(buffer);
       
       if (!data.text || data.text.trim().length === 0) {
