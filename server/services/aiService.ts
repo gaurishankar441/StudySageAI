@@ -1,8 +1,14 @@
 import { aiService } from "../openai";
 import { storage } from "../storage";
 import { documentService } from "./documentService";
+import { aiOrchestrator } from "./aiOrchestrator";
+import { AIProviderType } from "./aiProvider";
 
 export class AIServiceManager {
+  private async getUserProvider(userId: string): Promise<AIProviderType> {
+    const user = await storage.getUser(userId);
+    return (user?.aiProvider as AIProviderType) || 'cohere';
+  }
   // Tutor session management
   async startTutorSession(
     userId: string,
@@ -177,16 +183,32 @@ export class AIServiceManager {
       context = chunks.map(c => c.text).join('\n\n');
     }
 
-    // Generate questions
-    const questions = await aiService.generateQuiz(
-      subject,
-      topic,
-      difficulty,
-      questionCount,
-      questionTypes,
-      language,
-      context
+    // Get user's preferred AI provider
+    const providerType = await this.getUserProvider(userId);
+    console.log(`Generating quiz using ${providerType} provider for user ${userId}`);
+
+    // Generate quiz using orchestrator
+    const { result: quizData, usedProvider } = await aiOrchestrator.executeWithFallback(
+      providerType,
+      async (provider) => provider.generateQuiz(context || topic, {
+        subject,
+        difficulty,
+        language,
+        questionCount
+      })
     );
+
+    console.log(`Quiz generated successfully using ${usedProvider}`);
+
+    // Convert to old format for compatibility
+    const questions = quizData.questions.map(q => ({
+      type: 'mcq_single' as const,
+      stem: q.question,
+      options: q.options,
+      answer: [q.correctAnswer],
+      rationale: q.rationale,
+      sourceRef: ''
+    }));
 
     // Store questions
     for (let i = 0; i < questions.length; i++) {
@@ -275,21 +297,33 @@ export class AIServiceManager {
       combinedContent += chunks.map(c => c.text).join('\n\n') + '\n\n';
     }
 
-    // Generate summary
-    const summary = await aiService.summarizeContent(combinedContent, language, template);
+    // Get user's preferred AI provider
+    const providerType = await this.getUserProvider(userId);
+    console.log(`Generating notes using ${providerType} provider for user ${userId}`);
+
+    // Generate summary using orchestrator
+    const { result: noteData, usedProvider } = await aiOrchestrator.executeWithFallback(
+      providerType,
+      async (provider) => provider.generateNotes(combinedContent, {
+        language,
+        includeFlashcards: true
+      })
+    );
+
+    console.log(`Notes generated successfully using ${usedProvider}`);
 
     // Create note
     const note = await storage.createNote({
       userId,
-      title,
+      title: noteData.title || title,
       language,
       template,
-      content: summary,
+      content: noteData,
       sourceIds: JSON.stringify(sourceIds)
     });
 
     // Generate flashcards
-    for (const flashcard of summary.flashcards) {
+    for (const flashcard of noteData.flashcards) {
       await storage.createFlashcard({
         userId,
         noteId: note.id,
