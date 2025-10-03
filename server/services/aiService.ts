@@ -537,6 +537,94 @@ Keep it concise and actionable!`;
     }
   }
 
+  // DocChat Actions execution
+  async executeDocChatAction(
+    action: string,
+    docIds: string[],
+    params: { language: string; level?: string; examBoard?: string; [key: string]: any },
+    userId: string,
+    onChunk: (chunk: string) => void
+  ) {
+    const chunks = await documentService.retrieveRelevantChunks('', userId, docIds, 50);
+    const docContent = chunks.map(c => c.text).join('\n\n');
+    const prompt = this.buildDocChatActionPrompt(action, docContent, params);
+
+    let fullResponse = '';
+    try {
+      for await (const chunk of aiService.streamChatResponse([], prompt)) {
+        fullResponse += chunk;
+        onChunk(chunk);
+      }
+    } catch (error) {
+      console.error('DocChat action error:', error);
+      throw error;
+    }
+    return fullResponse;
+  }
+
+  private buildDocChatActionPrompt(action: string, content: string, params: any): string {
+    const { language, level, examBoard, keywords, maxLength, density, extractQuotes, count, types, difficulty, style } = params;
+    const lang = language === 'hi' ? 'हिन्दी' : 'English';
+    const board = examBoard ? ` for ${examBoard}` : '';
+
+    switch (action) {
+      case 'summary':
+        return `Create a structured summary from the following content${board} in ${lang}.
+${keywords ? `Focus on: ${keywords}\n` : ''}
+Detail level: ${maxLength || 'Medium'}
+
+Include:
+- Introduction (2-3 lines)
+- Key Points (bulleted, 5-8 items)
+- Examples/Diagrams mentioned
+- Important formulae boxed with units
+- References with page/section numbers
+
+Content:
+${content.slice(0, 8000)}
+
+Output in ${lang}.`;
+
+      case 'highlights':
+        return `Extract ${density || 'Medium'} density highlights from this content in ${lang}.
+${extractQuotes ? 'Include exact quotes with page/section references.\n' : ''}
+Format as numbered list. Language: ${lang}
+
+Content:
+${content.slice(0, 8000)}`;
+
+      case 'quiz':
+        return `Generate ${count || 10} ${types || 'mixed'} questions at ${difficulty || 'medium'} difficulty${board} from this content.
+
+Return JSON:
+[{
+  "q": "question",
+  "type": "mcq|short|numeric|assertion-reason",
+  "options": ["A","B","C","D"]?,
+  "answer": "B"|"text"|42,
+  "explain": "brief explanation",
+  "page": "source reference"
+}]
+
+Language: ${lang}
+Content:
+${content.slice(0, 8000)}`;
+
+      case 'flashcards':
+        return `Generate ${count || 10} ${style || 'Basic'} flashcards from this content in ${lang}.
+Keep answers < 32 words.
+
+Return JSON:
+[{"front": "question/term", "back": "answer/definition", "source": "page/section"}]
+
+Content:
+${content.slice(0, 8000)}`;
+
+      default:
+        return `Analyze this content in ${lang}:\n${content.slice(0, 8000)}`;
+    }
+  }
+
   // Streaming responses for real-time chat
   async *streamTutorResponse(
     chatId: string,

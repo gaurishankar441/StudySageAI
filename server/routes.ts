@@ -468,6 +468,44 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DocChat Quick Actions endpoint
+  app.post('/api/docchat/action', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { action, docIds, language = 'en', level, examBoard, constraints = {} } = req.body;
+
+      if (!action || !docIds || docIds.length === 0) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      const result = await aiServiceManager.executeDocChatAction(
+        action,
+        docIds,
+        { language, level, examBoard, ...constraints },
+        userId,
+        (chunk: string) => {
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
+      );
+
+      res.write(`data: ${JSON.stringify({ type: 'complete', content: result })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error("Error in DocChat action:", error);
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to execute action' })}\n\n`);
+      res.end();
+    }
+  });
+
   // Quiz routes
   app.post('/api/quizzes', isAuthenticated, async (req: any, res) => {
     try {

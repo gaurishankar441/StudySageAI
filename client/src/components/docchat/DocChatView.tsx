@@ -27,6 +27,9 @@ import {
   Trash2,
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
+import DocChatActionModal from "./DocChatActionModal";
+
+type ActionType = 'summary' | 'highlights' | 'quiz' | 'flashcards';
 
 export default function DocChatView() {
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
@@ -36,7 +39,10 @@ export default function DocChatView() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
-  const { toast } = useToast();
+  const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
+  const [actionProcessing, setActionProcessing] = useState(false);
+  const [actionContent, setActionContent] = useState("");
+  const { toast} = useToast();
   const queryClient = useQueryClient();
 
   const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
@@ -317,21 +323,73 @@ export default function DocChatView() {
     }
   };
 
-  const handleGenerateSummary = () => {
-    if (selectedDocuments.length > 0) {
-      generateSummaryMutation.mutate(selectedDocuments);
-    }
-  };
+  const handleDocChatActionSubmit = async (actionType: ActionType, formData: any) => {
+    setActionProcessing(true);
+    setActionContent("");
 
-  const handleGenerateQuiz = () => {
-    if (selectedDocuments.length > 0) {
-      generateQuizMutation.mutate(selectedDocuments[0]);
-    }
-  };
+    try {
+      const response = await fetch('/api/docchat/action', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          action: actionType,
+          docIds: selectedDocuments,
+          ...formData
+        })
+      });
 
-  const handleGenerateFlashcards = () => {
-    if (selectedDocuments.length > 0) {
-      generateFlashcardsMutation.mutate(selectedDocuments);
+      if (!response.ok) throw new Error('Failed to execute action');
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      if (!reader) throw new Error('No response stream');
+
+      let fullContent = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          for (const line of event.split('\n')) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.type === 'chunk') {
+                  fullContent += data.content;
+                  setActionContent(fullContent);
+                } else if (data.type === 'done' || data.type === 'complete') {
+                  setActionProcessing(false);
+                  toast({ title: "Generated Successfully" });
+                  setTimeout(() => {
+                    setActiveActionModal(null);
+                    setActionContent("");
+                  }, 1500);
+                } else if (data.type === 'error') {
+                  setActionProcessing(false);
+                  toast({ 
+                    title: "Error", 
+                    description: data.message || "Failed to execute action", 
+                    variant: "destructive" 
+                  });
+                }
+              } catch (e) {
+                console.warn('Parse error:', e);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Action error:', error);
+      setActionProcessing(false);
+      toast({ title: "Error", description: "Failed to execute action", variant: "destructive" });
     }
   };
 
@@ -633,42 +691,42 @@ export default function DocChatView() {
               <Button 
                 variant="outline" 
                 className="p-3 h-auto flex-col gap-1"
-                onClick={handleGenerateSummary}
-                disabled={selectedDocuments.length === 0 || generateSummaryMutation.isPending}
+                onClick={() => setActiveActionModal('summary')}
+                disabled={selectedDocuments.length === 0}
                 data-testid="button-quick-summary"
               >
                 <FileText className="w-4 h-4" />
-                <span className="text-xs">{generateSummaryMutation.isPending ? 'Generating...' : 'Summary'}</span>
+                <span className="text-xs">Summary</span>
               </Button>
               <Button 
                 variant="outline" 
                 className="p-3 h-auto flex-col gap-1"
-                onClick={handleGenerateSummary}
-                disabled={selectedDocuments.length === 0 || generateSummaryMutation.isPending}
+                onClick={() => setActiveActionModal('highlights')}
+                disabled={selectedDocuments.length === 0}
                 data-testid="button-quick-highlights"
               >
                 <Highlighter className="w-4 h-4" />
-                <span className="text-xs">{generateSummaryMutation.isPending ? 'Generating...' : 'Highlights'}</span>
+                <span className="text-xs">Highlights</span>
               </Button>
               <Button 
                 variant="outline" 
                 className="p-3 h-auto flex-col gap-1"
-                onClick={handleGenerateQuiz}
-                disabled={selectedDocuments.length === 0 || generateQuizMutation.isPending}
+                onClick={() => setActiveActionModal('quiz')}
+                disabled={selectedDocuments.length === 0}
                 data-testid="button-quick-quiz"
               >
                 <BookOpen className="w-4 h-4" />
-                <span className="text-xs">{generateQuizMutation.isPending ? 'Generating...' : 'Quiz'}</span>
+                <span className="text-xs">Quiz</span>
               </Button>
               <Button 
                 variant="outline" 
                 className="p-3 h-auto flex-col gap-1"
-                onClick={handleGenerateFlashcards}
-                disabled={selectedDocuments.length === 0 || generateFlashcardsMutation.isPending}
+                onClick={() => setActiveActionModal('flashcards')}
+                disabled={selectedDocuments.length === 0}
                 data-testid="button-quick-flashcards"
               >
                 <Layers className="w-4 h-4" />
-                <span className="text-xs">{generateFlashcardsMutation.isPending ? 'Generating...' : 'Flashcards'}</span>
+                <span className="text-xs">Flashcards</span>
               </Button>
             </div>
             
@@ -770,6 +828,22 @@ export default function DocChatView() {
           )}
         </Card>
       </div>
+
+      {/* DocChat Action Modal */}
+      <DocChatActionModal
+        open={activeActionModal !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setActiveActionModal(null);
+            setActionContent("");
+          }
+        }}
+        actionType={activeActionModal}
+        selectedDocs={selectedDocs.map(d => ({ id: d.id, title: d.title }))}
+        onSubmit={handleDocChatActionSubmit}
+        isProcessing={actionProcessing}
+        streamingContent={actionContent}
+      />
     </div>
   );
 }

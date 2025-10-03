@@ -8,8 +8,11 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
-### October 3, 2025
+### October 3, 2025 - Latest
+- **AI Tutor Quick Tools**: Implemented modal-first right rail with 5 instant tools (Explain Concept, Hint, Example, Practice 5, Summary). Features India-centric prompts supporting CBSE/ICSE/State Board, JEE/NEET, with English/Hindi toggle. SSE streaming with proper buffering, form reset on modal open, and visual progress indicators.
+
 - **YouTube Transcript Extraction**: Upgraded to `@danielxceron/youtube-transcript` library for improved reliability with 2025 YouTube formats. Supports all URL types (watch, shorts, live, embed) with dual fallback system.
+
 - **Quiz Partial Submission**: Users can now submit quizzes without answering all questions. Results display shows separate counts for Correct, Wrong, and Unattempted questions, with all questions displaying correct answers and explanations regardless of attempt status.
 
 ## User Preferences
