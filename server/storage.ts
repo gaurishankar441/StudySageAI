@@ -370,7 +370,7 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  // Vector similarity search using pgvector with raw SQL
+  // Vector similarity search using pgvector  
   async searchChunksByEmbedding(
     queryEmbedding: number[],
     docIds?: string[],
@@ -378,23 +378,34 @@ export class DatabaseStorage implements IStorage {
   ): Promise<Array<Chunk & { similarity: number }>> {
     const embeddingStr = JSON.stringify(queryEmbedding);
     
-    // Build WHERE clause for doc IDs filter
-    const docFilter = docIds && docIds.length > 0
-      ? sql`WHERE doc_id = ANY(${docIds})`
-      : sql.empty();
+    // Use safe SQL template literal with embedded parameters
+    let query;
+    if (docIds && docIds.length > 0) {
+      // Filter by specific documents using safe inArray helper
+      query = sql`
+        SELECT 
+          id, doc_id as "docId", ord, text, tokens, page, section, heading, 
+          lang as language, hash, embedding, metadata, created_at as "createdAt",
+          (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
+        FROM chunks
+        WHERE doc_id IN ${docIds}
+        ORDER BY embedding <=> ${embeddingStr}::vector
+        LIMIT ${limit}
+      `;
+    } else {
+      // No filter - search all chunks
+      query = sql`
+        SELECT 
+          id, doc_id as "docId", ord, text, tokens, page, section, heading, 
+          lang as language, hash, embedding, metadata, created_at as "createdAt",
+          (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
+        FROM chunks
+        ORDER BY embedding <=> ${embeddingStr}::vector
+        LIMIT ${limit}
+      `;
+    }
     
-    // Use raw SQL for pgvector cosine similarity search
-    const results = await db.execute(sql`
-      SELECT 
-        id, doc_id as "docId", ord, text, tokens, page, section, heading, 
-        language, hash, embedding, metadata, created_at as "createdAt",
-        (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
-      FROM chunks
-      ${docFilter}
-      ORDER BY embedding <=> ${embeddingStr}::vector
-      LIMIT ${limit}
-    `);
-    
+    const results = await db.execute(query);
     return results.rows as unknown as Array<Chunk & { similarity: number }>;
   }
 }
