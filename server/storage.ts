@@ -51,6 +51,7 @@ export interface IStorage {
   getDocument(id: string): Promise<Document | undefined>;
   getDocumentsByUser(userId: string): Promise<Document[]>;
   updateDocumentStatus(id: string, status: string, metadata?: any): Promise<void>;
+  deleteDocument(id: string): Promise<void>;
   
   // Chat operations
   createChat(chat: InsertChat): Promise<Chat>;
@@ -150,6 +151,11 @@ export class DatabaseStorage implements IStorage {
       .update(documents)
       .set({ status, metadata })
       .where(eq(documents.id, id));
+  }
+
+  async deleteDocument(id: string): Promise<void> {
+    // Delete associated chunks first (cascade will handle this automatically via FK constraint)
+    await db.delete(documents).where(eq(documents.id, id));
   }
 
   // Chat operations

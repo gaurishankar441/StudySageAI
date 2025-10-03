@@ -24,6 +24,7 @@ import {
   Highlighter,
   Layers,
   BookOpen,
+  Trash2,
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
 
@@ -92,6 +93,31 @@ export default function DocChatView() {
       toast({
         title: "Error",
         description: "Failed to add URL",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const deleteDocumentMutation = useMutation({
+    mutationFn: async (docId: string) => {
+      const response = await apiRequest("DELETE", `/api/documents/${docId}`, {});
+      if (!response.ok) {
+        throw new Error("Failed to delete document");
+      }
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Document deleted successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setSelectedDocuments(prev => prev.filter(id => !documents.find(d => d.id === id)));
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to delete document",
         variant: "destructive",
       });
     },
@@ -413,50 +439,74 @@ export default function DocChatView() {
                   <div
                     key={doc.id}
                     data-testid={`document-${doc.id}`}
-                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
+                    className={`group p-3 rounded-lg border-2 transition-all duration-200 relative ${
                       selectedDocuments.includes(doc.id)
                         ? 'border-primary bg-primary/10 shadow-md'
                         : 'border-border hover:border-primary/50 hover:shadow-sm'
                     }`}
-                    onClick={() => {
-                      setSelectedDocuments(prev => 
-                        prev.includes(doc.id)
-                          ? prev.filter(id => id !== doc.id)
-                          : [...prev, doc.id]
-                      );
-                    }}
                   >
-                    <div className="flex items-start gap-3">
-                      <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        {doc.sourceType === 'youtube' ? (
-                          <Youtube className="w-5 h-5 text-primary" />
-                        ) : doc.sourceType === 'web' ? (
-                          <Globe className="w-5 h-5 text-primary" />
-                        ) : (
-                          <FileText className="w-5 h-5 text-primary" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{doc.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {doc.pages ? `${doc.pages} pages` : ''} • {doc.status}
-                        </p>
-                        {doc.status === 'ready' && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="px-2 py-0.5 text-xs rounded bg-success/10 text-success">
-                              Ready
-                            </span>
-                          </div>
-                        )}
-                        {doc.status === 'processing' && (
-                          <div className="flex items-center gap-2 mt-2">
-                            <span className="px-2 py-0.5 text-xs rounded bg-warning/10 text-warning animate-pulse">
-                              Processing...
-                            </span>
-                          </div>
-                        )}
+                    <div
+                      className="cursor-pointer"
+                      onClick={() => {
+                        setSelectedDocuments(prev => 
+                          prev.includes(doc.id)
+                            ? prev.filter(id => id !== doc.id)
+                            : [...prev, doc.id]
+                        );
+                      }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          {doc.sourceType === 'youtube' ? (
+                            <Youtube className="w-5 h-5 text-primary" />
+                          ) : doc.sourceType === 'web' ? (
+                            <Globe className="w-5 h-5 text-primary" />
+                          ) : (
+                            <FileText className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{doc.title}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {doc.pages ? `${doc.pages} pages` : ''} • {doc.status}
+                          </p>
+                          {doc.status === 'ready' && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="px-2 py-0.5 text-xs rounded bg-success/10 text-success">
+                                Ready
+                              </span>
+                            </div>
+                          )}
+                          {doc.status === 'processing' && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="px-2 py-0.5 text-xs rounded bg-warning/10 text-warning animate-pulse">
+                                Processing...
+                              </span>
+                            </div>
+                          )}
+                          {doc.status === 'error' && (
+                            <div className="flex items-center gap-2 mt-2">
+                              <span className="px-2 py-0.5 text-xs rounded bg-destructive/10 text-destructive">
+                                Error
+                              </span>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="absolute top-2 right-2 h-7 w-7 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        deleteDocumentMutation.mutate(doc.id);
+                      }}
+                      data-testid={`button-delete-${doc.id}`}
+                      disabled={deleteDocumentMutation.isPending}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
                   </div>
                 ))}
                 
