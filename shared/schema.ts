@@ -62,7 +62,14 @@ export const documents = pgTable("documents", {
   language: varchar("lang").default('en'),
   tokens: integer("tokens"),
   status: varchar("status").default('processing'), // 'processing', 'ready', 'error'
-  metadata: jsonb("metadata"),
+  metadata: jsonb("metadata").$type<{
+    videoId?: string;
+    url?: string;
+    duration?: string;
+    segments?: number;
+    extractedAt?: string;
+    [key: string]: any;
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
 });
 
