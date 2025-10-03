@@ -270,10 +270,11 @@ export default function DocChatView() {
                 {documents.map((doc) => (
                   <div
                     key={doc.id}
-                    className={`p-3 rounded-lg border cursor-pointer transition-all duration-200 ${
+                    data-testid={`document-${doc.id}`}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all duration-200 ${
                       selectedDocuments.includes(doc.id)
-                        ? 'border-primary bg-primary/5'
-                        : 'border-border hover:border-primary'
+                        ? 'border-primary bg-primary/10 shadow-md'
+                        : 'border-border hover:border-primary/50 hover:shadow-sm'
                     }`}
                     onClick={() => {
                       setSelectedDocuments(prev => 
@@ -360,14 +361,48 @@ export default function DocChatView() {
               </div>
             </div>
 
-            <div className="flex-1 bg-muted p-8 overflow-y-auto">
-              <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-12 min-h-full">
-                <h2 className="text-2xl font-bold mb-6">{currentDoc.title}</h2>
-                <div className="space-y-4 text-sm leading-relaxed">
-                  <p>Document content would be displayed here...</p>
-                  <p>This is where the actual PDF/document content would be rendered using PDF.js or similar library.</p>
+            <div className="flex-1 bg-muted overflow-hidden">
+              {currentDoc.sourceType === 'pdf' && currentDoc.fileKey ? (
+                <div className="w-full h-full overflow-auto bg-gray-200">
+                  <iframe
+                    src={`/objects/${currentDoc.fileKey}`}
+                    className="w-full h-full border-0"
+                    title={currentDoc.title}
+                    style={{ minHeight: '100%' }}
+                  />
                 </div>
-              </div>
+              ) : currentDoc.status === 'processing' ? (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+                    <p className="text-sm font-medium">Processing document...</p>
+                    <p className="text-xs text-muted-foreground mt-2">This may take a few moments</p>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full p-8">
+                  <div className="text-center max-w-md">
+                    {currentDoc.sourceType === 'youtube' && <Youtube className="w-16 h-16 text-primary/50 mx-auto mb-4" />}
+                    {currentDoc.sourceType === 'web' && <Globe className="w-16 h-16 text-primary/50 mx-auto mb-4" />}
+                    {!['youtube', 'web', 'pdf'].includes(currentDoc.sourceType) && <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />}
+                    <h3 className="text-lg font-semibold mb-2">{currentDoc.title}</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      {currentDoc.sourceType === 'youtube' 
+                        ? 'YouTube video transcript is ready for chat' 
+                        : currentDoc.sourceType === 'web'
+                        ? 'Web content is ready for chat'
+                        : 'Document content is ready'}
+                    </p>
+                    <Button 
+                      onClick={handleStartChat}
+                      disabled={selectedDocuments.length === 0}
+                      className="mt-2"
+                    >
+                      Start Chat to Explore Content
+                    </Button>
+                  </div>
+                </div>
+              )}
             </div>
           </>
         ) : (
