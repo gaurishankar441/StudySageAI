@@ -1,0 +1,26 @@
+2025-10-03 12:49:55.775 [info] [main] Log level: Info
+2025-10-03 12:49:55.775 [info] [main] Validating found git in: "/usr/bin/git"
+2025-10-03 12:49:55.852 [info] [main] Using git "2.39.5 (Apple Git-154)" from "/usr/bin/git"
+2025-10-03 12:49:55.852 [info] [Model][doInitialScan] Initial repository scan started
+2025-10-03 12:49:55.854 [info] [Model][doInitialScan] Initial repository scan completed - repositories (0), closed repositories (0), parent repositories (0), unsafe repositories (0)
+2025-10-03 12:49:56.193 [info] > git config --get remote.origin.url [34ms]
+2025-10-03 12:49:56.208 [info] > git remote get-url --push origin [32ms]
+2025-10-03 12:49:56.208 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.588 [info] > git symbolic-ref --short refs/remotes/origin/HEAD [17ms]
+2025-10-03 12:49:56.588 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.602 [info] > git rev-parse --verify origin/main [14ms]
+2025-10-03 12:49:56.602 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.613 [info] > git rev-parse --verify origin/master [11ms]
+2025-10-03 12:49:56.613 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.625 [info] > git rev-parse --verify origin/develop [12ms]
+2025-10-03 12:49:56.625 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.638 [info] > git branch -r [13ms]
+2025-10-03 12:49:56.638 [info] fatal: not a git repository (or any of the parent directories): .git
+2025-10-03 12:49:56.655 [info] > git config --get init.defaultBranch [17ms]
+2025-10-03 12:50:05.877 [info] > git config --global user.name [24ms]
+2025-10-03 12:50:05.889 [info] > git config --global user.email [11ms]
+2025-10-03 12:50:05.889 [info] [main] Stored git author name in global state: Gaurishankar Singh <gaurishankar441@gmail.com>
+2025-10-03 12:50:10.214 [info] > git clone https://github.com/gaurishankar441/StudySageAI.git%20cd%20StudySageAI /Users/gaurishankarsingh/Desktop/StudySageAI.git cd StudySageAI --progress [625ms]
+2025-10-03 12:50:10.214 [info] Cloning into '/Users/gaurishankarsingh/Desktop/StudySageAI.git cd StudySageAI'...
+remote: Repository not found.
+fatal: repository 'https://github.com/gaurishankar441/StudySageAI.git%20cd%20StudySageAI/' not found
