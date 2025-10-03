@@ -1,0 +1,394 @@
+1) global UX principles (apply across the app)
+
+reduce steps & page jumps
+
+keep users on the current page. any secondary task opens a modal sheet (centered on desktop, full-height drawer on mobile).
+
+modal types: sm (420px), md (640px), lg (900px). use lg only for complex builders (quiz generator, study-plan wizard review).
+
+progressive disclosure
+
+show the minimum inputs first; reveal advanced options with “Show advanced ▾”.
+
+avoid “dead” buttons—everything gives immediate feedback (loading state, skeleton, or disabled with reason).
+
+consistent layout
+
+three-column tutor/docchat layout is good. normalize:
+
+left: context/plan
+
+center: chat or main canvas
+
+right: Quick Tools/Actions (sticky).
+
+right rail buttons open modals, not routes.
+
+micro-interactions
+
+button press → 150ms scale/opacity feedback.
+
+modal open → 200ms fade+translate.
+
+streaming text → caret blink + “AI is thinking” skeleton for first token.
+
+accessibility & keyboard
+
+every modal: Esc closes, Enter submits, ⌘K/Ctrl K opens global command palette.
+
+focus ring visible; labels connected via aria-labelledby.
+
+2) navigation simplification
+
+sidebar: Dashboard, AI Tutor, DocChat, Quiz, Study Plan, Notes, Settings. keep as is.
+
+search bar is global; suggest actions (e.g., “Create 10 physics MCQs from current doc”).
+
+3) AI Tutor — quick tools that actually work
+3.1 right-rail Quick Tools (stay on page, open modal)
+
+Buttons: Explain Concept, Give Me a Hint, Show Example, Practice 5 Qs, Get Summary.
+
+Behavior
+
+clicking opens a md modal with a small form (often just one field prefilled from context).
+
+upon submit, call /api/tutor/quick-tool with toolType. stream results into the modal and append a compact card into the chat.
+
+API (backend)
+
+POST /api/tutor/quick-tool
+body: {
+  sessionId: string,
+  toolType: 'explain'|'hint'|'example'|'practice5'|'summary',
+  subject: string,          // e.g., "mathematics"
+  level: 'beginner'|'intermediate'|'advanced'|'expert',
+  topic: string,            // e.g., "Geometry"
+  userQuery?: string,       // optional override
+  difficulty?: 'easy'|'medium'|'hard',
+  language?: 'en'|'hi',
+  examBoard?: string        // 'CBSE'|'ICSE'|'State-Board-<name>'
+}
+returns: SSE stream or {content, questions?, answerKey?}
+
+
+frontend state machine
+
+idle -> openingModal -> submitting -> streaming -> success | error
+
+3.2 modal specs + prompt templates (EN & Hindi aware)
+
+Use the same structure for all 5 tools. Prefill from session header (subject • level • topic). Allow language toggle EN/हिंदी.
+
+A) Explain Concept
+
+fields: Topic (prefilled), Sub-topic (optional), Language (toggle).
+
+CTA: “Generate explanation”
+
+output: concise explanation + 1 diagram suggestion + 3 quick checks.
+
+prompt
+
+System: You are a patient, exam-focused tutor for Indian students.
+User context:
+- Subject: {{subject}}, Level: {{level}}, Topic: {{topic}}
+- Board/Exam: {{examBoard}}
+- Language: {{language}}
+
+Task: Explain the concept {{subtopicOrTopic}} in {{language}} using:
+1) 4-6 short paragraphs, student-friendly
+2) 1 simple analogy
+3) Boxed key formulae (if any) with units
+4) 3 quick-check questions with answers
+5) If helpful, describe one simple diagram to draw in notebook
+Keep it aligned to {{examBoard}} (CBSE/ICSE/State).
+
+B) Give Me a Hint
+
+fields: Question (textarea), Language
+
+CTA: “Give hint (no solution)”
+
+output: 2-3 progressive hints; final “nudge” but no full solution.
+
+prompt
+
+Provide 2-3 progressive hints (no full solution) for:
+{{question}}
+Make each hint shorter than 30 words. Last hint should push toward the method, not the answer. Language: {{language}}.
+
+C) Show Example
+
+fields: Example Type: Solved Example | Real-life Application, Difficulty, Language
+
+CTA: “Show example”
+
+output: stepwise solved example or short real-life application with numbers.
+
+prompt
+
+Create a {{exampleType}} for {{topic}} at {{difficulty}} difficulty for an Indian Class {{grade}} student ({{examBoard}}).
+- Show steps clearly.
+- Include common mistakes to avoid.
+Language: {{language}}.
+
+D) Practice 5 Qs
+
+fields: Difficulty (default medium), Mix type (MCQ/Short/Num), Language
+
+CTA: “Generate 5 practice questions”
+
+output: 5 questions inline; submit answers in-modal → “Check” shows correctness + explanation; option “Send to Quiz” to store as a quiz.
+
+prompt
+
+Generate 5 {{qTypes}} practice questions for {{topic}} ({{difficulty}}) aligned to {{examBoard}} syllabus.
+Return JSON:
+[{ "q": "...", "type": "mcq|short|numeric",
+   "options": ["A","B","C","D"]?, "answer": "B"|42|"text",
+   "explain": "why"
+}]
+Language: {{language}}.
+
+
+frontend grading
+
+if type: mcq/numeric, local check first; for short answers, call /api/grade/free-text with semantic comparer (few-shot rubric).
+
+E) Get Summary
+
+fields: “Summarise last N turns” (default 10), Include formulas (toggle), Language
+
+CTA: “Summarise”
+
+output: bullet summary, key terms, 3 takeaways, 1 suggested next step.
+
+prompt
+
+Summarise the recent tutoring on {{topic}} for {{examBoard}} student.
+Include: key ideas (bulleted), 3 takeaways, important formulae boxed, and 1 suggested next study step.
+Language: {{language}}.
+
+4) DocChat — Quick Actions as modals (no page change)
+
+Right rail: Summary, Highlights, Quiz, Flashcards.
+
+shared API
+
+POST /api/docchat/action
+body: {
+  action: 'summary'|'highlights'|'quiz'|'flashcards',
+  docIds: string[],            // selected docs
+  language: 'en'|'hi',
+  level: 'Class-10'|'Class-12'|'UG' ...,
+  examBoard?: 'CBSE'|'ICSE'|'State-Board-<name>',
+  constraints?: {...}          // action-specific
+}
+
+4.1 Summary (modal lg)
+
+inputs: “Focus on section/keywords” (optional), “Max length: Short/Medium/Detailed”, Language.
+
+output: structured note (Intro, Key Points, Examples, Formulae, References with page).
+
+“Save to Notes” (Cornell format) → /api/notes.
+
+prompt
+
+Create a structured summary from the selected sources. Emphasise {{keywords}} if present.
+Output in sections: Intro, Key Points (bullets), Examples/Diagrams, Formulae with units, Citations [doc:page].
+Align to {{examBoard}}. Language: {{language}}.
+
+4.2 Highlights (modal md)
+
+inputs: “Highlight density: Low/Med/High”, “Extract quotes with page nos” toggle.
+
+output: list of highlights with page locators. “Copy all” & “Save to Notes”.
+
+4.3 Quiz (modal lg)
+
+inputs: Count (5/10/20), Types (MCQ/Assertion-Reason/Numerical/Short), Difficulty, Language.
+
+output: preview with Start Practice (inline in modal) or Save Quiz.
+
+prompt
+
+From selected docs, generate {{count}} questions ({{types}}) at {{difficulty}} aligned to {{examBoard}}.
+Return JSON with q, options?, answer, explanation, and page citation.
+Language: {{language}}.
+
+4.4 Flashcards (modal md)
+
+inputs: Style (Basic, Cloze, Q→A, A→Q), Count, Language.
+
+output: card list with Export to Anki (.apkg) or Save.
+
+prompt
+
+Generate {{count}} {{style}} flashcards from selected docs for {{topic}}. Keep each answer < 32 words.
+Return JSON: [{front, back, source:"doc:page"}]. Language: {{language}}.
+
+5) India-centric class/grade/exam onboarding
+
+Use a 2-step compact selector wherever grade/exam matters (Tutor, Quiz, Study Plan):
+
+Step A (md modal):
+
+Board: CBSE, ICSE, State Board (dropdown states), JEE/NEET/Foundation.
+
+Grade: 6–12 (if board), or Exam Track (JEE Main/Adv, NEET UG, CUET).
+
+Step B:
+
+Subject(s) (chips), Preferred Language (EN/हिंदी).
+
+Save as profile defaults (/api/profile/preferences).
+
+Use these defaults to prefill all later modals.
+
+6) Study Plan wizard — speed & clarity
+
+compress to 3 steps in a single lg modal with a sticky progress bar.
+
+Basics: Plan Name, Board/Grade, Subjects (chips), Topics (free text with AI autocomplete), Language.
+
+Timeline & Effort: Exam date (optional), Days/Week, Session length (Pomodoro options), Intensity slider.
+
+Review & Create: list of generated tasks with edit in-place; toggles to include Tutor checkpoints / Quiz / Flashcards.
+
+after create, show a sheet with Today’s tasks; clicking a task deep-links within the page (no route change)—open a drawer modal to start.
+
+API additions
+
+/api/study-plans/suggest-topics (RAG against notes/docs + India syllabi)
+
+/api/study-plans/generate supports board, grade, examTrack, language.
+
+7) Notes — faster creation flows
+
+Templates as cards; clicking opens md modal form (Source URL/file + goal + language) → Summary generated → user confirms → note created.
+
+Inline Generate Flashcards button directly inside a note (modal).
+
+8) performance & “instant feel”
+
+prefetch: when opening a page, prefetch the Quick Tool modal bundle.
+
+optimistic shells: show modal with skeleton immediately, then stream result.
+
+cache last tool payload; “Repeat last with changes” button in header of each modal.
+
+9) telemetry & guardrails
+
+log toolType, duration, token cost, satisfaction (thumbs).
+
+rate-limit heavy actions per user (e.g., 5 quizzes/hour).
+
+handle long docs: show “scanning 12/37 pages…” progress events.
+
+10) implementation checklist
+10.1 UI components (shadcn/ui)
+
+QuickButton: icon + label; opens modal.
+
+ActionModal: header (title, context chips), body (form/results tabs), footer (primary/secondary).
+
+StreamPane: streams tokens with pause/copy/save.
+
+QuestionList: renders MCQ/short/numeric; supports local grading.
+
+SaveBar: Save to Notes / Save to Quiz / Export.
+
+10.2 routes & handlers (frontend)
+
+/tutor loads session; right rail buttons dispatch openModal(toolType).
+
+global quickToolSlice (Zustand/Redux): state machine & cache.
+
+error toasts: “We couldn’t generate that. Try lowering difficulty.”
+
+10.3 backend glue
+
+new /api/tutor/quick-tool (SSE supported)
+
+new /api/docchat/action
+
+new /api/grade/free-text (LLM rubric)
+
+reuse aiOrchestrator with provider fallback (Cohere→OpenAI).
+
+SSE example (Node/Express)
+
+app.post('/api/tutor/quick-tool', sseMiddleware, async (req, res) => {
+  const { toolType, ...ctx } = req.body;
+  const prompt = buildPrompt(toolType, ctx);
+  await orchestrator.stream(prompt, (chunk) => res.write(`data: ${chunk}\n\n`));
+  res.end();
+});
+
+11) copy & micro-UX (what users see)
+
+button labels: Explain Concept, Hint, Example, Practice 5, Summary.
+
+modal subtitles show context: “Mathematics • Beginner • Geometry • CBSE • हिंदी”.
+
+empty states (DocChat chat box): “Select documents and start chatting” → “Tip: Press ⌘K to ‘Summarise current PDF’”.
+
+12) ready-to-use prompt library (India-first)
+
+Use these variables everywhere:
+{subject, level, topic, grade, examBoard, language, difficulty}
+
+assertion-reason MCQ (for CBSE):
+
+Create 4 Assertion-Reason questions for {{topic}} (CBSE Class {{grade}}).
+Format each with: Assertion, Reason, Options: A) Both true & R explains A  B) Both true & R does not explain A  C) A true, R false  D) A false, R true
+Give correct option and 1-line explanation. Language: {{language}}.
+
+
+NEET/JEE numeric practice:
+
+Generate 5 numerical problems (units enforced) for {{topic}} at {{difficulty}} aimed at {{examBoard}}.
+Return JSON with q, answer (number + unit), solution steps (concise).
+Language: {{language}}.
+
+
+Cornell-style notes from doc:
+
+Summarise into Cornell notes for {{topic}}: Cues (key terms), Notes (short lines), Summary (4 lines).
+Include citations [doc:page]. Language: {{language}}.
+
+13) fixing your current issues quickly
+
+Quick Tools not working
+
+add the /api/tutor/quick-tool route and wire the right-rail buttons to open modals; start with Explain and Practice 5 (most visible).
+
+stream responses; append a compact “result card” to the chat after success.
+
+Quick Actions in DocChat
+
+ensure document selection state (checkbox) exists. disable buttons until ≥1 doc selected.
+
+clicking Summary/Highlights/Quiz/Flashcards opens the corresponding modal; show a “Selected: leph101.pdf, pages 1-7” chip.
+
+Reduce steps in Tutor setup
+
+one consolidated modal: Subject → Level → Topic in a single view, with smart defaults from profile. “Start Session” starts immediately.
+
+Indian classes/exams
+
+add profile modal on first launch; store defaults and apply to all prompts.
+
+tiny design tweaks that add polish (quick wins)
+
+increase chat font to 15.5px; line-height 1.55 for readability.
+
+right rail width fixed to 320px; make it sticky.
+
+progress card in Tutor: show Accuracy chip with color state, clickable to open “Recent mistakes” modal.
+
+DocChat PDF viewer: add page thumbnails on hover only (less clutter).
+
+use icons from lucide-react: Lightbulb, BookOpen, Puzzle, ListChecks, Sparkles.
