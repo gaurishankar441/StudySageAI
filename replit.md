@@ -93,15 +93,15 @@ The schema supports multi-tenant user data with cascade deletions:
 ### Authentication and Authorization
 
 **Authentication Mechanism**
-- OpenID Connect (OIDC) via Replit Authentication
-- Passport.js with openid-client strategy for OAuth flow
+- Custom email/password authentication with bcrypt hashing
 - Server-side sessions stored in PostgreSQL with 7-day TTL
 - HTTP-only, secure cookies for session management
-- User profile synchronization with automatic upsert on login
+- Password requirements: minimum 8 characters
+- User registration and login with form validation
 
 **Authorization Pattern**
 - Session-based authentication with `isAuthenticated` middleware
-- User ID extraction from session claims for data isolation
+- User ID stored in session for data isolation
 - Row-level security through userId foreign key constraints
 - Object storage ACL for document-level access control
 

@@ -33,8 +33,8 @@ Multi-source note ingestion with AI-powered summarization and auto-generated fla
 - Express.js + TypeScript
 - Drizzle ORM (type-safe database)
 - Neon PostgreSQL (serverless)
-- OpenID Connect (Replit Auth)
-- Passport.js (authentication)
+- Email/Password Authentication with bcrypt
+- Express Session (session management)
 
 ### AI & Storage
 - OpenAI GPT-5 API
@@ -46,7 +46,6 @@ Multi-source note ingestion with AI-powered summarization and auto-generated fla
 - Node.js 20+ (or 18+)
 - PostgreSQL database access
 - OpenAI API key
-- Replit account (for OIDC authentication)
 
 ## ⚙️ Environment Variables
 
@@ -59,15 +58,10 @@ DATABASE_URL=postgresql://user:password@host/database
 # OpenAI API
 OPENAI_API_KEY=sk-your-openai-api-key
 
-# Session Management
+# Session Management (Required)
 SESSION_SECRET=your-random-secret-string
 
-# OIDC Authentication (Replit)
-ISSUER_URL=https://replit.com/oidc
-REPL_ID=your-repl-id
-REPLIT_DOMAINS=your-replit-domain
-
-# Object Storage (Google Cloud)
+# Object Storage (Google Cloud - Optional)
 DEFAULT_OBJECT_STORAGE_BUCKET_ID=your-bucket-id
 PUBLIC_OBJECT_SEARCH_PATHS=/public
 PRIVATE_OBJECT_DIR=/.private
@@ -125,7 +119,7 @@ PRIVATE_OBJECT_DIR=/.private
 │   ├── storage.ts            # Database abstraction
 │   ├── db.ts                 # Database connection
 │   ├── openai.ts             # OpenAI API client
-│   ├── replitAuth.ts         # OIDC authentication
+│   ├── auth.ts               # Custom email/password authentication
 │   ├── objectStorage.ts      # GCS integration
 │   └── objectAcl.ts          # File access control
 │
@@ -137,6 +131,9 @@ PRIVATE_OBJECT_DIR=/.private
 
 ### Authentication
 ```
+POST /api/auth/signup       - Create new account
+POST /api/auth/login        - Login with email/password
+POST /api/auth/logout       - Logout user
 GET  /api/auth/user         - Get authenticated user
 ```
 
@@ -245,11 +242,12 @@ The app uses Drizzle ORM with PostgreSQL. Key tables:
 
 ## 🔐 Authentication
 
-VaktaAI uses Replit's OpenID Connect (OIDC) authentication:
-- Secure session-based auth with PostgreSQL storage
+VaktaAI uses custom email/password authentication:
+- Secure bcrypt password hashing
+- Session-based auth with PostgreSQL storage
 - 7-day session TTL
-- Automatic user profile synchronization
 - HTTP-only secure cookies
+- Password requirements: minimum 8 characters
 
 ## 🌐 Deployment
 
