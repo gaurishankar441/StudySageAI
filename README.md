@@ -1,17 +1,30 @@
 # VaktaAI - AI-Powered Study Companion
 
-**VaktaAI** is a comprehensive educational platform that provides students with intelligent learning tools powered by OpenAI's GPT-5. The platform offers five core modules designed to enhance studying efficiency and comprehension through AI-assisted learning.
+**VaktaAI** is a comprehensive educational platform that provides students with intelligent learning tools powered by AI. The platform offers five core modules designed to enhance studying efficiency and comprehension through AI-assisted learning with support for multiple AI providers (OpenAI GPT & Cohere).
 
 ## ✨ Features
 
 ### 🎓 AI Tutor
-Interactive conversational learning with real-time streaming responses. Get personalized tutoring sessions on any subject with adaptive teaching based on your understanding.
+Interactive conversational learning with real-time streaming responses. Get personalized tutoring sessions on any subject with adaptive teaching based on your understanding. Supports both English and Hindi.
 
 ### 📚 DocChat
-RAG-based (Retrieval Augmented Generation) document Q&A system. Upload PDFs, DOCX files, YouTube transcripts, or web content and ask questions with citation-backed answers.
+RAG-based (Retrieval Augmented Generation) document Q&A system with semantic search powered by pgvector. Upload PDFs, DOCX files, YouTube transcripts, or web content and ask questions with citation-backed answers. Features:
+- Multi-format support: PDF, DOCX, YouTube videos, web articles
+- Automatic text extraction and chunking (944 chunks from YouTube transcripts)
+- Citation-based responses to prevent hallucination
+- Real-time document processing status
 
 ### 📝 Quiz Generator
-Auto-generate practice quizzes with multiple question types. Features instant grading with detailed explanations and performance tracking.
+Auto-generate practice quizzes with multiple question types. Features:
+- **Partial submission support**: Submit quizzes without answering all questions
+- Instant grading with detailed explanations for ALL questions (answered + unattempted)
+- Performance tracking with 4 key metrics:
+  - Overall Score %
+  - Correct answers count
+  - Wrong answers count
+  - Unattempted questions count
+- Visual feedback: Green CheckCircle (correct), Red XCircle (wrong), Gray MinusCircle (unattempted)
+- Learn from mistakes with comprehensive solution explanations
 
 ### 📅 Study Plan Manager
 AI-powered study plan creation with intelligent task scheduling. 4-step wizard generates personalized learning schedules with exam countdown and task tracking.
@@ -27,25 +40,36 @@ Multi-source note ingestion with AI-powered summarization and auto-generated fla
 - Wouter (routing)
 - TanStack Query v5 (server state)
 - shadcn/ui + Radix UI (components)
-- Tailwind CSS (styling)
+- Tailwind CSS (styling with indigo color scheme)
+- Lucide React (icons)
 
 ### Backend
 - Express.js + TypeScript
 - Drizzle ORM (type-safe database)
-- Neon PostgreSQL (serverless)
+- Neon PostgreSQL (serverless with WebSocket support)
+- pgvector extension (semantic search for RAG)
 - Email/Password Authentication with bcrypt
-- Express Session (session management)
+- Express Session (session management with PostgreSQL storage)
 
 ### AI & Storage
-- OpenAI GPT-5 API
-- Google Cloud Storage
-- Server-Sent Events (SSE) for streaming
+- **OpenAI GPT API** (primary AI provider)
+- **Cohere API** (alternative AI provider - default)
+- Google Cloud Storage (document storage)
+- Server-Sent Events (SSE) for streaming responses
+- @danielxceron/youtube-transcript (2025-compatible YouTube transcript extraction)
+
+### Document Processing
+- PDF: pdf-parse
+- DOCX: mammoth
+- YouTube: @danielxceron/youtube-transcript with dual fallback (HTML + InnerTube API)
+- Web scraping: @mozilla/readability + jsdom
+- Text chunking with tiktoken
 
 ## 📋 Prerequisites
 
 - Node.js 20+ (or 18+)
-- PostgreSQL database access
-- OpenAI API key
+- PostgreSQL database access with pgvector extension
+- OpenAI API key OR Cohere API key
 
 ## ⚙️ Environment Variables
 
@@ -55,8 +79,9 @@ Required environment variables:
 # Database (Neon PostgreSQL)
 DATABASE_URL=postgresql://user:password@host/database
 
-# OpenAI API
+# AI APIs (at least one required)
 OPENAI_API_KEY=sk-your-openai-api-key
+COHERE_API_KEY=your-cohere-api-key
 
 # Session Management (Required)
 SESSION_SECRET=your-random-secret-string
@@ -106,6 +131,7 @@ PRIVATE_OBJECT_DIR=/.private
 │       │   ├── layout/       # App layout & navigation
 │       │   ├── studyplan/    # Study plan wizard & views
 │       │   ├── quiz/         # Quiz components
+│       │   ├── docchat/      # DocChat interface
 │       │   └── ui/           # shadcn UI components
 │       ├── pages/            # Page components (routed)
 │       ├── lib/              # Utils & query client
@@ -113,7 +139,7 @@ PRIVATE_OBJECT_DIR=/.private
 │
 ├── server/                    # Express backend
 │   ├── services/             # Business logic
-│   │   ├── aiService.ts      # AI operations manager
+│   │   ├── aiOrchestrator.ts # Multi-provider AI manager
 │   │   └── documentService.ts # Document processing
 │   ├── routes.ts             # API endpoints
 │   ├── storage.ts            # Database abstraction
@@ -140,10 +166,11 @@ GET  /api/auth/user         - Get authenticated user
 ### Documents
 ```
 POST /api/documents/upload  - Upload file
-POST /api/documents/by-url  - Add document by URL
+POST /api/documents/by-url  - Add document by URL (YouTube/web)
 POST /api/documents/from-upload - Process uploaded document
 GET  /api/documents         - List user documents
 GET  /api/documents/:id/status - Get processing status
+DELETE /api/documents/:id   - Delete document
 ```
 
 ### Chat & AI
@@ -151,6 +178,7 @@ GET  /api/documents/:id/status - Get processing status
 POST /api/chats             - Create new chat
 GET  /api/chats             - List user chats
 GET  /api/chats/:id         - Get chat details
+DELETE /api/chats/:id       - Delete chat
 GET  /api/chats/:id/messages - Get chat history
 POST /api/chats/:id/stream  - Stream AI response
 POST /api/tutor/session     - Start tutor session
@@ -162,7 +190,7 @@ POST /api/docchat/session   - Start DocChat session
 POST /api/quizzes           - Generate new quiz
 GET  /api/quizzes           - List user quizzes
 GET  /api/quizzes/:id       - Get quiz details
-POST /api/quizzes/:id/attempts - Submit quiz attempt
+POST /api/quizzes/:id/attempts - Submit quiz attempt (supports partial submission)
 ```
 
 ### Study Plans
@@ -171,6 +199,7 @@ POST   /api/study-plans     - Create AI-powered study plan
 GET    /api/study-plans     - List user plans
 GET    /api/study-plans/:id - Get plan with tasks
 PATCH  /api/study-plans/:id/tasks/:taskId - Update task status
+DELETE /api/study-plans/:id - Delete study plan
 ```
 
 ### Notes & Flashcards
@@ -198,17 +227,17 @@ npm run db:push  # Sync database schema
 
 The app uses Drizzle ORM with PostgreSQL. Key tables:
 - `users` - User profiles
-- `documents` - Uploaded files & content
+- `documents` - Uploaded files & content (with processing status)
 - `chats` - Conversation sessions
-- `messages` - Chat messages
-- `quizzes` - Generated quizzes
-- `quizQuestions` - Quiz questions
-- `quizAttempts` - User submissions
+- `messages` - Chat messages with role-based storage
+- `quizzes` - Generated quizzes with metadata
+- `quizQuestions` - Quiz questions with answers (JSONB array format)
+- `quizAttempts` - User submissions with scoring
 - `studyPlans` - Study schedules
 - `studyTasks` - Individual tasks
 - `notes` - User notes
 - `flashcards` - Spaced repetition cards
-- `chunks` - RAG document chunks
+- `chunks` - RAG document chunks with vector embeddings
 - `sessions` - User sessions
 
 ## 🎯 Usage Examples
@@ -229,16 +258,21 @@ The app uses Drizzle ORM with PostgreSQL. Key tables:
 1. Go to **Quiz** page
 2. Click **"Generate New Quiz"**
 3. Enter subject, topics, and difficulty
-4. Answer questions and submit
-5. View instant results with explanations
+4. Answer questions (partial answers allowed)
+5. Submit when ready
+6. View instant results with:
+   - Overall score percentage
+   - Correct/Wrong/Unattempted breakdown
+   - Detailed explanations for ALL questions
 
 ### Document Chat
 
 1. Upload documents (PDF, DOCX) or add YouTube/web URLs
 2. Wait for processing (status: "processing" → "ready")
-3. Open **DocChat** and start a conversation
-4. Ask questions about your documents
-5. Get answers with source citations
+3. Open **DocChat** and select documents
+4. Start a conversation
+5. Ask questions about your documents
+6. Get answers with source citations
 
 ## 🔐 Authentication
 
@@ -248,6 +282,26 @@ VaktaAI uses custom email/password authentication:
 - 7-day session TTL
 - HTTP-only secure cookies
 - Password requirements: minimum 8 characters
+
+## 🆕 Recent Updates
+
+### October 2025
+- **Quiz Partial Submission**: Users can now submit quizzes without answering all questions
+  - Results display shows Correct, Wrong, and Unattempted counts separately
+  - All questions show correct answers and explanations (including unattempted)
+  - Visual indicators: CheckCircle (green), XCircle (red), MinusCircle (gray)
+
+- **YouTube Transcript Extraction**: Upgraded to `@danielxceron/youtube-transcript`
+  - Supports all 2025 YouTube URL formats (watch, shorts, live, embed)
+  - Dual fallback system (HTML scraping + InnerTube API)
+  - Handles 944-chunk extractions successfully
+
+- **Improved Error Handling**: User-facing errors return 400 status with descriptive messages
+
+- **Bug Fixes**:
+  - Fixed correct answer highlighting (proper array comparison)
+  - Fixed DocChat delete selection state management
+  - Fixed duration metadata calculation for documents
 
 ## 🌐 Deployment
 
@@ -288,7 +342,7 @@ MIT License - see LICENSE file for details
 ## 🙏 Acknowledgments
 
 - Built on [Replit](https://replit.com)
-- Powered by [OpenAI GPT-5](https://openai.com)
+- Powered by [OpenAI](https://openai.com) and [Cohere](https://cohere.ai)
 - UI components from [shadcn/ui](https://ui.shadcn.com)
 - Icons from [Lucide](https://lucide.dev)
 
