@@ -183,9 +183,129 @@ export default function DocChatView() {
     }
   };
 
+  const generateSummaryMutation = useMutation({
+    mutationFn: async (docIds: string[]) => {
+      const response = await apiRequest("POST", "/api/notes", {
+        title: `Summary - ${currentDoc?.title || 'Documents'}`,
+        sourceIds: docIds,
+        template: 'cornell',
+        language: 'en'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to generate summary' }));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (note) => {
+      toast({
+        title: "Success",
+        description: "Summary generated successfully",
+      });
+      window.location.href = '/notes';
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate summary",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateQuizMutation = useMutation({
+    mutationFn: async (docId: string) => {
+      const doc = documents.find(d => d.id === docId);
+      const response = await apiRequest("POST", "/api/quizzes", {
+        title: `Quiz - ${doc?.title || 'Document'}`,
+        source: 'document',
+        sourceId: docId,
+        subject: 'General',
+        topic: doc?.title || 'Document Content',
+        difficulty: 'medium',
+        questionCount: 5,
+        questionTypes: ['mcq', 'true-false'],
+        language: 'en'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to generate quiz' }));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (quiz) => {
+      toast({
+        title: "Success",
+        description: "Quiz generated successfully",
+      });
+      window.location.href = '/quiz';
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate quiz",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const generateFlashcardsMutation = useMutation({
+    mutationFn: async (docIds: string[]) => {
+      const response = await apiRequest("POST", "/api/notes", {
+        title: `Flashcards - ${currentDoc?.title || 'Documents'}`,
+        sourceIds: docIds,
+        template: 'outline',
+        language: 'en'
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to generate flashcards' }));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      return response.json();
+    },
+    onSuccess: (note) => {
+      toast({
+        title: "Success",
+        description: "Flashcards generated successfully",
+      });
+      window.location.href = '/notes';
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to generate flashcards",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleStartChat = () => {
     if (selectedDocuments.length > 0) {
       startChatMutation.mutate(selectedDocuments);
+    }
+  };
+
+  const handleGenerateSummary = () => {
+    if (selectedDocuments.length > 0) {
+      generateSummaryMutation.mutate(selectedDocuments);
+    }
+  };
+
+  const handleGenerateQuiz = () => {
+    if (selectedDocuments.length > 0) {
+      generateQuizMutation.mutate(selectedDocuments[0]);
+    }
+  };
+
+  const handleGenerateFlashcards = () => {
+    if (selectedDocuments.length > 0) {
+      generateFlashcardsMutation.mutate(selectedDocuments);
     }
   };
 
@@ -447,21 +567,45 @@ export default function DocChatView() {
               Quick Actions
             </h3>
             <div className="grid grid-cols-2 gap-2">
-              <Button variant="outline" className="p-3 h-auto flex-col gap-1">
+              <Button 
+                variant="outline" 
+                className="p-3 h-auto flex-col gap-1"
+                onClick={handleGenerateSummary}
+                disabled={selectedDocuments.length === 0 || generateSummaryMutation.isPending}
+                data-testid="button-quick-summary"
+              >
                 <FileText className="w-4 h-4" />
-                <span className="text-xs">Summary</span>
+                <span className="text-xs">{generateSummaryMutation.isPending ? 'Generating...' : 'Summary'}</span>
               </Button>
-              <Button variant="outline" className="p-3 h-auto flex-col gap-1">
+              <Button 
+                variant="outline" 
+                className="p-3 h-auto flex-col gap-1"
+                onClick={handleGenerateSummary}
+                disabled={selectedDocuments.length === 0 || generateSummaryMutation.isPending}
+                data-testid="button-quick-highlights"
+              >
                 <Highlighter className="w-4 h-4" />
-                <span className="text-xs">Highlights</span>
+                <span className="text-xs">{generateSummaryMutation.isPending ? 'Generating...' : 'Highlights'}</span>
               </Button>
-              <Button variant="outline" className="p-3 h-auto flex-col gap-1">
+              <Button 
+                variant="outline" 
+                className="p-3 h-auto flex-col gap-1"
+                onClick={handleGenerateQuiz}
+                disabled={selectedDocuments.length === 0 || generateQuizMutation.isPending}
+                data-testid="button-quick-quiz"
+              >
                 <BookOpen className="w-4 h-4" />
-                <span className="text-xs">Quiz</span>
+                <span className="text-xs">{generateQuizMutation.isPending ? 'Generating...' : 'Quiz'}</span>
               </Button>
-              <Button variant="outline" className="p-3 h-auto flex-col gap-1">
+              <Button 
+                variant="outline" 
+                className="p-3 h-auto flex-col gap-1"
+                onClick={handleGenerateFlashcards}
+                disabled={selectedDocuments.length === 0 || generateFlashcardsMutation.isPending}
+                data-testid="button-quick-flashcards"
+              >
                 <Layers className="w-4 h-4" />
-                <span className="text-xs">Flashcards</span>
+                <span className="text-xs">{generateFlashcardsMutation.isPending ? 'Generating...' : 'Flashcards'}</span>
               </Button>
             </div>
             

@@ -89,7 +89,14 @@ export class DocumentService {
   // YouTube transcript extraction using youtube-transcript
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
     try {
-      const transcript = await YoutubeTranscript.fetchTranscript(url);
+      // Extract video ID from various YouTube URL formats
+      const videoId = this.extractYouTubeVideoId(url);
+      if (!videoId) {
+        throw new Error('Invalid YouTube URL - could not extract video ID');
+      }
+
+      console.log('Extracting transcript for YouTube video:', videoId);
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
       const text = transcript.map(entry => entry.text).join(' ');
       const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
       
@@ -97,6 +104,7 @@ export class DocumentService {
         text,
         metadata: {
           url,
+          videoId,
           duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
           segments: transcript.length,
           extractedAt: new Date().toISOString()
@@ -105,6 +113,51 @@ export class DocumentService {
     } catch (error) {
       console.error('YouTube transcript error:', error);
       throw new Error(`Failed to extract YouTube transcript: ${error}`);
+    }
+  }
+
+  // Extract YouTube video ID from various URL formats
+  private extractYouTubeVideoId(url: string): string | null {
+    try {
+      // Remove any whitespace
+      url = url.trim();
+      
+      const urlObj = new URL(url);
+      const hostname = urlObj.hostname.toLowerCase().replace('www.', '').replace('m.', '');
+      
+      // Format: https://youtube.com/watch?v=VIDEO_ID (with or without www)
+      if (hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
+        const videoId = urlObj.searchParams.get('v');
+        // Clean video ID (remove any fragments or extra params)
+        return videoId ? videoId.split(/[&#]/)[0] : null;
+      }
+      
+      // Format: https://youtu.be/VIDEO_ID
+      if (hostname === 'youtu.be') {
+        const videoId = urlObj.pathname.substring(1);
+        // Clean video ID (remove any fragments or extra params)
+        return videoId ? videoId.split(/[?&#]/)[0] : null;
+      }
+      
+      // Format: https://youtube.com/embed/VIDEO_ID
+      if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/embed/')) {
+        const videoId = urlObj.pathname.split('/')[2];
+        // Clean video ID (remove any fragments or extra params)
+        return videoId ? videoId.split(/[?&#]/)[0] : null;
+      }
+      
+      // Format: https://youtube.com/shorts/VIDEO_ID
+      if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/shorts/')) {
+        const videoId = urlObj.pathname.split('/')[2];
+        // Clean video ID (remove any fragments or extra params)
+        return videoId ? videoId.split(/[?&#]/)[0] : null;
+      }
+      
+      console.log('Could not extract video ID from URL:', url);
+      return null;
+    } catch (error) {
+      console.error('Error parsing YouTube URL:', error);
+      return null;
     }
   }
 

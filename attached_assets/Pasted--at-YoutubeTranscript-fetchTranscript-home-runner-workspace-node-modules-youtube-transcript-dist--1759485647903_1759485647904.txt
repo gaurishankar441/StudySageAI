@@ -1,0 +1,33 @@
+  at YoutubeTranscript.fetchTranscript (/home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:68:16)
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:92:50)
+    at DocumentService.extractText (/home/runner/workspace/server/services/documentService.ts:37:21)
+    at DocumentService.ingestDocument (/home/runner/workspace/server/services/documentService.ts:275:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:158:21)
+Document ingestion error: Error: Failed to extract YouTube transcript: Error: [YoutubeTranscript] 🚨 Impossible to retrieve Youtube video ID.
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:107:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Document URL processing error: Error: Failed to extract YouTube transcript: Error: [YoutubeTranscript] 🚨 Impossible to retrieve Youtube video ID.
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:107:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+9:59:36 AM [express] POST /api/documents/by-url 500 in 527ms :: {"message":"Failed to process docume…
+YouTube transcript error: YoutubeTranscriptError: [YoutubeTranscript] 🚨 Impossible to retrieve Youtube video ID.
+    at YoutubeTranscript.retrieveVideoId (/home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:135:15)
+    at YoutubeTranscript.<anonymous> (/home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:69:37)
+    at Generator.next (<anonymous>)
+    at /home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:22:71
+    at new Promise (<anonymous>)
+    at __awaiter (/home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:18:12)
+    at YoutubeTranscript.fetchTranscript (/home/runner/workspace/node_modules/youtube-transcript/dist/youtube-transcript.common.js:68:16)
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:92:50)
+    at DocumentService.extractText (/home/runner/workspace/server/services/documentService.ts:37:21)
+    at DocumentService.ingestDocument (/home/runner/workspace/server/services/documentService.ts:275:45)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:158:21)
+Document ingestion error: Error: Failed to extract YouTube transcript: Error: [YoutubeTranscript] 🚨 Impossible to retrieve Youtube video ID.
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:107:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Document URL processing error: Error: Failed to extract YouTube transcript: Error: [YoutubeTranscript] 🚨 Impossible to retrieve Youtube video ID.
+    at DocumentService.extractFromYouTube (/home/runner/workspace/server/services/documentService.ts:107:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+9:59:55 AM [express] POST /api/documents/by-url 500 in 497ms :: {"message":"Failed to process docume…
