@@ -86,7 +86,7 @@ export class DocumentService {
     }
   }
 
-  // YouTube transcript extraction using youtube-transcript
+  // YouTube transcript extraction using YouTube's timedText API
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
     try {
       console.log('[YouTube] Processing URL:', url);
@@ -100,24 +100,56 @@ export class DocumentService {
 
       console.log('[YouTube] Extracted video ID:', videoId, '- fetching transcript...');
       
-      let transcript;
-      try {
-        transcript = await YoutubeTranscript.fetchTranscript(videoId);
-        console.log('[YouTube] Transcript fetch result:', transcript ? `${transcript.length} segments` : 'null/undefined');
-      } catch (transcriptError) {
-        console.error('[YouTube] Transcript fetch failed:', transcriptError);
-        throw new Error(`This video does not have captions/transcript available. Error: ${transcriptError instanceof Error ? transcriptError.message : 'Unknown error'}`);
+      // Try multiple language codes in priority order
+      const languageCodes = ['en', 'hi', 'en-US', 'en-GB'];
+      let transcriptData: Array<{ text: string; start: number; duration: number }> = [];
+      let usedLanguage = '';
+      
+      for (const lang of languageCodes) {
+        try {
+          console.log(`[YouTube] Attempting to fetch transcript in language: ${lang}`);
+          const timedTextUrl = `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${lang}`;
+          
+          const response = await fetch(timedTextUrl);
+          
+          if (!response.ok) {
+            console.log(`[YouTube] Language ${lang} not available (status: ${response.status})`);
+            continue;
+          }
+          
+          const xmlData = await response.text();
+          
+          // Check if we got valid XML with transcript data
+          if (!xmlData || xmlData.trim().length === 0 || !xmlData.includes('<text')) {
+            console.log(`[YouTube] Language ${lang} returned empty or invalid data`);
+            continue;
+          }
+          
+          console.log(`[YouTube] Successfully fetched transcript in ${lang}, parsing...`);
+          transcriptData = this.parseTimedTextXML(xmlData);
+          usedLanguage = lang;
+          
+          if (transcriptData.length > 0) {
+            console.log(`[YouTube] Successfully parsed ${transcriptData.length} segments in ${lang}`);
+            break;
+          }
+        } catch (langError) {
+          console.log(`[YouTube] Failed to fetch ${lang}:`, langError instanceof Error ? langError.message : 'Unknown error');
+          continue;
+        }
       }
       
-      if (!transcript || transcript.length === 0) {
-        console.warn('[YouTube] No transcript segments for video:', videoId);
-        throw new Error('This video does not have captions/transcript available. Please try another video or upload a document with text content.');
+      if (transcriptData.length === 0) {
+        console.error('[YouTube] No transcript available in any supported language');
+        throw new Error('This video does not have captions/transcript available. Please try another video with captions enabled.');
       }
       
-      const text = transcript.map(entry => entry.text).join(' ');
-      const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
+      const text = transcriptData.map(entry => entry.text).join(' ');
+      const duration = transcriptData.length > 0 ? 
+        transcriptData[transcriptData.length - 1].start + transcriptData[transcriptData.length - 1].duration : 0;
       
-      console.log('[YouTube] Successfully extracted transcript:', text.length, 'characters,', transcript.length, 'segments');
+      console.log('[YouTube] Successfully extracted transcript:', text.length, 'characters,', transcriptData.length, 'segments');
+      console.log('[YouTube] Language used:', usedLanguage);
       console.log('[YouTube] First 200 chars:', text.substring(0, 200));
       
       if (text.trim().length === 0) {
@@ -130,14 +162,52 @@ export class DocumentService {
         metadata: {
           url,
           videoId,
+          language: usedLanguage,
           duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
-          segments: transcript.length,
+          segments: transcriptData.length,
           extractedAt: new Date().toISOString()
         }
       };
     } catch (error) {
       console.error('[YouTube] Extraction error:', error);
       throw error instanceof Error ? error : new Error(`Failed to extract YouTube transcript: ${error}`);
+    }
+  }
+
+  // Parse YouTube's timedText XML format
+  private parseTimedTextXML(xmlData: string): Array<{ text: string; start: number; duration: number }> {
+    const segments: Array<{ text: string; start: number; duration: number }> = [];
+    
+    try {
+      // Simple XML parsing - extract <text> elements with start and dur attributes
+      const textRegex = /<text start="([^"]+)"(?:\s+dur="([^"]+)")?>([^<]*)<\/text>/g;
+      let match;
+      
+      while ((match = textRegex.exec(xmlData)) !== null) {
+        const start = parseFloat(match[1]);
+        const duration = match[2] ? parseFloat(match[2]) : 0;
+        let text = match[3];
+        
+        // Decode HTML entities
+        text = text
+          .replace(/&amp;/g, '&')
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&nbsp;/g, ' ')
+          .trim();
+        
+        if (text.length > 0) {
+          segments.push({ text, start, duration });
+        }
+      }
+      
+      console.log(`[YouTube] Parsed ${segments.length} segments from XML`);
+      return segments;
+    } catch (parseError) {
+      console.error('[YouTube] XML parsing error:', parseError);
+      return [];
     }
   }
 
