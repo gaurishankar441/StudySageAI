@@ -1,6 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useMutation } from "@tanstack/react-query";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { useToast } from "@/hooks/use-toast";
 import {
   GraduationCap,
   FileText,
@@ -24,6 +27,29 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const { user } = useAuth();
   const [location] = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const { toast } = useToast();
+
+  const logoutMutation = useMutation({
+    mutationFn: async () => {
+      await apiRequest("POST", "/api/auth/logout", {});
+    },
+    onSuccess: () => {
+      queryClient.clear();
+      window.location.href = "/";
+    },
+    onError: () => {
+      toast({
+        title: "Logout failed",
+        description: "Could not logout. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleLogout = (e: React.MouseEvent) => {
+    e.preventDefault();
+    logoutMutation.mutate();
+  };
 
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home, current: location === '/' },
@@ -104,13 +130,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
               </div>
             )}
             {!sidebarCollapsed && (
-              <a
-                href="/api/logout"
+              <button
+                onClick={handleLogout}
                 className="p-1 hover:bg-muted-foreground/10 rounded transition-colors duration-200"
                 title="Sign out"
+                disabled={logoutMutation.isPending}
+                data-testid="button-logout"
               >
                 <LogOut className="w-4 h-4" />
-              </a>
+              </button>
             )}
           </div>
         </div>
