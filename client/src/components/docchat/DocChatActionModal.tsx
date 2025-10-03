@@ -326,8 +326,8 @@ export default function DocChatActionModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" data-testid={`dialog-docchat-action-${actionType}`}>
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid={`dialog-docchat-action-${actionType}`}>
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
               <Icon className={`w-5 h-5 ${config.color}`} />
@@ -339,7 +339,7 @@ export default function DocChatActionModal({
           </div>
         </DialogHeader>
 
-        <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+        <div className="flex-shrink-0 mb-4 p-3 bg-muted/50 rounded-lg text-sm">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-muted-foreground">Selected:</span>
             {selectedDocs.slice(0, 2).map((doc, idx) => (
@@ -353,47 +353,50 @@ export default function DocChatActionModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {renderForm()}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {renderForm()}
 
-          {(streamingContent || isProcessing) && (
-            <div className="mt-4 p-4 bg-muted rounded-lg max-h-96 overflow-y-auto">
-              {isProcessing && !streamingContent && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  <span className="text-sm">Generating...</span>
-                </div>
-              )}
-              {streamingContent && (
-                <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap">{streamingContent}</div>
-                  {isProcessing && (
-                    <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+            {(streamingContent || isProcessing) && (
+              <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
+                {isProcessing && !streamingContent && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <span className="text-sm">Generating...</span>
+                  </div>
+                )}
+                {streamingContent && (
+                  <div className="prose prose-sm max-w-none">
+                    <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
+                    {isProcessing && (
+                      <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
 
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isProcessing}
-              data-testid="button-cancel"
-            >
-              {streamingContent ? 'Close' : 'Cancel'}
-            </Button>
-            <Button
-              type="submit"
-              disabled={isProcessing}
-              data-testid="button-generate"
-            >
-              {isProcessing ? 'Generating...' : `Generate ${config.title}`}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter className="flex-shrink-0 mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isProcessing}
+            data-testid="button-cancel"
+          >
+            {streamingContent ? 'Close' : 'Cancel'}
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isProcessing}
+            data-testid="button-generate"
+          >
+            {isProcessing ? 'Generating...' : `Generate ${config.title}`}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

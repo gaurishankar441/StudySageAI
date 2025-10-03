@@ -331,8 +331,8 @@ export default function QuickToolModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl" data-testid={`dialog-quick-tool-${toolType}`}>
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid={`dialog-quick-tool-${toolType}`}>
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center gap-3">
             <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
               <Icon className={`w-5 h-5 ${config.color}`} />
@@ -344,7 +344,7 @@ export default function QuickToolModal({
           </div>
         </DialogHeader>
 
-        <div className="mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+        <div className="flex-shrink-0 mb-4 p-3 bg-muted/50 rounded-lg text-sm">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="font-medium text-primary">{chat.subject}</span>
             <span className="text-muted-foreground">•</span>
@@ -362,47 +362,50 @@ export default function QuickToolModal({
           </div>
         </div>
 
-        <form onSubmit={handleSubmit}>
-          {renderForm()}
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {renderForm()}
 
-          {(streamingContent || isStreaming) && (
-            <div className="mt-4 p-4 bg-muted rounded-lg max-h-96 overflow-y-auto">
-              {isStreaming && !streamingContent && (
-                <div className="flex items-center gap-2 text-muted-foreground">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                  <span className="text-sm">AI is thinking...</span>
-                </div>
-              )}
-              {streamingContent && (
-                <div className="prose prose-sm max-w-none">
-                  <div className="whitespace-pre-wrap">{streamingContent}</div>
-                  {isStreaming && (
-                    <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
-                  )}
-                </div>
-              )}
-            </div>
-          )}
+            {(streamingContent || isStreaming) && (
+              <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
+                {isStreaming && !streamingContent && (
+                  <div className="flex items-center gap-2 text-muted-foreground">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                    <span className="text-sm">AI is thinking...</span>
+                  </div>
+                )}
+                {streamingContent && (
+                  <div className="prose prose-sm max-w-none">
+                    <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
+                    {isStreaming && (
+                      <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
+          </form>
+        </div>
 
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={isStreaming}
-              data-testid="button-cancel"
-            >
-              {streamingContent ? 'Close' : 'Cancel'}
-            </Button>
-            <Button
-              type="submit"
-              disabled={isStreaming || (toolType === 'hint' && !formData.userQuery.trim())}
-              data-testid="button-generate"
-            >
-              {isStreaming ? 'Generating...' : `Generate ${config.title}`}
-            </Button>
-          </DialogFooter>
-        </form>
+        <DialogFooter className="flex-shrink-0 mt-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={isStreaming}
+            data-testid="button-cancel"
+          >
+            {streamingContent ? 'Close' : 'Cancel'}
+          </Button>
+          <Button
+            type="submit"
+            onClick={handleSubmit}
+            disabled={isStreaming || (toolType === 'hint' && !formData.userQuery.trim())}
+            data-testid="button-generate"
+          >
+            {isStreaming ? 'Generating...' : `Generate ${config.title}`}
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
