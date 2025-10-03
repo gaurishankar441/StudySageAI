@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +19,7 @@ import { Quiz } from "@shared/schema";
 
 export default function QuizView() {
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [, navigate] = useLocation();
 
   const { data: quizzes = [], isLoading } = useQuery<Quiz[]>({
     queryKey: ["/api/quizzes"],
@@ -166,7 +168,15 @@ export default function QuizView() {
                         <span>{quiz.language === 'hi' ? 'हिन्दी' : 'English'}</span>
                       </div>
                     </div>
-                    <Button size="sm" className="opacity-0 group-hover:opacity-100 transition-all duration-200">
+                    <Button 
+                      size="sm" 
+                      className="opacity-0 group-hover:opacity-100 transition-all duration-200"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        navigate(`/quiz/${quiz.id}`);
+                      }}
+                      data-testid={`button-start-${quiz.id}`}
+                    >
                       <Play className="w-4 h-4 mr-1" />
                       Start
                     </Button>

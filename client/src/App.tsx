@@ -11,6 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import Tutor from "@/pages/Tutor";
 import DocChat from "@/pages/DocChat";
 import Quiz from "@/pages/Quiz";
+import QuizAttempt from "@/pages/QuizAttempt";
 import StudyPlan from "@/pages/StudyPlan";
 import Notes from "@/pages/Notes";
 import NotFound from "@/pages/not-found";
@@ -44,6 +45,7 @@ function Router() {
         <Route path="/" component={Dashboard} />
         <Route path="/tutor" component={Tutor} />
         <Route path="/docchat" component={DocChat} />
+        <Route path="/quiz/:id" component={QuizAttempt} />
         <Route path="/quiz" component={Quiz} />
         <Route path="/study-plan" component={StudyPlan} />
         <Route path="/notes" component={Notes} />
