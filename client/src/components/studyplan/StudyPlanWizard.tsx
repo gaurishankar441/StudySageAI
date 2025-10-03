@@ -89,9 +89,11 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
 
   const createPlanMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
+      console.log('[StudyPlanWizard] Starting mutation with data:', data);
       const topics = data.topics.split('\n').filter(t => t.trim()).map(t => t.trim());
+      console.log('[StudyPlanWizard] Parsed topics:', topics);
       
-      return apiRequest("POST", "/api/study-plans", {
+      const payload = {
         name: data.name,
         subject: data.subject,
         topics,
@@ -100,9 +102,15 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
         intensity: data.intensity,
         sessionDuration: data.sessionDuration,
         language: data.language,
-      });
+      };
+      console.log('[StudyPlanWizard] API payload:', payload);
+      
+      const result = await apiRequest("POST", "/api/study-plans", payload);
+      console.log('[StudyPlanWizard] API result:', result);
+      return result;
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('[StudyPlanWizard] Mutation success:', data);
       toast({
         title: "Success",
         description: "Study plan created successfully!",
@@ -111,7 +119,8 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
       onOpenChange(false);
       resetForm();
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('[StudyPlanWizard] Mutation error:', error);
       toast({
         title: "Error",
         description: "Failed to create study plan. Please try again.",
@@ -143,9 +152,11 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
   };
 
   const handleNext = () => {
+    console.log('[StudyPlanWizard] handleNext called, step:', step, 'canProceed:', canProceed());
     if (step < 4) {
       setStep(step + 1);
     } else {
+      console.log('[StudyPlanWizard] Calling mutation with formData:', formData);
       createPlanMutation.mutate(formData);
     }
   };
@@ -180,6 +191,7 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
               <Label htmlFor="plan-name">Plan Name</Label>
               <Input
                 id="plan-name"
+                data-testid="input-plan-name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g., Final Exams Preparation"
@@ -223,6 +235,7 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
                 <Label htmlFor="subject">Subject(s)</Label>
                 <Input
                   id="subject"
+                  data-testid="input-subject"
                   value={formData.subject}
                   onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
                   placeholder="e.g., Physics, Math, Chemistry"
@@ -234,6 +247,7 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
               <Label htmlFor="topics">Topics to Cover</Label>
               <Textarea
                 id="topics"
+                data-testid="textarea-topics"
                 rows={4}
                 value={formData.topics}
                 onChange={(e) => setFormData({ ...formData, topics: e.target.value })}
@@ -474,6 +488,7 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
             onClick={handleBack}
             disabled={step === 1}
             className="flex items-center gap-2"
+            data-testid="button-wizard-back"
           >
             <ChevronLeft className="w-4 h-4" />
             Previous
@@ -482,6 +497,7 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
             onClick={handleNext}
             disabled={!canProceed() || createPlanMutation.isPending}
             className="flex items-center gap-2"
+            data-testid="button-wizard-next"
           >
             {createPlanMutation.isPending ? (
               <div className="w-4 h-4 animate-spin rounded-full border-2 border-background border-t-transparent" />

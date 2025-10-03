@@ -195,25 +195,44 @@ Return valid JSON with structure: {"bigIdea": "...", "keyTerms": [...], "summary
     intensity: string = 'regular',
     sessionDuration: number = 30
   ): Promise<StudyPlanTask[]> {
-    const daysToExam = examDate ? Math.max(Math.ceil((examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)), 7) : 28;
-    
-    const systemPrompt = `Create a ${daysToExam}-day study plan for Subject: ${subject}, Topics: ${topics.join(', ')}, Level: ${level}, Language: ${language}.
+    try {
+      const daysToExam = examDate ? Math.max(Math.ceil((examDate.getTime() - Date.now()) / (1000 * 60 * 60 * 24)), 7) : 28;
+      
+      const systemPrompt = `Create a ${daysToExam}-day study plan for Subject: ${subject}, Topics: ${topics.join(', ')}, Level: ${level}, Language: ${language}.
 Exam date: ${examDate ? examDate.toISOString().split('T')[0] : "none"}. Intensity: ${intensity}. Session duration: ${sessionDuration} min.
 Mix tasks: read/docchat, tutor checkpoints, quizzes (10-20 qs), flashcards with SRS.
-Return JSON array of tasks with {"date": "YYYY-MM-DD", "type": "read|tutor|quiz|flashcards|video", "duration": minutes, "title": "...", "description": "..."}.`;
+Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD", "type": "read|tutor|quiz|flashcards|video", "duration": minutes, "title": "...", "description": "..."}.`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [{ role: "user", content: systemPrompt }],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 8192,
-    });
+      console.log('[generateStudyPlan] Creating study plan with prompt:', systemPrompt);
 
-    const content = response.choices[0].message.content;
-    if (!content) throw new Error('No response from AI');
+      const response = await openai.chat.completions.create({
+        model: "gpt-5",
+        messages: [{ role: "user", content: systemPrompt }],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 8192,
+      });
 
-    const result = JSON.parse(content);
-    return result.tasks || result;
+      console.log('[generateStudyPlan] Response received:', JSON.stringify(response, null, 2));
+
+      const content = response.choices[0]?.message?.content;
+      if (!content) {
+        console.error('[generateStudyPlan] No content in response. Full response:', response);
+        throw new Error('No response from AI');
+      }
+
+      console.log('[generateStudyPlan] Content:', content);
+
+      const result = JSON.parse(content);
+      console.log('[generateStudyPlan] Parsed result:', result);
+      
+      const tasks = result.tasks || (Array.isArray(result) ? result : []);
+      console.log('[generateStudyPlan] Returning tasks:', tasks);
+      
+      return tasks;
+    } catch (error) {
+      console.error('[generateStudyPlan] Error:', error);
+      throw error;
+    }
   }
 
   // Document analysis for ingestion
