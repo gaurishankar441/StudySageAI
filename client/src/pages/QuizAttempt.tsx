@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { ArrowLeft, CheckCircle, XCircle, Clock } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Clock, MinusCircle } from "lucide-react";
 import { Quiz, QuizQuestion } from "@shared/schema";
 
 interface QuizWithQuestions {
@@ -84,18 +84,15 @@ export default function QuizAttempt() {
   }
 
   const handleSubmit = () => {
-    if (Object.keys(answers).length < questions.length) {
-      toast({
-        title: "Incomplete quiz",
-        description: "Please answer all questions before submitting",
-        variant: "destructive",
-      });
-      return;
-    }
     submitAttemptMutation.mutate();
   };
 
   if (showResults && results) {
+    // Calculate stats
+    const answeredCount = Object.keys(answers).length;
+    const unattemptedCount = questions.length - answeredCount;
+    const wrongCount = answeredCount - results.correctCount;
+
     return (
       <div className="max-w-4xl mx-auto p-6">
         <Button onClick={() => navigate("/quiz")} variant="ghost" className="mb-4" data-testid="button-back-to-quiz">
@@ -108,18 +105,22 @@ export default function QuizAttempt() {
             <CardTitle>Quiz Results</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-3 gap-4 mb-6">
+            <div className="grid grid-cols-4 gap-4 mb-6">
               <div className="text-center p-4 bg-primary/10 rounded-lg">
-                <p className="text-3xl font-bold text-primary" data-testid="text-score">{results.score}%</p>
+                <p className="text-3xl font-bold text-primary" data-testid="text-score">{Math.round(results.score)}%</p>
                 <p className="text-sm text-muted-foreground">Score</p>
               </div>
               <div className="text-center p-4 bg-green-100 dark:bg-green-900/20 rounded-lg">
                 <p className="text-3xl font-bold text-green-600" data-testid="text-correct">{results.correctCount}</p>
                 <p className="text-sm text-muted-foreground">Correct</p>
               </div>
-              <div className="text-center p-4 bg-blue-100 dark:bg-blue-900/20 rounded-lg">
-                <p className="text-3xl font-bold text-blue-600" data-testid="text-time">{Math.floor(results.attempt.timeSpent / 60)}m</p>
-                <p className="text-sm text-muted-foreground">Time</p>
+              <div className="text-center p-4 bg-red-100 dark:bg-red-900/20 rounded-lg">
+                <p className="text-3xl font-bold text-red-600" data-testid="text-wrong">{wrongCount}</p>
+                <p className="text-sm text-muted-foreground">Wrong</p>
+              </div>
+              <div className="text-center p-4 bg-gray-100 dark:bg-gray-900/20 rounded-lg">
+                <p className="text-3xl font-bold text-gray-600 dark:text-gray-400" data-testid="text-unattempted">{unattemptedCount}</p>
+                <p className="text-sm text-muted-foreground">Unattempted</p>
               </div>
             </div>
           </CardContent>
@@ -127,14 +128,21 @@ export default function QuizAttempt() {
 
         {questions.map((question, index) => {
           const userAnswer = answers[question.id];
-          const isCorrect = userAnswer === question.answer;
+          const isUnattempted = !userAnswer;
+          
+          // question.answer is stored as an array [correctAnswer]
+          const correctAnswerArray = Array.isArray(question.answer) ? question.answer : [question.answer];
+          const correctAnswer = correctAnswerArray[0];
+          const isCorrect = userAnswer === correctAnswer;
           const feedback = results.feedback?.find((f: any) => f.questionId === question.id);
 
           return (
             <Card key={question.id} className="mb-4" data-testid={`card-result-${index}`}>
               <CardContent className="p-6">
                 <div className="flex items-start gap-3 mb-4">
-                  {isCorrect ? (
+                  {isUnattempted ? (
+                    <MinusCircle className="w-5 h-5 text-gray-500 mt-1" data-testid={`icon-unattempted-${index}`} />
+                  ) : isCorrect ? (
                     <CheckCircle className="w-5 h-5 text-green-600 mt-1" data-testid={`icon-correct-${index}`} />
                   ) : (
                     <XCircle className="w-5 h-5 text-red-600 mt-1" data-testid={`icon-wrong-${index}`} />
@@ -142,24 +150,30 @@ export default function QuizAttempt() {
                   <div className="flex-1">
                     <p className="font-medium mb-3" data-testid={`text-question-${index}`}>
                       {index + 1}. {question.stem}
+                      {isUnattempted && <span className="ml-2 text-sm text-gray-500">(Unattempted)</span>}
                     </p>
                     <div className="space-y-2 mb-3">
-                      {(question.options as string[] | null)?.map((option: string, optIndex: number) => (
-                        <div
-                          key={optIndex}
-                          className={`p-3 rounded-lg border ${
-                            option === question.answer
-                              ? "bg-green-100 dark:bg-green-900/20 border-green-600"
-                              : option === userAnswer
-                              ? "bg-red-100 dark:bg-red-900/20 border-red-600"
-                              : "bg-muted/50 border-border"
-                          }`}
-                          data-testid={`option-${index}-${optIndex}`}
-                        >
-                          {option}
-                          {option === question.answer && " ✓"}
-                        </div>
-                      ))}
+                      {(question.options as string[] | null)?.map((option: string, optIndex: number) => {
+                        const isCorrectOption = option === correctAnswer;
+                        const isUserAnswer = option === userAnswer && !isUnattempted;
+                        
+                        return (
+                          <div
+                            key={optIndex}
+                            className={`p-3 rounded-lg border ${
+                              isCorrectOption
+                                ? "bg-green-100 dark:bg-green-900/20 border-green-600"
+                                : isUserAnswer
+                                ? "bg-red-100 dark:bg-red-900/20 border-red-600"
+                                : "bg-muted/50 border-border"
+                            }`}
+                            data-testid={`option-${index}-${optIndex}`}
+                          >
+                            {option}
+                            {isCorrectOption && " ✓ Correct Answer"}
+                          </div>
+                        );
+                      })}
                     </div>
                     {question.rationale && (
                       <p className="text-sm text-muted-foreground mt-3 p-3 bg-muted/50 rounded-lg" data-testid={`text-rationale-${index}`}>

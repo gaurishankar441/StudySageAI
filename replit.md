@@ -6,6 +6,12 @@ VaktaAI is a comprehensive educational platform that provides students with five
 
 The platform is designed around a "fast, calm UI" principle with a maximum 3-click navigation philosophy, featuring real-time streaming responses, keyboard-first interactions, and accessibility considerations.
 
+## Recent Changes
+
+### October 3, 2025
+- **YouTube Transcript Extraction**: Upgraded to `@danielxceron/youtube-transcript` library for improved reliability with 2025 YouTube formats. Supports all URL types (watch, shorts, live, embed) with dual fallback system.
+- **Quiz Partial Submission**: Users can now submit quizzes without answering all questions. Results display shows separate counts for Correct, Wrong, and Unattempted questions, with all questions displaying correct answers and explanations regardless of attempt status.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
