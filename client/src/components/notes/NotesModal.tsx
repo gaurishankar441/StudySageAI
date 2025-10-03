@@ -87,8 +87,8 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
           sourceIds: data.sourceDocIds,
         });
       } else if (data.sourceType === 'urls' && data.sourceUrls.trim()) {
-        // For URLs, we'd need to process them first or create documents from them
-        const urls = data.sourceUrls.split('\n').filter(url => url.trim());
+        // For URLs, split by newlines and filter empty lines
+        const urls = data.sourceUrls.split('\n').map(url => url.trim()).filter(url => url.length > 0);
         return apiRequest("POST", "/api/notes", {
           ...payload,
           sourceUrls: urls,
