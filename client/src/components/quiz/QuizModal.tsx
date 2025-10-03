@@ -429,8 +429,8 @@ export default function QuizModal({ open, onOpenChange }: QuizModalProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl">Create Quiz</DialogTitle>
@@ -445,7 +445,7 @@ export default function QuizModal({ open, onOpenChange }: QuizModalProps) {
         </DialogHeader>
 
         {/* Progress Bar */}
-        <div className="flex items-center gap-2 mb-6">
+        <div className="flex items-center gap-2 mb-6 flex-shrink-0">
           {[1, 2, 3].map((i) => (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div
@@ -469,11 +469,11 @@ export default function QuizModal({ open, onOpenChange }: QuizModalProps) {
         </div>
 
         {/* Step Content */}
-        <div className="min-h-[300px]">
+        <div className="flex-1 overflow-y-auto min-h-0 py-4">
           {renderStep()}
         </div>
 
-        <DialogFooter className="flex justify-between">
+        <DialogFooter className="flex justify-between flex-shrink-0">
           <Button
             variant="outline"
             onClick={handleBack}

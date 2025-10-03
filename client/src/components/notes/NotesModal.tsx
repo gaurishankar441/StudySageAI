@@ -163,8 +163,8 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
+        <DialogHeader className="flex-shrink-0">
           <div className="flex items-center justify-between">
             <div>
               <DialogTitle className="text-xl">Create New Note</DialogTitle>
@@ -178,7 +178,8 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
           </div>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
+        <div className="flex-1 overflow-y-auto min-h-0">
+          <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Basic Information */}
           <div className="space-y-4">
             <div>
@@ -355,9 +356,10 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
               </Label>
             </div>
           </div>
-        </form>
+          </form>
+        </div>
 
-        <DialogFooter>
+        <DialogFooter className="flex-shrink-0">
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
             Cancel
           </Button>
