@@ -365,7 +365,7 @@ export default function DocChatView() {
               {currentDoc.sourceType === 'pdf' && currentDoc.fileKey ? (
                 <div className="w-full h-full overflow-auto bg-gray-200">
                   <iframe
-                    src={`/objects/${currentDoc.fileKey}`}
+                    src={currentDoc.fileKey}
                     className="w-full h-full border-0"
                     title={currentDoc.title}
                     style={{ minHeight: '100%' }}
