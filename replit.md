@@ -8,7 +8,12 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
-### October 3, 2025 - Latest
+### October 3, 2025 - Latest Session
+- **India-centric Student Profile System**: Complete profile management with Settings page supporting education board (CBSE/ICSE/State Board), exam target (JEE/NEET/Board Exams/Other), current class, and subject tagging. Database schema extended with India-specific fields. PATCH /api/auth/profile endpoint implemented with form validation and persistence. User preferences auto-populate in AI Tutor QuickToolModal and DocChat ActionModal for streamlined UX.
+
+- **UI Polish & Branding**: Integrated VaktaAI logo across application (sidebar: 40px, landing page: 96px, tutor header: 80px, browser favicon). Consistent modal design with proper loading states, visual hierarchy, and India-centric field integration. Verified through end-to-end Playwright testing.
+
+### October 3, 2025 - Earlier
 - **AI Tutor Quick Tools**: Implemented modal-first right rail with 5 instant tools (Explain Concept, Hint, Example, Practice 5, Summary). Features India-centric prompts supporting CBSE/ICSE/State Board, JEE/NEET, with English/Hindi toggle. SSE streaming with proper buffering, form reset on modal open, and visual progress indicators.
 
 - **YouTube Transcript Extraction**: Upgraded to `@danielxceron/youtube-transcript` library for improved reliability with 2025 YouTube formats. Supports all URL types (watch, shorts, live, embed) with dual fallback system.
