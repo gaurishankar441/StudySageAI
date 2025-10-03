@@ -128,9 +128,9 @@ export class DocumentService {
       url = url.trim();
       
       // Try regex-based extraction first (most reliable)
-      // Matches: v=ID, /ID, embed/ID, shorts/ID
+      // Matches: v=ID, /ID, embed/ID, shorts/ID, live/ID
       const regexPatterns = [
-        /(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/|youtube\.com\/shorts\/)([a-zA-Z0-9_-]{11})/,
+        /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
         /^([a-zA-Z0-9_-]{11})$/ // Plain video ID
       ];
       
@@ -187,6 +187,17 @@ export class DocumentService {
           const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
           if (cleanId) {
             console.log('URL parsing extracted video ID from shorts:', cleanId);
+            return cleanId;
+          }
+        }
+        
+        // Format: https://youtube.com/live/VIDEO_ID
+        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/live/')) {
+          const videoId = urlObj.pathname.split('/')[2];
+          // Clean video ID (remove any fragments or extra params)
+          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
+          if (cleanId) {
+            console.log('URL parsing extracted video ID from live:', cleanId);
             return cleanId;
           }
         }
