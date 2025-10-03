@@ -89,30 +89,39 @@ export class DocumentService {
   // YouTube transcript extraction using youtube-transcript
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
     try {
-      console.log('Processing YouTube URL:', url);
+      console.log('[YouTube] Processing URL:', url);
       
       // Extract video ID from various YouTube URL formats
       const videoId = this.extractYouTubeVideoId(url);
       if (!videoId) {
-        console.error('Failed to extract video ID from URL:', url);
+        console.error('[YouTube] Failed to extract video ID from URL:', url);
         throw new Error('Invalid YouTube URL - could not extract video ID');
       }
 
-      console.log('Extracted video ID:', videoId, '- fetching transcript...');
-      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+      console.log('[YouTube] Extracted video ID:', videoId, '- fetching transcript...');
+      
+      let transcript;
+      try {
+        transcript = await YoutubeTranscript.fetchTranscript(videoId);
+        console.log('[YouTube] Transcript fetch result:', transcript ? `${transcript.length} segments` : 'null/undefined');
+      } catch (transcriptError) {
+        console.error('[YouTube] Transcript fetch failed:', transcriptError);
+        throw new Error(`This video does not have captions/transcript available. Error: ${transcriptError instanceof Error ? transcriptError.message : 'Unknown error'}`);
+      }
       
       if (!transcript || transcript.length === 0) {
-        console.warn('No transcript available for video:', videoId);
+        console.warn('[YouTube] No transcript segments for video:', videoId);
         throw new Error('This video does not have captions/transcript available. Please try another video or upload a document with text content.');
       }
       
       const text = transcript.map(entry => entry.text).join(' ');
       const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
       
-      console.log('Successfully extracted transcript:', text.length, 'characters');
+      console.log('[YouTube] Successfully extracted transcript:', text.length, 'characters,', transcript.length, 'segments');
+      console.log('[YouTube] First 200 chars:', text.substring(0, 200));
       
       if (text.trim().length === 0) {
-        console.warn('Transcript is empty for video:', videoId);
+        console.warn('[YouTube] Transcript text is empty after joining for video:', videoId);
         throw new Error('Video transcript is empty. Please try another video with captions enabled.');
       }
       
@@ -127,8 +136,8 @@ export class DocumentService {
         }
       };
     } catch (error) {
-      console.error('YouTube transcript error:', error);
-      throw new Error(`Failed to extract YouTube transcript: ${error}`);
+      console.error('[YouTube] Extraction error:', error);
+      throw error instanceof Error ? error : new Error(`Failed to extract YouTube transcript: ${error}`);
     }
   }
 
@@ -396,6 +405,17 @@ export class DocumentService {
       // Chunk text with document title for citations
       const chunks = this.chunkText(text, document.id, title, analysis.language || 'en');
       
+      // Check if chunks were created
+      if (chunks.length === 0) {
+        console.error(`No chunks created for document ${document.id} - text might be too short or empty`);
+        await storage.updateDocumentStatus(document.id, 'error', {
+          error: 'No content could be extracted from this source',
+          totalTokens: this.countTokens(text),
+          chunkCount: 0
+        });
+        throw new Error('No content chunks created - source might be empty or too short');
+      }
+      
       // Generate embeddings for chunks (in batches of 100 to avoid API limits)
       const chunkTexts = chunks.map(c => c.text);
       const batchSize = 100;
@@ -435,6 +455,15 @@ export class DocumentService {
       return document.id;
     } catch (error) {
       console.error('Document ingestion error:', error);
+      
+      // Update document status to error if it exists
+      const docId = (error as any).documentId;
+      if (docId) {
+        await storage.updateDocumentStatus(docId, 'error', {
+          error: error instanceof Error ? error.message : 'Unknown error occurred'
+        });
+      }
+      
       throw error;
     }
   }
