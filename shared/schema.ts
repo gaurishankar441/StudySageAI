@@ -46,6 +46,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   locale: varchar("locale").default('en'),
+  aiProvider: varchar("ai_provider").default('cohere'), // 'cohere' or 'openai' - cohere is default
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
