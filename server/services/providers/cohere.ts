@@ -33,8 +33,14 @@ Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."
 
     const contentItem = response.message?.content?.[0];
     const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
-    const result = JSON.parse(text);
-    return result as Summary;
+    
+    try {
+      const result = JSON.parse(text);
+      return result as Summary;
+    } catch (error) {
+      console.error('Failed to parse Cohere summary response:', error);
+      throw new Error(`Invalid JSON response from Cohere: ${text.substring(0, 200)}`);
+    }
   }
 
   async generateHighlights(content: string, options?: {
@@ -59,8 +65,14 @@ ${content}`;
 
     const contentItem = response.message?.content?.[0];
     const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
-    const result = JSON.parse(text);
-    return result.highlights || [];
+    
+    try {
+      const result = JSON.parse(text);
+      return result.highlights || [];
+    } catch (error) {
+      console.error('Failed to parse Cohere highlights response:', error);
+      throw new Error(`Invalid JSON response from Cohere: ${text.substring(0, 200)}`);
+    }
   }
 
   async generateQuiz(content: string, options?: {
@@ -103,8 +115,14 @@ Return valid JSON: {
 
     const contentItem = response.message?.content?.[0];
     const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
-    const result = JSON.parse(text);
-    return result as Quiz;
+    
+    try {
+      const result = JSON.parse(text);
+      return result as Quiz;
+    } catch (error) {
+      console.error('Failed to parse Cohere quiz response:', error);
+      throw new Error(`Invalid JSON response from Cohere: ${text.substring(0, 200)}`);
+    }
   }
 
   async generateFlashcards(content: string, options?: {
@@ -129,8 +147,14 @@ ${content}`;
 
     const contentItem = response.message?.content?.[0];
     const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
-    const result = JSON.parse(text);
-    return result.flashcards || [];
+    
+    try {
+      const result = JSON.parse(text);
+      return result.flashcards || [];
+    } catch (error) {
+      console.error('Failed to parse Cohere flashcards response:', error);
+      throw new Error(`Invalid JSON response from Cohere: ${text.substring(0, 200)}`);
+    }
   }
 
   async generateNotes(content: string, options?: {
@@ -165,8 +189,14 @@ Return valid JSON: {
 
     const contentItem = response.message?.content?.[0];
     const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
-    const result = JSON.parse(text);
-    return result as Note;
+    
+    try {
+      const result = JSON.parse(text);
+      return result as Note;
+    } catch (error) {
+      console.error('Failed to parse Cohere notes response:', error);
+      throw new Error(`Invalid JSON response from Cohere: ${text.substring(0, 200)}`);
+    }
   }
 
   async chat(messages: Array<{ role: string; content: string }>, options?: {
