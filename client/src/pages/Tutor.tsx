@@ -4,6 +4,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import TutorSetupWizard, { type TutorConfig } from "@/components/tutor/TutorSetupWizard";
 import TutorSession from "@/components/tutor/TutorSession";
+import logoPath from "@assets/Vakta AI.122_1759509648531.png";
 
 export default function Tutor() {
   const [showSetupWizard, setShowSetupWizard] = useState(false);
@@ -59,8 +60,12 @@ export default function Tutor() {
   return (
     <div className="max-w-3xl mx-auto p-6">
       <div className="text-center mb-8">
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary/10 mb-4">
-          <i className="w-8 h-8 text-primary" />
+        <div className="inline-flex items-center justify-center mb-4">
+          <img 
+            src={logoPath} 
+            alt="Vakta AI" 
+            className="w-20 h-20 object-contain"
+          />
         </div>
         <h1 className="text-3xl font-bold mb-2">AI Tutor</h1>
         <p className="text-muted-foreground">Start a personalized learning session</p>

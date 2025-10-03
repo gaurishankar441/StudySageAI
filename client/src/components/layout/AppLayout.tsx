@@ -18,6 +18,7 @@ import {
   Home,
   LogOut
 } from "lucide-react";
+import logoPath from "@assets/Vakta AI.122_1759509648531.png";
 
 interface AppLayoutProps {
   children: React.ReactNode;
@@ -69,9 +70,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
         {/* Logo */}
         <div className="p-4 border-b border-border">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
-              V
-            </div>
+            <img 
+              src={logoPath} 
+              alt="Vakta AI" 
+              className="w-10 h-10 object-contain"
+            />
             {!sidebarCollapsed && (
               <div>
                 <h1 className="font-semibold text-lg leading-tight">VaktaAI</h1>
