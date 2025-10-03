@@ -37,7 +37,7 @@ import {
   type Chunk,
 } from "@shared/schema";
 import { db } from "./db";
-import { eq, desc, and, inArray } from "drizzle-orm";
+import { eq, desc, and, inArray, sql } from "drizzle-orm";
 
 export interface IStorage {
   // User operations
@@ -344,7 +344,8 @@ export class DatabaseStorage implements IStorage {
   // Chunk operations
   async createChunks(chunkData: InsertChunk[]): Promise<Chunk[]> {
     if (chunkData.length === 0) return [];
-    const newChunks = await db.insert(chunks).values(chunkData).returning();
+    // Type assertion needed due to custom vector type
+    const newChunks = await db.insert(chunks).values(chunkData as any).returning();
     return newChunks;
   }
 
@@ -367,6 +368,34 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(chunks)
       .limit(limit);
+  }
+
+  // Vector similarity search using pgvector with raw SQL
+  async searchChunksByEmbedding(
+    queryEmbedding: number[],
+    docIds?: string[],
+    limit: number = 8
+  ): Promise<Array<Chunk & { similarity: number }>> {
+    const embeddingStr = JSON.stringify(queryEmbedding);
+    
+    // Build WHERE clause for doc IDs filter
+    const docFilter = docIds && docIds.length > 0
+      ? sql`WHERE doc_id = ANY(${docIds})`
+      : sql.empty();
+    
+    // Use raw SQL for pgvector cosine similarity search
+    const results = await db.execute(sql`
+      SELECT 
+        id, doc_id as "docId", ord, text, tokens, page, section, heading, 
+        language, hash, embedding, metadata, created_at as "createdAt",
+        (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
+      FROM chunks
+      ${docFilter}
+      ORDER BY embedding <=> ${embeddingStr}::vector
+      LIMIT ${limit}
+    `);
+    
+    return results.rows as unknown as Array<Chunk & { similarity: number }>;
   }
 }
 

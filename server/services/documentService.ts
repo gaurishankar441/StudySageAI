@@ -7,8 +7,10 @@ import { YoutubeTranscript } from "youtube-transcript";
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { createRequire } from "module";
+import { encoding_for_model } from "tiktoken";
 
 const require = createRequire(import.meta.url);
+const tokenizer = encoding_for_model("gpt-3.5-turbo");
 
 export interface DocumentChunk {
   docId: string;
@@ -141,15 +143,48 @@ export class DocumentService {
     return match ? match[1].trim() : 'Untitled';
   }
 
-  // Chunk text into manageable pieces
-  chunkText(text: string, docId: string, docTitle: string, language: string = 'en', maxTokens: number = 700, overlap: number = 80): DocumentChunk[] {
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
+  // Adaptive chunk size based on document length
+  private getAdaptiveChunkSize(totalTokens: number): { maxTokens: number; overlap: number } {
+    if (totalTokens < 2000) {
+      // Small documents: larger chunks for better context
+      return { maxTokens: 1024, overlap: 100 };
+    } else if (totalTokens < 10000) {
+      // Medium documents: balanced chunks
+      return { maxTokens: 768, overlap: 80 };
+    } else {
+      // Large documents: smaller chunks for precision
+      return { maxTokens: 512, overlap: 60 };
+    }
+  }
+
+  // Accurate token counting using tiktoken
+  private countTokens(text: string): number {
+    try {
+      return tokenizer.encode(text).length;
+    } catch (error) {
+      // Fallback to estimation if encoding fails
+      return Math.ceil(text.length / 4);
+    }
+  }
+
+  // Chunk text into manageable pieces with smart semantic boundaries
+  chunkText(text: string, docId: string, docTitle: string, language: string = 'en', maxTokensOverride?: number, overlapOverride?: number): DocumentChunk[] {
+    // Count total tokens in document
+    const totalTokens = this.countTokens(text);
+    
+    // Determine adaptive chunk size
+    const { maxTokens, overlap } = maxTokensOverride 
+      ? { maxTokens: maxTokensOverride, overlap: overlapOverride || 80 }
+      : this.getAdaptiveChunkSize(totalTokens);
+
+    // Split on sentence boundaries for semantic coherence
+    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
     const chunks: DocumentChunk[] = [];
     let currentChunk = '';
     let currentTokens = 0;
 
     for (const sentence of sentences) {
-      const sentenceTokens = this.estimateTokens(sentence);
+      const sentenceTokens = this.countTokens(sentence);
       
       if (currentTokens + sentenceTokens > maxTokens && currentChunk) {
         // Add current chunk
@@ -158,7 +193,7 @@ export class DocumentService {
           docId,
           ord: chunks.length,
           text: chunkText,
-          tokens: currentTokens,
+          tokens: this.countTokens(chunkText),
           language,
           hash: this.generateHash(chunkText),
           metadata: {
@@ -169,12 +204,12 @@ export class DocumentService {
           }
         });
 
-        // Start new chunk with overlap
+        // Start new chunk with overlap (10-20% for context preservation)
         const overlapText = this.getOverlapText(currentChunk, overlap);
-        currentChunk = overlapText + sentence;
-        currentTokens = this.estimateTokens(currentChunk);
+        currentChunk = overlapText + sentence + ' ';
+        currentTokens = this.countTokens(currentChunk);
       } else {
-        currentChunk += sentence + '. ';
+        currentChunk += sentence + ' ';
         currentTokens += sentenceTokens;
       }
     }
@@ -186,7 +221,7 @@ export class DocumentService {
         docId,
         ord: chunks.length,
         text: chunkText,
-        tokens: currentTokens,
+        tokens: this.countTokens(chunkText),
         language,
         hash: this.generateHash(chunkText),
         metadata: {
@@ -198,12 +233,8 @@ export class DocumentService {
       });
     }
 
+    console.log(`[Chunking] Document: ${docTitle}, Total tokens: ${totalTokens}, Chunk size: ${maxTokens}, Chunks created: ${chunks.length}`);
     return chunks;
-  }
-
-  private estimateTokens(text: string): number {
-    // Rough estimate: 1 token ≈ 4 characters for English
-    return Math.ceil(text.length / 4);
   }
 
   private getOverlapText(text: string, overlapTokens: number): string {
@@ -262,12 +293,12 @@ export class DocumentService {
       // Add embeddings to chunks while preserving citation metadata
       const chunksWithEmbeddings = chunks.map((chunk, idx) => ({
         ...chunk,
+        embedding: allEmbeddings[idx], // Store as vector, not JSON
         metadata: {
           docTitle: chunk.metadata.docTitle,
           docId: chunk.metadata.docId,
           page: chunk.metadata.page,
-          section: chunk.metadata.section,
-          embedding: JSON.stringify(allEmbeddings[idx])
+          section: chunk.metadata.section
         }
       }));
       
@@ -278,7 +309,7 @@ export class DocumentService {
       await storage.updateDocumentStatus(document.id, 'ready', {
         ...metadata,
         ...analysis,
-        totalTokens: this.estimateTokens(text),
+        totalTokens: this.countTokens(text),
         chunkCount: chunks.length
       });
 
@@ -291,7 +322,7 @@ export class DocumentService {
     }
   }
 
-  // Retrieve relevant chunks for RAG using semantic search
+  // Retrieve relevant chunks for RAG using pgvector semantic search
   async retrieveRelevantChunks(
     query: string,
     userId: string,
@@ -302,61 +333,27 @@ export class DocumentService {
       // Generate embedding for the query
       const queryEmbedding = await aiService.generateEmbedding(query);
       
-      // Get chunks from specified documents or all user documents
-      let chunks;
-      if (docIds && docIds.length > 0) {
-        // Get chunks from specific documents
-        const allChunks = await Promise.all(
-          docIds.map(docId => storage.getChunksByDocument(docId))
-        );
-        chunks = allChunks.flat();
-      } else {
-        // Get all chunks from user's documents
-        const userDocs = await storage.getDocumentsByUser(userId);
-        const allChunks = await Promise.all(
-          userDocs.map(doc => storage.getChunksByDocument(doc.id))
-        );
-        chunks = allChunks.flat();
-      }
+      // Use pgvector similarity search
+      const results = await storage.searchChunksByEmbedding(
+        queryEmbedding,
+        docIds,
+        limit
+      );
       
-      // Calculate similarity scores for each chunk
-      const scoredChunks = chunks
-        .map(chunk => {
-          try {
-            // Extract embedding from metadata
-            const metadata = chunk.metadata as any;
-            const embeddingStr = metadata?.embedding;
-            if (!embeddingStr) {
-              return null;
-            }
-            
-            const chunkEmbedding = JSON.parse(embeddingStr);
-            const score = aiService.cosineSimilarity(queryEmbedding, chunkEmbedding);
-            
-            return {
-              text: chunk.text,
-              metadata: {
-                docTitle: (metadata as any)?.docTitle || 'Unknown Document',
-                docId: chunk.docId,
-                ord: chunk.ord,
-                page: (metadata as any)?.page || chunk.page || 1,
-                section: (metadata as any)?.section || chunk.section || 1,
-                heading: chunk.heading,
-                language: chunk.language
-              },
-              score
-            };
-          } catch (error) {
-            console.error('Error processing chunk:', error);
-            return null;
-          }
-        })
-        .filter(chunk => chunk !== null) as { text: string; metadata: any; score: number }[];
-      
-      // Sort by score (highest first) and return top k
-      return scoredChunks
-        .sort((a, b) => b.score - a.score)
-        .slice(0, limit);
+      // Format results with metadata
+      return results.map(chunk => ({
+        text: chunk.text,
+        metadata: {
+          docTitle: (chunk.metadata as any)?.docTitle || 'Unknown Document',
+          docId: chunk.docId,
+          ord: chunk.ord,
+          page: (chunk.metadata as any)?.page || chunk.page || 1,
+          section: (chunk.metadata as any)?.section || chunk.section || 1,
+          heading: chunk.heading,
+          language: chunk.language
+        },
+        score: chunk.similarity
+      }));
     } catch (error) {
       console.error('Error retrieving relevant chunks:', error);
       return [];
