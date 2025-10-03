@@ -99,17 +99,39 @@ export default function DocChatView() {
 
   const startChatMutation = useMutation({
     mutationFn: async (docIds: string[]) => {
+      console.log('Starting chat with docs:', docIds);
       const response = await apiRequest("POST", "/api/docchat/session", { docIds });
-      return response.json();
+      
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({ message: 'Failed to start chat' }));
+        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      console.log('Chat API response:', data);
+      
+      // Backend returns the chat object directly with an id field
+      const chatId = data.id || data.chatId;
+      if (!chatId) {
+        throw new Error('Invalid response: missing chat ID');
+      }
+      
+      return { ...data, id: chatId };
     },
     onSuccess: (chat: any) => {
+      console.log('Chat started successfully, ID:', chat.id);
       setCurrentChatId(chat.id);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
+      toast({
+        title: "Success",
+        description: "Chat session started",
+      });
     },
-    onError: () => {
+    onError: (error: any) => {
+      console.error('Failed to start chat:', error);
       toast({
         title: "Error",
-        description: "Failed to start chat session",
+        description: error.message || "Failed to start chat session",
         variant: "destructive",
       });
     },
@@ -444,8 +466,13 @@ export default function DocChatView() {
             </div>
             
             {selectedDocuments.length > 0 && !currentChatId && (
-              <Button className="w-full mt-3" onClick={handleStartChat}>
-                Start Chat with Selected Documents
+              <Button 
+                className="w-full mt-3" 
+                onClick={handleStartChat}
+                disabled={startChatMutation.isPending}
+                data-testid="button-start-chat"
+              >
+                {startChatMutation.isPending ? "Starting..." : "Start Chat with Selected Documents"}
               </Button>
             )}
           </CardContent>
@@ -513,11 +540,13 @@ export default function DocChatView() {
                     placeholder="Ask a question..."
                     disabled={sendMessageMutation.isPending}
                     className="flex-1"
+                    data-testid="input-chat-message"
                   />
                   <Button 
                     type="submit" 
                     disabled={!message.trim() || sendMessageMutation.isPending}
                     size="sm"
+                    data-testid="button-send-message"
                   >
                     <Send className="w-4 h-4" />
                   </Button>
