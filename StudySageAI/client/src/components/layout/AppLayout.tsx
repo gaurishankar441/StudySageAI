@@ -1,0 +1,161 @@
+import { useState } from "react";
+import { Link, useLocation } from "wouter";
+import { useAuth } from "@/hooks/useAuth";
+import {
+  GraduationCap,
+  FileText,
+  HelpCircle,
+  Calendar,
+  BookOpen,
+  Settings,
+  Search,
+  Globe,
+  Bell,
+  User,
+  Home,
+  LogOut
+} from "lucide-react";
+
+interface AppLayoutProps {
+  children: React.ReactNode;
+}
+
+export default function AppLayout({ children }: AppLayoutProps) {
+  const { user } = useAuth();
+  const [location] = useLocation();
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+
+  const navigation = [
+    { name: 'Dashboard', href: '/', icon: Home, current: location === '/' },
+    { name: 'AI Tutor', href: '/tutor', icon: GraduationCap, current: location === '/tutor' },
+    { name: 'DocChat', href: '/docchat', icon: FileText, current: location === '/docchat' },
+    { name: 'Quiz', href: '/quiz', icon: HelpCircle, current: location === '/quiz' },
+    { name: 'Study Plan', href: '/study-plan', icon: Calendar, current: location === '/study-plan' },
+    { name: 'Notes', href: '/notes', icon: BookOpen, current: location === '/notes' },
+  ];
+
+  const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` : 'U';
+
+  return (
+    <div className="flex h-screen bg-background overflow-hidden">
+      {/* Sidebar */}
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-card border-r border-border flex flex-col transition-all duration-200`}>
+        {/* Logo */}
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-primary text-primary-foreground flex items-center justify-center font-bold text-lg">
+              V
+            </div>
+            {!sidebarCollapsed && (
+              <div>
+                <h1 className="font-semibold text-lg leading-tight">VaktaAI</h1>
+                <p className="text-xs text-muted-foreground">Study Assistant</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+          {navigation.map((item) => {
+            const Icon = item.icon;
+            return (
+              <Link key={item.name} href={item.href}>
+                <a
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                    item.current
+                      ? 'bg-accent text-accent-foreground'
+                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                  }`}
+                >
+                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  {!sidebarCollapsed && <span>{item.name}</span>}
+                </a>
+              </Link>
+            );
+          })}
+
+          {!sidebarCollapsed && (
+            <div className="pt-3 mt-3 border-t border-border">
+              <Link href="/settings">
+                <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200">
+                  <Settings className="w-5 h-5" />
+                  <span>Settings</span>
+                </a>
+              </Link>
+            </div>
+          )}
+        </nav>
+
+        {/* User Profile */}
+        <div className="p-3 border-t border-border">
+          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent cursor-pointer transition-colors duration-200">
+            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+              {initials}
+            </div>
+            {!sidebarCollapsed && (
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">
+                  {user?.firstName} {user?.lastName}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            )}
+            {!sidebarCollapsed && (
+              <a
+                href="/api/logout"
+                className="p-1 hover:bg-muted-foreground/10 rounded transition-colors duration-200"
+                title="Sign out"
+              >
+                <LogOut className="w-4 h-4" />
+              </a>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Bar */}
+        <header className="h-16 bg-card border-b border-border px-6 flex items-center justify-between">
+          <div className="flex-1 max-w-2xl">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input
+                type="text"
+                placeholder="Search or press ⌘K..."
+                className="w-full pl-10 pr-4 py-2 bg-muted rounded-lg text-sm border border-transparent focus:border-ring focus:bg-background focus:outline-none transition-all duration-200"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-3 ml-6">
+            {/* Language Selector */}
+            <button className="px-3 py-1.5 text-sm bg-muted rounded-lg hover:bg-accent transition-colors duration-200 flex items-center gap-2">
+              <Globe className="w-4 h-4" />
+              <span>English</span>
+            </button>
+
+            {/* Notifications */}
+            <button className="w-9 h-9 flex items-center justify-center hover:bg-muted rounded-lg transition-colors duration-200 relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-destructive rounded-full"></span>
+            </button>
+
+            {/* Help */}
+            <button className="w-9 h-9 flex items-center justify-center hover:bg-muted rounded-lg transition-colors duration-200">
+              <HelpCircle className="w-5 h-5" />
+            </button>
+          </div>
+        </header>
+
+        {/* Content */}
+        <main className="flex-1 overflow-y-auto">
+          {children}
+        </main>
+      </div>
+    </div>
+  );
+}

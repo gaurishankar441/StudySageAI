@@ -13,7 +13,7 @@ import {
 import { relations } from "drizzle-orm";
 import { createInsertSchema } from "drizzle-zod";
 
-// Session storage table
+// Session storage table (mandatory for Replit Auth)
 export const sessions = pgTable(
   "sessions",
   {
@@ -24,11 +24,10 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// User storage table with password authentication
+// User storage table (mandatory for Replit Auth)
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").notNull().unique(),
-  passwordHash: varchar("password_hash").notNull(),
+  email: varchar("email").unique(),
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
@@ -313,6 +312,14 @@ export const flashcardsRelations = relations(flashcards, ({ one }) => ({
 }));
 
 // Insert schemas
+export const insertUserSchema = createInsertSchema(users).pick({
+  email: true,
+  firstName: true,
+  lastName: true,
+  profileImageUrl: true,
+  locale: true,
+});
+
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
   createdAt: true,
@@ -369,18 +376,17 @@ export const insertChunkSchema = createInsertSchema(chunks).omit({
   createdAt: true,
 });
 
-// Insert schema for users (exclude password_hash from inserts, handle separately)
-export const insertUserSchema = createInsertSchema(users).omit({
-  id: true,
-  passwordHash: true,
-  createdAt: true,
-  updatedAt: true,
-});
-
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
-export type AuthUser = Omit<User, 'passwordHash'>; // Exclude password hash from auth responses
+export type AuthUser = {
+  id: string;
+  email?: string | null;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  locale?: string | null;
+};
 export type InsertDocument = typeof insertDocumentSchema._type;
 export type Document = typeof documents.$inferSelect;
 export type InsertChat = typeof insertChatSchema._type;
