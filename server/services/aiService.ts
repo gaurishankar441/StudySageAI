@@ -386,6 +386,157 @@ export class AIServiceManager {
     return plan;
   }
 
+  // Quick Tools execution with streaming
+  async executeQuickTool(
+    sessionId: string | undefined,
+    toolType: string,
+    params: {
+      subject: string;
+      level: string;
+      topic: string;
+      userQuery?: string;
+      difficulty?: string;
+      language: string;
+      examBoard?: string;
+      subtopic?: string;
+      exampleType?: string;
+      qTypes?: string;
+      count?: number;
+      summaryTurns?: number;
+    },
+    userId: string,
+    onChunk: (chunk: string) => void
+  ) {
+    const systemPrompt = this.buildQuickToolPrompt(toolType, params);
+
+    let fullResponse = '';
+
+    try {
+      for await (const chunk of aiService.streamChatResponse([], systemPrompt)) {
+        fullResponse += chunk;
+        onChunk(chunk);
+      }
+    } catch (error) {
+      console.error('Quick tool streaming error:', error);
+      throw error;
+    }
+
+    // Optionally save to chat if sessionId provided
+    if (sessionId) {
+      await storage.addMessage({
+        chatId: sessionId,
+        role: 'assistant',
+        content: fullResponse,
+        metadata: { toolType, params }
+      });
+    }
+
+    return fullResponse;
+  }
+
+  // Build India-centric prompts for each tool type
+  private buildQuickToolPrompt(
+    toolType: string,
+    params: {
+      subject: string;
+      level: string;
+      topic: string;
+      userQuery?: string;
+      difficulty?: string;
+      language: string;
+      examBoard?: string;
+      subtopic?: string;
+      exampleType?: string;
+      qTypes?: string;
+      count?: number;
+      summaryTurns?: number;
+    }
+  ): string {
+    const { subject, level, topic, language, examBoard, subtopic, userQuery, difficulty, exampleType, qTypes, count } = params;
+
+    const langText = language === 'hi' ? 'हिन्दी (Hindi)' : 'English';
+    const boardText = examBoard ? `aligned to ${examBoard}` : 'aligned to Indian curriculum';
+
+    switch (toolType) {
+      case 'explain':
+        return `System: You are a patient, exam-focused tutor for Indian students.
+User context:
+- Subject: ${subject}, Level: ${level}, Topic: ${topic}
+- Board/Exam: ${examBoard || 'General'}
+- Language: ${langText}
+
+Task: Explain the concept "${subtopic || topic}" in ${langText} using:
+1) 4-6 short paragraphs, student-friendly language
+2) 1 simple analogy from daily life
+3) Boxed key formulae (if any) with units
+4) 3 quick-check questions with answers at the end
+5) If helpful, describe one simple diagram to draw in notebook
+
+Keep it ${boardText}. Use clear examples relevant to Indian students.`;
+
+      case 'hint':
+        return `Provide 2-3 progressive hints (no full solution) for this question in ${langText}:
+
+Question: ${userQuery || 'the current problem'}
+
+Context:
+- Subject: ${subject} (${level})
+- Topic: ${topic}
+- Board: ${examBoard || 'General'}
+
+Make each hint shorter than 30 words. Last hint should push toward the method, not the answer. Be encouraging!`;
+
+      case 'example':
+        return `Create a ${exampleType || 'Solved Example'} for ${topic} at ${difficulty || 'medium'} difficulty for an Indian ${level} student (${examBoard || 'General curriculum'}).
+
+Requirements:
+- Show steps clearly with proper units
+- Include common mistakes to avoid
+- Use numbers and scenarios relevant to Indian context
+- Language: ${langText}
+
+Keep it practical and exam-focused!`;
+
+      case 'practice5':
+        return `Generate ${count || 5} ${qTypes || 'mixed type'} practice questions for ${topic} (${difficulty || 'medium'} difficulty) ${boardText}.
+
+Return as JSON array:
+[{
+  "q": "question text",
+  "type": "mcq|short|numeric",
+  "options": ["A","B","C","D"]?,
+  "answer": "B"|42|"text",
+  "explain": "brief explanation why"
+}]
+
+Context:
+- Subject: ${subject}
+- Level: ${level}
+- Language: ${langText}
+- Board: ${examBoard || 'General'}
+
+Make questions exam-style and grade-appropriate!`;
+
+      case 'summary':
+        return `Summarise the recent tutoring session on ${topic} for ${examBoard || 'an Indian'} student.
+
+Include:
+- Key ideas covered (bulleted, 4-6 points)
+- 3 main takeaways for revision
+- Important formulae boxed (if any) with units
+- 1 suggested next study step
+
+Context:
+- Subject: ${subject} (${level})
+- Language: ${langText}
+
+Keep it concise and actionable!`;
+
+      default:
+        return `You are a helpful tutor for ${subject} (${level}), teaching ${topic} in ${langText}.`;
+    }
+  }
+
   // Streaming responses for real-time chat
   async *streamTutorResponse(
     chatId: string,

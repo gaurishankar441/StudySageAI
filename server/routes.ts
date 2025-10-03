@@ -387,6 +387,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Quick Tool endpoint with SSE streaming
+  app.post('/api/tutor/quick-tool', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const {
+        sessionId,
+        toolType,
+        subject,
+        level,
+        topic,
+        userQuery,
+        difficulty,
+        language = 'en',
+        examBoard,
+        subtopic,
+        exampleType,
+        qTypes,
+        count = 5,
+        summaryTurns = 10
+      } = req.body;
+
+      if (!toolType || !subject || !level || !topic) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Set up Server-Sent Events
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      const result = await aiServiceManager.executeQuickTool(
+        sessionId,
+        toolType,
+        {
+          subject,
+          level,
+          topic,
+          userQuery,
+          difficulty,
+          language,
+          examBoard,
+          subtopic,
+          exampleType,
+          qTypes,
+          count,
+          summaryTurns
+        },
+        userId,
+        (chunk: string) => {
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
+      );
+
+      res.write(`data: ${JSON.stringify({ type: 'complete', content: result })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error("Error in quick tool:", error);
+      res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to execute quick tool' })}\n\n`);
+      res.end();
+    }
+  });
+
   // DocChat routes
   app.post('/api/docchat/session', isAuthenticated, async (req: any, res) => {
     try {

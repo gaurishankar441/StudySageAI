@@ -23,6 +23,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
+import QuickToolModal from "./QuickToolModal";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -44,10 +45,15 @@ interface TutorSessionProps {
   onEndSession: () => void;
 }
 
+type ToolType = 'explain' | 'hint' | 'example' | 'practice5' | 'summary';
+
 export default function TutorSession({ chatId, onEndSession }: TutorSessionProps) {
   const [message, setMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingMessage, setStreamingMessage] = useState("");
+  const [activeToolModal, setActiveToolModal] = useState<ToolType | null>(null);
+  const [toolStreaming, setToolStreaming] = useState(false);
+  const [toolStreamingContent, setToolStreamingContent] = useState("");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -115,6 +121,94 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     e.preventDefault();
     if (message.trim() && !isStreaming) {
       sendMessageMutation.mutate(message.trim());
+    }
+  };
+
+  const handleQuickToolSubmit = async (toolType: ToolType, formData: any) => {
+    if (!chat) return;
+
+    setToolStreaming(true);
+    setToolStreamingContent("");
+
+    try {
+      const response = await fetch('/api/tutor/quick-tool', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          sessionId: chatId,
+          toolType,
+          subject: chat.subject,
+          level: chat.level,
+          topic: chat.topic,
+          ...formData
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to execute quick tool');
+      }
+
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+
+      if (!reader) throw new Error('No response stream');
+
+      let fullContent = '';
+      let buffer = '';
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const events = buffer.split('\n\n');
+        buffer = events.pop() || '';
+
+        for (const event of events) {
+          const lines = event.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                if (data.type === 'chunk') {
+                  fullContent += data.content;
+                  setToolStreamingContent(fullContent);
+                } else if (data.type === 'complete') {
+                  fullContent = data.content;
+                  setToolStreamingContent(fullContent);
+                } else if (data.type === 'done') {
+                  setToolStreaming(false);
+                  queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
+                  toast({
+                    title: "Generated Successfully",
+                    description: "Quick tool result has been added to the chat",
+                  });
+                  setTimeout(() => {
+                    setActiveToolModal(null);
+                    setToolStreamingContent("");
+                  }, 1500);
+                } else if (data.type === 'error') {
+                  throw new Error(data.message);
+                }
+              } catch (parseError) {
+                console.warn('Failed to parse SSE event:', line, parseError);
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Quick tool error:', error);
+      setToolStreaming(false);
+      toast({
+        title: "Error",
+        description: "Failed to execute quick tool. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -336,6 +430,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           <Button
             variant="outline"
             className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveToolModal('explain')}
+            data-testid="button-explain-concept"
           >
             <Lightbulb className="w-4 h-4" />
             Explain Concept
@@ -343,6 +439,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           <Button
             variant="outline"
             className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveToolModal('hint')}
+            data-testid="button-give-hint"
           >
             <HelpCircle className="w-4 h-4" />
             Give Me a Hint
@@ -350,6 +448,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           <Button
             variant="outline"
             className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveToolModal('example')}
+            data-testid="button-show-example"
           >
             <BookOpen className="w-4 h-4" />
             Show Example
@@ -357,6 +457,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           <Button
             variant="outline"
             className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveToolModal('practice5')}
+            data-testid="button-practice-5"
           >
             <Brain className="w-4 h-4" />
             Practice 5 Qs
@@ -364,6 +466,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           <Button
             variant="outline"
             className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+            onClick={() => setActiveToolModal('summary')}
+            data-testid="button-get-summary"
           >
             <FileText className="w-4 h-4" />
             Get Summary
@@ -417,6 +521,24 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           </div>
         </div>
       </div>
+
+      {/* Quick Tool Modal */}
+      {chat && (
+        <QuickToolModal
+          open={activeToolModal !== null}
+          onOpenChange={(open) => {
+            if (!open) {
+              setActiveToolModal(null);
+              setToolStreamingContent("");
+            }
+          }}
+          toolType={activeToolModal}
+          chat={chat}
+          onSubmit={handleQuickToolSubmit}
+          isStreaming={toolStreaming}
+          streamingContent={toolStreamingContent}
+        />
+      )}
     </div>
   );
 }
