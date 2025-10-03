@@ -16,6 +16,12 @@ export async function verifyPassword(password: string, hash: string): Promise<bo
   return bcrypt.compare(password, hash);
 }
 
+// Sanitize user object - remove sensitive fields
+export function sanitizeUser(user: AuthUser): Omit<AuthUser, 'passwordHash'> {
+  const { passwordHash, ...safeUser } = user;
+  return safeUser;
+}
+
 // Session configuration
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -76,9 +82,9 @@ export function setupAuth(app: Express) {
       // Set session
       (req.session as any).userId = userId;
 
-      // Get user without password
+      // Get user and sanitize before sending
       const user = await storage.getUser(userId);
-      res.status(201).json(user);
+      res.status(201).json(sanitizeUser(user));
     } catch (error) {
       console.error('Signup error:', error);
       res.status(500).json({ message: 'Failed to create account' });
@@ -114,9 +120,9 @@ export function setupAuth(app: Express) {
       // Set session
       (req.session as any).userId = userWithPassword.id;
 
-      // Get user without password
+      // Get user and sanitize before sending
       const user = await storage.getUser(userWithPassword.id);
-      res.json(user);
+      res.json(sanitizeUser(user));
     } catch (error) {
       console.error('Login error:', error);
       res.status(500).json({ message: 'Failed to login' });
@@ -138,7 +144,7 @@ export function setupAuth(app: Express) {
   app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
     try {
       const user = req.user;
-      res.json(user);
+      res.json(sanitizeUser(user));
     } catch (error) {
       console.error('Error fetching user:', error);
       res.status(500).json({ message: 'Failed to fetch user' });
@@ -160,8 +166,8 @@ export const isAuthenticated: RequestHandler = async (req, res, next) => {
       return res.status(401).json({ message: 'Unauthorized' });
     }
 
-    // Attach user to request (without password)
-    (req as any).user = user;
+    // Attach sanitized user to request
+    (req as any).user = sanitizeUser(user);
     next();
   } catch (error) {
     console.error('Auth middleware error:', error);
