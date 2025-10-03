@@ -48,32 +48,37 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileExtension = fileName.split('.').pop()?.toLowerCase();
       const sourceType = fileExtension === 'pdf' ? 'pdf' : 
                         fileExtension === 'docx' ? 'docx' : 
-                        fileExtension === 'pptx' ? 'pptx' : 'document';
+                        fileExtension === 'txt' ? 'text' : 
+                        fileExtension === 'pptx' ? 'pptx' : 'text';
 
-      // Fetch the file from object storage to process it
-      const fileResponse = await fetch(uploadURL);
-      if (!fileResponse.ok) {
-        throw new Error('Failed to fetch uploaded file');
-      }
+      // Initialize object storage service
+      const objectStorageService = new ObjectStorageService();
       
-      const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+      // Normalize the upload URL to get the object path
+      const normalizedPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
+      
+      // Get the file from object storage using GCS client
+      const objectFile = await objectStorageService.getObjectEntityFile(normalizedPath);
+      const [fileBuffer] = await objectFile.download();
 
-      console.log(`Processing document for user ${userId}: ${fileName}`);
+      console.log(`Processing document for user ${userId}: ${fileName} (${fileBuffer.length} bytes)`);
+      
+      // Convert buffer to string for text files
+      const content = sourceType === 'text' ? fileBuffer.toString('utf-8') : fileBuffer;
       
       // Process document
       const docId = await documentService.ingestDocument(
         userId,
         fileName,
         sourceType,
-        fileBuffer,
+        content,
         undefined,
-        uploadURL
+        normalizedPath
       );
 
       console.log(`Document ${docId} created for user ${userId}`);
 
       // Set ACL policy
-      const objectStorageService = new ObjectStorageService();
       await objectStorageService.trySetObjectEntityAclPolicy(uploadURL, {
         owner: userId,
         visibility: "private"
@@ -117,14 +122,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
       const sourceType = fileExtension === 'pdf' ? 'pdf' : 
                         fileExtension === 'docx' ? 'docx' : 
-                        fileExtension === 'pptx' ? 'pptx' : 'document';
+                        fileExtension === 'txt' ? 'text' : 
+                        fileExtension === 'pptx' ? 'pptx' : 'text';
+
+      // Convert buffer to string for text files
+      const content = sourceType === 'text' ? file.buffer.toString('utf-8') : file.buffer;
 
       // Process document
       const docId = await documentService.ingestDocument(
         userId,
         title || file.originalname,
         sourceType,
-        file.buffer,
+        content,
         undefined,
         uploadURL
       );
