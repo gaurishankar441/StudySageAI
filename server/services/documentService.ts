@@ -100,10 +100,21 @@ export class DocumentService {
 
       console.log('Extracted video ID:', videoId, '- fetching transcript...');
       const transcript = await YoutubeTranscript.fetchTranscript(videoId);
+      
+      if (!transcript || transcript.length === 0) {
+        console.warn('No transcript available for video:', videoId);
+        throw new Error('This video does not have captions/transcript available. Please try another video or upload a document with text content.');
+      }
+      
       const text = transcript.map(entry => entry.text).join(' ');
       const duration = transcript.length > 0 ? transcript[transcript.length - 1].offset / 1000 : 0;
       
       console.log('Successfully extracted transcript:', text.length, 'characters');
+      
+      if (text.trim().length === 0) {
+        console.warn('Transcript is empty for video:', videoId);
+        throw new Error('Video transcript is empty. Please try another video with captions enabled.');
+      }
       
       return {
         text,

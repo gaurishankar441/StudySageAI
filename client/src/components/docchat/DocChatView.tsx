@@ -513,6 +513,18 @@ export default function DocChatView() {
                     style={{ minHeight: '100%' }}
                   />
                 </div>
+              ) : currentDoc.sourceType === 'youtube' && currentDoc.metadata?.videoId ? (
+                <div className="w-full h-full flex items-center justify-center bg-black p-8">
+                  <div className="w-full max-w-4xl aspect-video">
+                    <iframe
+                      src={`https://www.youtube.com/embed/${currentDoc.metadata.videoId}`}
+                      className="w-full h-full border-0 rounded-lg shadow-2xl"
+                      title={currentDoc.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
               ) : currentDoc.status === 'processing' ? (
                 <div className="flex items-center justify-center h-full">
                   <div className="text-center">
@@ -539,6 +551,7 @@ export default function DocChatView() {
                       onClick={handleStartChat}
                       disabled={selectedDocuments.length === 0}
                       className="mt-2"
+                      data-testid="button-start-chat"
                     >
                       Start Chat to Explore Content
                     </Button>
