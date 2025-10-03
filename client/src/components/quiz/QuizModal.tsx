@@ -93,6 +93,7 @@ export default function QuizModal({ open, onOpenChange }: QuizModalProps) {
         title: data.title,
         source: data.generateFrom,
         sourceId: data.sourceId || null,
+        sourceUrl: data.sourceUrl || null,
         subject: data.subject,
         topic: data.topic,
         difficulty: data.difficulty,

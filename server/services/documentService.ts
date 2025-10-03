@@ -6,10 +6,8 @@ import * as mammoth from "mammoth";
 import { YoutubeTranscript } from "youtube-transcript";
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
-import { createRequire } from "module";
 import { encoding_for_model } from "tiktoken";
 
-const require = createRequire(import.meta.url);
 const tokenizer = encoding_for_model("gpt-3.5-turbo");
 
 export interface DocumentChunk {
@@ -44,10 +42,10 @@ export class DocumentService {
     }
   }
 
-  // PDF text extraction using pdf-parse (loaded via CommonJS)
+  // PDF text extraction using pdf-parse
   private async extractFromPDF(buffer: Buffer): Promise<{ text: string; metadata: any }> {
     try {
-      const pdfParse = require('pdf-parse');
+      const pdfParse = (await import('pdf-parse')).default;
       const data = await pdfParse(buffer);
       
       if (!data.text || data.text.trim().length === 0) {

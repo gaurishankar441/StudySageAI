@@ -381,6 +381,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         title,
         source,
         sourceId,
+        sourceUrl,
         subject,
         topic,
         difficulty,
@@ -389,11 +390,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         language = 'en'
       } = req.body;
 
+      let finalSourceId = sourceId;
+
+      // If URL provided (YouTube/Website), create document first
+      if (sourceUrl && (source === 'youtube' || source === 'website')) {
+        const docTitle = title || `${source === 'youtube' ? 'YouTube' : 'Web'} content for ${topic}`;
+        finalSourceId = await documentService.ingestDocument(
+          userId,
+          docTitle,
+          source,
+          '',
+          sourceUrl
+        );
+      }
+
       const quiz = await aiServiceManager.generateQuiz(
         userId,
         title,
         source,
-        sourceId,
+        finalSourceId,
         subject,
         topic,
         difficulty,
@@ -538,12 +553,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/notes', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const { title, sourceIds, template = 'cornell', language = 'en' } = req.body;
+      const { title, sourceIds, sourceUrls, template = 'cornell', language = 'en' } = req.body;
+
+      let finalSourceIds = sourceIds || [];
+
+      // If URLs provided, create documents first
+      if (sourceUrls && sourceUrls.length > 0) {
+        for (const url of sourceUrls) {
+          // Determine source type from URL
+          let sourceType = 'web';
+          if (url.includes('youtube.com') || url.includes('youtu.be')) {
+            sourceType = 'youtube';
+          }
+          
+          const docId = await documentService.ingestDocument(
+            userId,
+            title || url,
+            sourceType,
+            '',
+            url
+          );
+          finalSourceIds.push(docId);
+        }
+      }
 
       const note = await aiServiceManager.generateNoteFromSources(
         userId,
         title,
-        sourceIds,
+        finalSourceIds,
         template,
         language
       );
