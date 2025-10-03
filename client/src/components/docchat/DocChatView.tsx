@@ -53,11 +53,8 @@ export default function DocChatView() {
   });
 
   const uploadDocumentMutation = useMutation({
-    mutationFn: async (file: File) => {
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", file.name);
-      return apiRequest("POST", "/api/documents/upload", formData);
+    mutationFn: async (uploadData: { uploadURL: string; fileName: string; fileSize: number; fileType: string }) => {
+      return apiRequest("POST", "/api/documents/from-upload", uploadData);
     },
     onSuccess: () => {
       toast({
@@ -188,9 +185,16 @@ export default function DocChatView() {
                   return { method: "PUT" as const, url: uploadURL };
                 }}
                 onComplete={(result) => {
-                  const file = result.successful?.[0];
-                  if (file && file.data) {
-                    uploadDocumentMutation.mutate(file.data as File);
+                  const uploadedFile = result.successful?.[0];
+                  const uploadURL = uploadedFile?.uploadURL;
+                  const fileName = uploadedFile?.name || 'Uploaded Document';
+                  if (uploadedFile && uploadURL && typeof uploadURL === 'string') {
+                    uploadDocumentMutation.mutate({
+                      uploadURL: uploadURL,
+                      fileName: fileName,
+                      fileSize: uploadedFile.size || 0,
+                      fileType: uploadedFile.type || 'application/octet-stream'
+                    });
                   }
                 }}
                 buttonClassName="w-full h-24 border-2 border-dashed border-border hover:border-primary transition-colors duration-200"

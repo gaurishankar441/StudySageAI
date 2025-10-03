@@ -34,6 +34,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Document routes
+  // For files already uploaded to object storage via ObjectUploader
+  app.post('/api/documents/from-upload', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.claims.sub;
+      const { uploadURL, fileName, fileSize, fileType } = req.body;
+
+      if (!uploadURL || !fileName) {
+        return res.status(400).json({ message: "Upload URL and file name are required" });
+      }
+
+      // Extract file extension to determine source type
+      const fileExtension = fileName.split('.').pop()?.toLowerCase();
+      const sourceType = fileExtension === 'pdf' ? 'pdf' : 
+                        fileExtension === 'docx' ? 'docx' : 
+                        fileExtension === 'pptx' ? 'pptx' : 'document';
+
+      // Fetch the file from object storage to process it
+      const fileResponse = await fetch(uploadURL);
+      if (!fileResponse.ok) {
+        throw new Error('Failed to fetch uploaded file');
+      }
+      
+      const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
+
+      // Process document
+      const docId = await documentService.ingestDocument(
+        userId,
+        fileName,
+        sourceType,
+        fileBuffer,
+        undefined,
+        uploadURL
+      );
+
+      // Set ACL policy
+      const objectStorageService = new ObjectStorageService();
+      await objectStorageService.trySetObjectEntityAclPolicy(uploadURL, {
+        owner: userId,
+        visibility: "private"
+      });
+
+      res.json({ documentId: docId, status: 'processing' });
+    } catch (error) {
+      console.error("Document processing error:", error);
+      res.status(500).json({ message: "Failed to process document" });
+    }
+  });
+
+  // For direct file upload (legacy/alternative method)
   app.post('/api/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
     try {
       const userId = req.user.claims.sub;
