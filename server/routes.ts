@@ -166,6 +166,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json({ documentId: docId, status: 'processing' });
     } catch (error) {
       console.error("Document URL processing error:", error);
+      
+      // Return 400 for user-facing errors (missing captions, invalid URLs, etc.)
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes('captions') || errorMsg.includes('transcript') || 
+          errorMsg.includes('private') || errorMsg.includes('restricted') ||
+          errorMsg.includes('Invalid') || errorMsg.includes('disabled')) {
+        return res.status(400).json({ message: errorMsg });
+      }
+      
+      // Return 500 for server errors
       res.status(500).json({ message: "Failed to process document from URL" });
     }
   });

@@ -104,15 +104,15 @@ export default function DocChatView() {
       if (!response.ok) {
         throw new Error("Failed to delete document");
       }
-      return response.json();
+      return { docId };
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       toast({
         title: "Success",
         description: "Document deleted successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      setSelectedDocuments(prev => prev.filter(id => !documents.find(d => d.id === id)));
+      setSelectedDocuments(prev => prev.filter(id => id !== data.docId));
     },
     onError: () => {
       toast({

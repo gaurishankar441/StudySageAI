@@ -3,7 +3,7 @@ import { aiService } from "../openai";
 import { InsertDocument } from "@shared/schema";
 import * as crypto from "crypto";
 import * as mammoth from "mammoth";
-import { YoutubeTranscript } from "youtube-transcript";
+import { YoutubeTranscript } from "@danielxceron/youtube-transcript";
 import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { encoding_for_model } from "tiktoken";
@@ -86,74 +86,34 @@ export class DocumentService {
     }
   }
 
-  // YouTube transcript extraction using YouTube's timedText API
+  // YouTube transcript extraction using @danielxceron/youtube-transcript
   private async extractFromYouTube(url: string): Promise<{ text: string; metadata: any }> {
     try {
       console.log('[YouTube] Processing URL:', url);
       
-      // Extract video ID from various YouTube URL formats
-      const videoId = this.extractYouTubeVideoId(url);
-      if (!videoId) {
-        console.error('[YouTube] Failed to extract video ID from URL:', url);
-        throw new Error('Invalid YouTube URL - could not extract video ID');
-      }
-
-      console.log('[YouTube] Extracted video ID:', videoId, '- fetching transcript...');
+      // The library handles URL parsing and video ID extraction internally
+      // It supports: watch?v=, youtu.be/, shorts/, embed/, live/ URLs
+      const transcript = await YoutubeTranscript.fetchTranscript(url);
       
-      // Try multiple language codes in priority order
-      const languageCodes = ['en', 'hi', 'en-US', 'en-GB'];
-      let transcriptData: Array<{ text: string; start: number; duration: number }> = [];
-      let usedLanguage = '';
-      
-      for (const lang of languageCodes) {
-        try {
-          console.log(`[YouTube] Attempting to fetch transcript in language: ${lang}`);
-          const timedTextUrl = `https://www.youtube.com/api/timedtext?v=${videoId}&lang=${lang}`;
-          
-          const response = await fetch(timedTextUrl);
-          
-          if (!response.ok) {
-            console.log(`[YouTube] Language ${lang} not available (status: ${response.status})`);
-            continue;
-          }
-          
-          const xmlData = await response.text();
-          
-          // Check if we got valid XML with transcript data
-          if (!xmlData || xmlData.trim().length === 0 || !xmlData.includes('<text')) {
-            console.log(`[YouTube] Language ${lang} returned empty or invalid data`);
-            continue;
-          }
-          
-          console.log(`[YouTube] Successfully fetched transcript in ${lang}, parsing...`);
-          transcriptData = this.parseTimedTextXML(xmlData);
-          usedLanguage = lang;
-          
-          if (transcriptData.length > 0) {
-            console.log(`[YouTube] Successfully parsed ${transcriptData.length} segments in ${lang}`);
-            break;
-          }
-        } catch (langError) {
-          console.log(`[YouTube] Failed to fetch ${lang}:`, langError instanceof Error ? langError.message : 'Unknown error');
-          continue;
-        }
-      }
-      
-      if (transcriptData.length === 0) {
-        console.error('[YouTube] No transcript available in any supported language');
+      if (!transcript || transcript.length === 0) {
+        console.error('[YouTube] No transcript found for URL:', url);
         throw new Error('This video does not have captions/transcript available. Please try another video with captions enabled.');
       }
       
-      const text = transcriptData.map(entry => entry.text).join(' ');
-      const duration = transcriptData.length > 0 ? 
-        transcriptData[transcriptData.length - 1].start + transcriptData[transcriptData.length - 1].duration : 0;
+      console.log(`[YouTube] Successfully fetched transcript: ${transcript.length} segments`);
       
-      console.log('[YouTube] Successfully extracted transcript:', text.length, 'characters,', transcriptData.length, 'segments');
-      console.log('[YouTube] Language used:', usedLanguage);
+      // Extract text from segments
+      const text = transcript.map(entry => entry.text).join(' ');
+      // Library returns offset and duration in milliseconds
+      const durationMs = transcript.length > 0 ? 
+        transcript[transcript.length - 1].offset + transcript[transcript.length - 1].duration : 0;
+      const duration = durationMs / 1000;
+      
+      console.log('[YouTube] Transcript text:', text.length, 'characters');
       console.log('[YouTube] First 200 chars:', text.substring(0, 200));
       
       if (text.trim().length === 0) {
-        console.warn('[YouTube] Transcript text is empty after joining for video:', videoId);
+        console.error('[YouTube] Transcript text is empty');
         throw new Error('Video transcript is empty. Please try another video with captions enabled.');
       }
       
@@ -161,147 +121,26 @@ export class DocumentService {
         text,
         metadata: {
           url,
-          videoId,
-          language: usedLanguage,
           duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
-          segments: transcriptData.length,
+          segments: transcript.length,
           extractedAt: new Date().toISOString()
         }
       };
     } catch (error) {
       console.error('[YouTube] Extraction error:', error);
-      throw error instanceof Error ? error : new Error(`Failed to extract YouTube transcript: ${error}`);
+      
+      // Provide user-friendly error messages
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      if (errorMsg.includes('not available') || errorMsg.includes('disabled')) {
+        throw new Error('This video does not have captions/transcript available. Please try another video with captions enabled.');
+      } else if (errorMsg.includes('private') || errorMsg.includes('restricted')) {
+        throw new Error('Unable to access this video. It may be private, age-restricted, or region-locked.');
+      } else {
+        throw new Error(`Failed to extract YouTube transcript: ${errorMsg}`);
+      }
     }
   }
 
-  // Parse YouTube's timedText XML format
-  private parseTimedTextXML(xmlData: string): Array<{ text: string; start: number; duration: number }> {
-    const segments: Array<{ text: string; start: number; duration: number }> = [];
-    
-    try {
-      // Simple XML parsing - extract <text> elements with start and dur attributes
-      const textRegex = /<text start="([^"]+)"(?:\s+dur="([^"]+)")?>([^<]*)<\/text>/g;
-      let match;
-      
-      while ((match = textRegex.exec(xmlData)) !== null) {
-        const start = parseFloat(match[1]);
-        const duration = match[2] ? parseFloat(match[2]) : 0;
-        let text = match[3];
-        
-        // Decode HTML entities
-        text = text
-          .replace(/&amp;/g, '&')
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
-          .replace(/&quot;/g, '"')
-          .replace(/&#39;/g, "'")
-          .replace(/&nbsp;/g, ' ')
-          .trim();
-        
-        if (text.length > 0) {
-          segments.push({ text, start, duration });
-        }
-      }
-      
-      console.log(`[YouTube] Parsed ${segments.length} segments from XML`);
-      return segments;
-    } catch (parseError) {
-      console.error('[YouTube] XML parsing error:', parseError);
-      return [];
-    }
-  }
-
-  // Extract YouTube video ID from various URL formats
-  private extractYouTubeVideoId(url: string): string | null {
-    try {
-      // Remove any whitespace
-      url = url.trim();
-      
-      // Try regex-based extraction first (most reliable)
-      // Matches: v=ID, /ID, embed/ID, shorts/ID, live/ID
-      const regexPatterns = [
-        /(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
-        /^([a-zA-Z0-9_-]{11})$/ // Plain video ID
-      ];
-      
-      for (const pattern of regexPatterns) {
-        const match = url.match(pattern);
-        if (match && match[1]) {
-          console.log('Regex extracted video ID:', match[1]);
-          return match[1];
-        }
-      }
-      
-      // Fallback to URL parsing
-      try {
-        const urlObj = new URL(url);
-        const hostname = urlObj.hostname.toLowerCase().replace('www.', '').replace('m.', '');
-        
-        // Format: https://youtube.com/watch?v=VIDEO_ID (with or without www)
-        if (hostname.includes('youtube.com') && urlObj.searchParams.has('v')) {
-          const videoId = urlObj.searchParams.get('v');
-          // Clean video ID (remove any fragments or extra params)
-          const cleanId = videoId ? videoId.split(/[&#]/)[0] : null;
-          if (cleanId) {
-            console.log('URL parsing extracted video ID:', cleanId);
-            return cleanId;
-          }
-        }
-        
-        // Format: https://youtu.be/VIDEO_ID
-        if (hostname === 'youtu.be') {
-          const videoId = urlObj.pathname.substring(1);
-          // Clean video ID (remove any fragments or extra params)
-          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
-          if (cleanId) {
-            console.log('URL parsing extracted video ID from youtu.be:', cleanId);
-            return cleanId;
-          }
-        }
-        
-        // Format: https://youtube.com/embed/VIDEO_ID
-        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/embed/')) {
-          const videoId = urlObj.pathname.split('/')[2];
-          // Clean video ID (remove any fragments or extra params)
-          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
-          if (cleanId) {
-            console.log('URL parsing extracted video ID from embed:', cleanId);
-            return cleanId;
-          }
-        }
-        
-        // Format: https://youtube.com/shorts/VIDEO_ID
-        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/shorts/')) {
-          const videoId = urlObj.pathname.split('/')[2];
-          // Clean video ID (remove any fragments or extra params)
-          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
-          if (cleanId) {
-            console.log('URL parsing extracted video ID from shorts:', cleanId);
-            return cleanId;
-          }
-        }
-        
-        // Format: https://youtube.com/live/VIDEO_ID
-        if (hostname.includes('youtube.com') && urlObj.pathname.startsWith('/live/')) {
-          const videoId = urlObj.pathname.split('/')[2];
-          // Clean video ID (remove any fragments or extra params)
-          const cleanId = videoId ? videoId.split(/[?&#]/)[0] : null;
-          if (cleanId) {
-            console.log('URL parsing extracted video ID from live:', cleanId);
-            return cleanId;
-          }
-        }
-      } catch (urlError) {
-        console.log('URL parsing failed, likely not a valid URL:', urlError);
-      }
-      
-      console.log('Could not extract video ID from URL:', url);
-      return null;
-    } catch (error) {
-      console.error('Error extracting YouTube video ID:', error);
-      return null;
-    }
-  }
 
   // Web content extraction using Readability
   private async extractFromWeb(url: string): Promise<{ text: string; metadata: any }> {
