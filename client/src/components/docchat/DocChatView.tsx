@@ -54,16 +54,19 @@ export default function DocChatView() {
 
   const uploadDocumentMutation = useMutation({
     mutationFn: async (uploadData: { uploadURL: string; fileName: string; fileSize: number; fileType: string }) => {
-      return apiRequest("POST", "/api/documents/from-upload", uploadData);
+      const response = await apiRequest("POST", "/api/documents/from-upload", uploadData);
+      return response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
+      console.log('Document upload success:', data);
       toast({
         title: "Success",
         description: "Document uploaded successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
     },
-    onError: () => {
+    onError: (error) => {
+      console.error('Document upload error:', error);
       toast({
         title: "Error",
         description: "Failed to upload document",

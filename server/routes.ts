@@ -58,6 +58,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       const fileBuffer = Buffer.from(await fileResponse.arrayBuffer());
 
+      console.log(`Processing document for user ${userId}: ${fileName}`);
+      
       // Process document
       const docId = await documentService.ingestDocument(
         userId,
@@ -67,6 +69,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         undefined,
         uploadURL
       );
+
+      console.log(`Document ${docId} created for user ${userId}`);
 
       // Set ACL policy
       const objectStorageService = new ObjectStorageService();
