@@ -100,6 +100,11 @@ export function setupAuth(app: Express) {
         return res.status(401).json({ message: 'Invalid email or password' });
       }
 
+      // Check if user has a password (not from OIDC migration)
+      if (!userWithPassword.passwordHash) {
+        return res.status(401).json({ message: 'Please sign up with a password to continue' });
+      }
+
       // Verify password
       const isValid = await verifyPassword(password, userWithPassword.passwordHash);
       if (!isValid) {
