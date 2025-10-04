@@ -1006,6 +1006,230 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ uploadURL });
   });
 
+  // Dashboard API endpoints
+  app.get('/api/stats', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+
+      // Get all chats (tutoring sessions)
+      const chats = await storage.getChatsByUser(userId);
+      const activeSessions = chats.length;
+
+      // Get quiz attempts for accuracy calculation
+      const quizzes = await storage.getQuizzesByUser(userId);
+      let totalScore = 0;
+      let totalPossibleScore = 0;
+      
+      for (const quiz of quizzes) {
+        const attempts = await storage.getQuizAttempts(quiz.id, userId);
+        for (const attempt of attempts) {
+          if (attempt.score !== null && attempt.totalScore !== null) {
+            totalScore += attempt.score;
+            totalPossibleScore += attempt.totalScore;
+          }
+        }
+      }
+      
+      const quizAccuracy = totalPossibleScore > 0 ? Math.round((totalScore / totalPossibleScore) * 100) : 0;
+
+      // Estimate study time from chat count (each chat ~30 min average)
+      const studyTime = Math.round(chats.length * 0.5); // hours
+
+      // Get study plans for goals
+      const studyPlans = await storage.getStudyPlansByUser(userId);
+      const activePlans = studyPlans.filter(plan => plan.status === 'active');
+      const completedPlans = studyPlans.filter(plan => plan.status === 'completed');
+      const totalGoals = activePlans.length + completedPlans.length;
+      const goalsAchieved = completedPlans.length;
+
+      res.json({
+        activeSessions,
+        quizAccuracy,
+        studyTime,
+        goalsAchieved,
+        totalGoals,
+      });
+    } catch (error) {
+      console.error("Error fetching stats:", error);
+      res.status(500).json({ message: "Failed to fetch statistics" });
+    }
+  });
+
+  app.get('/api/activity', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const activities: any[] = [];
+
+      // Get recent chats
+      const chats = await storage.getChatsByUser(userId);
+      const recentChats = chats
+        .filter(chat => chat.createdAt)
+        .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
+        .slice(0, 3);
+
+      for (const chat of recentChats) {
+        const timeAgo = getTimeAgo(new Date(chat.createdAt!));
+        activities.push({
+          id: `chat-${chat.id}`,
+          type: chat.mode === 'tutor' ? 'tutor' : 'docchat',
+          title: chat.mode === 'tutor' 
+            ? `${chat.subject || 'General'} tutoring on ${chat.topic}` 
+            : `DocChat session on ${chat.topic || 'Document'}`,
+          time: timeAgo,
+          icon: 'MessageCircle',
+        });
+      }
+
+      // Get recent quiz attempts
+      const quizzes = await storage.getQuizzesByUser(userId);
+      const allAttempts: any[] = [];
+      
+      for (const quiz of quizzes) {
+        const attempts = await storage.getQuizAttempts(quiz.id, userId);
+        for (const attempt of attempts) {
+          if (attempt.completedAt) {
+            allAttempts.push({ ...attempt, quizTitle: quiz.title });
+          }
+        }
+      }
+
+      const recentAttempts = allAttempts
+        .sort((a: any, b: any) => new Date(b.completedAt!).getTime() - new Date(a.completedAt!).getTime())
+        .slice(0, 2);
+
+      for (const attempt of recentAttempts) {
+        const accuracy = (attempt.score !== null && attempt.totalScore !== null && attempt.totalScore > 0)
+          ? Math.round((attempt.score / attempt.totalScore) * 100)
+          : 0;
+        const timeAgo = getTimeAgo(new Date(attempt.completedAt!));
+        activities.push({
+          id: `quiz-${attempt.id}`,
+          type: 'quiz',
+          title: `Scored ${accuracy}% on ${attempt.quizTitle || 'Quiz'}`,
+          time: timeAgo,
+          icon: 'CheckCircle',
+        });
+      }
+
+      // Get recent study plan updates
+      const studyPlans = await storage.getStudyPlansByUser(userId);
+      const recentPlans = studyPlans
+        .filter(plan => plan.updatedAt)
+        .sort((a, b) => new Date(b.updatedAt!).getTime() - new Date(a.updatedAt!).getTime())
+        .slice(0, 2);
+
+      for (const plan of recentPlans) {
+        const timeAgo = getTimeAgo(new Date(plan.updatedAt!));
+        activities.push({
+          id: `plan-${plan.id}`,
+          type: 'study-plan',
+          title: `Updated Study Plan: ${plan.name}`,
+          time: timeAgo,
+          icon: 'Calendar',
+        });
+      }
+
+      // Sort all activities by time and return top 5
+      const sortedActivities = activities
+        .sort((a, b) => {
+          const timeA = parseTimeAgo(a.time);
+          const timeB = parseTimeAgo(b.time);
+          return timeA - timeB;
+        })
+        .slice(0, 5);
+
+      res.json(sortedActivities);
+    } catch (error) {
+      console.error("Error fetching activity:", error);
+      res.status(500).json({ message: "Failed to fetch activity" });
+    }
+  });
+
+  app.get('/api/tasks/upcoming', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const upcomingTasks: any[] = [];
+
+      // Get all active study plans
+      const studyPlans = await storage.getStudyPlansByUser(userId);
+      const activePlans = studyPlans.filter(plan => plan.status === 'active');
+
+      // Get tasks from all active plans
+      for (const plan of activePlans) {
+        const tasks = await storage.getStudyTasks(plan.id);
+        const pendingTasks = tasks.filter(task => task.status === 'pending' && task.dueAt);
+
+        for (const task of pendingTasks) {
+          const dueDate = new Date(task.dueAt!);
+          const now = new Date();
+          const diffDays = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
+          let status = 'upcoming';
+          if (diffDays <= 0) status = 'due-today';
+          else if (diffDays === 1) status = 'tomorrow';
+
+          upcomingTasks.push({
+            id: task.id,
+            title: task.title,
+            subject: plan.subject || 'General',
+            duration: `${task.durationMin || 30} min`,
+            type: task.type === 'tutor' ? 'AI Tutor' : 
+                  task.type === 'quiz' ? 'Quiz' : 
+                  task.type === 'read' ? 'Reading' : 
+                  task.type === 'flashcards' ? 'Flashcards' : 'Task',
+            status,
+            icon: task.type === 'tutor' ? 'BookOpen' : 
+                  task.type === 'quiz' ? 'ClipboardList' : 
+                  task.type === 'read' ? 'BookOpen' : 'Brain',
+            dueAt: task.dueAt,
+          });
+        }
+      }
+
+      // Sort by due date and return top 5
+      const sortedTasks = upcomingTasks
+        .sort((a: any, b: any) => new Date(a.dueAt).getTime() - new Date(b.dueAt).getTime())
+        .slice(0, 5);
+
+      res.json(sortedTasks);
+    } catch (error) {
+      console.error("Error fetching upcoming tasks:", error);
+      res.status(500).json({ message: "Failed to fetch upcoming tasks" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
+}
+
+// Helper functions for time calculation
+function getTimeAgo(date: Date): string {
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffMins = Math.floor(diffMs / (1000 * 60));
+  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffMins < 60) return `${diffMins} min${diffMins !== 1 ? 's' : ''} ago`;
+  if (diffHours < 24) return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays} days ago`;
+  return date.toLocaleDateString();
+}
+
+function parseTimeAgo(timeStr: string): number {
+  if (timeStr.includes('min')) {
+    const mins = parseInt(timeStr);
+    return mins;
+  }
+  if (timeStr.includes('hour')) {
+    const hours = parseInt(timeStr);
+    return hours * 60;
+  }
+  if (timeStr === 'Yesterday') return 24 * 60;
+  if (timeStr.includes('days')) {
+    const days = parseInt(timeStr);
+    return days * 24 * 60;
+  }
+  return 999999; // Very old
 }

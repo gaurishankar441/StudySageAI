@@ -458,7 +458,29 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     );
   }
 
-  const progress = 65; // This would come from the chat metadata in a real implementation
+  // Calculate dynamic lesson plan based on chat progress
+  const userMessages = messages.filter(m => m.role === 'user').length;
+  const totalMessages = messages.length;
+  
+  // Calculate progress based on message exchanges
+  const progress = totalMessages > 0 ? Math.min(Math.round((userMessages / 15) * 100), 100) : 0;
+  
+  // Determine lesson phases based on message count
+  const introComplete = userMessages >= 2;
+  const coreConceptsComplete = userMessages >= 8;
+  const practiceComplete = userMessages >= 15;
+  
+  // Determine current active phase
+  const currentPhase = userMessages >= 8 ? 'practice' : userMessages >= 2 ? 'core-concepts' : 'introduction';
+  
+  // Calculate time elapsed
+  const startTime = chat.createdAt ? new Date(chat.createdAt) : new Date();
+  const elapsedMs = new Date().getTime() - startTime.getTime();
+  const elapsedMin = Math.floor(elapsedMs / 60000);
+  
+  // Calculate questions answered (user messages)
+  const questionsAnswered = userMessages;
+  const estimatedTotal = Math.max(15, userMessages + 3);
 
   return (
     <div className="h-full flex gap-6">
@@ -468,28 +490,79 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           Lesson Plan
         </h3>
         <div className="space-y-2">
-          <div className="p-3 rounded-lg bg-primary/10 border border-primary/20">
+          {/* Introduction Phase */}
+          <div className={`p-3 rounded-lg ${
+            introComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'introduction' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
             <div className="flex items-center gap-2 mb-1">
-              <CheckCircle className="w-4 h-4 text-primary" />
-              <span className="text-sm font-medium">Introduction</span>
+              {introComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'introduction' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
+                Introduction
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">Completed</p>
+            <p className="text-xs text-muted-foreground">
+              {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
+            </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-accent/10 border border-accent/20">
+          {/* Core Concepts Phase */}
+          <div className={`p-3 rounded-lg ${
+            coreConceptsComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'core-concepts' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-              <span className="text-sm font-medium">Core Concepts</span>
+              {coreConceptsComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'core-concepts' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
+                Core Concepts
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">In Progress</p>
+            <p className="text-xs text-muted-foreground">
+              {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
+            </p>
           </div>
 
-          <div className="p-3 rounded-lg bg-muted">
+          {/* Practice Phase */}
+          <div className={`p-3 rounded-lg ${
+            practiceComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'practice' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
             <div className="flex items-center gap-2 mb-1">
-              <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-              <span className="text-sm font-medium text-muted-foreground">Practice</span>
+              {practiceComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'practice' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
+                Practice
+              </span>
             </div>
-            <p className="text-xs text-muted-foreground">Not started</p>
+            <p className="text-xs text-muted-foreground">
+              {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
+            </p>
           </div>
         </div>
 
@@ -508,16 +581,16 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
         <div className="pt-4 border-t border-border space-y-2">
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Questions Answered</span>
-            <span className="font-medium">12 / 18</span>
+            <span className="text-muted-foreground">Questions Asked</span>
+            <span className="font-medium">{questionsAnswered} / {estimatedTotal}</span>
           </div>
           <div className="flex justify-between text-xs">
             <span className="text-muted-foreground">Time Elapsed</span>
-            <span className="font-medium">22 min</span>
+            <span className="font-medium">{elapsedMin} min</span>
           </div>
           <div className="flex justify-between text-xs">
-            <span className="text-muted-foreground">Accuracy</span>
-            <span className="font-medium text-success">83%</span>
+            <span className="text-muted-foreground">Total Exchanges</span>
+            <span className="font-medium">{Math.floor(totalMessages / 2)}</span>
           </div>
         </div>
       </div>

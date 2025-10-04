@@ -20,81 +20,37 @@ import {
   Folder,
   TrendingUp,
   Plus,
+  Brain,
 } from "lucide-react";
+
+// Icon mapping helper
+const getIconComponent = (iconName: string) => {
+  const iconMap: Record<string, any> = {
+    MessageCircle,
+    CheckCircle,
+    Calendar,
+    BookOpen,
+    ClipboardList,
+    Brain,
+    FileText,
+  };
+  return iconMap[iconName] || MessageCircle;
+};
 
 export default function Dashboard() {
   const { user } = useAuth();
 
-  // Mock data queries - in real implementation these would fetch actual data
+  // Fetch real dashboard data from APIs
   const { data: stats, isLoading: statsLoading } = useQuery({
     queryKey: ["/api/stats"],
-    queryFn: () => Promise.resolve({
-      activeSessions: 12,
-      quizAccuracy: 85,
-      studyTime: 24,
-      goalsAchieved: 7,
-      totalGoals: 10,
-    }),
   });
 
   const { data: recentActivity, isLoading: activityLoading } = useQuery({
     queryKey: ["/api/activity"],
-    queryFn: () => Promise.resolve([
-      {
-        id: 1,
-        type: "docchat",
-        title: "Completed DocChat session on Quantum Physics",
-        time: "2 hours ago",
-        icon: MessageCircle,
-      },
-      {
-        id: 2,
-        type: "quiz",
-        title: "Scored 90% on Calculus Quiz",
-        time: "Yesterday",
-        icon: CheckCircle,
-      },
-      {
-        id: 3,
-        type: "study-plan",
-        title: "Updated Study Plan for Final Exams",
-        time: "2 days ago",
-        icon: Calendar,
-      },
-    ]),
   });
 
   const { data: upcomingTasks, isLoading: tasksLoading } = useQuery({
     queryKey: ["/api/tasks/upcoming"],
-    queryFn: () => Promise.resolve([
-      {
-        id: 1,
-        title: "Review Chapter 5 - Thermodynamics",
-        subject: "Physics",
-        duration: "20 min",
-        type: "DocChat",
-        status: "due-today",
-        icon: BookOpen,
-      },
-      {
-        id: 2,
-        title: "Complete Algebra Quiz",
-        subject: "Mathematics",
-        duration: "15 min",
-        type: "Quiz",
-        status: "tomorrow",
-        icon: ClipboardList,
-      },
-      {
-        id: 3,
-        title: "Read: Introduction to Quantum Mechanics",
-        subject: "Physics",
-        duration: "45 min",
-        type: "Reading",
-        status: "upcoming",
-        icon: BookOpen,
-      },
-    ]),
   });
 
   const firstName = user?.firstName || "Student";
@@ -175,8 +131,8 @@ export default function Dashboard() {
           <CardContent className="p-6">
             <h2 className="text-xl font-semibold mb-4">Recent Activity</h2>
             <div className="space-y-4">
-              {recentActivity?.map((activity) => {
-                const Icon = activity.icon;
+              {recentActivity && recentActivity.length > 0 ? recentActivity.map((activity: any) => {
+                const Icon = getIconComponent(activity.icon);
                 return (
                   <div key={activity.id} className="flex items-start gap-4 pb-4 border-b border-border last:border-0 last:pb-0">
                     <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -188,7 +144,7 @@ export default function Dashboard() {
                     </div>
                   </div>
                 );
-              }) || (
+              }) : (
                 <div className="text-center py-8">
                   <TrendingUp className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                   <p className="text-sm text-muted-foreground">No recent activity</p>
@@ -248,8 +204,8 @@ export default function Dashboard() {
             </Button>
           </div>
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {upcomingTasks?.map((task) => {
-              const Icon = task.icon;
+            {upcomingTasks && upcomingTasks.length > 0 ? upcomingTasks.map((task: any) => {
+              const Icon = getIconComponent(task.icon);
               return (
                 <div key={task.id} className="p-4 rounded-lg border border-border hover:border-primary transition-colors duration-200 cursor-pointer">
                   <div className="flex items-start justify-between mb-2">
@@ -268,7 +224,7 @@ export default function Dashboard() {
                   <p className="text-sm text-muted-foreground">{task.duration} • {task.subject}</p>
                 </div>
               );
-            }) || (
+            }) : (
               <div className="col-span-full text-center py-8">
                 <Calendar className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
                 <p className="text-sm text-muted-foreground">No upcoming tasks</p>
