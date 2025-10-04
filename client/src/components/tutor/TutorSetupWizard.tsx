@@ -2,14 +2,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { DialogUnified } from "@/components/ui/dialog-unified";
 import { Calculator, FlaskConical, Book, Globe, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface TutorSetupWizardProps {
@@ -223,17 +216,24 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid="dialog-tutor-setup">
-        <DialogHeader className="flex-shrink-0">
-          <DialogTitle className="text-xl">Start AI Tutor Session</DialogTitle>
-          <DialogDescription>
+    <DialogUnified 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      size="lg"
+      scrim="light"
+      closeOnOuterClick={false}
+    >
+      <div className="space-y-6" data-testid="dialog-tutor-setup">
+        {/* Header */}
+        <div>
+          <h3 className="text-xl font-semibold">Start AI Tutor Session</h3>
+          <p className="text-sm text-muted-foreground mt-1">
             Step {step} of 4: Set up your personalized learning experience
-          </DialogDescription>
-        </DialogHeader>
+          </p>
+        </div>
 
         {/* Progress Indicator */}
-        <div className="flex items-center gap-2 mb-6 flex-shrink-0">
+        <div className="flex items-center gap-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div
@@ -257,16 +257,18 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto min-h-0 flex flex-col justify-center py-4">
+        <div className="min-h-[200px]">
           {renderStep()}
         </div>
 
-        <DialogFooter className="flex justify-between flex-shrink-0">
+        {/* Footer Actions */}
+        <div className="flex justify-between pt-4 border-t border-border">
           <Button
             variant="outline"
             onClick={handlePrev}
             disabled={step === 1}
             className="flex items-center gap-2"
+            data-testid="button-wizard-prev"
           >
             <ChevronLeft className="w-4 h-4" />
             Previous
@@ -275,12 +277,13 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
             onClick={handleNext}
             disabled={!canProceed()}
             className="flex items-center gap-2"
+            data-testid="button-wizard-next"
           >
             {step === 4 ? 'Start Learning' : 'Next'}
             {step < 4 && <ChevronRight className="w-4 h-4" />}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </DialogUnified>
   );
 }

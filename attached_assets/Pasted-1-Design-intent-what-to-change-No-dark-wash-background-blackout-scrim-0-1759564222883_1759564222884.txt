@@ -1,0 +1,243 @@
+1) Design intent (what to change)
+
+No dark wash: background को blackout मत करो; बस हल्का scrim (या 0) + elevated card.
+Material guidance scrim ~8–16% opacity रखो; large tasks के लिए full-screen dialog, छोटे steps के लिए compact dialog. 
+BoltUiX
+
+Single Dialog system: हर पेज पर ad-hoc modals की जगह एक reusable <Dialog/> + <DialogProvider/>.
+
+Focus & A11y: open होने पर focus first interactive element पर जाए; ESC/Close से dialog बंद; background aria-hidden; tab cycle trap. Patterns WAI-ARIA & Radix/Headless UI जैसे रखें. 
+mdc.almoamen.net
++2
+Stack Overflow
++2
+
+Body scroll lock: modal खुला हो तो page scroll बंद; dialog content के अंदर scroll. 
+DEV Community
+
+Z-index discipline: global tokens set—Backdrop 60, Dialog 70, Toast 80, Command-K 90.
+
+Portal: dialog DOM को document.body में portal करो ताकि any parent overflow/z-index से overlap न हो. (Headless/Radix भी यही करते हैं). 
+css-tricks.com
+
+2) Theme tokens (Tailwind/CSS)
+:root{
+  --scrim: rgba(2,6,23,0.10);   /* slate-950 @10%: subtle scrim */
+  --card-bg: #FFFFFF;
+  --ring: 0 0 0 2px rgba(79,70,229,0.35); /* indigo focus */
+  --radius: 12px;  /* rounded-xl */
+  --shadow-lg: 0 10px 30px rgba(2,6,23,0.12), 0 6px 16px rgba(2,6,23,0.08);
+  --z-backdrop: 60; --z-dialog: 70; --z-toast: 80; --z-cmdk: 90;
+}
+html.modal-open, body.modal-open { overflow: hidden; } /* scroll lock */
+
+
+Scrim को 0.10 (या 0) रखो ताकि background readable रहे—reference जैसा “clear popover” लगे, blackout न हो. (Material: scrim light guidance). 
+BoltUiX
+
+3) Reusable Dialog (React + Tailwind)
+
+इसे app-wide यूज़ करो: AI Tutor wizard, Quiz Create, DocChat Quick Actions, Study Plan wizard—सब एक ही Dialog से.
+
+// components/ui/Dialog.tsx
+import {useEffect, useRef} from "react";
+import {createPortal} from "react-dom";
+
+type DialogProps = {
+  open: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  size?: "sm"|"md"|"lg";
+  scrim?: "none"|"light"; // "none" for popover-like
+  closeOnOuterClick?: boolean;
+};
+
+export function Dialog({
+  open, onClose, title, children,
+  size="md", scrim="light", closeOnOuterClick=true
+}: DialogProps){
+  const ref = useRef<HTMLDivElement>(null);
+
+  // Focus trap + ESC + scroll lock
+  useEffect(()=>{
+    if(!open) return;
+    const prev = document.activeElement as HTMLElement | null;
+    document.documentElement.classList.add("modal-open");
+    const focusable = ref.current?.querySelector<HTMLElement>(
+      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+    );
+    focusable?.focus();
+    const onKey = (e: KeyboardEvent)=>{ if(e.key==="Escape") onClose(); };
+    document.addEventListener("keydown", onKey);
+    return ()=>{
+      document.documentElement.classList.remove("modal-open");
+      document.removeEventListener("keydown", onKey);
+      prev?.focus?.();
+    };
+  },[open, onClose]);
+
+  if(!open) return null;
+
+  return createPortal(
+    <div
+      aria-hidden={false}
+      role="dialog"
+      aria-modal="true"
+      className="fixed inset-0 z-[var(--z-dialog)] grid place-items-center"
+    >
+      {/* Backdrop */}
+      <div
+        data-backdrop
+        className={`fixed inset-0 ${scrim==="light" ? "bg-[var(--scrim)]" : "bg-transparent"}`}
+        onClick={()=> closeOnOuterClick && onClose()}
+        aria-hidden="true"
+        style={{zIndex: Number(getComputedStyle(document.documentElement).getPropertyValue('--z-backdrop'))}}
+      />
+
+      {/* Panel */}
+      <div
+        ref={ref}
+        className={[
+          "relative mx-4 w-full max-w-screen",
+          size==="sm" && "max-w-md",
+          size==="md" && "max-w-lg",
+          size==="lg" && "max-w-2xl",
+          "rounded-[var(--radius)] bg-[var(--card-bg)] shadow-[var(--shadow-lg)]",
+          "outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+        ].join(" ")}
+      >
+        <div className="flex items-start justify-between p-5 border-b border-slate-200/70">
+          <h2 className="text-lg font-semibold">{title}</h2>
+          <button
+            onClick={onClose}
+            aria-label="Close dialog"
+            className="rounded-md p-2 hover:bg-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >✕</button>
+        </div>
+        <div className="p-5 overflow-y-auto max-h-[80vh]">{children}</div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
+
+Why this fixes your screenshots:
+
+Backdrop light/none ⇒ base page नहीं “greyed-out”; modal card elevated दिखेगा (reference vibe).
+
+Portal + z-index tokens ⇒ किसी भी parent overflow/stack से overlay/overlap नहीं होगा. 
+css-tricks.com
+
+Focus-trap/ARIA/ESC ⇒ WAI-ARIA dialog pattern compliant. 
+mdc.almoamen.net
+
+Scroll-lock ⇒ background scroll बंद (CSS approach). 
+DEV Community
+
+4) Popover vs Dialog (when to use what)
+
+Wizard / Create flows (AI Tutor 4-step, Quiz Create, Study Plan): Dialog (modal) with progress bar.
+
+Tiny, anchored menus (Filters, Sort): Popover (no scrim, anchor-aligned). Radix “Dialog vs Popover” rule follow. 
+Stack Overflow
+
+5) Apply across 5 pillars (exact tasks)
+(A) AI Tutor – Start Wizard
+
+Existing black overlay हटाओ; scrim="light"; size="lg".
+
+Top में progress bar, नीचे “Back/Next”, no navigation leap—same page में dialog.
+
+Focus order: Subject grid → Next → Close.
+
+QA: ESC closes, outside-click closes, tab loops, background scroll locked.
+
+(B) DocChat – Quick Actions (Summary/Highlights/Flashcards/Quiz)
+
+Buttons page change न करें; each action = Dialog with compact form + streaming area.
+
+Summary: progress + streamed bullets;
+
+Highlights: 12–18 bullets + “Copy to Notes”;
+
+Quiz: fields (count/difficulty/lang) → Generate → “Practice now” CTA;
+
+Flashcards: style + count → preview grid.
+
+All dialogs: scrim="none" (popover-like) to keep viewer readable behind.
+
+Guidance to keep answers grounded in citations for DocChat is in WAI-ARIA dialog usage; your content region remains visible for context while dialog is active. 
+mdc.almoamen.net
+
+(C) Quiz – Create Quiz
+
+Current overlay को replace; size="lg", left side Setup Type chips; right side form; footer sticky actions.
+
+(D) Study Plan – Wizard
+
+Same Dialog; long content पर internal scroll; Today/Week/Month tabs sticky inside.
+
+(E) Notes – Templates
+
+“Record Lecture”, “Summarize Article” etc. → Dialog with steps; upload dropzone dialog-body में; submission पर non-blocking toaster.
+
+6) Implementation checklist
+
+Install headless utils (optional)
+Radix/Headless UI adopt करने से focus management आसान होता है; ऊपर वाला custom भी WAI-ARIA guides के संगत है. 
+Stack Overflow
++1
+
+Global Provider (optional)
+
+एक DialogProvider रखो ताकि nested dialogs/clashes न हों; imperative open(id, props) API helpful.
+
+QA matrix
+
+Keyboard only; Screen reader (NVDA/VO/JAWS); Small/large viewport; Long content scroll; Multiple dialogs stacked? (avoid).
+
+Docs/readme: “How to open a dialog” snippet + tokens table + z-index policy page.
+
+7) Example: AI Tutor “Choose Subject” (reference look)
+<Dialog open={open} onClose={()=>setOpen(false)} title="Start AI Tutoring Session" size="lg" scrim="light">
+  <div className="space-y-4">
+    <div className="w-full h-2 rounded bg-slate-100 overflow-hidden">
+      <div className="h-full w-1/4 bg-indigo-600"></div>
+    </div>
+    <p className="text-slate-600">Personalized learning in 4 simple steps</p>
+    <div className="grid grid-cols-2 gap-4">
+      <SubjectTile label="Mathematics" subtitle="Algebra, Calculus, Geometry" />
+      <SubjectTile label="Physics" subtitle="Mechanics, Optics, Modern" />
+      <SubjectTile label="Chemistry" subtitle="Organic, Inorganic, Physical" />
+      <SubjectTile label="Biology" subtitle="Botany, Zoology, Genetics" />
+    </div>
+    <div className="flex justify-between pt-2">
+      <button className="btn-secondary">Back</button>
+      <button className="btn-primary">Next</button>
+    </div>
+  </div>
+</Dialog>
+
+
+यह second screenshot जैसा clean card देगा—background readable, no heavy black overlay, clear elevation.
+
+Why this matches best practice
+
+WAI-ARIA Dialog pattern: role, aria-modal, focus management. 
+mdc.almoamen.net
+
+Radix/Headless principles: portal, escape, outside click, scroll-lock. 
+Stack Overflow
++1
+
+Material Dialog: light scrim + elevation; do not obscure context unnecessarily. 
+BoltUiX
+
+Body scroll lock: CSS approach (no jitter). 
+DEV Community
+
+TL;DR “Dev prompt” (drop into task)
+
+Replace all ad-hoc popups with a unified <Dialog> component (portal to body, z-index tokens, focus-trap, ESC/outside-close, body scroll-lock). Use light or no scrim to keep base page visible, elevated card with 12px radius & soft shadow. Apply to AI Tutor wizard, DocChat Quick Actions (stay on same page), Quiz Create, Study Plan wizard, and Notes templates. Follow WAI-ARIA dialog pattern and Radix/Headless behavior for accessibility & robustness. Targets: no background scroll, no overlay overlap, keyboard-only usable, screen-reader friendly.

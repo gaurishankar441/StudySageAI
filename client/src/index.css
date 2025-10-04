@@ -38,15 +38,21 @@
   /* Z-index Tokens (WAI-ARIA compliant layering) */
   --z-header: 50;
   --z-content: 0;
+  --z-backdrop: 60;
+  --z-dialog: 70;
   --z-popover: 600;
   --z-tooltip: 650;
   --z-modal: 700;
-  --z-toast: 800;
+  --z-toast: 80;
+  --z-cmdk: 90;
   
   /* Surface Design Tokens */
+  --scrim-light: rgba(2, 6, 23, 0.10);
+  --scrim-none: transparent;
   --overlay-transparent: transparent;
   --overlay-modal: transparent;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --shadow-lg: 0 10px 30px rgba(2, 6, 23, 0.12), 0 6px 16px rgba(2, 6, 23, 0.08);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --focus: 0 0 0 3px rgba(79, 70, 229, 0.25);
 }
@@ -81,6 +87,12 @@ body {
   background-color: hsl(var(--background));
   color: hsl(var(--foreground));
   font-family: var(--font-sans);
+}
+
+/* Modal scroll lock - prevent background scroll when dialog open */
+html.modal-open,
+body.modal-open {
+  overflow: hidden;
 }
 
 /* Smooth transitions */
