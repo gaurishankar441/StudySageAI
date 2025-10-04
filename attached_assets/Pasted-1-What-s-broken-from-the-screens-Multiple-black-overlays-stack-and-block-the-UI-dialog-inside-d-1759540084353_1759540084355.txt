@@ -1,0 +1,398 @@
+1) What’s broken (from the screens)
+
+Multiple black overlays stack and block the UI (dialog inside dialog).
+
+Transparent popups + low-contrast backgrounds → unclear click targets.
+
+Quick Tools/Actions are only visual; no event → prompt pipeline; they also navigate.
+
+Stepper flows (Tutor, Quiz, Study Plan) feel heavy; too many screens for simple inputs.
+
+DocChat quick actions don’t run within context (doc selection, RAG constraints).
+
+Indian curriculum taxonomy missing (classes, boards, exam tags).
+
+2) Global UX policy (apply across app)
+
+One overlay at a time. Never open a Dialog on top of a Dialog. If you must nest, second layer = Drawer/Sheet from right; or use Popover not Dialog.
+
+All modals render in a portal at #modal-root with z-50; backdrops are opaque enough to separate but not kill context.
+
+Design tokens (Tailwind / CSS variables)
+:root {
+  --bg: 255 255 255;
+  --fg: 17 24 39;
+  --muted: 107 114 128;
+  --brand: 79 70 229; /* indigo-600 */
+  --success: 16 185 129;
+  --danger: 239 68 68;
+
+  --radius: 14px;
+  --shadow: 0 10px 30px rgba(0,0,0,.12);
+  --overlay: rgba(17,24,39,.45); /* 45% not black */
+  --focus: 0 0 0 3px rgba(79,70,229,.25);
+}
+
+Dialog/Sheet spec
+
+Backdrop: background: var(--overlay); backdrop-filter: blur(2px);
+
+Card: rounded-[var(--radius)] shadow-[var(--shadow)] bg-white
+
+Sizes: sm: 420px, md: 640px, lg: 880px (use lg for Quick Tools).
+
+Focus trap + scroll lock (Radix Dialog handles this).
+
+Close affordances: top-right X, ESC, click backdrop.
+
+Keyboard: Tab order, Enter submits, Cmd+Enter runs AI.
+
+Use shadcn/ui Dialog and Sheet. Do not build custom transparent overlays.
+
+3) Engineering fix for the “black overlay” bug
+
+Ensure a single portal:
+
+// index.html (client)
+<div id="root"></div>
+<div id="modal-root"></div>
+
+
+Force all overlays to render in #modal-root:
+
+// ModalProvider.tsx
+export const ModalPortal = ({ children }: { children: React.ReactNode }) =>
+  createPortal(children, document.getElementById('modal-root')!);
+
+
+Wrap all Dialog/Sheet components with ModalPortal.
+
+Block nested modals: Central useOverlay() store with openId (string | null). If openId is set, prevent opening a second Dialog; open a Sheet instead.
+
+4) “Quick Tools” (AI Tutor) — make them work in-place
+UI behavior
+
+Clicking a Quick Tool opens a Dialog (lg) on the same page with:
+
+compact form (topic prefilled from session header)
+
+level/class (chips)
+
+“Language” (English/Hindi)
+
+Prompt preview (read-only)
+
+Run button (streams into the chat on background, also shows inline result in the modal until “Insert to Chat” pressed)
+
+Data contract
+type QuickToolKind = 'explain'|'hint'|'example'|'practice5'|'summary';
+interface QuickToolPayload {
+  sessionId: string;
+  subject: string;           // e.g. Mathematics
+  board?: 'CBSE'|'ICSE'|'State'|'ISC'|'JEE'|'NEET';
+  class?: 'Class 6'|'Class 7'|...|'Class 12';
+  level?: 'Beginner'|'Intermediate'|'Advanced'|'Expert';
+  topic: string;
+  language: 'English'|'Hindi';
+  userNotes?: string;        // optional extra context
+}
+
+API
+
+POST /api/tutor/quick-tool/:kind → streams text (SSE)
+Server maps kind → prompt template (below), then calls Cohere/OpenAI.
+
+Prompt templates (Indian context, bilingual ready)
+
+Use these as system prompts; {{...}} are variables; pass user question as user content where relevant.
+
+4.1 Explain Concept
+You are "VaktaAI", a friendly expert tutor for {{subject}} for {{board}} {{class}} ({{level}}).
+Explain "{{topic}}" simply, then add a structured deepening:
+1) Intuition
+2) Formal definition
+3) Step-by-step example (Indian syllabus aligned)
+4) Common mistakes
+5) 3 quick check questions with answers
+Keep it crisp, 300–500 words. Language: {{language}}.
+
+4.2 Give Me a Hint
+You are a hint-only tutor. The learner is studying {{topic}} in {{subject}} ({{board}} {{class}}).
+Provide 2–3 progressive hints without giving the final answer.
+If user shares work, point to the exact step to rethink. Language: {{language}}.
+
+4.3 Show Example
+Create 1–2 worked examples for {{topic}} ({{subject}}, {{board}} {{class}}).
+Format: Problem → Plan → Steps → Answer → Why this works.
+Use numbers typical for Indian textbooks. Language: {{language}}.
+
+4.4 Practice 5 Qs
+Generate 5 practice questions for {{topic}} ({{subject}}, {{board}} {{class}}).
+Mix types: 2 MCQ, 1 short, 1 numerical, 1 application.
+Return JSON:
+[{ "type":"mcq"|"short"|"num"|"app", "q":"...", "options":["A","B","C","D"]?, "answer":"...", "explanation":"..." }]
+Language: {{language}}.
+
+
+Client renders into the chat as an interactive block; answered states persist to quizAttempts table.
+
+4.5 Get Summary
+Summarise the learner's current chat session on {{topic}} into:
+- Key ideas (5 bullets)
+- One misconception to watch
+- 3 practice tasks for tomorrow
+Max 180 words. Language: {{language}}.
+
+5) AI Tutor stepper → single-sheet wizard
+
+Replace 4 steps with one dialog (lg) using cards & chips:
+
+Subject chips: Mathematics, Science, Physics, Chemistry, History, Literature
+
+Level chips: Beginner / Intermediate / Advanced / Expert
+
+Board/Class: select combo (preloaded Indian taxonomy below)
+
+Topic input (placeholder: “e.g., Quadratic Equations / लैटिस ऊर्जा”)
+
+Start Session → create session + land in tutor chat.
+
+Indian taxonomy (Boards & Classes)
+
+Boards: CBSE, ICSE, ISC, State (MH, UP, TN, WB...), JEE Main/Adv, NEET, CUET
+
+Classes: 6–12; Exams: Term I/II, Pre-Board, Board
+
+Streams (Class 11–12): PCM, PCB, Commerce, Humanities
+
+6) DocChat Quick Actions (run in-place)
+
+Buttons: Summary, Highlights, Quiz, Flashcards → Dialog on same page.
+
+Required preconditions
+
+At least 1 selected source; show a red helper beneath buttons if none:
+“Select 1–3 documents to run this action.”
+
+Prompts
+
+Summary (RAG)
+
+You are summarising the selected sources for {{board}} {{class}} ({{subject}}).
+Create a structured summary (≤ 350 words) with mini glossary. Cite using [#chunk-id] markers we provide.
+Language: {{language}}.
+
+
+Server passes top-k chunks with chunkId and content.
+
+Client renders citations [12] as hover tooltips showing source filename and page.
+
+Highlights
+
+Extract 8–12 highlights with page references from provided chunks.
+Format: bullet list, each ≤ 20 words. Language: {{language}}.
+
+
+Quiz (from docs)
+
+Reuse Practice 5 Qs JSON prompt but add:
+Base questions ONLY on provided chunks. Include citationId per question.
+
+Flashcards
+
+Generate {{N}} Q→A flashcards from provided chunks.
+Format JSON: [{ "front":"...", "back":"...", "citationId": "..." }]
+Follow {{language}}.
+
+
+All four dialogs have Run → stream preview → Save to (Notes / Quiz / Flashcards) without leaving page. Toast on success.
+
+7) Quiz builder (no dark overlay, no nav)
+
+Button Create Quiz → Dialog (lg) with tabs:
+
+Auto (Topic / Document / YouTube / Website)
+
+Manual
+
+Keep within one dialog. When generating, show inline progress bar + cancel.
+
+Partial submission already supported—add a top badge “Partial OK”.
+
+Prompt (Auto by Topic)
+Use the Practice 5 Qs JSON prompt with params: count (N), difficulty (Easy/Med/Hard/Mixed), language, board/class, subject, topic.
+
+8) Study Plan wizard simplification
+
+One Dialog (lg), four sections stacked:
+
+Basics (plan name, language)
+
+Target (exam? date? board/class)
+
+Preferences (intensity, session length, preferred time)
+
+Topics (textarea 1-per-line; optional import from Notes/Docs)
+
+Create Plan streams a progress meter (task generation → scheduled list).
+
+After create, don’t navigate; show success sheet with “Open Plan” & “Share”.
+
+9) Notes templates
+
+Keep the 5 tiles, but each opens an in-place dialog to configure (source, language, output style).
+
+When running, show inline progress; save to Notes on finish with toast.
+
+10) Visual clean-ups (apply Tailwind classes)
+
+Replace transparent popups with:
+
+<div className="rounded-2xl bg-white shadow-xl ring-1 ring-black/5">
+
+
+Backdrop:
+
+<div className="fixed inset-0 bg-gray-900/45 backdrop-blur-sm" />
+
+
+Active cards: ring-2 ring-indigo-600 ring-offset-2
+
+Buttons: btn-primary = bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl px-4 py-2
+
+Chips: data-[state=on]:bg-indigo-50 data-[state=on]:text-indigo-700
+
+11) Reference component (shadcn + Radix) — one working Quick Tool
+// QuickToolDialog.tsx
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { useMutation } from "@tanstack/react-query";
+
+export function QuickToolDialog({ open, onOpenChange, kind, session }: {
+  open:boolean; onOpenChange:(o:boolean)=>void;
+  kind: 'explain'|'hint'|'example'|'practice5'|'summary';
+  session: { id:string; subject:string; topic:string; level:string; board?:string; class?:string }
+}) {
+  const [language, setLanguage] = useState<'English'|'Hindi'>('English');
+  const [notes, setNotes] = useState('');
+  const [preview, setPreview] = useState<string>('');
+
+  const { mutate, isPending } = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/tutor/quick-tool/${kind}`, {
+        method: 'POST', headers: { 'Content-Type':'application/json' },
+        body: JSON.stringify({
+          sessionId: session.id,
+          subject: session.subject, topic: session.topic,
+          level: session.level, board: session.board, class: session.class,
+          language, userNotes: notes
+        })
+      });
+      // stream SSE → concat to preview
+      const reader = res.body!.getReader(); const dec = new TextDecoder();
+      let text = '';
+      for(;;){ const { value, done } = await reader.read(); if(done) break;
+        text += dec.decode(value); setPreview(text);
+      }
+      return text;
+    },
+    onSuccess: () => {/* toast */}
+  });
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[880px]">
+        <DialogHeader>
+          <DialogTitle>{labelFromKind(kind)}</DialogTitle>
+        </DialogHeader>
+
+        <div className="grid gap-4">
+          <div className="grid grid-cols-2 gap-3">
+            <Info label="Subject" value={session.subject}/>
+            <Info label="Topic" value={session.topic}/>
+            <Info label="Level" value={session.level}/>
+            <Info label="Board/Class" value={`${session.board ?? '-'} / ${session.class ?? '-'}`}/>
+            <div>
+              <label className="text-sm text-gray-600">Language</label>
+              <select className="mt-1 w-full rounded-xl border-gray-200" value={language}
+                onChange={e=>setLanguage(e.target.value as any)}>
+                <option>English</option><option>Hindi</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="text-sm text-gray-600">Extra context (optional)</label>
+            <Textarea value={notes} onChange={e=>setNotes(e.target.value)} placeholder="Anything specific to emphasize..."/>
+          </div>
+
+          <div className="rounded-xl border p-3 max-h-64 overflow-auto bg-gray-50">
+            <pre className="whitespace-pre-wrap text-sm">{preview || 'Output will appear here...'}</pre>
+          </div>
+        </div>
+
+        <DialogFooter>
+          <Button variant="secondary" onClick={()=>onOpenChange(false)}>Close</Button>
+          <Button disabled={isPending} onClick={()=>mutate()}>Run</Button>
+          <Button disabled={!preview} onClick={()=>insertToChat(preview)}>Insert to Chat</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+Reuse this pattern for DocChat Quick Actions, Quiz builder, Notes templates, Study Plan wizard.
+
+12) Accessibility & performance
+
+ARIA: aria-label on action icons; aria-busy during streaming.
+
+Skeletons for Doc preview pane and chat bubble.
+
+Debounce inputs (250ms) in topic/notes.
+
+Toast for success/error.
+
+Error banner with retry.
+
+13) QA checklist (ship-blockers)
+
+ Only one overlay visible; backdrop opacity ~45%; no double dark screens.
+
+ ESC closes; Cmd+Enter runs; focus returns to invoking button.
+
+ Quick Tools insert content into chat; no navigation occurs.
+
+ DocChat actions require selected docs; citations render [id] with hover.
+
+ Tutor one-sheet creates session reliably; fields prefill across app.
+
+ Mobile: Dialog → Sheet on <768px; content scrolls.
+
+14) Implementation tasks (dev breakdown)
+
+Frontend
+
+Add ModalProvider + single portal; migrate all modals to Radix Dialog/Sheet.
+
+Build QuickToolDialog + wire five tools to /api/tutor/quick-tool/:kind.
+
+Build DocChat action dialogs (Summary/Highlights/Quiz/Flashcards) with streaming + save.
+
+Replace stepper popups with one-sheet wizards (Tutor/Quiz/Study Plan).
+
+Add Indian board/class taxonomy store; surface in selects.
+
+Add “Insert to Chat” action + toast.
+
+Backend
+
+Implement quick-tool endpoints; map to prompts above (OpenAI/Cohere via your aiOrchestrator).
+
+Add RAG-limited generation for DocChat actions (pass chunk window with ids).
+
+SSE streaming across all new endpoints.
+
+Persist outputs (notes/quiz/flashcards) per action.

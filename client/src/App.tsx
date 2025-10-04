@@ -4,6 +4,7 @@ import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
+import { OverlayProvider } from "@/lib/useOverlay";
 
 // Pages
 import Landing from "@/pages/Landing";
@@ -60,8 +61,10 @@ function Router() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <Router />
-      <Toaster />
+      <OverlayProvider>
+        <Router />
+        <Toaster />
+      </OverlayProvider>
     </QueryClientProvider>
   );
 }

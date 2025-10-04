@@ -27,11 +27,16 @@
   --border: hsl(214 32% 91%);
   --input: hsl(214 32% 91%);
   --ring: hsl(243 75% 59%);
-  --radius: 12px;
+  --radius: 14px;
 
   /* Custom properties */
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-math: "STIX Two Math", serif;
+  
+  /* Modal & Overlay Design Tokens */
+  --overlay: rgba(17, 24, 39, 0.45);
+  --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --focus: 0 0 0 3px rgba(79, 70, 229, 0.25);
 }
 
 .dark {
