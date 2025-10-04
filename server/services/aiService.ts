@@ -102,57 +102,46 @@ export class AIServiceManager {
     message: string,
     userId: string
   ) {
-    console.log('[DOCCHAT] sendDocChatMessage called:', { chatId, userId, message });
-    
     const chat = await storage.getChat(chatId);
     if (!chat || chat.userId !== userId) {
       throw new Error('Chat not found or access denied');
     }
 
     // Add user message
-    console.log('[DOCCHAT] Adding user message to DB');
-    const userMessage = await storage.addMessage({
+    await storage.addMessage({
       chatId,
       role: 'user',
       content: message
     });
-    console.log('[DOCCHAT] User message saved:', { messageId: userMessage.id });
 
     // Get relevant context from documents
     const docIds = chat.docIds 
       ? (typeof chat.docIds === 'string' ? JSON.parse(chat.docIds) : chat.docIds)
       : [];
-    console.log('[DOCCHAT] Retrieving relevant chunks for docIds:', docIds);
-    
     const relevantChunks = await documentService.retrieveRelevantChunks(
       message,
       userId,
       docIds
     );
-    console.log('[DOCCHAT] Relevant chunks found:', relevantChunks.length);
 
     const context = relevantChunks
       .map(chunk => `[${chunk.metadata.docTitle}, p.${chunk.metadata.page} §${chunk.metadata.section}]\n${chunk.text}`)
       .join('\n\n');
 
     // Generate response
-    console.log('[DOCCHAT] Generating AI response');
     const response = await aiService.generateDocChatResponse(
       message,
       context,
       chat.language!
     );
-    console.log('[DOCCHAT] AI response generated, length:', response.length);
 
     // Add assistant message
-    console.log('[DOCCHAT] Adding assistant message to DB');
     const assistantMessage = await storage.addMessage({
       chatId,
       role: 'assistant',
       content: response,
       metadata: { sources: relevantChunks.map(c => c.metadata) }
     });
-    console.log('[DOCCHAT] Assistant message saved:', { messageId: assistantMessage.id });
 
     return { response, messageId: assistantMessage.id, sources: relevantChunks };
   }

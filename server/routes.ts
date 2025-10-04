@@ -304,19 +304,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const userId = req.user?.id;
       const { id } = req.params;
 
-      console.log('[MESSAGES] Fetching messages for chat:', { chatId: id, userId });
-
       const chat = await storage.getChat(id);
       if (!chat || chat.userId !== userId) {
-        console.log('[MESSAGES] Chat not found or unauthorized');
         return res.status(404).json({ message: "Chat not found" });
       }
 
       const messages = await storage.getChatMessages(id);
-      console.log('[MESSAGES] Messages retrieved:', { chatId: id, count: messages.length });
       res.json(messages);
     } catch (error) {
-      console.error("[MESSAGES] Error fetching messages:", error);
+      console.error("Error fetching messages:", error);
       res.status(500).json({ message: "Failed to fetch messages" });
     }
   });
@@ -328,15 +324,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const { id } = req.params;
       const message = req.query.message as string;
 
-      console.log('[STREAM] Request received:', { chatId: id, userId, message, hasMessage: !!message });
-
       if (!message) {
         return res.status(400).json({ message: "Message is required" });
       }
 
       const chat = await storage.getChat(id);
-      console.log('[STREAM] Chat fetched:', { chatId: id, chatFound: !!chat, mode: chat?.mode });
-      
       if (!chat || chat.userId !== userId) {
         return res.status(404).json({ message: "Chat not found" });
       }
@@ -351,24 +343,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       if (chat.mode === 'tutor') {
-        console.log('[STREAM] Processing tutor message');
         for await (const chunk of aiServiceManager.streamTutorResponse(id, message, userId)) {
           res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
         }
       } else if (chat.mode === 'docchat') {
-        console.log('[STREAM] Processing docchat message');
         const { response } = await aiServiceManager.sendDocChatMessage(id, message, userId);
-        console.log('[STREAM] DocChat response generated, length:', response.length);
         res.write(`data: ${JSON.stringify({ type: 'complete', content: response })}\n\n`);
-      } else {
-        console.log('[STREAM] Unknown chat mode:', chat.mode);
       }
 
       res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
       res.end();
-      console.log('[STREAM] Stream completed for chat:', id);
     } catch (error) {
-      console.error("[STREAM] Error in streaming chat:", error);
+      console.error("Error in streaming chat:", error);
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to process message' })}\n\n`);
       res.end();
     }
