@@ -24,6 +24,9 @@ import {
   TrendingUp,
   AlertCircle,
   Settings,
+  Volume2,
+  VolumeX,
+  Loader2,
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
@@ -59,6 +62,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [toolStreamingContent, setToolStreamingContent] = useState("");
   const [isRecording, setIsRecording] = useState(false);
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [playingAudio, setPlayingAudio] = useState<string | null>(null);
+  const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -214,6 +219,71 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       mediaRecorder.stop();
       setIsRecording(false);
       setMediaRecorder(null);
+    }
+  };
+
+  const playAudio = async (messageId: string, text: string) => {
+    // Stop any currently playing audio
+    if (audioElement) {
+      audioElement.pause();
+      audioElement.src = '';
+    }
+
+    if (playingAudio === messageId) {
+      setPlayingAudio(null);
+      setAudioElement(null);
+      return;
+    }
+
+    try {
+      setPlayingAudio(messageId);
+
+      const response = await fetch('/api/tutor/tts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: text,
+          voice: 'alloy',
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate speech');
+      }
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+
+      audio.onended = () => {
+        setPlayingAudio(null);
+        setAudioElement(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setPlayingAudio(null);
+        setAudioElement(null);
+        toast({
+          title: "Audio Playback Error",
+          description: "Could not play the audio. Please try again.",
+          variant: "destructive",
+        });
+      };
+
+      setAudioElement(audio);
+      await audio.play();
+    } catch (error) {
+      console.error('TTS error:', error);
+      setPlayingAudio(null);
+      toast({
+        title: "Speech Generation Failed",
+        description: "Could not generate speech. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -439,9 +509,29 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                     <p className="text-sm leading-relaxed">{msg.content}</p>
                   )}
                 </div>
-                <p className="text-xs text-muted-foreground mt-2 text-right">
-                  {new Date(msg.createdAt!).toLocaleTimeString()}
-                </p>
+                <div className="flex items-center justify-between mt-2">
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(msg.createdAt!).toLocaleTimeString()}
+                  </p>
+                  {msg.role === 'assistant' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => playAudio(msg.id, msg.content)}
+                      disabled={playingAudio !== null && playingAudio !== msg.id}
+                      className="h-6 px-2"
+                      data-testid={`button-play-audio-${msg.id}`}
+                    >
+                      {playingAudio === msg.id ? (
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                      ) : playingAudio ? (
+                        <VolumeX className="w-3 h-3" />
+                      ) : (
+                        <Volume2 className="w-3 h-3" />
+                      )}
+                    </Button>
+                  )}
+                </div>
               </div>
 
               {msg.role === 'user' && (
