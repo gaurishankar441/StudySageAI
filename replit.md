@@ -8,6 +8,9 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
+### October 4, 2025 - Voice Conversation Feature
+- **AI Tutor Voice Input**: Complete voice conversation functionality using OpenAI Whisper for speech-to-text transcription. Students can now speak questions via microphone, see transcript appear immediately in chat, and receive AI tutor responses. Backend endpoint POST /api/tutor/transcribe processes audio files (webm format). Frontend implements MediaRecorder for audio capture with visual recording states (red pulsing mic button). Features optimistic UI updates showing transcripts immediately, visible "Transcribing..." indicator during processing, and automatic error rollback on failures. Complete flow: Record → Transcribe → Display → AI Response.
+
 ### October 3, 2025 - Latest Session
 - **India-centric Student Profile System**: Complete profile management with Settings page supporting education board (CBSE/ICSE/State Board), exam target (JEE/NEET/Board Exams/Other), current class, and subject tagging. Database schema extended with India-specific fields. PATCH /api/auth/profile endpoint implemented with form validation and persistence. User preferences auto-populate in AI Tutor QuickToolModal and DocChat ActionModal for streamlined UX.
 
@@ -126,7 +129,7 @@ The schema supports multi-tenant user data with cascade deletions:
 - `/api/documents/*`: Document upload and management
 - `/api/chats/*`: Chat session CRUD operations
 - `/api/messages/*`: Message history retrieval
-- `/api/tutor/*`: AI tutor session management
+- `/api/tutor/*`: AI tutor session management (includes voice transcription)
 - `/api/quizzes/*`: Quiz generation and attempts
 - `/api/study-plans/*`: Study plan CRUD operations
 - `/api/notes/*`: Note creation and management
