@@ -6,6 +6,9 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
+import ReactMarkdown from 'react-markdown';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import {
   Bot,
   User,
@@ -152,7 +155,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           chatId: chatId,
           role: 'user',
           content: transcript.trim(),
-          createdAt: new Date().toISOString(),
+          createdAt: new Date(),
+          tool: null,
+          metadata: null,
         };
         
         // Update messages cache optimistically
@@ -422,42 +427,13 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                     : 'bg-muted'
                 }`}>
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none">
-                      {/* Parse JSON response for tutor messages */}
-                      {(() => {
-                        try {
-                          const tutorResponse = JSON.parse(msg.content) as TutorResponse;
-                          return (
-                            <>
-                              <p className="mb-3">{tutorResponse.explain}</p>
-                              {tutorResponse.check && (
-                                <Card className="mt-3 bg-background border">
-                                  <CardContent className="p-4">
-                                    <div className="flex items-center gap-2 text-xs font-medium text-primary mb-3">
-                                      <HelpCircle className="w-3 h-3" />
-                                      Check Your Understanding
-                                    </div>
-                                    <p className="text-sm font-medium mb-3">{tutorResponse.check.stem}</p>
-                                    <div className="space-y-2">
-                                      {tutorResponse.check.options.map((option, i) => (
-                                        <button
-                                          key={i}
-                                          className="w-full text-left p-3 rounded-lg border border-border hover:bg-accent transition-all duration-200"
-                                        >
-                                          <span className="font-medium mr-2">{String.fromCharCode(65 + i)}.</span>
-                                          {option}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              )}
-                            </>
-                          );
-                        } catch {
-                          return <p>{msg.content}</p>;
-                        }
-                      })()}
+                    <div className="prose prose-sm max-w-none dark:prose-invert text-sm leading-relaxed">
+                      <ReactMarkdown
+                        remarkPlugins={[remarkMath]}
+                        rehypePlugins={[rehypeKatex]}
+                      >
+                        {msg.content}
+                      </ReactMarkdown>
                     </div>
                   ) : (
                     <p className="text-sm leading-relaxed">{msg.content}</p>
@@ -501,7 +477,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               </div>
               <div className="flex-1">
                 <div className="bg-muted rounded-xl p-4">
-                  <p className="text-sm leading-relaxed">{streamingMessage}</p>
+                  <div className="prose prose-sm max-w-none dark:prose-invert text-sm leading-relaxed inline-block">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkMath]}
+                      rehypePlugins={[rehypeKatex]}
+                    >
+                      {streamingMessage}
+                    </ReactMarkdown>
+                  </div>
                   <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
                 </div>
               </div>
