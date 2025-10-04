@@ -2,14 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { DialogUnified } from "@/components/ui/dialog-unified";
 import {
   Select,
   SelectContent,
@@ -325,21 +318,27 @@ export default function DocChatActionModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid={`dialog-docchat-action-${actionType}`}>
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
-              <Icon className={`w-5 h-5 ${config.color}`} />
-            </div>
-            <div>
-              <DialogTitle>{config.title}</DialogTitle>
-              <DialogDescription>{config.description}</DialogDescription>
-            </div>
+    <DialogUnified 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      size="lg"
+      scrim="none"
+      closeOnOuterClick={!isProcessing}
+    >
+      <div className="space-y-4" data-testid={`dialog-docchat-action-${actionType}`}>
+        {/* Header */}
+        <div className="flex items-center gap-3 pb-4 border-b border-border">
+          <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${config.color}`} />
           </div>
-        </DialogHeader>
+          <div>
+            <h3 className="text-lg font-semibold">{config.title}</h3>
+            <p className="text-sm text-muted-foreground">{config.description}</p>
+          </div>
+        </div>
 
-        <div className="flex-shrink-0 mb-4 p-3 bg-muted/50 rounded-lg text-sm">
+        {/* Selected Documents */}
+        <div className="p-3 bg-muted/50 rounded-lg text-sm">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-muted-foreground">Selected:</span>
             {selectedDocs.slice(0, 2).map((doc, idx) => (
@@ -353,51 +352,51 @@ export default function DocChatActionModal({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {renderForm()}
+        {/* Form */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {renderForm()}
 
-            {(streamingContent || isProcessing) && (
-              <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
-                {isProcessing && !streamingContent && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    <span className="text-sm">Generating...</span>
-                  </div>
-                )}
-                {streamingContent && (
-                  <div className="prose prose-sm max-w-none">
-                    <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
-                    {isProcessing && (
-                      <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </form>
-        </div>
+          {(streamingContent || isProcessing) && (
+            <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
+              {isProcessing && !streamingContent && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <span className="text-sm">Generating...</span>
+                </div>
+              )}
+              {streamingContent && (
+                <div className="prose prose-sm max-w-none">
+                  <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
+                  {isProcessing && (
+                    <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
 
-        <DialogFooter className="flex-shrink-0 mt-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isProcessing}
-            data-testid="button-cancel"
-          >
-            {streamingContent ? 'Close' : 'Cancel'}
-          </Button>
-          <Button
-            type="submit"
-            onClick={handleSubmit}
-            disabled={isProcessing}
-            data-testid="button-generate"
-          >
-            {isProcessing ? 'Generating...' : `Generate ${config.title}`}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={isProcessing}
+              data-testid="button-cancel"
+            >
+              {streamingContent ? 'Close' : 'Cancel'}
+            </Button>
+            <Button
+              type="submit"
+              onClick={handleSubmit}
+              disabled={isProcessing}
+              data-testid="button-generate"
+            >
+              {isProcessing ? 'Generating...' : `Generate ${config.title}`}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </DialogUnified>
   );
 }
