@@ -8,8 +8,19 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
+### October 4, 2025 - Unified Dialog System
+- **DialogUnified Component**: Created WAI-ARIA compliant reusable dialog system (`client/src/components/ui/dialog-unified.tsx`) with focus trap management, body scroll lock, portal-based rendering, and configurable scrim opacity (8-16% light scrim or transparent). Replaces heavy black overlay with subtle, context-aware backgrounds. Features: size presets (sm/md/lg/xl), ESC key support, outside-click dismissal (configurable), CSS custom properties for z-index discipline (--z-dialog: 9999, --z-dialog-overlay: 9998).
+
+- **CSS Tokens for Modal System**: Added scrim variables in `index.css` - `--scrim-light: rgba(0, 0, 0, 0.12)` for focus mode, `--scrim-transparent: transparent` for context-aware modals. Implemented `.modal-open` body class with `overflow: hidden; padding-right: var(--scrollbar-width)` to prevent layout shift when scroll is locked.
+
+- **AI Tutor Wizard Migration**: Updated TutorSetupWizard to use DialogUnified with `scrim="light"` for focus, maintaining 3-step progress bar, subject/class/language selection, and seamless integration with chat initialization.
+
+- **DocChat Quick Actions Migration**: Updated DocChatActionModal to use DialogUnified with `scrim="none"` for transparent overlay, allowing students to see document context while selecting generation options (Summary, Highlights, Quiz, Flashcards). Preserves streaming UI, form validation, and India-centric preferences.
+
+- **TTS Voice Update**: Changed text-to-speech voice from 'alloy' to 'nova' (young female) for better alignment with teacher persona.
+
 ### October 4, 2025 - Voice Conversation & Enhanced Chat UI
-- **AI Tutor Voice Input & Output**: Complete bidirectional voice conversation functionality. Students speak questions via microphone (OpenAI Whisper STT), see transcripts appear immediately with optimistic updates, and receive AI responses both as text and audio (OpenAI TTS). Backend endpoints: POST /api/tutor/transcribe (audio→text) and POST /api/tutor/tts (text→audio with alloy voice). Frontend features MediaRecorder for capture, ReactMarkdown with remark-math/rehype-katex for LaTeX rendering ($x^2$, formulas), speaker buttons on AI messages, and audio playback with loading states. Complete flow: Record → Transcribe → Display (with math) → AI Response → Play Audio.
+- **AI Tutor Voice Input & Output**: Complete bidirectional voice conversation functionality. Students speak questions via microphone (OpenAI Whisper STT), see transcripts appear immediately with optimistic updates, and receive AI responses both as text and audio (OpenAI TTS nova voice). Backend endpoints: POST /api/tutor/transcribe (audio→text) and POST /api/tutor/tts (text→audio). Frontend features MediaRecorder for capture, ReactMarkdown with remark-math/rehype-katex for LaTeX rendering ($x^2$, formulas), speaker buttons on AI messages, and audio playback with loading states. Complete flow: Record → Transcribe → Display (with math) → AI Response → Play Audio.
 
 - **Enhanced Chat UI Design**: Implemented premium gradient-based design with visual hierarchy. User messages display right-aligned with indigo-to-indigo-700 gradient (`bg-gradient-to-br from-indigo-600 to-indigo-700`), AI messages left-aligned with slate gradient and borders. Avatar circles feature gradient backgrounds (bot: indigo-500→purple-600, user: slate-300→slate-400) with shadow effects. Message bubbles use `rounded-2xl` corners with `p-5` padding and subtle shadows for depth.
 

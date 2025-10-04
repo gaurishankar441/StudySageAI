@@ -30,15 +30,46 @@ export function DialogUnified({
     const prev = document.activeElement as HTMLElement | null;
     document.documentElement.classList.add("modal-open");
 
-    // Focus first interactive element
-    const focusable = ref.current?.querySelector<HTMLElement>(
-      'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-    );
-    focusable?.focus();
+    const getFocusableElements = () => {
+      if (!ref.current) return [];
+      const selector = 'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])';
+      return Array.from(ref.current.querySelectorAll<HTMLElement>(selector));
+    };
 
-    // ESC key handler
+    // Focus first interactive element
+    const focusables = getFocusableElements();
+    if (focusables.length > 0) {
+      focusables[0].focus();
+    }
+
+    // ESC and Tab/Shift+Tab handler
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
+      if (e.key === "Escape") {
+        onClose();
+        return;
+      }
+
+      if (e.key === "Tab") {
+        const focusables = getFocusableElements();
+        if (focusables.length === 0) return;
+
+        const firstFocusable = focusables[0];
+        const lastFocusable = focusables[focusables.length - 1];
+
+        if (e.shiftKey) {
+          // Shift+Tab: if focus is on first element, move to last
+          if (document.activeElement === firstFocusable) {
+            e.preventDefault();
+            lastFocusable.focus();
+          }
+        } else {
+          // Tab: if focus is on last element, move to first
+          if (document.activeElement === lastFocusable) {
+            e.preventDefault();
+            firstFocusable.focus();
+          }
+        }
+      }
     };
     document.addEventListener("keydown", onKey);
 
