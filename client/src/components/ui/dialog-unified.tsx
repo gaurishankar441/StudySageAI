@@ -48,12 +48,12 @@ export function DialogUnified({
 
     // Focus first interactive element ONLY on initial open
     if (!hasInitialFocusRef.current) {
+      hasInitialFocusRef.current = true; // Set BEFORE setTimeout to prevent race condition
       setTimeout(() => {
         const focusables = getFocusableElements();
         if (focusables.length > 0) {
           focusables[0].focus();
         }
-        hasInitialFocusRef.current = true;
       }, 50);
     }
 
@@ -93,7 +93,8 @@ export function DialogUnified({
       document.removeEventListener("keydown", onKey);
       prev?.focus?.();
     };
-  }, [open, onClose]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open]); // Remove onClose from dependencies - it's stable enough and causes re-renders
 
   if (!open) return null;
 
