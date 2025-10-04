@@ -12,13 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { DialogUnified } from "@/components/ui/dialog-unified";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -162,23 +156,15 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
   const selectedTemplate = templates.find(t => t.id === formData.template);
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl">Create New Note</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                {selectedTemplate ? selectedTemplate.description : 'Create a new study note'}
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-
-        <div className="flex-1 overflow-y-auto min-h-0">
+    <DialogUnified 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      size="lg"
+      title="Create New Note"
+      description={selectedTemplate ? selectedTemplate.description : 'Create a new study note'}
+      closeOnOuterClick={false}
+    >
+      <div className="space-y-6">
           <form onSubmit={handleSubmit} className="space-y-6 py-4">
           {/* Basic Information */}
           <div className="space-y-4">
@@ -356,27 +342,28 @@ export default function NotesModal({ open, onOpenChange, template }: NotesModalP
               </Label>
             </div>
           </div>
+          
+          {/* Footer Actions */}
+          <div className="flex justify-end gap-2 pt-4 border-t border-border">
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Cancel
+            </Button>
+            <Button 
+              onClick={handleSubmit}
+              disabled={createNoteMutation.isPending || !formData.title.trim()}
+              className="flex items-center gap-2"
+              data-testid="button-create-note"
+            >
+              {createNoteMutation.isPending ? (
+                <div className="w-4 h-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+              ) : (
+                <FileText className="w-4 h-4" />
+              )}
+              Create Note
+            </Button>
+          </div>
           </form>
-        </div>
-
-        <DialogFooter className="flex-shrink-0">
-          <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
-          </Button>
-          <Button 
-            onClick={handleSubmit}
-            disabled={createNoteMutation.isPending || !formData.title.trim()}
-            className="flex items-center gap-2"
-          >
-            {createNoteMutation.isPending ? (
-              <div className="w-4 h-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-            ) : (
-              <FileText className="w-4 h-4" />
-            )}
-            Create Note
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </DialogUnified>
   );
 }

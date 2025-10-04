@@ -12,13 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { DialogUnified } from "@/components/ui/dialog-unified";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -432,29 +426,22 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] flex flex-col">
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center justify-between">
-            <div>
-              <DialogTitle className="text-xl">Create Study Plan</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">
-                Step {step} of 4: {
-                  step === 1 ? 'Basic Information' :
-                  step === 2 ? 'Timeline & Goals' :
-                  step === 3 ? 'Study Preferences' :
-                  'Feature Selection'
-                }
-              </p>
-            </div>
-            <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </DialogHeader>
-
+    <DialogUnified 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      size="lg"
+      title="Create Study Plan"
+      description={`Step ${step} of 4: ${
+        step === 1 ? 'Basic Information' :
+        step === 2 ? 'Timeline & Goals' :
+        step === 3 ? 'Study Preferences' :
+        'Feature Selection'
+      }`}
+      closeOnOuterClick={false}
+    >
+      <div className="space-y-6">
         {/* Progress Bar */}
-        <div className="flex items-center gap-2 mb-6 flex-shrink-0">
+        <div className="flex items-center gap-2">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="flex items-center gap-2 flex-1">
               <div
@@ -478,11 +465,12 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
         </div>
 
         {/* Step Content */}
-        <div className="flex-1 overflow-y-auto min-h-0 py-4">
+        <div className="py-4">
           {renderStep()}
         </div>
 
-        <DialogFooter className="flex justify-between flex-shrink-0">
+        {/* Footer Actions */}
+        <div className="flex justify-between pt-4 border-t border-border">
           <Button
             variant="outline"
             onClick={handleBack}
@@ -510,8 +498,8 @@ export default function StudyPlanWizard({ open, onOpenChange }: StudyPlanWizardP
               </>
             )}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </div>
+    </DialogUnified>
   );
 }
