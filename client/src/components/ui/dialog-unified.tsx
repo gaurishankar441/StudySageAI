@@ -148,6 +148,7 @@ export function DialogUnified({
               )}
             </div>
             <button
+              type="button"
               onClick={onClose}
               aria-label="Close dialog"
               className="rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"

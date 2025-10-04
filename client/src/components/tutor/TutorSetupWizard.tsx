@@ -98,6 +98,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
                 return (
                   <button
                     key={subject.id}
+                    type="button"
                     onClick={() => setConfig({ ...config, subject: subject.id })}
                     className={`p-4 rounded-xl border-2 transition-all duration-200 ${
                       config.subject === subject.id
@@ -126,6 +127,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
               {levels.map((level) => (
                 <button
                   key={level.id}
+                  type="button"
                   onClick={() => setConfig({ ...config, level: level.id })}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-center ${
                     config.level === level.id
@@ -195,6 +197,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
               {languages.map((language) => (
                 <button
                   key={language.id}
+                  type="button"
                   onClick={() => setConfig({ ...config, language: language.id })}
                   className={`p-4 rounded-xl border-2 transition-all duration-200 text-left flex items-center gap-3 ${
                     config.language === language.id
@@ -258,6 +261,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
         {/* Footer Actions */}
         <div className="flex justify-between pt-4 border-t border-border">
           <Button
+            type="button"
             variant="outline"
             onClick={handlePrev}
             disabled={step === 1}
@@ -268,6 +272,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
             Previous
           </Button>
           <Button
+            type="button"
             onClick={handleNext}
             disabled={!canProceed()}
             className="flex items-center gap-2"

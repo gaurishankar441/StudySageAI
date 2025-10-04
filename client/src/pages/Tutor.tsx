@@ -15,7 +15,19 @@ export default function Tutor() {
   const startSessionMutation = useMutation({
     mutationFn: async (config: TutorConfig) => {
       const response = await apiRequest("POST", "/api/tutor/session", config);
-      return response.json();
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to start session: ${response.status} ${errorText}`);
+      }
+      
+      const data = await response.json();
+      
+      if (!data || !data.id) {
+        throw new Error('Invalid response from server - missing session ID');
+      }
+      
+      return data;
     },
     onSuccess: (data: any) => {
       setCurrentSessionId(data.id);
@@ -25,10 +37,10 @@ export default function Tutor() {
         description: "Your AI tutor session has begun!",
       });
     },
-    onError: () => {
+    onError: (error: any) => {
       toast({
         title: "Error",
-        description: "Failed to start tutor session. Please try again.",
+        description: error.message || "Failed to start tutor session. Please try again.",
         variant: "destructive",
       });
     },
@@ -75,6 +87,7 @@ export default function Tutor() {
         <button
           onClick={() => setShowSetupWizard(true)}
           className="px-8 py-4 bg-primary text-primary-foreground rounded-xl hover:bg-primary/90 transition-all duration-200 font-semibold shadow-sm hover:shadow-md text-lg"
+          data-testid="button-new-session"
         >
           Start New Tutoring Session
         </button>
