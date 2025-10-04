@@ -2,53 +2,7 @@
 
 ## Overview
 
-VaktaAI is a comprehensive educational platform that provides students with five core learning tools: AI Tutor, DocChat, Quiz Generation, Study Plan Management, and Smart Notes. The application supports multilingual learning (English and Hindi), handles multiple content formats (PDFs, videos, audio, web content), and emphasizes grounded, citation-based responses to prevent hallucination.
-
-The platform is designed around a "fast, calm UI" principle with a maximum 3-click navigation philosophy, featuring real-time streaming responses, keyboard-first interactions, and accessibility considerations.
-
-## Recent Changes
-
-### October 4, 2025 - Material Design Modal System
-- **DialogUnified Component**: Created Material Design compliant global modal system (`client/src/components/ui/dialog-unified.tsx`) with opaque scrim (60% opacity), proper animations, and complete accessibility. Portal-based rendering to document body, focus trap with Tab/Shift+Tab cycling, body scroll lock, ESC key support, and ARIA compliance (role="dialog", aria-modal="true", aria-labelledby, aria-describedby).
-
-- **Material Design Specifications**: 
-  - **Opaque Scrim**: `bg-slate-900/60` (60% opacity) - Material recommends opaque scrims for clarity, prevents visual clutter and click confusion
-  - **Animation**: Scale 0.98→1 + opacity 0→1 in 180ms ease-out (both scrim and panel synchronized)
-  - **Z-index Layering**: Scrim at 1000, panel at 1001, nested elements at 1010+ (centralized z-stack)
-  - **Shadow & Styling**: `0 20px 60px -12px rgba(2,6,23,0.35)` shadow, 12px border radius, responsive padding (p-6 sm:p-7 md:p-8)
-  - **Size Presets**: sm (480px), md (720px), lg (960px) with `w-[min(100vw-2rem, maxWidth)]` for mobile
-
-- **CSS Tokens for Modal System**: Updated `index.css` with Material Design tokens:
-  - `--scrim-opaque: rgba(15, 23, 42, 0.6)` - 60% opacity default
-  - `--scrim-heavy: rgba(15, 23, 42, 0.72)` - 72% for full attention flows
-  - `--z-modal-scrim: 1000`, `--z-modal-panel: 1001`, `--z-nested-sheet: 1010`
-  - `--modal-shadow`, `--modal-radius`, `--modal-animation` tokens
-  - `.modal-open` body class with `overflow: hidden` for scroll lock
-
-- **App-wide Migration**: Migrated AI Tutor Setup Wizard and DocChat Quick Actions to DialogUnified with opaque scrim. Both modals now have proper accessible names (title/description props), consistent animations, and focus management. No transparent overlays - all modals use Material's recommended opaque scrim for clear modal interaction patterns.
-
-- **TTS Voice Update**: Changed text-to-speech voice from 'alloy' to 'nova' (young female) for better alignment with teacher persona.
-
-### October 4, 2025 - Voice Conversation & Enhanced Chat UI
-- **AI Tutor Voice Input & Output**: Complete bidirectional voice conversation functionality. Students speak questions via microphone (OpenAI Whisper STT), see transcripts appear immediately with optimistic updates, and receive AI responses both as text and audio (OpenAI TTS nova voice). Backend endpoints: POST /api/tutor/transcribe (audio→text) and POST /api/tutor/tts (text→audio). Frontend features MediaRecorder for capture, ReactMarkdown with remark-math/rehype-katex for LaTeX rendering ($x^2$, formulas), speaker buttons on AI messages, and audio playback with loading states. Complete flow: Record → Transcribe → Display (with math) → AI Response → Play Audio.
-
-- **Enhanced Chat UI Design**: Implemented premium gradient-based design with visual hierarchy. User messages display right-aligned with indigo-to-indigo-700 gradient (`bg-gradient-to-br from-indigo-600 to-indigo-700`), AI messages left-aligned with slate gradient and borders. Avatar circles feature gradient backgrounds (bot: indigo-500→purple-600, user: slate-300→slate-400) with shadow effects. Message bubbles use `rounded-2xl` corners with `p-5` padding and subtle shadows for depth.
-
-- **Smart Auto-scroll Behavior**: Chat automatically follows conversation flow with intelligent scroll detection. Auto-scrolls to bottom only when user is within 100px of bottom (near-bottom threshold), preventing scroll interference when reading earlier messages. Triggers on new messages, streaming updates, and voice transcription. Smooth scrolling via `scroll-smooth` class ensures polished UX.
-
-- **Auto-play TTS**: AI responses automatically trigger text-to-speech playback when streaming completes. Gracefully handles browser autoplay policies (NotAllowedError) with informative toast, fallback to manual speaker button click always available. Comprehensive error handling with [TTS] console logging for debugging.
-
-### October 3, 2025 - Latest Session
-- **India-centric Student Profile System**: Complete profile management with Settings page supporting education board (CBSE/ICSE/State Board), exam target (JEE/NEET/Board Exams/Other), current class, and subject tagging. Database schema extended with India-specific fields. PATCH /api/auth/profile endpoint implemented with form validation and persistence. User preferences auto-populate in AI Tutor QuickToolModal and DocChat ActionModal for streamlined UX.
-
-- **UI Polish & Branding**: Integrated VaktaAI logo across application (sidebar: 40px, landing page: 96px, tutor header: 80px, browser favicon). Consistent modal design with proper loading states, visual hierarchy, and India-centric field integration. Verified through end-to-end Playwright testing.
-
-### October 3, 2025 - Earlier
-- **AI Tutor Quick Tools**: Implemented modal-first right rail with 5 instant tools (Explain Concept, Hint, Example, Practice 5, Summary). Features India-centric prompts supporting CBSE/ICSE/State Board, JEE/NEET, with English/Hindi toggle. SSE streaming with proper buffering, form reset on modal open, and visual progress indicators.
-
-- **YouTube Transcript Extraction**: Upgraded to `@danielxceron/youtube-transcript` library for improved reliability with 2025 YouTube formats. Supports all URL types (watch, shorts, live, embed) with dual fallback system.
-
-- **Quiz Partial Submission**: Users can now submit quizzes without answering all questions. Results display shows separate counts for Correct, Wrong, and Unattempted questions, with all questions displaying correct answers and explanations regardless of attempt status.
+VaktaAI is a comprehensive educational platform offering AI Tutor, DocChat, Quiz Generation, Study Plan Management, and Smart Notes. It supports multilingual learning (English, Hindi) and multiple content formats (PDFs, videos, audio, web content). The platform emphasizes grounded, citation-based AI responses to prevent hallucination and is designed with a "fast, calm UI" featuring maximum 3-click navigation, real-time streaming, keyboard-first interactions, and accessibility.
 
 ## User Preferences
 
@@ -58,166 +12,64 @@ Preferred communication style: Simple, everyday language.
 
 ### Frontend Architecture
 
-**Framework & Build System**
-- React with TypeScript for type-safe component development
-- Vite as the build tool and development server, configured for optimized bundling
-- Client-side routing via Wouter (lightweight alternative to React Router)
-- TanStack Query (React Query) for server state management with aggressive caching strategies
-
-**UI Component System**
-- Radix UI primitives for accessible, unstyled components
-- shadcn/ui component library built on top of Radix (New York style variant)
-- Tailwind CSS for utility-first styling with custom design tokens
-- CSS variables for theming with light/dark mode support
-- Inter font for UI elements, STIX Two Math for mathematical notation
-
-**Design System Tokens**
-- Primary color: Indigo (#4F46E5)
-- Neutral base with generous padding (12-16px) and 8pt spacing grid
-- 12px border radius (rounded-xl) for modern, friendly aesthetic
-- Lucide icons throughout the interface
-- Animations capped at 200ms with ease-out timing
-
-**State Management Strategy**
-- TanStack Query handles all server state with queryKey-based caching
-- Local component state for UI interactions
-- Authentication state managed through React Query with session persistence
-- Optimistic updates for improved perceived performance
+*   **Framework & Build System**: React with TypeScript, Vite for bundling and development, Wouter for client-side routing, TanStack Query for server state management.
+*   **UI Component System**: Radix UI primitives, shadcn/ui (New York style), Tailwind CSS for styling, custom design tokens, CSS variables for theming, Inter font.
+*   **Design System**: Primary color Indigo (#4F46E5), 12-16px padding, 8pt spacing grid, 12px border radius, Lucide icons, animations capped at 200ms ease-out.
+*   **State Management**: TanStack Query for server state and caching, local component state for UI, session persistence for authentication, optimistic updates.
+*   **UI/UX Decisions**: Material Design compliant global modal system with opaque scrims, animations, accessibility (focus trap, scroll lock, ARIA). Premium gradient-based chat UI with distinct user/AI message styles and smart auto-scroll.
 
 ### Backend Architecture
 
-**Server Framework**
-- Express.js as the HTTP server with TypeScript
-- RESTful API design pattern for all client-server communication
-- Session-based authentication with connect-pg-simple for PostgreSQL session storage
-- Middleware-based request logging and error handling
-
-**Database Layer**
-- PostgreSQL as the primary relational database
-- Drizzle ORM for type-safe database queries and schema management
-- Neon serverless PostgreSQL driver for connection pooling
-- WebSocket-based connection via Neon for improved performance
-
-**Database Schema Design**
-The schema supports multi-tenant user data with cascade deletions:
-- `users`: Core user profiles with authentication data
-- `documents`: Uploaded/processed content with metadata and status tracking
-- `chats`: Conversational sessions for AI Tutor and DocChat modes
-- `messages`: Individual chat messages with role-based storage
-- `notes`: User-created notes with template support
-- `quizzes`: Generated quiz metadata with subject/difficulty tracking
-- `quizQuestions`: Individual quiz questions with answers and rationale
-- `quizAttempts`: User quiz submissions with scoring
-- `studyPlans`: Long-term learning schedules
-- `studyTasks`: Individual tasks within study plans
-- `flashcards`: Spaced repetition learning cards
-- `chunks`: Vector-searchable document fragments (for RAG implementation)
-- `sessions`: Server-side session storage for authentication
-
-**AI Integration Architecture**
-- OpenAI API integration for LLM-powered features
-- Streaming response support for real-time tutor interactions
-- Structured output generation for quizzes, flashcards, and study plans
-- Document processing pipeline for text extraction and chunking
-- Citation tracking for grounded responses (RAG pattern)
-
-**File Storage Strategy**
-- Google Cloud Storage integration via @google-cloud/storage
-- Replit sidecar authentication for seamless cloud access
-- Object ACL (Access Control List) system for fine-grained permissions
-- Multer middleware for multipart/form-data file uploads (200MB limit)
-- Uppy frontend integration for direct-to-cloud uploads with presigned URLs
-
-**Service Layer Organization**
-- `documentService`: Handles text extraction from PDFs, DOCX, YouTube, and web content
-- `aiServiceManager`: Orchestrates AI operations (tutor sessions, quiz generation, notes summarization)
-- `storage`: Database abstraction layer with typed CRUD operations
-- `objectStorageService`: Cloud storage operations with ACL management
+*   **Server Framework**: Express.js with TypeScript, RESTful API, session-based authentication (connect-pg-simple), middleware for logging and error handling.
+*   **Database Layer**: PostgreSQL, Drizzle ORM for type-safe queries, Neon serverless driver, WebSocket-based connection.
+*   **Database Schema**: Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks.
+*   **AI Integration**: OpenAI API for LLM features, streaming responses, structured output, document processing, citation tracking (RAG).
+*   **File Storage**: Google Cloud Storage via `@google-cloud/storage`, Replit sidecar auth, object ACLs, Multer for multipart uploads, Uppy for direct-to-cloud uploads.
+*   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `storage` for DB abstraction, `objectStorageService` for cloud storage.
 
 ### Authentication and Authorization
 
-**Authentication Mechanism**
-- Custom email/password authentication with bcrypt hashing
-- Server-side sessions stored in PostgreSQL with 7-day TTL
-- HTTP-only, secure cookies for session management
-- Password requirements: minimum 8 characters
-- User registration and login with form validation
-
-**Authorization Pattern**
-- Session-based authentication with `isAuthenticated` middleware
-- User ID stored in session for data isolation
-- Row-level security through userId foreign key constraints
-- Object storage ACL for document-level access control
+*   **Authentication**: Custom email/password with bcrypt, server-side sessions (7-day TTL) in PostgreSQL, HTTP-only secure cookies.
+*   **Authorization**: Session-based `isAuthenticated` middleware, user ID for data isolation, row-level security via foreign keys, object storage ACLs.
 
 ### API Structure
 
-**Route Organization**
-- `/api/auth/*`: Authentication endpoints (login, logout, user profile)
-- `/api/documents/*`: Document upload and management
-- `/api/chats/*`: Chat session CRUD operations
-- `/api/messages/*`: Message history retrieval
-- `/api/tutor/*`: AI tutor session management (includes voice transcription)
-- `/api/quizzes/*`: Quiz generation and attempts
-- `/api/study-plans/*`: Study plan CRUD operations
-- `/api/notes/*`: Note creation and management
-
-**Data Flow Pattern**
-1. Client makes authenticated API request
-2. Express middleware validates session
-3. Route handler extracts userId from session
-4. Service layer performs business logic
-5. Storage layer executes database operations
-6. Response streamed back to client (where applicable)
+*   **Route Organization**: Categorized endpoints for authentication (`/api/auth/*`), documents (`/api/documents/*`), chats (`/api/chats/*`), messages (`/api/messages/*`), AI tutor (`/api/tutor/*`), quizzes (`/api/quizzes/*`), study plans (`/api/study-plans/*`), and notes (`/api/notes/*`).
+*   **Data Flow**: Authenticated client requests, session validation, user ID extraction, business logic, database operations, streamed responses.
 
 ### Document Processing Pipeline
 
-**Multi-Format Support**
-- PDF: Text extraction with page metadata
-- DOCX: Structured content extraction
-- YouTube: Transcript fetching via URL
-- Web: Article extraction from URLs
-- Audio/Video: Transcription support (architecture ready)
-- Plain text: Direct ingestion
-
-**Processing Workflow**
-1. File uploaded to object storage via presigned URL
-2. Document metadata created with 'processing' status
-3. Background job extracts text content
-4. Text chunked into searchable segments
-5. Chunks stored with embeddings for RAG
-6. Document status updated to 'ready'
+*   **Multi-Format Support**: PDF, DOCX, YouTube, Web content, plain text, and future audio/video transcription.
+*   **Processing Workflow**: File upload to object storage, metadata creation, background text extraction, chunking, embedding generation for RAG, status update.
 
 ## External Dependencies
 
 ### Third-Party APIs
-- **OpenAI API**: GPT-based language model for tutoring, quiz generation, and content summarization
-- **Replit Authentication**: OIDC provider for user authentication
-- **Google Cloud Storage**: Object storage for uploaded files and media
+
+*   **OpenAI API**: GPT-based models for core AI functionalities (tutoring, quiz generation, summarization).
+*   **Replit Authentication**: OIDC provider for user authentication.
+*   **Google Cloud Storage**: Object storage for user-uploaded files and media.
 
 ### Database Services
-- **Neon PostgreSQL**: Serverless PostgreSQL database with WebSocket support
-- **Drizzle Kit**: Schema migration and database management tool
+
+*   **Neon PostgreSQL**: Serverless PostgreSQL database.
+*   **Drizzle Kit**: Schema migration and database management.
 
 ### Frontend Libraries
-- **@tanstack/react-query**: Server state management and caching
-- **wouter**: Lightweight client-side routing
-- **@radix-ui/***: Comprehensive set of accessible UI primitives
-- **@uppy/core, @uppy/aws-s3, @uppy/dashboard**: File upload management
-- **react-hook-form + @hookform/resolvers**: Form validation with Zod schemas
-- **lucide-react**: Icon library
+
+*   **@tanstack/react-query**: Server state management.
+*   **wouter**: Lightweight client-side routing.
+*   **@radix-ui/***: Accessible UI primitives.
+*   **@uppy/core, @uppy/aws-s3, @uppy/dashboard**: File upload management.
+*   **react-hook-form + @hookform/resolvers**: Form validation.
+*   **lucide-react**: Icon library.
 
 ### Backend Libraries
-- **express**: HTTP server framework
-- **passport**: Authentication middleware
-- **openid-client**: OIDC authentication client
-- **drizzle-orm**: Type-safe database ORM
-- **multer**: Multipart form data handling
-- **connect-pg-simple**: PostgreSQL session store
-- **memoizee**: Function result caching
 
-### Development Tools
-- **Vite**: Frontend build tool and dev server
-- **TypeScript**: Type safety across the stack
-- **ESBuild**: Backend bundling for production
-- **Tailwind CSS**: Utility-first CSS framework
-- **PostCSS**: CSS transformation pipeline
+*   **express**: HTTP server framework.
+*   **passport**: Authentication middleware.
+*   **openid-client**: OIDC authentication client.
+*   **drizzle-orm**: Type-safe ORM.
+*   **multer**: Multipart form data handling.
+*   **connect-pg-simple**: PostgreSQL session store.
+*   **memoizee**: Function result caching.
