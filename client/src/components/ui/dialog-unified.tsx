@@ -24,6 +24,12 @@ export function DialogUnified({
   const ref = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const hasInitialFocusRef = useRef(false);
+  const onCloseRef = useRef(onClose);
+
+  // Keep onClose ref updated with latest callback
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  }, [onClose]);
 
   // Animation trigger
   useEffect(() => {
@@ -57,10 +63,10 @@ export function DialogUnified({
       }, 50);
     }
 
-    // ESC and Tab/Shift+Tab handler
+    // ESC and Tab/Shift+Tab handler - use ref for latest onClose
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
-        onClose();
+        onCloseRef.current(); // Use ref to get latest callback
         return;
       }
 
@@ -93,8 +99,7 @@ export function DialogUnified({
       document.removeEventListener("keydown", onKey);
       prev?.focus?.();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]); // Remove onClose from dependencies - it's stable enough and causes re-renders
+  }, [open]); // Only depend on open - use ref for onClose to prevent re-renders
 
   if (!open) return null;
 
@@ -122,7 +127,7 @@ export function DialogUnified({
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
         style={{ zIndex: 1000 }}
-        onClick={() => closeOnOuterClick && onClose()}
+        onClick={() => closeOnOuterClick && onCloseRef.current()}
         aria-hidden="true"
       />
 
@@ -154,7 +159,7 @@ export function DialogUnified({
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={() => onCloseRef.current()}
               aria-label="Close dialog"
               className="rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               data-testid="button-close-dialog"
