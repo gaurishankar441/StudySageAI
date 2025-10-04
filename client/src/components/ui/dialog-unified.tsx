@@ -23,11 +23,13 @@ export function DialogUnified({
 }: DialogProps) {
   const ref = useRef<HTMLDivElement>(null);
   const [isAnimating, setIsAnimating] = useState(false);
+  const hasInitialFocusRef = useRef(false);
 
   // Animation trigger
   useEffect(() => {
     if (open) {
       setIsAnimating(true);
+      hasInitialFocusRef.current = false;
     }
   }, [open]);
 
@@ -44,13 +46,16 @@ export function DialogUnified({
       return Array.from(ref.current.querySelectorAll<HTMLElement>(selector));
     };
 
-    // Focus first interactive element with slight delay for animation
-    setTimeout(() => {
-      const focusables = getFocusableElements();
-      if (focusables.length > 0) {
-        focusables[0].focus();
-      }
-    }, 50);
+    // Focus first interactive element ONLY on initial open
+    if (!hasInitialFocusRef.current) {
+      setTimeout(() => {
+        const focusables = getFocusableElements();
+        if (focusables.length > 0) {
+          focusables[0].focus();
+        }
+        hasInitialFocusRef.current = true;
+      }, 50);
+    }
 
     // ESC and Tab/Shift+Tab handler
     const onKey = (e: KeyboardEvent) => {
