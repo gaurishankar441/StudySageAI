@@ -181,6 +181,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // For direct text content submission
+  app.post('/api/documents', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { title, content, sourceType = 'text' } = req.body;
+
+      if (!content) {
+        return res.status(400).json({ message: "Content is required" });
+      }
+
+      // Process text document
+      const docId = await documentService.ingestDocument(
+        userId,
+        title || 'Text Document',
+        sourceType,
+        content
+      );
+
+      res.json({ documentId: docId, status: 'processing' });
+    } catch (error) {
+      console.error("Text document processing error:", error);
+      res.status(500).json({ message: "Failed to process text document" });
+    }
+  });
+
   app.get('/api/documents/:id/status', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;

@@ -37,6 +37,8 @@ export default function DocChatView() {
   const [message, setMessage] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [textTitle, setTextTitle] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [zoom, setZoom] = useState(100);
   const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
@@ -103,6 +105,29 @@ export default function DocChatView() {
       toast({
         title: "Error",
         description: "Failed to add URL",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addTextMutation = useMutation({
+    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+      const response = await apiRequest("POST", "/api/documents", { title, content, sourceType: 'text' });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Text document added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setTextTitle("");
+      setTextContent("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add text document",
         variant: "destructive",
       });
     },
@@ -479,6 +504,51 @@ export default function DocChatView() {
                     <Globe className="w-4 h-4" />
                   </Button>
                 </div>
+              </div>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-border"></div>
+                </div>
+                <div className="relative flex justify-center text-xs">
+                  <span className="px-2 bg-card text-muted-foreground">OR PASTE TEXT</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <Input
+                  value={textTitle}
+                  onChange={(e) => setTextTitle(e.target.value)}
+                  placeholder="Document title (optional)"
+                  className="w-full"
+                  data-testid="input-text-title"
+                />
+                <Textarea
+                  value={textContent}
+                  onChange={(e) => setTextContent(e.target.value)}
+                  placeholder="Paste your text content here..."
+                  className="w-full min-h-[100px]"
+                  data-testid="textarea-text-content"
+                />
+                <Button
+                  size="sm"
+                  onClick={() => addTextMutation.mutate({ 
+                    title: textTitle || 'Text Document', 
+                    content: textContent 
+                  })}
+                  disabled={!textContent || addTextMutation.isPending}
+                  className="w-full"
+                  data-testid="button-add-text"
+                >
+                  {addTextMutation.isPending ? (
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
+                  ) : (
+                    <>
+                      <FileText className="w-4 h-4 mr-2" />
+                      Add Text Document
+                    </>
+                  )}
+                </Button>
               </div>
             </div>
           </CardContent>
