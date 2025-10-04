@@ -33,9 +33,19 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-math: "STIX Two Math", serif;
   
-  /* Modal & Overlay Design Tokens */
-  --overlay: rgba(17, 24, 39, 0.45);
+  /* Z-index Tokens (WAI-ARIA compliant layering) */
+  --z-header: 50;
+  --z-content: 0;
+  --z-popover: 600;
+  --z-tooltip: 650;
+  --z-modal: 700;
+  --z-toast: 800;
+  
+  /* Surface Design Tokens */
+  --overlay-transparent: transparent;
+  --overlay-modal: transparent;
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   --focus: 0 0 0 3px rgba(79, 70, 229, 0.25);
 }
 
