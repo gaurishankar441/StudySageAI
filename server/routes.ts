@@ -6,6 +6,7 @@ import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { documentService } from "./services/documentService";
 import { aiServiceManager } from "./services/aiService";
+import { aiService } from "./openai";
 import { insertDocumentSchema, insertChatSchema, insertNoteSchema, insertQuizSchema, insertStudyPlanSchema } from "@shared/schema";
 import multer from "multer";
 
@@ -451,6 +452,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error in quick tool:", error);
       res.write(`data: ${JSON.stringify({ type: 'error', message: 'Failed to execute quick tool' })}\n\n`);
       res.end();
+    }
+  });
+
+  // New Quick Tool with kind parameter (Indian curriculum focused)
+  app.post('/api/tutor/quick-tool/:kind', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { kind } = req.params;
+      const {
+        sessionId,
+        subject,
+        board,
+        class: className,
+        level,
+        topic,
+        language = 'en',
+        userNotes
+      } = req.body;
+
+      if (!['explain', 'hint', 'example', 'practice5', 'summary'].includes(kind)) {
+        return res.status(400).json({ message: "Invalid tool kind" });
+      }
+
+      if (!subject || !topic) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      // Summary requires sessionId for chat history
+      if (kind === 'summary' && !sessionId) {
+        return res.status(400).json({ message: "Summary requires active chat session" });
+      }
+
+      // Set up Server-Sent Events
+      res.writeHead(200, {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Headers': 'Cache-Control'
+      });
+
+      // Use the existing executeQuickTool method
+      const result = await aiServiceManager.executeQuickTool(
+        sessionId,
+        kind,
+        {
+          subject,
+          level: level || 'Intermediate',
+          topic,
+          userQuery: userNotes,
+          difficulty: 'medium',
+          language,
+          examBoard: board,
+          subtopic: topic,
+          exampleType: 'Solved Example',
+          qTypes: 'mixed type',
+          count: 5,
+          summaryTurns: 10
+        },
+        userId,
+        (chunk: string) => {
+          res.write(`data: ${JSON.stringify({ type: 'chunk', content: chunk })}\n\n`);
+        }
+      );
+
+      res.write(`data: ${JSON.stringify({ type: 'complete', content: result })}\n\n`);
+      res.write(`data: ${JSON.stringify({ type: 'done' })}\n\n`);
+      res.end();
+    } catch (error) {
+      console.error("Error in quick tool:", error);
+      const message = error instanceof Error ? error.message : 'Failed to execute quick tool';
+      res.status(500).json({ message });
     }
   });
 
