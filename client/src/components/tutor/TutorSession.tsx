@@ -54,6 +54,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [activeToolModal, setActiveToolModal] = useState<ToolType | null>(null);
   const [toolStreaming, setToolStreaming] = useState(false);
   const [toolStreamingContent, setToolStreamingContent] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -120,6 +122,77 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       });
     },
   });
+
+  const transcribeMutation = useMutation({
+    mutationFn: async (audioBlob: Blob) => {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('language', chat?.language || 'en');
+
+      const response = await fetch('/api/tutor/transcribe', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to transcribe audio');
+      }
+
+      return response.json();
+    },
+    onSuccess: (data) => {
+      const transcript = data.transcript;
+      if (transcript && transcript.trim()) {
+        sendMessageMutation.mutate(transcript.trim());
+      }
+    },
+    onError: () => {
+      toast({
+        title: "Transcription Failed",
+        description: "Could not transcribe your voice. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      const chunks: BlobPart[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+        transcribeMutation.mutate(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+    } catch (error) {
+      toast({
+        title: "Microphone Access Denied",
+        description: "Please allow microphone access to use voice input.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -407,19 +480,42 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              placeholder="Type your response or question..."
-              disabled={isStreaming}
+              placeholder={isRecording ? "Recording..." : transcribeMutation.isPending ? "Transcribing..." : "Type your response or question..."}
+              disabled={isStreaming || isRecording || transcribeMutation.isPending}
               className="flex-1"
+              data-testid="input-chat-message"
             />
-            <Button type="submit" disabled={!message.trim() || isStreaming}>
+            <Button 
+              type="submit" 
+              disabled={!message.trim() || isStreaming || isRecording}
+              data-testid="button-send-message"
+            >
               <Send className="w-4 h-4" />
             </Button>
-            <Button type="button" variant="outline" disabled={isStreaming}>
+            <Button 
+              type="button" 
+              variant={isRecording ? "destructive" : "outline"}
+              disabled={isStreaming || transcribeMutation.isPending}
+              onClick={isRecording ? stopRecording : startRecording}
+              data-testid="button-voice-input"
+              className={isRecording ? "animate-pulse" : ""}
+            >
               <Mic className="w-4 h-4" />
             </Button>
           </form>
           <p className="text-xs text-muted-foreground mt-2">
-            Press Enter to send • Shift+Enter for new line
+            {isRecording ? (
+              <span className="text-destructive font-medium flex items-center gap-1">
+                <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                Recording... Click mic to stop
+              </span>
+            ) : transcribeMutation.isPending ? (
+              <span className="text-primary font-medium">
+                Transcribing your voice...
+              </span>
+            ) : (
+              "Press Enter to send • Click mic for voice input"
+            )}
           </p>
         </div>
       </div>
