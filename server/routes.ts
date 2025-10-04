@@ -1010,9 +1010,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/stats', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      console.log('[STATS] userId:', userId);
 
       // Get all chats (tutoring sessions)
       const chats = await storage.getChatsByUser(userId);
+      console.log('[STATS] chats count:', chats.length, 'chats:', JSON.stringify(chats.slice(0, 2)));
       const activeSessions = chats.length;
 
       // Get quiz attempts for accuracy calculation
@@ -1058,10 +1060,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/activity', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
+      console.log('[ACTIVITY] userId:', userId);
       const activities: any[] = [];
 
       // Get recent chats
       const chats = await storage.getChatsByUser(userId);
+      console.log('[ACTIVITY] chats count:', chats.length);
       const recentChats = chats
         .filter(chat => chat.createdAt)
         .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime())
