@@ -86,7 +86,6 @@ export function DialogUnified({
     return () => {
       document.documentElement.classList.remove("modal-open");
       document.removeEventListener("keydown", onKey);
-      setIsAnimating(false);
       prev?.focus?.();
     };
   }, [open, onClose]);
