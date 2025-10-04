@@ -227,21 +227,27 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   };
 
   const playAudio = async (messageId: string, text: string) => {
+    console.log('[TTS] playAudio called for message:', messageId);
+    
     // Stop any currently playing audio
     if (audioElement) {
+      console.log('[TTS] Stopping currently playing audio');
       audioElement.pause();
       audioElement.src = '';
     }
 
     if (playingAudio === messageId) {
+      console.log('[TTS] Toggling off audio for message:', messageId);
       setPlayingAudio(null);
       setAudioElement(null);
       return;
     }
 
     try {
+      console.log('[TTS] Setting playing audio to:', messageId);
       setPlayingAudio(messageId);
 
+      console.log('[TTS] Fetching TTS for text:', text.substring(0, 50) + '...');
       const response = await fetch('/api/tutor/tts', {
         method: 'POST',
         headers: {
@@ -254,21 +260,29 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         }),
       });
 
+      console.log('[TTS] Response status:', response.status);
       if (!response.ok) {
-        throw new Error('Failed to generate speech');
+        throw new Error(`Failed to generate speech: ${response.status}`);
       }
 
       const audioBlob = await response.blob();
+      console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
+      
       const audioUrl = URL.createObjectURL(audioBlob);
+      console.log('[TTS] Audio URL created:', audioUrl);
+      
       const audio = new Audio(audioUrl);
+      console.log('[TTS] Audio element created');
 
       audio.onended = () => {
+        console.log('[TTS] Audio playback ended');
         setPlayingAudio(null);
         setAudioElement(null);
         URL.revokeObjectURL(audioUrl);
       };
 
-      audio.onerror = () => {
+      audio.onerror = (e) => {
+        console.error('[TTS] Audio playback error:', e);
         setPlayingAudio(null);
         setAudioElement(null);
         toast({
@@ -279,22 +293,43 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       };
 
       setAudioElement(audio);
+      console.log('[TTS] Attempting to play audio...');
+      
       await audio.play();
-    } catch (error) {
-      console.error('TTS error:', error);
+      console.log('[TTS] Audio play() successful');
+    } catch (error: any) {
+      console.error('[TTS] Error in playAudio:', error);
       setPlayingAudio(null);
-      toast({
-        title: "Speech Generation Failed",
-        description: "Could not generate speech. Please try again.",
-        variant: "destructive",
-      });
+      setAudioElement(null);
+      
+      // Handle autoplay policy errors gracefully
+      if (error.name === 'NotAllowedError') {
+        console.log('[TTS] Audio autoplay blocked by browser policy');
+        toast({
+          title: "Audio Blocked",
+          description: "Please interact with the page first to enable audio playback.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Speech Generation Failed",
+          description: error.message || "Could not generate speech. Please try again.",
+          variant: "destructive",
+        });
+      }
     }
   };
 
-  // Auto-scroll to bottom when messages change or streaming
+  // Auto-scroll to bottom when messages change or streaming (only if user is near bottom)
   useEffect(() => {
     if (chatContainerRef.current) {
-      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+      const container = chatContainerRef.current;
+      const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
+      
+      // Only auto-scroll if user is already near the bottom or if it's a new message/streaming
+      if (isNearBottom) {
+        container.scrollTop = container.scrollHeight;
+      }
     }
   }, [messages, streamingMessage, isStreaming, transcribeMutation.isPending]);
 
@@ -303,7 +338,10 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     if (shouldAutoPlayTTS && messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       if (lastMessage.role === 'assistant') {
-        playAudio(lastMessage.id, lastMessage.content);
+        // Auto-play with error handling for browser policies
+        playAudio(lastMessage.id, lastMessage.content).catch((err) => {
+          console.log('Auto-play blocked, user can click speaker manually', err);
+        });
         setShouldAutoPlayTTS(false);
       }
     }

@@ -8,8 +8,14 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
-### October 4, 2025 - Voice Conversation Feature
+### October 4, 2025 - Voice Conversation & Enhanced Chat UI
 - **AI Tutor Voice Input & Output**: Complete bidirectional voice conversation functionality. Students speak questions via microphone (OpenAI Whisper STT), see transcripts appear immediately with optimistic updates, and receive AI responses both as text and audio (OpenAI TTS). Backend endpoints: POST /api/tutor/transcribe (audio→text) and POST /api/tutor/tts (text→audio with alloy voice). Frontend features MediaRecorder for capture, ReactMarkdown with remark-math/rehype-katex for LaTeX rendering ($x^2$, formulas), speaker buttons on AI messages, and audio playback with loading states. Complete flow: Record → Transcribe → Display (with math) → AI Response → Play Audio.
+
+- **Enhanced Chat UI Design**: Implemented premium gradient-based design with visual hierarchy. User messages display right-aligned with indigo-to-indigo-700 gradient (`bg-gradient-to-br from-indigo-600 to-indigo-700`), AI messages left-aligned with slate gradient and borders. Avatar circles feature gradient backgrounds (bot: indigo-500→purple-600, user: slate-300→slate-400) with shadow effects. Message bubbles use `rounded-2xl` corners with `p-5` padding and subtle shadows for depth.
+
+- **Smart Auto-scroll Behavior**: Chat automatically follows conversation flow with intelligent scroll detection. Auto-scrolls to bottom only when user is within 100px of bottom (near-bottom threshold), preventing scroll interference when reading earlier messages. Triggers on new messages, streaming updates, and voice transcription. Smooth scrolling via `scroll-smooth` class ensures polished UX.
+
+- **Auto-play TTS**: AI responses automatically trigger text-to-speech playback when streaming completes. Gracefully handles browser autoplay policies (NotAllowedError) with informative toast, fallback to manual speaker button click always available. Comprehensive error handling with [TTS] console logging for debugging.
 
 ### October 3, 2025 - Latest Session
 - **India-centric Student Profile System**: Complete profile management with Settings page supporting education board (CBSE/ICSE/State Board), exam target (JEE/NEET/Board Exams/Other), current class, and subject tagging. Database schema extended with India-specific fields. PATCH /api/auth/profile endpoint implemented with form validation and persistence. User preferences auto-populate in AI Tutor QuickToolModal and DocChat ActionModal for streamlined UX.
