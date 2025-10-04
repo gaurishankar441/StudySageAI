@@ -256,7 +256,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         credentials: 'include',
         body: JSON.stringify({
           text: text,
-          voice: 'alloy',
+          voice: 'nova',
         }),
       });
 
