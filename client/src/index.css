@@ -292,7 +292,7 @@ body {
 
 /* Uppy Modal Overlay Override - Match App Overlay Pattern */
 .uppy-Dashboard--modal .uppy-Dashboard-overlay {
-  background-color: rgba(0, 0, 0, 0.6) !important;
+  background-color: rgba(0, 0, 0, 0.8) !important;
   z-index: 700 !important;
 }
 
