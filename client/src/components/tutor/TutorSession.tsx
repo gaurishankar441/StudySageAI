@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -64,8 +64,11 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
+  const [shouldAutoPlayTTS, setShouldAutoPlayTTS] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const chatContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: chat, isLoading: chatLoading } = useQuery<Chat>({
     queryKey: [`/api/chats/${chatId}`],
@@ -102,6 +105,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           } else if (data.type === 'done') {
             eventSource.close();
             setIsStreaming(false);
+            setShouldAutoPlayTTS(true);
             resolve(data);
           } else if (data.type === 'error') {
             eventSource.close();
@@ -286,6 +290,24 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       });
     }
   };
+
+  // Auto-scroll to bottom when messages change or streaming
+  useEffect(() => {
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+  }, [messages, streamingMessage, isStreaming, transcribeMutation.isPending]);
+
+  // Auto-play TTS when streaming completes
+  useEffect(() => {
+    if (shouldAutoPlayTTS && messages.length > 0) {
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage.role === 'assistant') {
+        playAudio(lastMessage.id, lastMessage.content);
+        setShouldAutoPlayTTS(false);
+      }
+    }
+  }, [shouldAutoPlayTTS, messages]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -481,23 +503,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-y-auto p-6 space-y-6">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" id="chat-messages-container">
           {messages.map((msg, index) => (
             <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-4 h-4 text-primary-foreground" />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Bot className="w-5 h-5 text-white" />
                 </div>
               )}
               
-              <div className={`flex-1 ${msg.role === 'user' ? 'max-w-lg' : ''}`}>
-                <div className={`rounded-xl p-4 ${
+              <div className={`flex-1 ${msg.role === 'user' ? 'max-w-2xl' : 'max-w-3xl'}`}>
+                <div className={`rounded-2xl p-5 shadow-sm ${
                   msg.role === 'user' 
-                    ? 'bg-primary text-primary-foreground ml-auto' 
-                    : 'bg-muted'
+                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white ml-auto' 
+                    : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700'
                 }`}>
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none dark:prose-invert text-sm leading-relaxed">
+                    <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed">
                       <ReactMarkdown
                         remarkPlugins={[remarkMath]}
                         rehypePlugins={[rehypeKatex]}
@@ -506,10 +528,10 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="text-sm leading-relaxed">{msg.content}</p>
+                    <p className="leading-relaxed">{msg.content}</p>
                   )}
                 </div>
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-2 px-1">
                   <p className="text-xs text-muted-foreground">
                     {new Date(msg.createdAt!).toLocaleTimeString()}
                   </p>
@@ -519,15 +541,15 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       size="sm"
                       onClick={() => playAudio(msg.id, msg.content)}
                       disabled={playingAudio !== null && playingAudio !== msg.id}
-                      className="h-6 px-2"
+                      className="h-7 px-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
                       data-testid={`button-play-audio-${msg.id}`}
                     >
                       {playingAudio === msg.id ? (
-                        <Loader2 className="w-3 h-3 animate-spin" />
+                        <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
                       ) : playingAudio ? (
-                        <VolumeX className="w-3 h-3" />
+                        <VolumeX className="w-4 h-4 text-slate-400" />
                       ) : (
-                        <Volume2 className="w-3 h-3" />
+                        <Volume2 className="w-4 h-4 text-indigo-600" />
                       )}
                     </Button>
                   )}
@@ -535,8 +557,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               </div>
 
               {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 text-sm font-medium">
-                  <User className="w-4 h-4" />
+                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <User className="w-5 h-5 text-white" />
                 </div>
               )}
             </div>
@@ -545,13 +567,13 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           {/* Transcribing Indicator */}
           {transcribeMutation.isPending && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <Mic className="w-4 h-4 text-primary-foreground animate-pulse" />
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Mic className="w-5 h-5 text-white animate-pulse" />
               </div>
               <div className="flex-1">
-                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
-                  <p className="text-sm text-primary font-medium flex items-center gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 shadow-sm">
+                  <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium flex items-center gap-2">
+                    <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
                     Transcribing your voice...
                   </p>
                 </div>
@@ -562,12 +584,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           {/* Streaming Message */}
           {isStreaming && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                <Bot className="w-4 h-4 text-primary-foreground" />
+              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Bot className="w-5 h-5 text-white" />
               </div>
-              <div className="flex-1">
-                <div className="bg-muted rounded-xl p-4">
-                  <div className="prose prose-sm max-w-none dark:prose-invert text-sm leading-relaxed inline-block">
+              <div className="flex-1 max-w-3xl">
+                <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
+                  <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed inline-block">
                     <ReactMarkdown
                       remarkPlugins={[remarkMath]}
                       rehypePlugins={[rehypeKatex]}
@@ -575,7 +597,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       {streamingMessage}
                     </ReactMarkdown>
                   </div>
-                  <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                  <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />
                 </div>
               </div>
             </div>
