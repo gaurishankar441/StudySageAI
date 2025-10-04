@@ -115,6 +115,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
     },
     onError: (error) => {
+      // Rollback optimistic update - refetch to remove phantom message
+      queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
       toast({
         title: "Error",
         description: "Failed to send message. Please try again.",
@@ -144,6 +146,22 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     onSuccess: (data) => {
       const transcript = data.transcript;
       if (transcript && transcript.trim()) {
+        // Optimistically add user message to UI
+        const tempUserMessage: Message = {
+          id: `temp-${Date.now()}`,
+          chatId: chatId,
+          role: 'user',
+          content: transcript.trim(),
+          createdAt: new Date().toISOString(),
+        };
+        
+        // Update messages cache optimistically
+        queryClient.setQueryData<Message[]>(
+          [`/api/chats/${chatId}/messages`],
+          (old = []) => [...old, tempUserMessage]
+        );
+        
+        // Send to AI for response
         sendMessageMutation.mutate(transcript.trim());
       }
     },
@@ -457,6 +475,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               )}
             </div>
           ))}
+
+          {/* Transcribing Indicator */}
+          {transcribeMutation.isPending && (
+            <div className="flex gap-4 animate-fade-in">
+              <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                <Mic className="w-4 h-4 text-primary-foreground animate-pulse" />
+              </div>
+              <div className="flex-1">
+                <div className="bg-primary/10 border border-primary/20 rounded-xl p-4">
+                  <p className="text-sm text-primary font-medium flex items-center gap-2">
+                    <span className="w-2 h-2 bg-primary rounded-full animate-pulse" />
+                    Transcribing your voice...
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Streaming Message */}
           {isStreaming && (
