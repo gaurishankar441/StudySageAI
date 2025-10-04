@@ -1,0 +1,232 @@
+1) Decide the right surface for each action
+
+Popover (non-modal) — inline, lightweight, does not block page. Good for Quick Tools / Quick Actions (Explain, Hint, Example, Summary, Flashcards, “Create Quiz from…”). Keep it anchored to the button and close on outside click/ESC. 
+W3C
++1
+
+Modal Dialog — blocks page until user finishes a short task (e.g., “Start Tutor Session” 4-step, “Create Quiz” wizard). Use a backdrop but you can make that backdrop transparent so the page doesn’t darken. Manage focus + keyboard per ARIA APG.
+
+2) Layering model (no more black screen)
+
+Create one portal root and controlled backdrops.
+
+<body>
+  <div id="app"></div>
+  <div id="portal-root" aria-live="polite"></div>
+</body>
+
+
+Z-index tokens
+
+header: 50
+
+page content: 0
+
+popover: 600
+
+tooltip: 650
+
+modal: 700
+
+toast: 800
+
+3) Popover (non-modal) that does not dim the page
+
+You can use Radix UI Popover (great a11y + positioning) or Headless UI Popover. Both render without a page overlay by default. 
+radix-ui.com
++1
+
+React (Radix UI)
+import * as Popover from '@radix-ui/react-popover';
+
+export function QuickToolPopover({trigger, title, children}: {
+  trigger: React.ReactNode; title: string; children: React.ReactNode;
+}) {
+  return (
+    <Popover.Root>
+      <Popover.Trigger asChild>{trigger}</Popover.Trigger>
+      <Popover.Portal container={document.getElementById('portal-root')!}>
+        <Popover.Content
+          side="right"
+          align="start"
+          avoidCollisions
+          className="rounded-2xl border border-slate-200 bg-white shadow-2xl p-4 w-[440px] max-h-[80vh] overflow-auto"
+        >
+          <div className="text-base font-semibold mb-2">{title}</div>
+          {children}
+          <Popover.Arrow className="fill-white drop-shadow" />
+        </Popover.Content>
+      </Popover.Portal>
+    </Popover.Root>
+  );
+}
+
+
+No backdrop layer added → background stays clear.
+
+Content is scrollable, arrow points to the triggering button.
+
+ESC / outside click will close automatically (a11y handled by library). 
+radix-ui.com
+
+4) Modal dialog that keeps background visible
+
+Use native <dialog> (great in 2025) or Radix Dialog. If you want no dimming, set a transparent backdrop:
+
+Native <dialog> (accessible pattern)
+<dialog id="wiz" aria-labelledby="wizTitle" aria-modal="true">
+  <h2 id="wizTitle">Start AI Tutor</h2>
+  <!-- wizard content -->
+  <button formmethod="dialog">Close</button>
+</dialog>
+
+<script type="module">
+  const dlg = document.getElementById('wiz');
+  // Open:
+  dlg.showModal();
+  // Keep page visible (no dark overlay):
+  dlg.style.padding = 0;
+  dlg.style.border = 'none';
+  dlg.style.borderRadius = '16px';
+  dlg.style.maxWidth = '760px';
+  dlg.style.width = 'min(760px, 96vw)';
+  // Transparent backdrop:
+  dlg.addEventListener('close', () => document.body.inert = false);
+  document.body.inert = true; // prevent background interaction (a11y)
+</script>
+
+<style>
+dialog::backdrop { background: transparent; } /* <-- no dim */
+</style>
+
+
+dialog.showModal() + ::backdrop { background: transparent; } keeps the page clear, but still traps focus (required).
+
+Use inert on <body> (or the main app root) to disable pointer/tab on the background while the dialog is open (clean a11y). 
+schalkneethling.com
++1
+
+If you prefer a library, Radix Dialog already implements focus trap/ESC/ARIA; give it backdrop: transparent. 
+radix-ui.com
+
+Why this is correct: The WAI-ARIA Authoring Practices require focus trapping, ESC to close, labelled titles, and preventing background interaction for true modals. We’re doing that without a visual dark veil.
+
+5) Fix the current black overlay bug (quick diff)
+
+You likely have a global overlay like <div class="fixed inset-0 bg-black/60"> mounted above everything on any “open”.
+
+Remove it for Popover flows entirely.
+
+For Modal, either:
+
+keep the element but set bg-transparent, or
+
+if using <dialog>, style dialog::backdrop { background: transparent; }.
+
+Also ensure only one overlay is mounted (some stacks create 2: one from library + one custom).
+
+6) Keep actions “in-place” (no page jumps)
+
+All Quick Tool / Quick Actions should open in the same page via the Popover component above. Here are tiny, focused popovers for your actions:
+
+Explain Concept — text field (optional), “level” select, Explain button → streams back explanation + mini ToC in the popover.
+
+Give me a Hint — single “Hint me” button; returns a 2–3 line hint (no solution), with “Another hint” chip.
+
+Show Example — dropdown: “Numerical / Real-life / Step-by-step” → example block + “Generate similar”.
+
+Practice 5 Qs — generate 5 inline MCQs in the popover; “Open full practice” to push into the Quiz page only if they choose.
+
+Get Summary — 5–7 bullet summary + “Copy” button.
+
+Flashcards (DocChat) — style select, count, language → “Generate” in place; success toast with “View deck” deep-link.
+
+7) Prompt templates (Indian curriculum tuned)
+
+You can feed these as system prompts for the AI calls behind each Popover.
+
+Explain Concept
+You are “VaktaAI Tutor”, a friendly subject expert for Indian students (CBSE/ICSE/State Boards). 
+Grade: {grade} • Subject: {subject} • Topic: {topic}. 
+Language: {lang} (use simple bilingual labels if lang=Hindi).
+Output: 
+1) 2–3 sentence overview, 
+2) Key formulas/terms with brief meaning, 
+3) Step-by-step reasoning path students can follow, 
+4) 1 quick-check question.
+Keep it concise. Use class-appropriate examples (e.g., Class 9 vs Class 12).
+
+Hint
+Give a short hint (2–3 lines) towards solving {problem}. 
+Do not reveal the final answer. Offer a strategy or the next step only.
+
+Example
+Create one worked example for {topic} at {grade} level.
+Format: Problem → Step-by-step Solution → Answer. Prefer India-context examples where relevant.
+
+Practice 5 Qs (in-popover)
+Make 5 MCQs for {topic} ({grade}, {difficulty}). 
+Return JSON: [{ id, question, options[4], correctIndex, explanation:1–2 lines }].
+Keep language {lang}. Avoid trick questions.
+
+Summary (notes/docchat)
+Summarize the selected content for {grade} in {lang}.
+Return: 5–7 bullets + 3 key terms + 1 exam-style question.
+
+Flashcards (docchat)
+Generate {n} flashcards for spaced repetition on {topic} ({grade}). 
+Each: front (question/prompt) and back (concise answer), {lang}. 
+Prefer formula/name on front, explanation on back.
+
+8) Micro-IA for Indian grades/classes
+
+Subject presets: Class 6–12 CBSE/ICSE, plus JEE/NEET toggles.
+
+When grade selected, seed topic pickers with chapter lists (NCERT friendly labels).
+
+“Language” toggle: English / Hindi / Hinglish (simple bilingual headings).
+
+9) QA/accessibility checklist (ship-ready)
+
+For all popovers
+
+Close on ESC/outside click; return focus to trigger.
+
+Arrow keys navigate inside lists.
+
+aria-controls, aria-expanded on trigger. 
+radix-ui.com
+
+For modals
+
+role="dialog" (native <dialog> sets it), aria-modal="true", labelled heading.
+
+Trap focus; first tabbable element is meaningful (Close or Title per APG).
+
+Disable page interaction (inert on app root) while open. 
+HTML Living Standard
+
+10) Tiny Tailwind tokens (copy-paste)
+/* Surfaces */
+.surface { @apply bg-white rounded-2xl shadow-2xl border border-slate-200; }
+.surface-popover { @apply p-4 w-[440px] max-h-[80vh] overflow-auto; }
+.surface-modal { @apply p-6 w-[760px] max-w-[96vw]; }
+
+/* Backdrop for modals only; keep transparent */
+.modal-backdrop { background: transparent; }
+
+/* Portal layers */
+.z-popover { z-index: 600; }
+.z-modal   { z-index: 700; }
+
+Why this approach
+
+Standards-based: follows WAI-ARIA dialog guidance and modern HTML <dialog>/popover capabilities, with libraries that already handle accessibility well. 
+W3C
++3
+schalkneethling.com
++3
+HTML Living Standard
++3
+
+No visual blackout: you keep the backdrop transparent for modals, and you remove overlays for popovers—exactly like your reference page.
