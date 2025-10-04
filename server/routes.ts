@@ -527,6 +527,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Voice transcription endpoint using OpenAI Whisper
+  app.post('/api/tutor/transcribe', isAuthenticated, upload.single('audio'), async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const audioFile = req.file;
+
+      if (!audioFile) {
+        return res.status(400).json({ message: "No audio file provided" });
+      }
+
+      console.log(`Transcribing audio for user ${userId}: ${audioFile.size} bytes`);
+
+      // Call OpenAI Whisper API for transcription
+      const formData = new FormData();
+      formData.append('file', new Blob([audioFile.buffer]), 'audio.webm');
+      formData.append('model', 'whisper-1');
+      formData.append('language', req.body.language || 'en');
+
+      const response = await fetch('https://api.openai.com/v1/audio/transcriptions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+        },
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const error = await response.text();
+        console.error('Whisper API error:', error);
+        throw new Error('Failed to transcribe audio');
+      }
+
+      const result = await response.json();
+      console.log('Transcription successful:', result.text);
+
+      res.json({ 
+        transcript: result.text,
+        language: result.language || req.body.language || 'en'
+      });
+    } catch (error) {
+      console.error("Transcription error:", error);
+      res.status(500).json({ message: "Failed to transcribe audio" });
+    }
+  });
+
   // DocChat routes
   app.post('/api/docchat/session', isAuthenticated, async (req: any, res) => {
     try {
