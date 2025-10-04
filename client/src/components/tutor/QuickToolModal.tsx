@@ -3,14 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { DialogUnified } from "@/components/ui/dialog-unified";
 import {
   Select,
   SelectContent,
@@ -330,19 +323,23 @@ export default function QuickToolModal({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl max-h-[90vh] flex flex-col" data-testid={`dialog-quick-tool-${toolType}`}>
-        <DialogHeader className="flex-shrink-0">
-          <div className="flex items-center gap-3">
-            <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
-              <Icon className={`w-5 h-5 ${config.color}`} />
-            </div>
-            <div>
-              <DialogTitle>{config.title}</DialogTitle>
-              <DialogDescription>{config.description}</DialogDescription>
-            </div>
+    <DialogUnified 
+      open={open} 
+      onClose={() => onOpenChange(false)}
+      title={config.title}
+      description={config.description}
+      size="lg"
+    >
+      <form onSubmit={handleSubmit} className="flex flex-col max-h-[75vh]" data-testid={`dialog-quick-tool-${toolType}`}>
+        <div className="flex items-center gap-3 mb-6">
+          <div className={`w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center`}>
+            <Icon className={`w-5 h-5 ${config.color}`} />
           </div>
-        </DialogHeader>
+          <div>
+            <h3 className="font-semibold text-lg">{config.title}</h3>
+            <p className="text-sm text-muted-foreground">{config.description}</p>
+          </div>
+        </div>
 
         <div className="flex-shrink-0 mb-4 p-3 bg-muted/50 rounded-lg text-sm">
           <div className="flex items-center gap-2 flex-wrap">
@@ -362,32 +359,30 @@ export default function QuickToolModal({
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto min-h-0">
-          <form onSubmit={handleSubmit} className="space-y-4">
-            {renderForm()}
+        <div className="flex-1 overflow-y-auto min-h-0 space-y-4">
+          {renderForm()}
 
-            {(streamingContent || isStreaming) && (
-              <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
-                {isStreaming && !streamingContent && (
-                  <div className="flex items-center gap-2 text-muted-foreground">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
-                    <span className="text-sm">AI is thinking...</span>
-                  </div>
-                )}
-                {streamingContent && (
-                  <div className="prose prose-sm max-w-none">
-                    <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
-                    {isStreaming && (
-                      <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
-                    )}
-                  </div>
-                )}
-              </div>
-            )}
-          </form>
+          {(streamingContent || isStreaming) && (
+            <div className="mt-4 p-4 bg-muted rounded-lg max-h-80 overflow-y-auto">
+              {isStreaming && !streamingContent && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary"></div>
+                  <span className="text-sm">AI is thinking...</span>
+                </div>
+              )}
+              {streamingContent && (
+                <div className="prose prose-sm max-w-none">
+                  <div className="whitespace-pre-wrap break-words">{streamingContent}</div>
+                  {isStreaming && (
+                    <div className="inline-block w-2 h-4 bg-primary animate-pulse ml-1" />
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        <DialogFooter className="flex-shrink-0 mt-4">
+        <div className="flex-shrink-0 mt-6 flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"
@@ -399,14 +394,13 @@ export default function QuickToolModal({
           </Button>
           <Button
             type="submit"
-            onClick={handleSubmit}
             disabled={isStreaming || (toolType === 'hint' && !formData.userQuery.trim())}
             data-testid="button-generate"
           >
             {isStreaming ? 'Generating...' : `Generate ${config.title}`}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </form>
+    </DialogUnified>
   );
 }
