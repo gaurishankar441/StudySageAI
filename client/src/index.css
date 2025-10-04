@@ -289,3 +289,13 @@ body {
     display: none !important;
   }
 }
+
+/* Uppy Modal Overlay Override - Match App Overlay Pattern */
+.uppy-Dashboard--modal .uppy-Dashboard-overlay {
+  background-color: rgba(0, 0, 0, 0.4) !important;
+  z-index: 700 !important;
+}
+
+.uppy-Dashboard--modal .uppy-Dashboard-inner {
+  z-index: 701 !important;
+}
