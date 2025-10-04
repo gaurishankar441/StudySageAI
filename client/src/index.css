@@ -35,22 +35,25 @@
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-math: "STIX Two Math", serif;
   
-  /* Z-index Tokens (WAI-ARIA compliant layering) */
+  /* Z-index Tokens (Material Design compliant layering) */
   --z-header: 50;
   --z-content: 0;
-  --z-backdrop: 60;
-  --z-dialog: 70;
   --z-popover: 600;
   --z-tooltip: 650;
-  --z-modal: 700;
-  --z-toast: 80;
-  --z-cmdk: 90;
+  --z-toast: 800;
+  --z-cmdk: 900;
+  --z-modal-scrim: 1000;
+  --z-modal-panel: 1001;
+  --z-nested-sheet: 1010;
   
-  /* Surface Design Tokens */
-  --scrim-light: rgba(2, 6, 23, 0.10);
-  --scrim-none: transparent;
-  --overlay-transparent: transparent;
-  --overlay-modal: transparent;
+  /* Modal System Tokens (Material Design spec) */
+  --scrim-opaque: rgba(15, 23, 42, 0.6);  /* 60% opacity - Material recommended */
+  --scrim-heavy: rgba(15, 23, 42, 0.72);   /* 72% opacity - full attention */
+  --modal-shadow: 0 20px 60px -12px rgba(2, 6, 23, 0.35);
+  --modal-radius: 12px;
+  --modal-animation: 180ms ease-out;
+  
+  /* General shadows */
   --shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
   --shadow-lg: 0 10px 30px rgba(2, 6, 23, 0.12), 0 6px 16px rgba(2, 6, 23, 0.08);
   --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);

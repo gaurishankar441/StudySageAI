@@ -220,17 +220,11 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
       open={open} 
       onClose={() => onOpenChange(false)}
       size="lg"
-      scrim="light"
       closeOnOuterClick={false}
+      title="Start AI Tutor Session"
+      description={`Step ${step} of 4: Set up your personalized learning experience`}
     >
       <div className="space-y-6" data-testid="dialog-tutor-setup">
-        {/* Header */}
-        <div>
-          <h3 className="text-xl font-semibold">Start AI Tutor Session</h3>
-          <p className="text-sm text-muted-foreground mt-1">
-            Step {step} of 4: Set up your personalized learning experience
-          </p>
-        </div>
 
         {/* Progress Indicator */}
         <div className="flex items-center gap-2">

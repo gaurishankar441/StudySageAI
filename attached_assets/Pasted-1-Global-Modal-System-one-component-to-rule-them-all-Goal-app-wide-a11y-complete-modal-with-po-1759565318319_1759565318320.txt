@@ -1,0 +1,184 @@
+1) Global Modal System (one component to rule them all)
+
+Goal: app-wide, a11y-complete modal with portal, focus-trap, scroll-lock, ESC/outside-click to close, proper z-index + scrim. Reuse this everywhere (Tutor wizard, Quick Tools, Create Quiz, Study Plan wizard, Notes “Summarize” etc.).
+
+UI tokens (consistent look)
+
+Scrim: rgba(15, 23, 42, 0.56) (no see-through page!); allow variant 0.72 for full attention. Material recommends opaque/near-opaque scrims for clarity. 
+Markaicode
+
+Container: white, radius 12px, shadow 0 20px 60px -12px rgba(2,6,23,.35), max-width steps: sm(480) | md(720) | lg(960).
+
+Motion: scale 0.98→1, opacity 0→1 in 180ms ease-out. Scrim fade 150ms.
+
+Z-index: scrim 1000, modal 1001, nested sheet/toast > 1010 (rare). Keep a z-stack map to avoid ad-hoc values.
+
+Accessibility & behavior (must-haves)
+
+Portal to <body>; backdrop covers viewport; modal is centered. 
+radix-ui.com
+
+Focus management: move focus to dialog on open; trap focus inside; return focus to “opener” on close. (APG dialog pattern.) 
+Material Design
+
+ARIA: role="dialog" (or alertdialog for destructive confirm), aria-modal="true", aria-labelledby, aria-describedby. 
+Material Design
+
+Keyboard: Close on Esc; click on scrim closes (configurable). No background scroll (use body-scroll-lock lib for iOS correctness). 
+GitHub
+
+Prevent stacking overlays: open one modal at a time; if a second must open (rare), push onto a stack and hide the first (set inert or aria-hidden). 
+Material Design
+
+MDN tip: native <dialog> is fine, but custom + library often yields better cross-browser control; if you use native, also polyfill focus trap. 
+GitHub
+
+Recommended implementation options
+
+Radix UI <Dialog> (already matches most rules, easy theming). 
+radix-ui.com
+
+or Headless UI Dialog (React) with your Tailwind tokens. 
+Svelte Headless UI
+
+Add body-scroll-lock for iOS momentum scroll. 
+GitHub
+
+✅ Decision: pick one (Radix or Headless) and use it everywhere. No custom ad-hoc overlays.
+
+2) Code-level contract (drop-in)
+// Modal.tsx — the only modal to import across app
+export type ModalProps = {
+  open: boolean;
+  onOpenChange: (v: boolean) => void;
+  title: string;
+  description?: string;
+  size?: "sm" | "md" | "lg";
+  closeOnScrim?: boolean;
+  initialFocusRef?: React.RefObject<HTMLElement>;
+  children: React.ReactNode;
+};
+
+// Use Radix as base; wire aria, focus trap, portal, scroll lock.
+// (Radix already handles portal + a11y; add body-scroll-lock on open.)
+
+
+Styling rules
+
+Scrim div (portal root): fixed inset-0 bg-slate-900/60 backdrop-blur-[0.5px] (blur optional).
+
+Panel: rounded-xl bg-white shadow-2xl p-6 sm:p-7 md:p-8 w-[min(100vw-32px, var(--modal-w))].
+
+Sizes: --modal-w: 480px|720px|960px.
+
+3) App-wide sweep: where to replace and what to test
+
+Instruction: Find/replace all custom overlays/popups and migrate to Modal above. Below is a page-by-page checklist. Any item that “opens a pop-up” must use this Modal and must not dim the page with transparent overlay.
+
+A) AI Tutor
+
+Tutor Launcher (4-step wizard)
+
+Use one Modal; inside, render steps with a progress bar (like your reference).
+
+Keep the background opaque scrim; do not blur/transparent the whole app pane.
+
+Buttons: Back / Next / Start aligned right; Enter → Next; Esc → close confirm dialog.
+
+Keep focus on primary action each step; announce step via aria-live="polite".
+
+Right-rail Quick Tools (Explain, Give Hint, Example, Practice 5 Qs, Summary)
+
+Open a modal sheet (size=sm) on the same page—no navigation.
+
+Each tool shows a mini-form (e.g., “target concept?”) + result area.
+
+Close returns focus back to the triggering button.
+
+B) DocChat
+
+Quick Actions (Summary / Highlights / Quiz / Flashcards / Export): open as modal over the viewer.
+
+While open, freeze PDF/video scroll (body-scroll-lock).
+
+Results should stream inside the modal with citations list; keep “Insert to Notes / Create Quiz” as secondary actions at the bottom.
+
+C) Quiz
+
+Create Quiz: single Modal (size=md/lg depending on “Generate from” section).
+
+Practice Now: use full-height modal (size=lg) with sticky header (timer, question X/Y) and sticky footer (Next/Submit). No page nav.
+
+D) Study Plan
+
+Create Plan wizard: Modal (lg) with stepper.
+
+Task edit / reschedule: small modal with date/time pickers; confirm destructive actions with alertdialog.
+
+E) Notes
+
+New Note / Summarize Sources / Record lecture: Modal (md).
+
+Export to PDF: progress modal with spinner & log; auto-close on success, toast with “Open”.
+
+F) Global
+
+Confirm/Alert: tiny alertdialog variant (focus primary button). 
+Material Design
+
+Keyboard shortcuts palette (Cmd/Ctrl-K): use the same Modal infra (size=lg) with listbox roles.
+
+4) Why your current overlay looks “dim + messy” and how this fixes it
+
+Transparent/dim background still shows interactive elements → visual clutter & click confusion. Material & APG recommend a blocking scrim + focus trap so users know the dialog is modal. 
+Markaicode
++1
+
+No scroll-lock → content behind scrolls on touch devices (especially iOS). Use body-scroll-lock. 
+GitHub
+
+Missing focus management → screen readers and keyboard users “fall through” to the page. Use APG dialog pattern. 
+Material Design
+
+Ad-hoc z-indices → stacking bugs. Centralize z-stack tokens.
+
+5) Implementation sprint plan (2 days)
+
+Day 1
+
+Add Modal infra (Radix/Headless + body-scroll-lock). Unit test: open/close, return-focus, ESC, tab-trap. 
+radix-ui.com
++1
+
+Replace in Tutor wizard + Quiz Create + DocChat Quick Actions.
+
+Day 2
+3. Replace in Study Plan wizard + Notes Summarize/Record.
+4. Add ConfirmDialog utility and migrate all confirms.
+5. QA pass: keyboard, SR (VO/NVDA), mobile Safari momentum scroll, nested open prevention.
+
+6) Developer checklist (copy/paste into PR)
+
+ All pop-ups use Modal component.
+
+ Scrim is opaque; you cannot interact with background.
+
+ Focus moves into dialog; Tab/Shift+Tab cycle inside; returns to trigger on close. 
+Material Design
+
+ Esc closes (except blocking flows); outside click behavior matches spec.
+
+ Body scroll locked on iOS/Android; inner modal scroll works. 
+GitHub
+
+ ARIA: role, aria-modal, labelledby/ describedby correct. 
+Material Design
+
+ No z-index hacks outside the tokens; only one modal at a time.
+
+ Streaming content works inside modal; toasts used for non-blocking info.
+
+7) Optional: Popover (non-modal) pattern
+
+For tiny, contextual UI (e.g., mini tooltips or overflow menus), use a Popover (non-blocking, no scrim, closes on focus-out). Use Radix/Headless Popover, not the Modal. This keeps interaction semantics correct. 
+radix-ui.com

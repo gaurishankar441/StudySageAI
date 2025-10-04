@@ -8,14 +8,24 @@ The platform is designed around a "fast, calm UI" principle with a maximum 3-cli
 
 ## Recent Changes
 
-### October 4, 2025 - Unified Dialog System
-- **DialogUnified Component**: Created WAI-ARIA compliant reusable dialog system (`client/src/components/ui/dialog-unified.tsx`) with focus trap management, body scroll lock, portal-based rendering, and configurable scrim opacity (8-16% light scrim or transparent). Replaces heavy black overlay with subtle, context-aware backgrounds. Features: size presets (sm/md/lg/xl), ESC key support, outside-click dismissal (configurable), CSS custom properties for z-index discipline (--z-dialog: 9999, --z-dialog-overlay: 9998).
+### October 4, 2025 - Material Design Modal System
+- **DialogUnified Component**: Created Material Design compliant global modal system (`client/src/components/ui/dialog-unified.tsx`) with opaque scrim (60% opacity), proper animations, and complete accessibility. Portal-based rendering to document body, focus trap with Tab/Shift+Tab cycling, body scroll lock, ESC key support, and ARIA compliance (role="dialog", aria-modal="true", aria-labelledby, aria-describedby).
 
-- **CSS Tokens for Modal System**: Added scrim variables in `index.css` - `--scrim-light: rgba(0, 0, 0, 0.12)` for focus mode, `--scrim-transparent: transparent` for context-aware modals. Implemented `.modal-open` body class with `overflow: hidden; padding-right: var(--scrollbar-width)` to prevent layout shift when scroll is locked.
+- **Material Design Specifications**: 
+  - **Opaque Scrim**: `bg-slate-900/60` (60% opacity) - Material recommends opaque scrims for clarity, prevents visual clutter and click confusion
+  - **Animation**: Scale 0.98→1 + opacity 0→1 in 180ms ease-out (both scrim and panel synchronized)
+  - **Z-index Layering**: Scrim at 1000, panel at 1001, nested elements at 1010+ (centralized z-stack)
+  - **Shadow & Styling**: `0 20px 60px -12px rgba(2,6,23,0.35)` shadow, 12px border radius, responsive padding (p-6 sm:p-7 md:p-8)
+  - **Size Presets**: sm (480px), md (720px), lg (960px) with `w-[min(100vw-2rem, maxWidth)]` for mobile
 
-- **AI Tutor Wizard Migration**: Updated TutorSetupWizard to use DialogUnified with `scrim="light"` for focus, maintaining 3-step progress bar, subject/class/language selection, and seamless integration with chat initialization.
+- **CSS Tokens for Modal System**: Updated `index.css` with Material Design tokens:
+  - `--scrim-opaque: rgba(15, 23, 42, 0.6)` - 60% opacity default
+  - `--scrim-heavy: rgba(15, 23, 42, 0.72)` - 72% for full attention flows
+  - `--z-modal-scrim: 1000`, `--z-modal-panel: 1001`, `--z-nested-sheet: 1010`
+  - `--modal-shadow`, `--modal-radius`, `--modal-animation` tokens
+  - `.modal-open` body class with `overflow: hidden` for scroll lock
 
-- **DocChat Quick Actions Migration**: Updated DocChatActionModal to use DialogUnified with `scrim="none"` for transparent overlay, allowing students to see document context while selecting generation options (Summary, Highlights, Quiz, Flashcards). Preserves streaming UI, form validation, and India-centric preferences.
+- **App-wide Migration**: Migrated AI Tutor Setup Wizard and DocChat Quick Actions to DialogUnified with opaque scrim. Both modals now have proper accessible names (title/description props), consistent animations, and focus management. No transparent overlays - all modals use Material's recommended opaque scrim for clear modal interaction patterns.
 
 - **TTS Voice Update**: Changed text-to-speech voice from 'alloy' to 'nova' (young female) for better alignment with teacher persona.
 
