@@ -133,15 +133,22 @@ export class ObjectStorageService {
   }
 
   // Get presigned URL for upload
-  async getObjectEntityUploadURL(): Promise<string> {
+  async getObjectEntityUploadURL(contentType?: string): Promise<string> {
     const privateDir = this.getPrivateObjectDir();
     const objectId = randomUUID();
     const key = `${privateDir}/${objectId}`;
 
-    const command = new PutObjectCommand({
+    const commandParams: any = {
       Bucket: this.bucketName,
       Key: key,
-    });
+    };
+
+    // Include ContentType if provided to match upload request
+    if (contentType) {
+      commandParams.ContentType = contentType;
+    }
+
+    const command = new PutObjectCommand(commandParams);
 
     // Generate presigned URL valid for 15 minutes
     const presignedUrl = await getSignedUrl(s3Client, command, {

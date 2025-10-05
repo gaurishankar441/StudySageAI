@@ -437,10 +437,18 @@ export default function DocChatView() {
               <ObjectUploader
                 maxNumberOfFiles={1}
                 maxFileSize={200 * 1024 * 1024} // 200MB
-                onGetUploadParameters={async () => {
-                  const response = await apiRequest("POST", "/api/objects/upload", {});
+                onGetUploadParameters={async (file) => {
+                  const response = await apiRequest("POST", "/api/objects/upload", {
+                    contentType: file.type
+                  });
                   const { uploadURL } = await response.json();
-                  return { method: "PUT" as const, url: uploadURL };
+                  return { 
+                    method: "PUT" as const, 
+                    url: uploadURL,
+                    headers: {
+                      'Content-Type': file.type
+                    }
+                  };
                 }}
                 onComplete={(result) => {
                   const uploadedFile = result.successful?.[0];
