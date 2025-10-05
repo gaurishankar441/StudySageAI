@@ -79,7 +79,12 @@ export const documents = pgTable("documents", {
     [key: string]: any;
   }>(),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  // Composite index for user documents ordered by creation
+  index("documents_user_id_created_at_idx").on(table.userId, table.createdAt),
+  // Index for filtering by status
+  index("documents_status_idx").on(table.status),
+]);
 
 // Document chunks for RAG
 export const chunks = pgTable("chunks", {
@@ -96,7 +101,11 @@ export const chunks = pgTable("chunks", {
   embedding: vector("embedding"), // pgvector embedding (1536 dimensions for OpenAI text-embedding-3-small)
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  // Composite index for document chunks in order
+  index("chunks_doc_id_ord_idx").on(table.docId, table.ord),
+  // Note: Vector index (IVFFlat) will be created via SQL migration
+]);
 
 // Chats table
 export const chats = pgTable("chats", {
@@ -111,7 +120,12 @@ export const chats = pgTable("chats", {
   docIds: jsonb("doc_ids"), // array of document IDs for docchat
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  // Composite index for user chats ordered by creation (most recent first)
+  index("chats_user_id_created_at_idx").on(table.userId, table.createdAt),
+  // Index for filtering by mode
+  index("chats_mode_idx").on(table.mode),
+]);
 
 // Messages table
 export const messages = pgTable("messages", {
@@ -122,7 +136,10 @@ export const messages = pgTable("messages", {
   tool: varchar("tool"), // tool used for this message
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
-});
+}, (table) => [
+  // Composite index for chat messages ordered by creation (chronological order)
+  index("messages_chat_id_created_at_idx").on(table.chatId, table.createdAt),
+]);
 
 // Notes table
 export const notes = pgTable("notes", {

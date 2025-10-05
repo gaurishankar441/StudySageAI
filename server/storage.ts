@@ -190,12 +190,19 @@ export class DatabaseStorage implements IStorage {
     return msg;
   }
 
-  async getChatMessages(chatId: string): Promise<Message[]> {
-    return await db
+  async getChatMessages(chatId: string, limit?: number): Promise<Message[]> {
+    const query = db
       .select()
       .from(messages)
       .where(eq(messages.chatId, chatId))
       .orderBy(messages.createdAt);
+    
+    // Add limit for pagination (helpful for long chats)
+    if (limit) {
+      return await query.limit(limit);
+    }
+    
+    return await query;
   }
 
   // Notes operations
@@ -384,7 +391,7 @@ export class DatabaseStorage implements IStorage {
       .limit(limit);
   }
 
-  // Vector similarity search using pgvector  
+  // Vector similarity search using pgvector with IVFFlat optimization
   async searchChunksByEmbedding(
     queryEmbedding: number[],
     docIds?: string[],
@@ -392,23 +399,28 @@ export class DatabaseStorage implements IStorage {
   ): Promise<Array<Chunk & { similarity: number }>> {
     const embeddingStr = JSON.stringify(queryEmbedding);
     
-    // Use safe SQL template literal with embedded parameters
+    // Build query with probes setting in same SQL statement (ensures same connection)
+    // Using CTE to set probes, then execute search in same query
     let query;
     if (docIds && docIds.length > 0) {
-      // Filter by specific documents using safe inArray helper
+      // Filter by specific documents using parameterized array (SQL injection safe)
+      // sql.join creates comma-separated list for = ANY() operator
+      const docIdsLiterals = docIds.map(id => sql`${id}`);
       query = sql`
+        WITH _ AS (SELECT set_config('ivfflat.probes', '10', true))
         SELECT 
           id, doc_id as "docId", ord, text, tokens, page, section, heading, 
           lang as language, hash, embedding, metadata, created_at as "createdAt",
           (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
         FROM chunks
-        WHERE doc_id IN ${docIds}
+        WHERE doc_id = ANY(ARRAY[${sql.join(docIdsLiterals, sql`, `)}])
         ORDER BY embedding <=> ${embeddingStr}::vector
         LIMIT ${limit}
       `;
     } else {
       // No filter - search all chunks
       query = sql`
+        WITH _ AS (SELECT set_config('ivfflat.probes', '10', true))
         SELECT 
           id, doc_id as "docId", ord, text, tokens, page, section, heading, 
           lang as language, hash, embedding, metadata, created_at as "createdAt",
