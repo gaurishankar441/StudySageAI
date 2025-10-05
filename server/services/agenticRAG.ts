@@ -365,6 +365,17 @@ Is this helpful? Do we need more information?`
       ? 'Respond in Hindi (हिन्दी). Use Devanagari script.'
       : 'Respond in English.';
 
+    // Truncate gathered info to fit within context limits
+    // GPT-4 has 8K context, we need room for system prompt, query, and response
+    // ~6000 chars ≈ 8000 tokens max, leaving 2K tokens for system/query/response
+    const maxInfoLength = 6000;
+    const truncatedInfo = gatheredInfo.length > maxInfoLength
+      ? gatheredInfo.substring(0, maxInfoLength) + '\n\n[... information truncated due to length ...]'
+      : gatheredInfo;
+
+    console.log('[synthesizeFinalAnswer] Gathered info length:', gatheredInfo.length);
+    console.log('[synthesizeFinalAnswer] Truncated to:', truncatedInfo.length);
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -377,7 +388,7 @@ Is this helpful? Do we need more information?`
           content: `Question: "${query}"
 
 Gathered Information:
-${gatheredInfo}
+${truncatedInfo}
 
 Please provide a comprehensive answer with proper citations.`
         }
