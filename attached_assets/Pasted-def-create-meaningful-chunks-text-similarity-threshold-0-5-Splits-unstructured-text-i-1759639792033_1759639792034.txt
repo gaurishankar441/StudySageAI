@@ -1,0 +1,77 @@
+def create_meaningful_chunks(text, similarity_threshold=0.5):
+    """
+    Splits unstructured text into meaningful chunks while ensuring topic coherence.
+    Uses SentenceTransformer embeddings for similarity calculations.
+    """
+    try:
+        print("entring meaningfull chunk function--------------")
+        # :white_tick: Input Validation
+        if not isinstance(text, str) or len(text.strip()) == 0:
+            raise ValueError("Input text must be a non-empty string.")
+        # :white_tick: Clean up whitespace
+        text = re.sub(r'\s+', ' ', text).strip()
+        print("meaningful text1----------------",text)
+        # :white_tick: Sentence Tokenization (More Accurate)
+        sentences = sent_tokenize(text)  # Extracts sentences correctly
+        print("sentences-----------------",sentences)
+        print(sentences, 'sentencessentences>>>>>>>>>>>>>>>')
+        # :white_tick: Adaptive Chunk Size
+        document_length = len(text.split())  # Count total words
+        chunk_size = get_dynamic_chunk_size(document_length)
+        print(":drawing_pin: Adaptive chunk size:", chunk_size)
+        # :white_tick: Ensure model is loaded before encoding
+        if modelForChunk is None:
+            raise RuntimeError("Sentence Transformer model failed to load.")
+        # :white_tick: Encode sentences efficiently
+        try:
+            sentence_embeddings = modelForChunk.encode(sentences, batch_size=8)
+        except Exception as e:
+            raise RuntimeError(f":siren: Error in sentence encoding: {e}")
+        chunks = []
+        current_chunk = []
+        current_length = 0
+        for i, sentence in enumerate(sentences):
+            sentence_length = len(sentence.split())
+            # :white_tick: Handling Very Long Sentences (Ensuring Proper Splitting)
+            if sentence_length > chunk_size * 1.5:
+                print(f":warning: Warning: Long sentence detected, ensuring complete split.")
+                split_sentences = sent_tokenize(sentence)  # Split by sentence, not words
+                for sub_sentence in split_sentences:
+                    chunks.append(sub_sentence)
+                continue  # Skip to next iteration
+            # :white_tick: Compute similarity with previous sentence (If applicable)
+            if i > 0:
+                try:
+                    similarity = np.dot(sentence_embeddings[i], sentence_embeddings[i-1]) / (
+                        np.linalg.norm(sentence_embeddings[i]) * np.linalg.norm(sentence_embeddings[i-1]) + 1e-6
+                    )  # Small value added to avoid division by zero
+                except Exception as e:
+                    print(f":warning: Warning: Error computing similarity, defaulting to 1.0. Error: {e}")
+                    similarity = 1.0  # Assume high similarity if error occurs
+                # :white_tick: If similarity is LOW, start a new chunk
+                if similarity < similarity_threshold and current_length > chunk_size * 0.75:
+                    chunks.append(" ".join(current_chunk))
+                    current_chunk = []
+                    current_length = 0
+            # :white_tick: Add Sentence to Current Chunk
+            current_chunk.append(sentence)
+            current_length += sentence_length
+            # :white_tick: If chunk size limit is reached, finalize the chunk (ENSURE FULL SENTENCE)
+            if current_length >= chunk_size and "." in sentence:  # Ensure it ends at a period
+                chunks.append(" ".join(current_chunk))
+                current_chunk = []
+                current_length = 0
+        # :white_tick: Add the last chunk if any remains
+        if current_chunk:
+            chunks.append(" ".join(current_chunk))
+        # :white_tick: Generate summary AFTER chunking for better context
+        # summary = create_summary(" ".join(chunks))  # Generate summary based on final chunks
+        return chunks
+    except Exception as e:
+        print(f":siren: Unexpected error in create_meaningful_chunks: {e}")
+        return [], ""
+
+React
+
+Reply
+
