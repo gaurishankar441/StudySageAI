@@ -71,58 +71,130 @@ export class SarvamVoiceService {
   /**
    * Synthesize speech using Sarvam Bulbul model
    * Natural Indian voices with prosody control
+   * Handles text longer than 500 chars by chunking
    */
   async synthesizeSpeech(
     text: string,
     language: 'hi' | 'en' = 'en'
   ): Promise<Buffer> {
     try {
-      console.log(`[SARVAM TTS] Synthesizing speech in ${language}...`);
+      console.log(`[SARVAM TTS] Synthesizing speech in ${language} (${text.length} chars)...`);
 
-      // Speaker selection for natural Indian voices
-      const speaker = language === 'hi' ? 'meera' : 'arvind'; // Meera = Hindi female, Arvind = English male
-
-      const response = await fetch(`${this.baseUrl}/text-to-speech`, {
-        method: 'POST',
-        headers: {
-          'API-Subscription-Key': this.apiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          inputs: [text],
-          target_language_code: language === 'hi' ? 'hi-IN' : 'en-IN',
-          speaker: speaker,
-          model: 'bulbul:v2',
-          pitch: 0,
-          pace: 1.0,
-          loudness: 1.0,
-          speech_sample_rate: 22050,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('[SARVAM TTS] API error:', errorText);
-        throw new Error(`Sarvam TTS failed: ${response.status}`);
-      }
-
-      const result = await response.json();
+      // Sarvam has 500 char limit per request - chunk if needed
+      const MAX_CHARS = 500;
       
-      if (!result.audios || result.audios.length === 0) {
-        throw new Error('No audio received from Sarvam TTS');
+      if (text.length <= MAX_CHARS) {
+        return await this.synthesizeChunk(text, language);
       }
 
-      // Convert base64 audio to buffer
-      const audioBase64 = result.audios[0];
-      const audioBuffer = Buffer.from(audioBase64, 'base64');
+      // Split text into chunks at sentence boundaries
+      const chunks = this.splitTextIntoChunks(text, MAX_CHARS);
+      console.log(`[SARVAM TTS] Splitting into ${chunks.length} chunks...`);
 
-      console.log(`[SARVAM TTS] ✅ Speech synthesized: ${audioBuffer.length} bytes`);
+      // Synthesize each chunk
+      const audioBuffers: Buffer[] = [];
+      for (let i = 0; i < chunks.length; i++) {
+        const chunk = chunks[i];
+        console.log(`[SARVAM TTS] Processing chunk ${i + 1}/${chunks.length} (${chunk.length} chars)...`);
+        const buffer = await this.synthesizeChunk(chunk, language);
+        audioBuffers.push(buffer);
+      }
 
-      return audioBuffer;
+      // Combine all audio buffers
+      const combinedBuffer = Buffer.concat(audioBuffers);
+      console.log(`[SARVAM TTS] ✅ Combined speech synthesized: ${combinedBuffer.length} bytes`);
+
+      return combinedBuffer;
     } catch (error) {
       console.error('[SARVAM TTS] Synthesis error:', error);
       throw error;
     }
+  }
+
+  /**
+   * Synthesize a single chunk of text (≤500 chars)
+   */
+  private async synthesizeChunk(
+    text: string,
+    language: 'hi' | 'en' = 'en'
+  ): Promise<Buffer> {
+    const speaker = language === 'hi' ? 'meera' : 'arvind';
+
+    const response = await fetch(`${this.baseUrl}/text-to-speech`, {
+      method: 'POST',
+      headers: {
+        'API-Subscription-Key': this.apiKey,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        inputs: [text],
+        target_language_code: language === 'hi' ? 'hi-IN' : 'en-IN',
+        speaker: speaker,
+        model: 'bulbul:v2',
+        pitch: 0,
+        pace: 1.0,
+        loudness: 1.0,
+        speech_sample_rate: 22050,
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      console.error('[SARVAM TTS] API error:', errorText);
+      throw new Error(`Sarvam TTS failed: ${response.status}`);
+    }
+
+    const result = await response.json();
+    
+    if (!result.audios || result.audios.length === 0) {
+      throw new Error('No audio received from Sarvam TTS');
+    }
+
+    return Buffer.from(result.audios[0], 'base64');
+  }
+
+  /**
+   * Split text into chunks at sentence boundaries (max 500 chars each)
+   */
+  private splitTextIntoChunks(text: string, maxChars: number): string[] {
+    const chunks: string[] = [];
+    
+    // Split by sentences (., !, ?, ।, ॥ for Hindi)
+    const sentences = text.match(/[^.!?।॥]+[.!?।॥]+|[^.!?।॥]+$/g) || [text];
+    
+    let currentChunk = '';
+    
+    for (const sentence of sentences) {
+      const trimmedSentence = sentence.trim();
+      
+      // If single sentence > maxChars, force split
+      if (trimmedSentence.length > maxChars) {
+        if (currentChunk) {
+          chunks.push(currentChunk.trim());
+          currentChunk = '';
+        }
+        // Split long sentence into smaller parts
+        for (let i = 0; i < trimmedSentence.length; i += maxChars) {
+          chunks.push(trimmedSentence.substring(i, i + maxChars));
+        }
+        continue;
+      }
+      
+      // If adding sentence exceeds limit, save current chunk
+      if (currentChunk.length + trimmedSentence.length + 1 > maxChars) {
+        chunks.push(currentChunk.trim());
+        currentChunk = trimmedSentence;
+      } else {
+        currentChunk += (currentChunk ? ' ' : '') + trimmedSentence;
+      }
+    }
+    
+    // Add remaining chunk
+    if (currentChunk) {
+      chunks.push(currentChunk.trim());
+    }
+    
+    return chunks;
   }
 
   /**
