@@ -3,6 +3,7 @@ import { getTestProblems, getRandomProblems, TestProblem } from '../tests/jeeNee
 import { optimizedAI } from '../services/optimizedAIService';
 import { modelRouter } from '../services/modelRouter';
 import { costTracker } from '../services/costTracker';
+import { AnswerValidator } from '../tests/answerValidator';
 
 const testValidationRouter = Router();
 
@@ -64,13 +65,14 @@ testValidationRouter.post('/validate', async (req, res) => {
     
     const responseTime = Date.now() - startTime;
     
-    // Check if AI response contains correct answer
-    const aiResponseLower = result.response.toLowerCase();
-    const correctAnswerLower = problem.correctAnswer.toLowerCase();
-    const isCorrect = aiResponseLower.includes(correctAnswerLower);
+    // Use smart validator for answer checking
+    const validation = AnswerValidator.validate(
+      result.response,
+      problem.correctAnswer,
+      problem.options
+    );
     
-    // Calculate confidence (basic heuristic)
-    const confidence = isCorrect ? 0.9 : 0.3;
+    const { isCorrect, confidence } = validation;
     
     const testResult: TestResult = {
       problem,
@@ -130,11 +132,13 @@ testValidationRouter.post('/benchmark', async (req, res) => {
       
       const responseTime = Date.now() - startTime;
       
-      const aiResponseLower = aiResult.response.toLowerCase();
-      const correctAnswerLower = problem.correctAnswer.toLowerCase();
-      const isCorrect = aiResponseLower.includes(correctAnswerLower);
+      const validation = AnswerValidator.validate(
+        aiResult.response,
+        problem.correctAnswer,
+        problem.options
+      );
       
-      if (isCorrect) {
+      if (validation.isCorrect) {
         correctCount++;
       }
       
@@ -144,8 +148,8 @@ testValidationRouter.post('/benchmark', async (req, res) => {
       results.push({
         problem,
         aiResponse: aiResult.response,
-        isCorrect,
-        confidence: isCorrect ? 0.9 : 0.3,
+        isCorrect: validation.isCorrect,
+        confidence: validation.confidence,
         responseTime,
         cost: aiResult.cost || 0,
         model: aiResult.model || 'unknown',
@@ -161,10 +165,14 @@ testValidationRouter.post('/benchmark', async (req, res) => {
       benchmark: {
         totalProblems: problems.length,
         correctAnswers: correctCount,
-        accuracy: accuracy.toFixed(2) + '%',
-        avgResponseTime: avgResponseTime.toFixed(2) + 'ms',
-        totalCost: '$' + totalCost.toFixed(4),
-        avgCost: '$' + avgCost.toFixed(4),
+        accuracyPercent: parseFloat(accuracy.toFixed(2)),
+        accuracyDisplay: accuracy.toFixed(2) + '%',
+        avgResponseTimeMs: parseFloat(avgResponseTime.toFixed(2)),
+        avgResponseTimeDisplay: avgResponseTime.toFixed(2) + 'ms',
+        totalCost: parseFloat(totalCost.toFixed(4)),
+        totalCostDisplay: '$' + totalCost.toFixed(4),
+        avgCost: parseFloat(avgCost.toFixed(4)),
+        avgCostDisplay: '$' + avgCost.toFixed(4),
         results,
       },
     });
@@ -204,7 +212,12 @@ testValidationRouter.post('/full-suite', async (req, res) => {
       
       const responseTime = Date.now() - startTime;
       
-      const isCorrect = aiResult.response.toLowerCase().includes(problem.correctAnswer.toLowerCase());
+      const validation = AnswerValidator.validate(
+        aiResult.response,
+        problem.correctAnswer,
+        problem.options
+      );
+      const isCorrect = validation.isCorrect;
       
       if (isCorrect) {
         totalCorrect++;
@@ -237,8 +250,8 @@ testValidationRouter.post('/full-suite', async (req, res) => {
       detailedResults.push({
         problem,
         aiResponse: aiResult.response.substring(0, 200) + '...',
-        isCorrect,
-        confidence: isCorrect ? 0.9 : 0.3,
+        isCorrect: validation.isCorrect,
+        confidence: validation.confidence,
         responseTime,
         cost: aiResult.cost || 0,
         model: aiResult.model || 'unknown',
@@ -248,21 +261,21 @@ testValidationRouter.post('/full-suite', async (req, res) => {
     const overallAccuracy = (totalCorrect / allProblems.length) * 100;
     
     // Calculate subject-wise accuracy
-    const subjectAccuracy: Record<string, string> = {};
+    const subjectAccuracy: Record<string, number> = {};
     for (const [subject, stats] of Object.entries(subjectResults)) {
-      subjectAccuracy[subject] = ((stats.correct / stats.total) * 100).toFixed(2) + '%';
+      subjectAccuracy[subject] = parseFloat(((stats.correct / stats.total) * 100).toFixed(2));
     }
     
     // Calculate exam-wise accuracy
-    const examAccuracy: Record<string, string> = {};
+    const examAccuracy: Record<string, number> = {};
     for (const [exam, stats] of Object.entries(examResults)) {
-      examAccuracy[exam] = ((stats.correct / stats.total) * 100).toFixed(2) + '%';
+      examAccuracy[exam] = parseFloat(((stats.correct / stats.total) * 100).toFixed(2));
     }
     
     // Calculate difficulty-wise accuracy
-    const difficultyAccuracy: Record<string, string> = {};
+    const difficultyAccuracy: Record<string, number> = {};
     for (const [difficulty, stats] of Object.entries(difficultyResults)) {
-      difficultyAccuracy[difficulty] = ((stats.correct / stats.total) * 100).toFixed(2) + '%';
+      difficultyAccuracy[difficulty] = parseFloat(((stats.correct / stats.total) * 100).toFixed(2));
     }
     
     res.json({
@@ -271,11 +284,16 @@ testValidationRouter.post('/full-suite', async (req, res) => {
         summary: {
           totalProblems: allProblems.length,
           correctAnswers: totalCorrect,
-          overallAccuracy: overallAccuracy.toFixed(2) + '%',
-          totalCost: '$' + totalCost.toFixed(4),
-          totalTime: totalTime.toFixed(2) + 'ms',
-          avgTimePerProblem: (totalTime / allProblems.length).toFixed(2) + 'ms',
-          avgCostPerProblem: '$' + (totalCost / allProblems.length).toFixed(4),
+          overallAccuracyPercent: parseFloat(overallAccuracy.toFixed(2)),
+          overallAccuracyDisplay: overallAccuracy.toFixed(2) + '%',
+          totalCost: parseFloat(totalCost.toFixed(4)),
+          totalCostDisplay: '$' + totalCost.toFixed(4),
+          totalTimeMs: parseFloat(totalTime.toFixed(2)),
+          totalTimeDisplay: totalTime.toFixed(2) + 'ms',
+          avgTimePerProblemMs: parseFloat((totalTime / allProblems.length).toFixed(2)),
+          avgTimePerProblemDisplay: (totalTime / allProblems.length).toFixed(2) + 'ms',
+          avgCostPerProblem: parseFloat((totalCost / allProblems.length).toFixed(4)),
+          avgCostPerProblemDisplay: '$' + (totalCost / allProblems.length).toFixed(4),
         },
         bySubject: subjectAccuracy,
         byExam: examAccuracy,

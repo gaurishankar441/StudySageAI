@@ -7,6 +7,21 @@ import { nanoid } from 'nanoid';
 
 const voiceRouter = Router();
 
+// Validate AWS configuration on router initialization
+const validateAWSConfig = () => {
+  if (!process.env.AWS_S3_BUCKET_NAME) {
+    console.error('[VOICE] AWS_S3_BUCKET_NAME not configured');
+  }
+  if (!process.env.AWS_REGION) {
+    console.error('[VOICE] AWS_REGION not configured');
+  }
+  if (!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
+    console.error('[VOICE] AWS credentials not configured');
+  }
+};
+
+validateAWSConfig();
+
 // Configure multer for audio file uploads
 const upload = multer({
   storage: multer.memoryStorage(),
@@ -42,12 +57,17 @@ voiceRouter.post('/transcribe', upload.single('audio'), async (req, res) => {
     
     console.log(`[VOICE API] Transcribing ${req.file.size} bytes in ${language}`);
     
+    // Validate AWS configuration
+    if (!process.env.AWS_S3_BUCKET_NAME || !process.env.AWS_REGION) {
+      return res.status(500).json({ error: 'AWS S3 not configured properly' });
+    }
+    
     // Upload audio to S3
     const audioKey = `voice/${userId}/${nanoid()}.${req.file.mimetype.split('/')[1]}`;
     
     await s3Client.send(
       new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: audioKey,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
@@ -130,12 +150,17 @@ voiceRouter.post('/ask', upload.single('audio'), async (req, res) => {
       return res.status(401).json({ error: 'Unauthorized' });
     }
     
+    // Validate AWS configuration
+    if (!process.env.AWS_S3_BUCKET_NAME || !process.env.AWS_REGION) {
+      return res.status(500).json({ error: 'AWS S3 not configured properly' });
+    }
+    
     // Step 1: Upload to S3
     const audioKey = `voice/${userId}/${nanoid()}.${req.file.mimetype.split('/')[1]}`;
     
     await s3Client.send(
       new PutObjectCommand({
-        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
         Key: audioKey,
         Body: req.file.buffer,
         ContentType: req.file.mimetype,
