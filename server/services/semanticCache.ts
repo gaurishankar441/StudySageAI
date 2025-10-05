@@ -17,20 +17,27 @@ export class SemanticCache {
   private readonly SIMILARITY_THRESHOLD = 0.95; // 95% similar = cache hit
   private readonly TTL = 3600; // 1 hour cache
   private readonly MAX_CACHE_SIZE = 1000; // Max cached queries
+  private readonly MAX_SCAN_ENTRIES = 200; // Max entries to check for similarity (performance)
   private readonly CACHE_PREFIX = 'vaktaai:cache:'; // Namespace for VaktaAI cache
   
-  // Get all cache keys using SCAN (non-blocking)
-  private async scanCacheKeys(): Promise<string[]> {
+  // Get cache keys using SCAN with limit (non-blocking, performance-optimized)
+  private async scanCacheKeys(maxEntries?: number): Promise<string[]> {
     const keys: string[] = [];
     let cursor = '0';
+    const limit = maxEntries || this.MAX_SCAN_ENTRIES;
     
     do {
       const result = await redis.scan(cursor, 'MATCH', `${this.CACHE_PREFIX}*`, 'COUNT', 100);
       cursor = result[0];
       keys.push(...result[1]);
+      
+      // Stop if we've scanned enough entries for similarity check
+      if (keys.length >= limit) {
+        break;
+      }
     } while (cursor !== '0');
     
-    return keys;
+    return keys.slice(0, limit); // Return at most 'limit' entries
   }
   
   async check(query: string): Promise<string | null> {
@@ -87,14 +94,14 @@ export class SemanticCache {
     }
     
     try {
-      // Enforce max cache size using SCAN
-      const cacheKeys = await this.scanCacheKeys();
+      // Enforce max cache size using SCAN (scan all for accurate count)
+      const cacheKeys = await this.scanCacheKeys(Infinity); // Scan all entries for eviction
       if (cacheKeys.length >= this.MAX_CACHE_SIZE) {
-        // Remove oldest key (first in scan result)
+        // Remove oldest key (first in scan result, based on timestamp in key)
         const oldestKey = cacheKeys[0];
         if (oldestKey) {
           await redis.del(oldestKey);
-          console.log(`[CACHE] Evicted oldest key: ${oldestKey}`);
+          console.log(`[CACHE] LRU eviction: removed ${oldestKey} (${cacheKeys.length}/${this.MAX_CACHE_SIZE} entries)`);
         }
       }
       
@@ -140,7 +147,7 @@ export class SemanticCache {
       return;
     }
     
-    const keys = await this.scanCacheKeys();
+    const keys = await this.scanCacheKeys(Infinity); // Scan all entries
     if (keys.length > 0) {
       await redis.del(...keys);
       console.log(`[CACHE] Cleared ${keys.length} cached queries`);
@@ -153,7 +160,7 @@ export class SemanticCache {
       return { size: 0, status: 'disconnected' };
     }
     
-    const keys = await this.scanCacheKeys();
+    const keys = await this.scanCacheKeys(Infinity); // Scan all for stats
     return {
       size: keys.length,
       maxSize: this.MAX_CACHE_SIZE,

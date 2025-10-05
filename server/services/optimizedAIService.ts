@@ -127,8 +127,10 @@ export class OptimizedAIService {
       if (onChunk) {
         const words = cached.split(' ');
         for (const word of words) {
-          onChunk(word + ' ', { cached: true, model: 'cache' });
+          onChunk(word + ' ', { cached: true, model: 'cache', type: 'chunk' });
         }
+        // Send completion event for cache hits
+        onChunk('', { cached: true, model: 'cache', cost: 0, type: 'complete' });
       }
       
       return { response: cached, cached: true, model: 'cache', cost: 0 };
@@ -146,48 +148,81 @@ export class OptimizedAIService {
       { role: 'user', content: query }
     ];
     
-    const stream = await openai.chat.completions.create({
-      model: streamModel,
-      messages,
-      stream: true,
-      stream_options: { include_usage: true }, // Get actual token counts
-    });
-    
     let fullResponse = '';
     let actualInputTokens = 0;
     let actualOutputTokens = 0;
+    let partialCost = 0;
     
-    for await (const chunk of stream) {
-      const content = chunk.choices[0]?.delta?.content || '';
-      fullResponse += content;
+    try {
+      const stream = await openai.chat.completions.create({
+        model: streamModel,
+        messages,
+        stream: true,
+        stream_options: { include_usage: true }, // Get actual token counts
+      });
       
-      // Capture actual token usage from final chunk
-      if (chunk.usage) {
-        actualInputTokens = chunk.usage.prompt_tokens;
-        actualOutputTokens = chunk.usage.completion_tokens;
+      for await (const chunk of stream) {
+        const content = chunk.choices[0]?.delta?.content || '';
+        fullResponse += content;
+        
+        // Capture actual token usage from final chunk
+        if (chunk.usage) {
+          actualInputTokens = chunk.usage.prompt_tokens;
+          actualOutputTokens = chunk.usage.completion_tokens;
+        }
+        
+        if (onChunk && content) {
+          onChunk(content, { cached: false, model: streamModel, type: 'chunk' });
+        }
       }
       
-      if (onChunk && content) {
-        onChunk(content, { cached: false, model: streamModel });
+      // Step 4: Track cost with actual tokens
+      const cost = costTracker.trackTokenUsage(
+        streamModel, 
+        actualInputTokens, 
+        actualOutputTokens
+      );
+      
+      // Step 5: Cache the complete response
+      await semanticCache.store(query, fullResponse);
+      
+      // Send completion event
+      if (onChunk) {
+        onChunk('', { cached: false, model: streamModel, cost, type: 'complete' });
       }
+      
+      return {
+        response: fullResponse,
+        cached: false,
+        model: streamModel,
+        cost,
+      };
+    } catch (streamError) {
+      // Track partial cost even on error (best effort with estimates)
+      if (actualInputTokens > 0 || actualOutputTokens > 0) {
+        // Use actual tokens if we got them
+        partialCost = costTracker.trackTokenUsage(streamModel, actualInputTokens, actualOutputTokens);
+      } else if (fullResponse.length > 0) {
+        // Fallback to estimates for partial response
+        const estInputTokens = Math.ceil((systemPrompt.length + query.length + (context?.length || 0)) / 4);
+        const estOutputTokens = Math.ceil(fullResponse.length / 4);
+        partialCost = costTracker.trackTokenUsage(streamModel, estInputTokens, estOutputTokens);
+      }
+      
+      // Send error event with partial cost
+      if (onChunk) {
+        onChunk('', { 
+          cached: false, 
+          model: streamModel, 
+          cost: partialCost,
+          partialResponse: fullResponse,
+          type: 'error',
+          error: streamError instanceof Error ? streamError.message : 'Stream failed'
+        });
+      }
+      
+      throw streamError; // Re-throw for route handler
     }
-    
-    // Step 4: Track cost with actual tokens
-    const cost = costTracker.trackTokenUsage(
-      streamModel, 
-      actualInputTokens, 
-      actualOutputTokens
-    );
-    
-    // Step 5: Cache the complete response
-    await semanticCache.store(query, fullResponse);
-    
-    return {
-      response: fullResponse,
-      cached: false,
-      model: streamModel,
-      cost,
-    };
   }
   
   /**
