@@ -405,7 +405,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Optimized Tutor routes (with intelligent routing & caching)
   app.use('/api/tutor/optimized', isAuthenticated, optimizedTutorRouter);
   
-  // Voice routes (STT/TTS with AssemblyAI & AWS Polly)
+  // Voice routes (Sarvam AI primary, AssemblyAI/Polly fallback)
   app.use('/api/voice', isAuthenticated, voiceRouter);
   
   // Test Validation routes (JEE/NEET accuracy testing)
@@ -609,7 +609,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Text-to-speech endpoint using AWS Polly (Phase 4)
+  // Text-to-speech endpoint (Sarvam AI primary, AWS Polly fallback)
   app.post('/api/tutor/tts', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
