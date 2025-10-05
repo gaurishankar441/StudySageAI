@@ -64,15 +64,35 @@ export class VoiceService {
       // Voice selection for Indian languages
       const voiceId = language === 'hi' ? 'Aditi' : 'Joanna'; // Aditi = Hindi, Joanna = English
       
-      const command = new SynthesizeSpeechCommand({
-        Text: text,
-        OutputFormat: 'mp3',
-        VoiceId: voiceId,
-        Engine: 'neural', // Neural voices for better quality
-        LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN', // Indian English
-      });
-      
-      const response = await polly.send(command);
+      // Try neural engine first, fallback to standard if not supported in region
+      let response;
+      try {
+        const command = new SynthesizeSpeechCommand({
+          Text: text,
+          OutputFormat: 'mp3',
+          VoiceId: voiceId,
+          Engine: 'neural', // Neural voices for better quality
+          LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN',
+        });
+        
+        response = await polly.send(command);
+      } catch (neuralError: any) {
+        // Fallback to standard engine if neural not supported
+        if (neuralError.name === 'InvalidParameterException' || neuralError.message?.includes('neural')) {
+          console.warn('[VOICE] Neural engine not supported, using standard engine');
+          const fallbackCommand = new SynthesizeSpeechCommand({
+            Text: text,
+            OutputFormat: 'mp3',
+            VoiceId: voiceId,
+            Engine: 'standard', // Fallback to standard
+            LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN',
+          });
+          
+          response = await polly.send(fallbackCommand);
+        } else {
+          throw neuralError;
+        }
+      }
       
       if (!response.AudioStream) {
         throw new Error('No audio stream received from Polly');

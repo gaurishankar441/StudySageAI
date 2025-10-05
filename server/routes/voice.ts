@@ -147,16 +147,20 @@ voiceRouter.post('/ask', upload.single('audio'), async (req, res) => {
     // Step 2: Transcribe audio to text
     const transcription = await voiceService.transcribeAudio(audioUrl, language);
     
-    // Step 3: Get AI response (using existing AI service - to be integrated)
-    const aiResponse = `This is a placeholder AI response to: ${transcription.text}`;
+    // Step 3: Get AI response using optimized AI service
+    const { optimizedAI } = await import('../services/optimizedAIService');
+    const context = `Answer this ${language === 'hi' ? 'in Hindi' : 'in English'} for a student.`;
+    const aiResult = await optimizedAI.generateResponse(transcription.text, context);
     
     // Step 4: Synthesize AI response to speech
-    const audioBuffer = await voiceService.synthesizeSpeech(aiResponse, language);
+    const audioBuffer = await voiceService.synthesizeSpeech(aiResult.response, language);
     
     // Send audio response
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('X-Transcript', encodeURIComponent(transcription.text));
-    res.setHeader('X-AI-Response', encodeURIComponent(aiResponse));
+    res.setHeader('X-AI-Response', encodeURIComponent(aiResult.response));
+    res.setHeader('X-Model', aiResult.model || 'unknown');
+    res.setHeader('X-Cost', aiResult.cost?.toString() || '0');
     res.send(audioBuffer);
   } catch (error) {
     console.error('[VOICE API] Voice ask error:', error);
