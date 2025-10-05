@@ -245,20 +245,46 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
     const systemPrompt = `Analyze this document and return JSON with:
 {"summary": "Brief description", "subject": "main academic subject", "language": "detected language code", "topics": ["list of main topics"]}`;
 
-    const response = await openai.chat.completions.create({
-      model: "gpt-5",
-      messages: [
-        { role: "system", content: systemPrompt },
-        { role: "user", content: `Title: ${title}\nType: ${sourceType}\nContent: ${content.substring(0, 4000)}` }
-      ],
-      response_format: { type: "json_object" },
-      max_completion_tokens: 1000,
-    });
+    const contentPreview = content.substring(0, 4000);
+    console.log('[analyzeDocument] Starting analysis...');
+    console.log('[analyzeDocument] Title:', title);
+    console.log('[analyzeDocument] Type:', sourceType);
+    console.log('[analyzeDocument] Content length:', content.length);
+    console.log('[analyzeDocument] Preview length:', contentPreview.length);
 
-    const responseContent = response.choices[0].message.content;
-    if (!responseContent) throw new Error('No response from AI');
+    try {
+      const response = await openai.chat.completions.create({
+        model: "gpt-5",
+        messages: [
+          { role: "system", content: systemPrompt },
+          { role: "user", content: `Title: ${title}\nType: ${sourceType}\nContent: ${contentPreview}` }
+        ],
+        response_format: { type: "json_object" },
+        max_completion_tokens: 1000,
+      });
 
-    return JSON.parse(responseContent);
+      console.log('[analyzeDocument] API Response received');
+      console.log('[analyzeDocument] Choices:', response.choices?.length || 0);
+      console.log('[analyzeDocument] First choice:', JSON.stringify(response.choices[0], null, 2));
+
+      const responseContent = response.choices[0]?.message?.content;
+      if (!responseContent) {
+        console.error('[analyzeDocument] No content in response. Full response:', JSON.stringify(response, null, 2));
+        throw new Error('No response from AI');
+      }
+
+      console.log('[analyzeDocument] Response content:', responseContent);
+      const parsed = JSON.parse(responseContent);
+      console.log('[analyzeDocument] Parsed successfully:', parsed);
+      return parsed;
+    } catch (error) {
+      console.error('[analyzeDocument] Error:', error);
+      if (error instanceof Error) {
+        console.error('[analyzeDocument] Error message:', error.message);
+        console.error('[analyzeDocument] Error stack:', error.stack);
+      }
+      throw error;
+    }
   }
 
   // Streaming chat responses
