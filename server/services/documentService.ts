@@ -92,9 +92,16 @@ export class DocumentService {
     try {
       console.log('[YouTube] Processing URL:', url);
       
-      // The library handles URL parsing and video ID extraction internally
-      // It supports: watch?v=, youtu.be/, shorts/, embed/, live/ URLs
-      const transcript = await YoutubeTranscript.fetchTranscript(url);
+      // Extract video ID from various YouTube URL formats
+      const videoId = this.extractYouTubeVideoId(url);
+      if (!videoId) {
+        throw new Error('Invalid YouTube URL. Please provide a valid YouTube video link.');
+      }
+      
+      console.log('[YouTube] Extracted video ID:', videoId);
+      
+      // Fetch transcript using video ID
+      const transcript = await YoutubeTranscript.fetchTranscript(videoId);
       
       if (!transcript || transcript.length === 0) {
         console.error('[YouTube] No transcript found for URL:', url);
@@ -171,6 +178,31 @@ export class DocumentService {
     } catch (error) {
       console.error('Web extraction error:', error);
       throw new Error(`Failed to fetch web content: ${error}`);
+    }
+  }
+
+  private extractYouTubeVideoId(url: string): string | null {
+    try {
+      // Clean the URL
+      url = url.trim();
+      
+      // Handle various YouTube URL formats
+      const patterns = [
+        /(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/|live\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/,
+        /^([a-zA-Z0-9_-]{11})$/ // Direct video ID
+      ];
+      
+      for (const pattern of patterns) {
+        const match = url.match(pattern);
+        if (match && match[1]) {
+          return match[1];
+        }
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('[YouTube] Error extracting video ID:', error);
+      return null;
     }
   }
 
