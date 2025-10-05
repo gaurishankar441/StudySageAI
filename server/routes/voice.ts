@@ -1,0 +1,170 @@
+import { Router } from 'express';
+import multer from 'multer';
+import { voiceService } from '../services/voiceService';
+import { s3Client } from '../objectStorage';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { nanoid } from 'nanoid';
+
+const voiceRouter = Router();
+
+// Configure multer for audio file uploads
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: {
+    fileSize: 25 * 1024 * 1024, // 25MB max
+  },
+  fileFilter: (req, file, cb) => {
+    // Accept audio files only
+    if (file.mimetype.startsWith('audio/') || file.mimetype === 'video/webm') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only audio files are allowed'));
+    }
+  },
+});
+
+/**
+ * POST /api/voice/transcribe
+ * Upload audio file and get text transcription
+ */
+voiceRouter.post('/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+    
+    const language = (req.body.language || 'en') as 'hi' | 'en';
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    console.log(`[VOICE API] Transcribing ${req.file.size} bytes in ${language}`);
+    
+    // Upload audio to S3
+    const audioKey = `voice/${userId}/${nanoid()}.${req.file.mimetype.split('/')[1]}`;
+    
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: audioKey,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+        Metadata: {
+          userId,
+          uploadedAt: new Date().toISOString(),
+        },
+      })
+    );
+    
+    const audioUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${audioKey}`;
+    
+    // Transcribe using AssemblyAI
+    const result = await voiceService.transcribeAudio(audioUrl, language);
+    
+    res.json({
+      success: true,
+      text: result.text,
+      confidence: result.confidence,
+      language: result.language,
+      audioUrl,
+    });
+  } catch (error) {
+    console.error('[VOICE API] Transcription error:', error);
+    res.status(500).json({
+      error: 'Failed to transcribe audio',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/voice/synthesize
+ * Convert text to speech
+ */
+voiceRouter.post('/synthesize', async (req, res) => {
+  try {
+    const { text, language = 'en' } = req.body;
+    
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+    
+    if (text.length > 3000) {
+      return res.status(400).json({ error: 'Text too long (max 3000 characters)' });
+    }
+    
+    console.log(`[VOICE API] Synthesizing ${text.length} chars in ${language}`);
+    
+    const audioBuffer = await voiceService.synthesizeSpeech(text, language);
+    
+    // Send audio file
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Content-Length', audioBuffer.length);
+    res.setHeader('Content-Disposition', 'inline; filename="speech.mp3"');
+    res.send(audioBuffer);
+  } catch (error) {
+    console.error('[VOICE API] TTS error:', error);
+    res.status(500).json({
+      error: 'Failed to synthesize speech',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+/**
+ * POST /api/voice/ask
+ * Voice-to-voice AI interaction: STT → AI → TTS
+ */
+voiceRouter.post('/ask', upload.single('audio'), async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: 'No audio file provided' });
+    }
+    
+    const language = (req.body.language || 'en') as 'hi' | 'en';
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    // Step 1: Upload to S3
+    const audioKey = `voice/${userId}/${nanoid()}.${req.file.mimetype.split('/')[1]}`;
+    
+    await s3Client.send(
+      new PutObjectCommand({
+        Bucket: process.env.AWS_S3_BUCKET_NAME!,
+        Key: audioKey,
+        Body: req.file.buffer,
+        ContentType: req.file.mimetype,
+      })
+    );
+    
+    const audioUrl = `https://${process.env.AWS_S3_BUCKET_NAME}.s3.${process.env.AWS_REGION}.amazonaws.com/${audioKey}`;
+    
+    // Step 2: Transcribe audio to text
+    const transcription = await voiceService.transcribeAudio(audioUrl, language);
+    
+    // Step 3: Get AI response (using existing AI service - to be integrated)
+    const aiResponse = `This is a placeholder AI response to: ${transcription.text}`;
+    
+    // Step 4: Synthesize AI response to speech
+    const audioBuffer = await voiceService.synthesizeSpeech(aiResponse, language);
+    
+    // Send audio response
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('X-Transcript', encodeURIComponent(transcription.text));
+    res.setHeader('X-AI-Response', encodeURIComponent(aiResponse));
+    res.send(audioBuffer);
+  } catch (error) {
+    console.error('[VOICE API] Voice ask error:', error);
+    res.status(500).json({
+      error: 'Failed to process voice request',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+export default voiceRouter;

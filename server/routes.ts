@@ -10,6 +10,8 @@ import { aiService } from "./openai";
 import { insertDocumentSchema, insertChatSchema, insertNoteSchema, insertQuizSchema, insertStudyPlanSchema } from "@shared/schema";
 import multer from "multer";
 import { optimizedTutorRouter } from "./routes/optimizedTutor";
+import voiceRouter from "./routes/voice";
+import testValidationRouter from "./routes/testValidation";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -402,6 +404,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Optimized Tutor routes (with intelligent routing & caching)
   app.use('/api/tutor/optimized', isAuthenticated, optimizedTutorRouter);
+  
+  // Voice routes (STT/TTS with AssemblyAI & AWS Polly)
+  app.use('/api/voice', isAuthenticated, voiceRouter);
+  
+  // Test Validation routes (JEE/NEET accuracy testing)
+  app.use('/api/test', isAuthenticated, testValidationRouter);
 
   // Tutor routes
   app.post('/api/tutor/session', isAuthenticated, async (req: any, res) => {
