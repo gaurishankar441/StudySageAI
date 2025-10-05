@@ -11,6 +11,8 @@
     "db:push": "drizzle-kit push"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.901.0",
+    "@aws-sdk/s3-request-presigner": "^3.901.0",
     "@danielxceron/youtube-transcript": "^1.2.3",
     "@google-cloud/storage": "^7.17.1",
     "@hookform/resolvers": "^3.10.0",
