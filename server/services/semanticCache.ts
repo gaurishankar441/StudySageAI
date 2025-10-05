@@ -1,17 +1,32 @@
 import Redis from 'ioredis';
 import { embeddingService } from '../embeddingService';
 
-// Redis client setup
-const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: 3,
-  enableReadyCheck: true,
-  lazyConnect: true,
-});
+// Check if Redis is explicitly disabled
+const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 
-// Connect to Redis
-redis.connect().catch(err => {
-  console.warn('[CACHE] Redis connection failed, caching disabled:', err.message);
-});
+// Redis client setup
+const redis = REDIS_DISABLED 
+  ? null 
+  : new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+      maxRetriesPerRequest: 0, // Don't retry failed connections
+      enableReadyCheck: true,
+      lazyConnect: true,
+      retryStrategy: () => null, // Don't retry
+    });
+
+// Suppress Redis error logs
+if (redis) {
+  redis.on('error', (err) => {
+    // Silently ignore Redis errors - caching will be disabled
+  });
+
+  // Connect to Redis
+  redis.connect().catch(err => {
+    console.log('[CACHE] Redis unavailable, caching disabled');
+  });
+} else {
+  console.log('[CACHE] Redis disabled via REDIS_DISABLED env var');
+}
 
 export class SemanticCache {
   private readonly SIMILARITY_THRESHOLD = 0.95; // 95% similar = cache hit
@@ -22,6 +37,8 @@ export class SemanticCache {
   
   // Get cache keys using SCAN with limit (non-blocking, performance-optimized)
   private async scanCacheKeys(maxEntries?: number): Promise<string[]> {
+    if (!redis) return [];
+    
     const keys: string[] = [];
     let cursor = '0';
     const limit = maxEntries || this.MAX_SCAN_ENTRIES;
@@ -41,7 +58,7 @@ export class SemanticCache {
   }
   
   async check(query: string): Promise<string | null> {
-    if (!redis.status || redis.status !== 'ready') {
+    if (!redis || !redis.status || redis.status !== 'ready') {
       return null; // Redis not available
     }
     
@@ -89,7 +106,7 @@ export class SemanticCache {
   }
   
   async store(query: string, response: string) {
-    if (!redis.status || redis.status !== 'ready') {
+    if (!redis || !redis.status || redis.status !== 'ready') {
       return; // Redis not available
     }
     
@@ -143,7 +160,7 @@ export class SemanticCache {
   
   // Clear entire cache (using SCAN)
   async clear() {
-    if (!redis.status || redis.status !== 'ready') {
+    if (!redis || !redis.status || redis.status !== 'ready') {
       return;
     }
     
@@ -156,7 +173,7 @@ export class SemanticCache {
   
   // Get cache statistics (using SCAN)
   async getStats() {
-    if (!redis.status || redis.status !== 'ready') {
+    if (!redis || !redis.status || redis.status !== 'ready') {
       return { size: 0, status: 'disconnected' };
     }
     
