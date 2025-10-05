@@ -27,7 +27,7 @@ Preferred communication style: Simple, everyday language.
     - **LLM**: OpenAI API (GPT-5) for tutoring, chat, quiz generation, summarization
     - **Embeddings**: Vyakyarth-1-Indic (768-dim) for semantic search - optimized for Hindi and Indic languages
     - **Features**: Streaming responses, structured output, document processing, citation tracking (RAG)
-*   **File Storage**: Google Cloud Storage via `@google-cloud/storage`, Replit sidecar auth, object ACLs, Multer for multipart uploads, Uppy for direct-to-cloud uploads.
+*   **File Storage**: AWS S3 via `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`, presigned URLs for uploads, metadata-based ACL policies, Multer for multipart handling, Uppy for direct-to-cloud uploads.
 *   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `embeddingService` for Vyakyarth-1-Indic embeddings, `storage` for DB abstraction, `objectStorageService` for cloud storage.
 
 ### Authentication and Authorization
@@ -52,7 +52,7 @@ Preferred communication style: Simple, everyday language.
 *   **OpenAI API**: GPT-5 for LLM features (tutoring, chat, quiz generation, summarization).
 *   **Vyakyarth-1-Indic**: Krutrim AI Labs' embedding model for semantic search (768 dimensions, optimized for Hindi/Indic languages).
 *   **Replit Authentication**: OIDC provider for user authentication.
-*   **Google Cloud Storage**: Object storage for user-uploaded files and media.
+*   **AWS S3**: Object storage for user-uploaded files and media.
 
 ### Database Services
 
@@ -93,3 +93,15 @@ Preferred communication style: Simple, everyday language.
 - **Multilingual**: Full Hindi/English support with language-aware instructions
 - Updated `aiService.ts`: Integrated Agentic RAG into sendDocChatMessage() replacing simple RAG
 - **Benefits**: Better complex query handling, transparent reasoning process, source verification, optimized retrieval (only gets what's needed)
+
+### October 5, 2025 - AWS S3 Migration
+**Migrated object storage from Google Cloud Storage to AWS S3:**
+- Completely rewrote `server/objectStorage.ts` to use AWS S3 SDK (`@aws-sdk/client-s3`, `@aws-sdk/s3-request-presigner`)
+- **S3 Client**: Region-based configuration with IAM credentials (AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY)
+- **Presigned URLs**: Generate presigned PUT URLs for direct client uploads (15-minute TTL)
+- **Metadata-based ACL**: Store ACL policies in S3 object metadata instead of separate ACL entries
+- **Bucket Structure**: `private/uploads/` for user documents, configurable public paths
+- **Streaming**: Direct S3 → Express response streaming for downloads
+- **Compatibility**: Maintained existing API surface for seamless integration with documentService and routes
+- **Environment Variables**: AWS_S3_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
+- **Reason**: Application will be deployed on AWS infrastructure in production

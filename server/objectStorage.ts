@@ -3,6 +3,7 @@ import {
   GetObjectCommand,
   HeadObjectCommand,
   PutObjectCommand,
+  CopyObjectCommand,
   ListObjectsV2Command,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
@@ -118,10 +119,15 @@ export class ObjectStorageService {
       } else {
         res.status(404).json({ error: "File content not found" });
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error downloading file from S3:", error);
       if (!res.headersSent) {
-        res.status(500).json({ error: "Error downloading file" });
+        // Return 404 for NotFound errors, 500 for others
+        if (error.name === 'NotFound' || error.name === 'NoSuchKey') {
+          res.status(404).json({ error: "File not found" });
+        } else {
+          res.status(500).json({ error: "Error downloading file" });
+        }
       }
     }
   }
@@ -242,26 +248,33 @@ export class ObjectStorageService {
     aclPolicy: ObjectAclPolicy
   ): Promise<void> {
     try {
-      // First, get the current object to copy it with new metadata
-      const getCommand = new GetObjectCommand({
+      // Get current metadata first
+      const headCommand = new HeadObjectCommand({
         Bucket: s3Object.bucket,
         Key: s3Object.key,
       });
-      const currentObject = await s3Client.send(getCommand);
+      const currentMetadata = await s3Client.send(headCommand);
 
-      // Update with new metadata (copy object to itself with updated metadata)
-      const putCommand = new PutObjectCommand({
+      // Use CopyObject to update metadata in-place without downloading/re-uploading
+      // Preserve ALL existing headers to avoid metadata loss
+      const copyCommand = new CopyObjectCommand({
         Bucket: s3Object.bucket,
         Key: s3Object.key,
-        Body: currentObject.Body as any,
-        ContentType: currentObject.ContentType,
+        CopySource: `${s3Object.bucket}/${s3Object.key}`,
+        MetadataDirective: "REPLACE",
+        ...(currentMetadata.ContentType && { ContentType: currentMetadata.ContentType }),
+        ...(currentMetadata.ContentDisposition && { ContentDisposition: currentMetadata.ContentDisposition }),
+        ...(currentMetadata.CacheControl && { CacheControl: currentMetadata.CacheControl }),
+        ...(currentMetadata.ContentEncoding && { ContentEncoding: currentMetadata.ContentEncoding }),
+        ...(currentMetadata.ContentLanguage && { ContentLanguage: currentMetadata.ContentLanguage }),
+        ...(currentMetadata.Expires && { Expires: currentMetadata.Expires }),
         Metadata: {
-          ...currentObject.Metadata,
+          ...(currentMetadata.Metadata ?? {}),
           'acl-policy': JSON.stringify(aclPolicy),
         },
       });
 
-      await s3Client.send(putCommand);
+      await s3Client.send(copyCommand);
     } catch (error) {
       console.error("Error setting ACL policy:", error);
       throw error;
