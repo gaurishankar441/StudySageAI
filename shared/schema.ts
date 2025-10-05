@@ -16,7 +16,7 @@ import { createInsertSchema } from "drizzle-zod";
 
 const vector = customType<{ data: number[]; driverData: string }>({
   dataType() {
-    return 'vector(768)';
+    return 'vector(1024)';
   },
   toDriver(value: number[]): string {
     return JSON.stringify(value);
@@ -93,7 +93,7 @@ export const chunks = pgTable("chunks", {
   heading: varchar("heading"),
   language: varchar("lang"),
   hash: varchar("hash"),
-  embedding: vector("embedding"), // pgvector embedding (768 dimensions for Vyakyarth-1-Indic)
+  embedding: vector("embedding"), // pgvector embedding (1024 dimensions for BGE-M3)
   metadata: jsonb("metadata"),
   createdAt: timestamp("created_at").defaultNow(),
 });

@@ -188,6 +188,38 @@ export class ObjectStorageService {
     }
   }
 
+  // Download S3 object content as Buffer (for document processing)
+  async downloadBuffer(s3Object: S3Object): Promise<Buffer> {
+    try {
+      const command = new GetObjectCommand({
+        Bucket: s3Object.bucket,
+        Key: s3Object.key,
+      });
+
+      const response = await s3Client.send(command);
+
+      if (!response.Body) {
+        throw new Error("No content in S3 object");
+      }
+
+      // Convert stream to buffer
+      const chunks: Uint8Array[] = [];
+      const stream = response.Body as any;
+      
+      for await (const chunk of stream) {
+        chunks.push(chunk);
+      }
+
+      return Buffer.concat(chunks);
+    } catch (error: any) {
+      console.error("Error downloading buffer from S3:", error);
+      if (error.name === 'NotFound' || error.name === 'NoSuchKey') {
+        throw new ObjectNotFoundError();
+      }
+      throw error;
+    }
+  }
+
   // Normalize object entity path from S3 URL
   normalizeObjectEntityPath(rawPath: string): string {
     // Handle S3 URLs

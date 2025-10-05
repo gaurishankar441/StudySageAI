@@ -46,9 +46,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Normalize the upload URL to get the object path
       const normalizedPath = objectStorageService.normalizeObjectEntityPath(uploadURL);
       
-      // Get the file from object storage using GCS client
+      // Get the file from object storage using S3 client
       const objectFile = await objectStorageService.getObjectEntityFile(normalizedPath);
-      const [fileBuffer] = await objectFile.download();
+      const fileBuffer = await objectStorageService.downloadBuffer(objectFile);
 
       console.log(`Processing document for user ${userId}: ${fileName} (${fileBuffer.length} bytes)`);
       

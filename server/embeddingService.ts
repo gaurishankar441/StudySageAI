@@ -5,7 +5,7 @@ env.allowRemoteModels = true;
 
 class EmbeddingService {
   private model: any = null;
-  private modelName = 'krutrim-ai-labs/vyakyarth';
+  private modelName = 'BAAI/bge-m3'; // BGE-M3: Multilingual embeddings, 1024 dimensions
   private isInitializing = false;
   private initPromise: Promise<void> | null = null;
 
@@ -18,11 +18,11 @@ class EmbeddingService {
     this.isInitializing = true;
     this.initPromise = (async () => {
       try {
-        console.log(`[EmbeddingService] Loading Vyakyarth-1-Indic model: ${this.modelName}`);
+        console.log(`[EmbeddingService] Loading BGE-M3 model: ${this.modelName}`);
         this.model = await pipeline('feature-extraction', this.modelName);
-        console.log('[EmbeddingService] Vyakyarth-1-Indic model loaded successfully');
+        console.log('[EmbeddingService] BGE-M3 model loaded successfully (1024 dimensions)');
       } catch (error) {
-        console.error('[EmbeddingService] Failed to load Vyakyarth-1-Indic model:', error);
+        console.error('[EmbeddingService] Failed to load BGE-M3 model:', error);
         throw error;
       } finally {
         this.isInitializing = false;
@@ -47,8 +47,8 @@ class EmbeddingService {
 
       const embedding = Array.from(output.data) as number[];
       
-      if (embedding.length !== 768) {
-        console.warn(`[EmbeddingService] Expected 768 dimensions, got ${embedding.length}`);
+      if (embedding.length !== 1024) {
+        console.warn(`[EmbeddingService] Expected 1024 dimensions, got ${embedding.length}`);
       }
       
       return embedding;
@@ -83,7 +83,7 @@ class EmbeddingService {
         const embedding = Array.from(output.data) as number[];
         embeddings.push(embedding);
       } else {
-        const dims = 768;
+        const dims = 1024; // BGE-M3 produces 1024 dimensions
         for (let i = 0; i < texts.length; i++) {
           const start = i * dims;
           const end = start + dims;
