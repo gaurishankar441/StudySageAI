@@ -1,5 +1,6 @@
 import { storage } from "../storage";
 import { aiService } from "../openai";
+import { embeddingService } from "../embeddingService";
 import { InsertDocument } from "@shared/schema";
 import * as crypto from "crypto";
 import * as mammoth from "mammoth";
@@ -178,6 +179,135 @@ export class DocumentService {
     return match ? match[1].trim() : 'Untitled';
   }
 
+  private splitIntoSentences(text: string): string[] {
+    text = text.replace(/\s+/g, ' ').trim();
+    
+    const sentenceRegex = /(?<=[.!?।])\s+|(?<=[.!?।])$/g;
+    const sentences = text.split(sentenceRegex).filter(s => s && s.trim().length > 0);
+    
+    return sentences.map(s => s.trim());
+  }
+
+  private getDynamicChunkSize(documentWordCount: number): number {
+    if (documentWordCount < 5000) {
+      return 350;
+    } else if (documentWordCount < 20000) {
+      return 250;
+    } else {
+      return 180;
+    }
+  }
+
+  private async createSemanticChunks(
+    text: string,
+    docId: string,
+    docTitle: string,
+    language: string = 'en',
+    similarityThreshold: number = 0.5
+  ): Promise<DocumentChunk[]> {
+    try {
+      console.log('[SemanticChunking] Starting semantic chunking process...');
+      
+      if (!text || text.trim().length === 0) {
+        throw new Error('Input text must be a non-empty string');
+      }
+
+      const cleanedText = text.replace(/\s+/g, ' ').trim();
+      const sentences = this.splitIntoSentences(cleanedText);
+      
+      console.log(`[SemanticChunking] Split into ${sentences.length} sentences`);
+      
+      if (sentences.length === 0) {
+        throw new Error('No sentences extracted from text');
+      }
+
+      const documentWordCount = cleanedText.split(/\s+/).length;
+      const targetChunkSize = this.getDynamicChunkSize(documentWordCount);
+      
+      console.log(`[SemanticChunking] Document has ${documentWordCount} words, target chunk size: ${targetChunkSize} words`);
+
+      console.log('[SemanticChunking] Generating sentence embeddings...');
+      const sentenceEmbeddings = await embeddingService.generateEmbeddings(sentences);
+      console.log(`[SemanticChunking] Generated ${sentenceEmbeddings.length} embeddings`);
+
+      const chunks: DocumentChunk[] = [];
+      let currentChunk: string[] = [];
+      let currentLength = 0;
+
+      for (let i = 0; i < sentences.length; i++) {
+        const sentence = sentences[i];
+        const sentenceLength = sentence.split(/\s+/).length;
+
+        if (sentenceLength > targetChunkSize * 1.5) {
+          console.log(`[SemanticChunking] Warning: Long sentence detected (${sentenceLength} words), adding as separate chunk`);
+          if (currentChunk.length > 0) {
+            chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+            currentChunk = [];
+            currentLength = 0;
+          }
+          chunks.push(this.createChunkObject(sentence, docId, docTitle, language, chunks.length));
+          continue;
+        }
+
+        if (i > 0) {
+          const similarity = embeddingService.cosineSimilarity(
+            sentenceEmbeddings[i],
+            sentenceEmbeddings[i - 1]
+          );
+
+          if (similarity < similarityThreshold && currentLength > targetChunkSize * 0.75) {
+            console.log(`[SemanticChunking] Low similarity (${similarity.toFixed(3)}) detected, creating new chunk`);
+            chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+            currentChunk = [];
+            currentLength = 0;
+          }
+        }
+
+        currentChunk.push(sentence);
+        currentLength += sentenceLength;
+
+        if (currentLength >= targetChunkSize && sentence.match(/[.!?।]$/)) {
+          chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+          currentChunk = [];
+          currentLength = 0;
+        }
+      }
+
+      if (currentChunk.length > 0) {
+        chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+      }
+
+      console.log(`[SemanticChunking] Created ${chunks.length} semantic chunks from ${sentences.length} sentences`);
+      return chunks;
+    } catch (error) {
+      console.error('[SemanticChunking] Error in semantic chunking:', error);
+      throw error;
+    }
+  }
+
+  private createChunkObject(
+    text: string,
+    docId: string,
+    docTitle: string,
+    language: string,
+    ord: number
+  ): DocumentChunk {
+    return {
+      docId,
+      ord,
+      text: text.trim(),
+      tokens: this.countTokens(text),
+      language,
+      hash: this.generateHash(text),
+      metadata: {
+        docTitle,
+        docId,
+        page: Math.floor(ord / 3) + 1,
+        section: (ord % 3) + 1
+      }
+    };
+  }
+
   // Adaptive chunk size based on document length
   private getAdaptiveChunkSize(totalTokens: number): { maxTokens: number; overlap: number } {
     if (totalTokens < 2000) {
@@ -202,74 +332,45 @@ export class DocumentService {
     }
   }
 
-  // Chunk text into manageable pieces with smart semantic boundaries
-  chunkText(text: string, docId: string, docTitle: string, language: string = 'en', maxTokensOverride?: number, overlapOverride?: number): DocumentChunk[] {
-    // Count total tokens in document
-    const totalTokens = this.countTokens(text);
-    
-    // Determine adaptive chunk size
-    const { maxTokens, overlap } = maxTokensOverride 
-      ? { maxTokens: maxTokensOverride, overlap: overlapOverride || 80 }
-      : this.getAdaptiveChunkSize(totalTokens);
-
-    // Split on sentence boundaries for semantic coherence
-    const sentences = text.split(/(?<=[.!?])\s+/).filter(s => s.trim().length > 0);
-    const chunks: DocumentChunk[] = [];
-    let currentChunk = '';
-    let currentTokens = 0;
-
-    for (const sentence of sentences) {
-      const sentenceTokens = this.countTokens(sentence);
+  async chunkText(text: string, docId: string, docTitle: string, language: string = 'en', similarityThreshold: number = 0.5): Promise<DocumentChunk[]> {
+    try {
+      const totalTokens = this.countTokens(text);
+      console.log(`[Chunking] Starting semantic chunking for document: ${docTitle}, Total tokens: ${totalTokens}`);
       
-      if (currentTokens + sentenceTokens > maxTokens && currentChunk) {
-        // Add current chunk
-        const chunkText = currentChunk.trim();
-        chunks.push({
-          docId,
-          ord: chunks.length,
-          text: chunkText,
-          tokens: this.countTokens(chunkText),
-          language,
-          hash: this.generateHash(chunkText),
-          metadata: {
-            docTitle,
-            docId,
-            page: Math.floor(chunks.length / 3) + 1, // Estimate page number
-            section: (chunks.length % 3) + 1 // Section within page
-          }
-        });
-
-        // Start new chunk with overlap (10-20% for context preservation)
-        const overlapText = this.getOverlapText(currentChunk, overlap);
-        currentChunk = overlapText + sentence + ' ';
-        currentTokens = this.countTokens(currentChunk);
-      } else {
-        currentChunk += sentence + ' ';
-        currentTokens += sentenceTokens;
-      }
-    }
-
-    // Add final chunk
-    if (currentChunk.trim()) {
-      const chunkText = currentChunk.trim();
-      chunks.push({
-        docId,
-        ord: chunks.length,
-        text: chunkText,
-        tokens: this.countTokens(chunkText),
-        language,
-        hash: this.generateHash(chunkText),
-        metadata: {
-          docTitle,
-          docId,
-          page: Math.floor(chunks.length / 3) + 1,
-          section: (chunks.length % 3) + 1
+      const chunks = await this.createSemanticChunks(text, docId, docTitle, language, similarityThreshold);
+      
+      console.log(`[Chunking] Document: ${docTitle}, Total tokens: ${totalTokens}, Chunks created: ${chunks.length}`);
+      return chunks;
+    } catch (error) {
+      console.error('[Chunking] Error in semantic chunking, falling back to simple chunking:', error);
+      
+      const sentences = this.splitIntoSentences(text);
+      const chunks: DocumentChunk[] = [];
+      const targetSize = 300;
+      
+      let currentChunk: string[] = [];
+      let currentLength = 0;
+      
+      for (const sentence of sentences) {
+        const sentenceLength = sentence.split(/\s+/).length;
+        
+        if (currentLength + sentenceLength > targetSize && currentChunk.length > 0) {
+          chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+          currentChunk = [];
+          currentLength = 0;
         }
-      });
+        
+        currentChunk.push(sentence);
+        currentLength += sentenceLength;
+      }
+      
+      if (currentChunk.length > 0) {
+        chunks.push(this.createChunkObject(currentChunk.join(' '), docId, docTitle, language, chunks.length));
+      }
+      
+      console.log(`[Chunking] Fallback chunking created ${chunks.length} chunks`);
+      return chunks;
     }
-
-    console.log(`[Chunking] Document: ${docTitle}, Total tokens: ${totalTokens}, Chunk size: ${maxTokens}, Chunks created: ${chunks.length}`);
-    return chunks;
   }
 
   private getOverlapText(text: string, overlapTokens: number): string {
@@ -311,8 +412,8 @@ export class DocumentService {
       // Analyze document
       const analysis = await aiService.analyzeDocument(title, text, sourceType);
 
-      // Chunk text with document title for citations
-      const chunks = this.chunkText(text, document.id, title, analysis.language || 'en');
+      // Chunk text with document title for citations using semantic chunking
+      const chunks = await this.chunkText(text, document.id, title, analysis.language || 'en');
       
       // Check if chunks were created
       if (chunks.length === 0) {
