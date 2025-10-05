@@ -226,8 +226,17 @@ export class DocumentService {
       
       console.log(`[SemanticChunking] Document has ${documentWordCount} words, target chunk size: ${targetChunkSize} words`);
 
-      console.log('[SemanticChunking] Generating sentence embeddings...');
-      const sentenceEmbeddings = await embeddingService.generateEmbeddings(sentences);
+      console.log('[SemanticChunking] Generating sentence embeddings in batches...');
+      const sentenceEmbeddings: number[][] = [];
+      const batchSize = 100;
+      
+      for (let i = 0; i < sentences.length; i += batchSize) {
+        const batch = sentences.slice(i, i + batchSize);
+        console.log(`[SemanticChunking] Processing batch ${Math.floor(i/batchSize) + 1}/${Math.ceil(sentences.length/batchSize)} (${batch.length} sentences)`);
+        const batchEmbeddings = await embeddingService.generateEmbeddings(batch);
+        sentenceEmbeddings.push(...batchEmbeddings);
+      }
+      
       console.log(`[SemanticChunking] Generated ${sentenceEmbeddings.length} embeddings`);
 
       const chunks: DocumentChunk[] = [];

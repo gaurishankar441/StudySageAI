@@ -61,14 +61,43 @@ class EmbeddingService {
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     await this.initialize();
 
-    const embeddings: number[][] = [];
-    
-    for (const text of texts) {
-      const embedding = await this.generateEmbedding(text);
-      embeddings.push(embedding);
+    if (!this.model) {
+      throw new Error('Embedding model not initialized');
     }
-    
-    return embeddings;
+
+    if (texts.length === 0) {
+      return [];
+    }
+
+    try {
+      console.log(`[EmbeddingService] Generating embeddings for ${texts.length} texts in batch`);
+      
+      const output = await this.model(texts, {
+        pooling: 'mean',
+        normalize: true,
+      });
+
+      const embeddings: number[][] = [];
+      
+      if (texts.length === 1) {
+        const embedding = Array.from(output.data) as number[];
+        embeddings.push(embedding);
+      } else {
+        const dims = 768;
+        for (let i = 0; i < texts.length; i++) {
+          const start = i * dims;
+          const end = start + dims;
+          const embedding = Array.from(output.data.slice(start, end)) as number[];
+          embeddings.push(embedding);
+        }
+      }
+      
+      console.log(`[EmbeddingService] Generated ${embeddings.length} embeddings successfully`);
+      return embeddings;
+    } catch (error) {
+      console.error('[EmbeddingService] Error generating batch embeddings:', error);
+      throw new Error(`Failed to generate batch embeddings: ${error}`);
+    }
   }
 
   cosineSimilarity(vecA: number[], vecB: number[]): number {
