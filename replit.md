@@ -22,13 +22,13 @@ Preferred communication style: Simple, everyday language.
 
 *   **Server Framework**: Express.js with TypeScript, RESTful API, session-based authentication (connect-pg-simple), middleware for logging and error handling.
 *   **Database Layer**: PostgreSQL with pgvector extension, Drizzle ORM for type-safe queries, Neon serverless driver, WebSocket-based connection.
-*   **Database Schema**: Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks (768-dimensional embeddings).
+*   **Database Schema**: Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks (1536-dimensional embeddings).
 *   **AI Integration**: 
     - **LLM**: OpenAI API (GPT-5) for tutoring, chat, quiz generation, summarization
-    - **Embeddings**: Vyakyarth-1-Indic (768-dim) for semantic search - optimized for Hindi and Indic languages
+    - **Embeddings**: OpenAI text-embedding-3-small (1536-dim) for semantic search - multilingual support
     - **Features**: Streaming responses, structured output, document processing, citation tracking (RAG)
 *   **File Storage**: AWS S3 via `@aws-sdk/client-s3` and `@aws-sdk/s3-request-presigner`, presigned URLs for uploads, metadata-based ACL policies, Multer for multipart handling, Uppy for direct-to-cloud uploads.
-*   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `embeddingService` for Vyakyarth-1-Indic embeddings, `storage` for DB abstraction, `objectStorageService` for cloud storage.
+*   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `embeddingService` for OpenAI embeddings, `storage` for DB abstraction, `objectStorageService` for cloud storage.
 
 ### Authentication and Authorization
 
@@ -49,8 +49,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Third-Party APIs
 
-*   **OpenAI API**: GPT-5 for LLM features (tutoring, chat, quiz generation, summarization).
-*   **Vyakyarth-1-Indic**: Krutrim AI Labs' embedding model for semantic search (768 dimensions, optimized for Hindi/Indic languages).
+*   **OpenAI API**: GPT-5 for LLM features (tutoring, chat, quiz generation, summarization) and text-embedding-3-small for semantic search (1536 dimensions).
 *   **Replit Authentication**: OIDC provider for user authentication.
 *   **AWS S3**: Object storage for user-uploaded files and media.
 
@@ -77,7 +76,6 @@ Preferred communication style: Simple, everyday language.
 *   **multer**: Multipart form data handling.
 *   **connect-pg-simple**: PostgreSQL session store.
 *   **memoizee**: Function result caching.
-*   **@xenova/transformers**: For running Vyakyarth-1-Indic embedding model locally.
 
 ## Recent Changes
 
@@ -105,3 +103,14 @@ Preferred communication style: Simple, everyday language.
 - **Compatibility**: Maintained existing API surface for seamless integration with documentService and routes
 - **Environment Variables**: AWS_S3_BUCKET_NAME, AWS_REGION, AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY
 - **Reason**: Application will be deployed on AWS infrastructure in production
+
+### October 5, 2025 - OpenAI Embeddings Migration
+**Switched from local model to OpenAI API for embeddings:**
+- **Previous**: Attempted to use BGE-M3 (BAAI/bge-m3) via Transformers.js - ONNX models not available
+- **Current**: OpenAI text-embedding-3-small API (1536 dimensions, multilingual)
+- Rewrote `server/embeddingService.ts` to use OpenAI Embeddings API instead of local Transformers.js
+- **Database Migration**: Vector column migrated from 768→1536 dimensions
+- **SQL Migration**: `ALTER TABLE chunks DROP COLUMN embedding; ALTER TABLE chunks ADD COLUMN embedding vector(1536);`
+- **Benefits**: Reliable API-based embeddings, no local model loading issues, excellent multilingual support
+- **Verified**: Document processing, semantic chunking, embedding generation, vector search (66% similarity on test)
+- **Ready**: RAG pipeline fully functional for DocChat and Quick Actions

@@ -1,56 +1,34 @@
-import { pipeline, env } from '@xenova/transformers';
+import OpenAI from 'openai';
 
-env.allowLocalModels = false;
-env.allowRemoteModels = true;
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 class EmbeddingService {
-  private model: any = null;
-  private modelName = 'BAAI/bge-m3'; // BGE-M3: Multilingual embeddings, 1024 dimensions
-  private isInitializing = false;
-  private initPromise: Promise<void> | null = null;
-
-  async initialize() {
-    if (this.model) return;
-    if (this.isInitializing && this.initPromise) {
-      return this.initPromise;
-    }
-
-    this.isInitializing = true;
-    this.initPromise = (async () => {
-      try {
-        console.log(`[EmbeddingService] Loading BGE-M3 model: ${this.modelName}`);
-        this.model = await pipeline('feature-extraction', this.modelName);
-        console.log('[EmbeddingService] BGE-M3 model loaded successfully (1024 dimensions)');
-      } catch (error) {
-        console.error('[EmbeddingService] Failed to load BGE-M3 model:', error);
-        throw error;
-      } finally {
-        this.isInitializing = false;
-      }
-    })();
-
-    return this.initPromise;
-  }
+  private modelName = 'text-embedding-3-small'; // 1536 dimensions, multilingual support
+  private dimensions = 1536;
 
   async generateEmbedding(text: string): Promise<number[]> {
-    await this.initialize();
-
-    if (!this.model) {
-      throw new Error('Embedding model not initialized');
+    if (!text || text.trim().length === 0) {
+      throw new Error('Text cannot be empty');
     }
 
     try {
-      const output = await this.model(text, {
-        pooling: 'mean',
-        normalize: true,
+      console.log(`[EmbeddingService] Generating embedding for text (${text.length} chars)`);
+      
+      const response = await openai.embeddings.create({
+        model: this.modelName,
+        input: text,
+        dimensions: this.dimensions,
       });
 
-      const embedding = Array.from(output.data) as number[];
+      const embedding = response.data[0].embedding;
       
-      if (embedding.length !== 1024) {
-        console.warn(`[EmbeddingService] Expected 1024 dimensions, got ${embedding.length}`);
+      if (embedding.length !== this.dimensions) {
+        console.warn(`[EmbeddingService] Expected ${this.dimensions} dimensions, got ${embedding.length}`);
       }
       
+      console.log(`[EmbeddingService] Generated embedding with ${embedding.length} dimensions`);
       return embedding;
     } catch (error) {
       console.error('[EmbeddingService] Error generating embedding:', error);
@@ -59,12 +37,6 @@ class EmbeddingService {
   }
 
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
-    await this.initialize();
-
-    if (!this.model) {
-      throw new Error('Embedding model not initialized');
-    }
-
     if (texts.length === 0) {
       return [];
     }
@@ -72,25 +44,13 @@ class EmbeddingService {
     try {
       console.log(`[EmbeddingService] Generating embeddings for ${texts.length} texts in batch`);
       
-      const output = await this.model(texts, {
-        pooling: 'mean',
-        normalize: true,
+      const response = await openai.embeddings.create({
+        model: this.modelName,
+        input: texts,
+        dimensions: this.dimensions,
       });
 
-      const embeddings: number[][] = [];
-      
-      if (texts.length === 1) {
-        const embedding = Array.from(output.data) as number[];
-        embeddings.push(embedding);
-      } else {
-        const dims = 1024; // BGE-M3 produces 1024 dimensions
-        for (let i = 0; i < texts.length; i++) {
-          const start = i * dims;
-          const end = start + dims;
-          const embedding = Array.from(output.data.slice(start, end)) as number[];
-          embeddings.push(embedding);
-        }
-      }
+      const embeddings = response.data.map(item => item.embedding);
       
       console.log(`[EmbeddingService] Generated ${embeddings.length} embeddings successfully`);
       return embeddings;
@@ -116,6 +76,10 @@ class EmbeddingService {
     }
     
     return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+  }
+
+  getDimensions(): number {
+    return this.dimensions;
   }
 }
 
