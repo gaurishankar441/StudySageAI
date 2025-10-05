@@ -1,6 +1,7 @@
 import { AssemblyAI } from 'assemblyai';
 import { PollyClient, SynthesizeSpeechCommand } from '@aws-sdk/client-polly';
 import { Readable } from 'stream';
+import { sarvamVoiceService } from './sarvamVoice';
 
 const assemblyAI = new AssemblyAI({
   apiKey: process.env.ASSEMBLYAI_API_KEY || '',
@@ -16,16 +17,33 @@ const polly = new PollyClient({
 
 export class VoiceService {
   /**
-   * Transcribe audio to text using AssemblyAI
-   * Supports multiple Indian languages for JEE/NEET students
+   * Transcribe audio to text
+   * Primary: Sarvam AI (Indian accent optimized)
+   * Fallback: AssemblyAI
    */
   async transcribeAudio(audioUrl: string, language: 'hi' | 'en' = 'en'): Promise<{
     text: string;
     confidence: number;
     language: string;
   }> {
+    // Try Sarvam AI first (Indian accent optimized)
+    if (sarvamVoiceService.isAvailable()) {
+      try {
+        console.log(`[VOICE] Using Sarvam AI STT for ${language}...`);
+        
+        // Fetch audio from URL
+        const audioResponse = await fetch(audioUrl);
+        const audioBuffer = Buffer.from(await audioResponse.arrayBuffer());
+        
+        return await sarvamVoiceService.transcribeAudio(audioBuffer, language);
+      } catch (sarvamError) {
+        console.warn('[VOICE] Sarvam AI failed, falling back to AssemblyAI:', sarvamError);
+      }
+    }
+    
+    // Fallback to AssemblyAI
     try {
-      console.log(`[VOICE] Starting transcription for ${language}...`);
+      console.log(`[VOICE] Using AssemblyAI STT for ${language}...`);
       
       const transcript = await assemblyAI.transcripts.transcribe({
         audio: audioUrl,
@@ -51,15 +69,27 @@ export class VoiceService {
   }
   
   /**
-   * Synthesize text to speech using AWS Polly
-   * Supports Hindi and English voices optimized for Indian students
+   * Synthesize text to speech
+   * Primary: Sarvam AI (authentic Indian voices)
+   * Fallback: AWS Polly
    */
   async synthesizeSpeech(
     text: string,
     language: 'hi' | 'en' = 'en'
   ): Promise<Buffer> {
+    // Try Sarvam AI first (authentic Indian voices)
+    if (sarvamVoiceService.isAvailable()) {
+      try {
+        console.log(`[VOICE] Using Sarvam AI TTS for ${language}...`);
+        return await sarvamVoiceService.synthesizeSpeech(text, language);
+      } catch (sarvamError) {
+        console.warn('[VOICE] Sarvam AI failed, falling back to AWS Polly:', sarvamError);
+      }
+    }
+    
+    // Fallback to AWS Polly
     try {
-      console.log(`[VOICE] Synthesizing speech in ${language}...`);
+      console.log(`[VOICE] Using AWS Polly TTS for ${language}...`);
       
       // Voice selection for Indian languages
       const voiceId = language === 'hi' ? 'Aditi' : 'Joanna'; // Aditi = Hindi, Joanna = English
