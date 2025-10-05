@@ -1,0 +1,743 @@
+ASK: VaktaAI Production Optimization for JEE/NEET Students
+
+CONTEXT:
+You are upgrading an existing AI study companion (VaktaAI) to make it production-ready, cost-effective, and optimized for JEE/NEET exam preparation. The current system uses GPT-4 which is expensive ($5/million tokens). We need to reduce costs by 70-85% while maintaining 95%+ accuracy specifically for Indian competitive exams.
+
+CURRENT STACK (Already Implemented):
+- Backend: Express.js + TypeScript
+- Database: PostgreSQL + pgvector (1536D embeddings)
+- AI: OpenAI GPT-4 + text-embedding-3-small
+- Storage: AWS S3 (Mumbai region)
+- RAG: Agentic RAG with multi-step reasoning
+- Auth: Session-based with bcrypt
+- Features: AI Tutor, DocChat, Quiz, Study Plans, Notes
+
+CRITICAL REQUIREMENTS:
+1. Cost Reduction: From $4,500/month to $1,000-1,500/month for 10K students
+2. Low Latency: <3 seconds for text responses
+3. High Accuracy: 95%+ on JEE/NEET problems (Physics, Chemistry, Math)
+4. Fast Response: Streaming responses with <500ms first token
+
+IMPLEMENTATION PHASES:
+
+═══════════════════════════════════════════════════════════════
+PHASE 1: INTELLIGENT MODEL ROUTING (PRIORITY: CRITICAL)
+═══════════════════════════════════════════════════════════════
+
+OBJECTIVE: Replace expensive GPT-4 with smart routing to multiple cheaper models based on query complexity and type. This alone saves 70-80% costs.
+
+STEP 1.1: Create Model Router Service
+Location: server/services/modelRouter.ts
+```typescript
+import { ChatOpenAI } from "@langchain/openai";
+import Anthropic from "@anthropic-ai/sdk";
+import { SentenceTransformer } from '@huggingface/transformers';
+
+// Intent classification embeddings (precomputed for speed)
+const INTENT_PATTERNS = {
+  concept_explanation: ['explain', 'what is', 'define', 'help me understand', 'meaning of'],
+  numerical_solving: ['solve', 'calculate', 'find answer', 'compute', 'numerical'],
+  hint_request: ['hint', 'stuck', 'guide me', 'point me', 'suggest'],
+  quiz_generation: ['quiz', 'mcq', 'questions', 'test'],
+  summarization: ['summarize', 'summary', 'key points', 'tldr'],
+};
+
+interface QueryAnalysis {
+  intent: string;
+  complexity: number; // 1-4 scale
+  subject: 'physics' | 'chemistry' | 'math' | 'general';
+  language: 'hindi' | 'english' | 'hinglish';
+}
+
+export class IntelligentModelRouter {
+  private geminiFlash: ChatOpenAI;
+  private claudeHaiku: Anthropic;
+  private gpt4oMini: ChatOpenAI;
+  
+  constructor() {
+    // Tier 1: Cheap & Fast (75% of queries)
+    this.geminiFlash = new ChatOpenAI({
+      modelName: "gemini-1.5-flash",
+      temperature: 0.7,
+      apiKey: process.env.GOOGLE_API_KEY,
+    });
+    
+    // Tier 2: Balanced (20% of queries)
+    this.gpt4oMini = new ChatOpenAI({
+      modelName: "gpt-4o-mini",
+      temperature: 0.7,
+    });
+    
+    // Tier 3: Complex reasoning (5% of queries)
+    this.claudeHaiku = new Anthropic({
+      apiKey: process.env.ANTHROPIC_API_KEY,
+    });
+  }
+  
+  // Fast intent classification (50ms)
+  async classifyQuery(query: string): Promise<QueryAnalysis> {
+    const queryLower = query.toLowerCase();
+    
+    // Intent detection via keyword matching
+    let intent = 'general';
+    for (const [intentType, keywords] of Object.entries(INTENT_PATTERNS)) {
+      if (keywords.some(kw => queryLower.includes(kw))) {
+        intent = intentType;
+        break;
+      }
+    }
+    
+    // Complexity scoring (rule-based, 0ms)
+    let complexity = 1;
+    if (queryLower.includes('derive') || queryLower.includes('prove')) complexity = 4;
+    else if (queryLower.includes('solve numerically') || queryLower.includes('calculate')) complexity = 3;
+    else if (queryLower.includes('explain') || queryLower.includes('why')) complexity = 2;
+    
+    // Subject detection
+    let subject: any = 'general';
+    if (queryLower.match(/force|velocity|acceleration|energy|momentum/)) subject = 'physics';
+    else if (queryLower.match(/reaction|element|compound|acid|base/)) subject = 'chemistry';
+    else if (queryLower.match(/integrate|differentiate|polynomial|matrix/)) subject = 'math';
+    
+    // Language detection (simple heuristic)
+    const hindiChars = query.match(/[\u0900-\u097F]/g);
+    const language = hindiChars && hindiChars.length > 10 ? 'hindi' : 'english';
+    
+    return { intent, complexity, subject, language };
+  }
+  
+  // Route to appropriate model
+  async routeQuery(query: string, context?: string): Promise<any> {
+    const analysis = await this.classifyQuery(query);
+    
+    // Routing logic
+    if (analysis.complexity <= 2 && analysis.intent !== 'numerical_solving') {
+      // Tier 1: Gemini Flash (75% queries)
+      console.log(`[ROUTER] Using Gemini Flash (Cost: $0.07/M) - ${analysis.intent}`);
+      return this.geminiFlash;
+    }
+    
+    else if (analysis.complexity === 3 || analysis.subject === 'math') {
+      // Tier 2: GPT-4o-mini for moderate complexity
+      console.log(`[ROUTER] Using GPT-4o-mini (Cost: $0.15/M) - ${analysis.intent}`);
+      return this.gpt4oMini;
+    }
+    
+    else {
+      // Tier 3: Claude Haiku for complex reasoning
+      console.log(`[ROUTER] Using Claude Haiku (Cost: $0.25/M) - ${analysis.intent}`);
+      return this.claudeHaiku;
+    }
+  }
+}
+STEP 1.2: Update AI Service to Use Router
+Location: server/services/aiService.ts
+typescriptimport { IntelligentModelRouter } from './modelRouter';
+
+const router = new IntelligentModelRouter();
+
+export async function generateResponse(query: string, context?: string) {
+  // Route to appropriate model
+  const model = await router.routeQuery(query, context);
+  
+  const systemPrompt = `You are VaktaAI, an expert tutor for JEE/NEET preparation.
+Focus on clear, step-by-step explanations.
+If user asks in Hindi, respond in Hindi.
+Always include examples relevant to Indian students.`;
+  
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    ...(context ? [{ role: 'system', content: `Relevant context:\n${context}` }] : []),
+    { role: 'user', content: query }
+  ];
+  
+  // Stream response
+  const stream = await model.stream(messages);
+  return stream;
+}
+EXPECTED RESULT: Cost reduced from $5.00/M to $0.07-0.25/M (85-95% savings)
+TESTING: Run 100 test queries across different complexity levels, verify correct routing
+═══════════════════════════════════════════════════════════════
+PHASE 2: SEMANTIC CACHING WITH REDIS (PRIORITY: HIGH)
+═══════════════════════════════════════════════════════════════
+OBJECTIVE: Cache 30-40% of repetitive queries (JEE/NEET has many common questions)
+STEP 2.1: Setup Redis Cache Service
+Location: server/services/semanticCache.ts
+typescriptimport Redis from 'ioredis';
+import { OpenAIEmbeddings } from '@langchain/openai';
+
+const redis = new Redis(process.env.REDIS_URL || 'redis://localhost:6379');
+const embeddings = new OpenAIEmbeddings({
+  modelName: 'text-embedding-3-small',
+  dimensions: 384, // Smaller for cache (faster)
+});
+
+export class SemanticCache {
+  private readonly SIMILARITY_THRESHOLD = 0.95; // 95% similar = cache hit
+  private readonly TTL = 3600; // 1 hour
+  
+  async check(query: string): Promise<string | null> {
+    const startTime = Date.now();
+    
+    // Generate query embedding
+    const queryEmbedding = await embeddings.embedQuery(query);
+    
+    // Search cached queries (scan all cache:* keys)
+    const cachedKeys = await redis.keys('cache:*');
+    
+    for (const key of cachedKeys) {
+      const cached = await redis.hgetall(key);
+      if (!cached.embedding) continue;
+      
+      // Parse stored embedding
+      const cachedEmbedding = JSON.parse(cached.embedding);
+      
+      // Calculate cosine similarity
+      const similarity = this.cosineSimilarity(queryEmbedding, cachedEmbedding);
+      
+      if (similarity > this.SIMILARITY_THRESHOLD) {
+        console.log(`[CACHE HIT] Similarity: ${similarity.toFixed(3)}, Latency: ${Date.now() - startTime}ms`);
+        return cached.response;
+      }
+    }
+    
+    console.log(`[CACHE MISS] Checked ${cachedKeys.length} entries in ${Date.now() - startTime}ms`);
+    return null;
+  }
+  
+  async store(query: string, response: string) {
+    const queryEmbedding = await embeddings.embedQuery(query);
+    const cacheKey = `cache:${Date.now()}:${Math.random().toString(36)}`;
+    
+    await redis.hset(cacheKey, {
+      query,
+      embedding: JSON.stringify(queryEmbedding),
+      response,
+      timestamp: Date.now(),
+    });
+    
+    await redis.expire(cacheKey, this.TTL);
+  }
+  
+  private cosineSimilarity(a: number[], b: number[]): number {
+    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
+    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
+    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
+    return dotProduct / (magnitudeA * magnitudeB);
+  }
+}
+STEP 2.2: Integrate Cache into API Routes
+Location: server/routes/tutor.ts
+typescriptimport { SemanticCache } from '../services/semanticCache';
+const cache = new SemanticCache();
+
+router.post('/api/tutor/ask', async (req, res) => {
+  const { query } = req.body;
+  
+  // Check cache first
+  const cached = await cache.check(query);
+  if (cached) {
+    return res.json({ response: cached, cached: true });
+  }
+  
+  // Generate new response
+  const response = await generateResponse(query);
+  
+  // Store in cache
+  await cache.store(query, response);
+  
+  res.json({ response, cached: false });
+});
+EXPECTED RESULT: 31% of queries served from cache in 20-50ms, zero API cost
+TESTING: Ask same question 3 times, verify second/third return instantly from cache
+═══════════════════════════════════════════════════════════════
+PHASE 3: JEE/NEET SPECIFIC PROMPTING (PRIORITY: HIGH)
+═══════════════════════════════════════════════════════════════
+OBJECTIVE: Improve accuracy on JEE/NEET problems from 70% to 95%+ with specialized prompts
+STEP 3.1: Create JEE/NEET Prompt Templates
+Location: server/prompts/jeeNeetPrompts.ts
+typescriptexport const JEE_NEET_PROMPTS = {
+  // Physics numerical problems
+  physics_numerical: `You are an expert JEE Advanced physics tutor with 15 years experience.
+
+Problem: {QUERY}
+
+Provide complete step-by-step solution:
+
+<analysis>
+1. Identify physics concepts: [List all relevant principles]
+2. Known quantities: [Extract from problem with units]
+3. Unknown quantities: [What we need to find]
+4. Assumptions: [Any assumptions made]
+5. Applicable laws: [Newton's laws, conservation laws, etc.]
+</analysis>
+
+<solution>
+Step 1: [State principle/equation]
+Explanation: [Why this applies]
+
+Step 2: [Substitute values]
+Calculation: [Show full working with units]
+
+Step 3-N: [Continue logically]
+
+Final Answer: \\boxed{[value with units]}
+</solution>
+
+<verification>
+- Unit check: ✓ [Dimensional analysis]
+- Order of magnitude: ✓ [Does answer make physical sense?]
+- Limiting cases: [Check boundary conditions]
+</verification>
+
+Common mistakes students make: [1-2 points]`,
+
+  // Concept explanation
+  concept_explain: `You are VaktaAI, a friendly JEE/NEET tutor explaining concepts clearly.
+
+Topic: {QUERY}
+
+Provide:
+1. Simple definition (one sentence)
+2. Real-world example from Indian context
+3. Key points (3-4 bullet points)
+4. Common misconceptions
+5. JEE/NEET relevance (which chapters/topics)
+
+Use analogies and examples relevant to Indian students.
+If query in Hindi, respond in Hindi.`,
+
+  // Hints (Socratic method)
+  hint_socratic: `You are a Socratic tutor. NEVER give direct answers.
+
+Student problem: {QUERY}
+
+Provide ONE guiding question that:
+- Points to relevant concept WITHOUT naming it
+- Encourages thinking about specific aspect
+- Does NOT reveal approach or answer
+
+Keep to 1-2 sentences maximum.`,
+
+  // Chemistry reactions
+  chemistry_mechanism: `You are a JEE/NEET organic chemistry expert.
+
+Reaction: {QUERY}
+
+Provide:
+<mechanism>
+Step 1: Identify nucleophile and electrophile
+[Show with electron movement arrows]
+
+Step 2: Attack and intermediate formation
+[Curved arrows showing electron flow]
+
+Step 3: Rearrangement (if any)
+
+Step 4: Final product
+</mechanism>
+
+<explanation>
+Why this mechanism: [Stability, resonance, etc.]
+Common mistakes: [What students get wrong]
+JEE tip: [Exam-specific insights]
+</explanation>`,
+};
+
+export function getPromptForQuery(query: string, intent: string, subject: string): string {
+  if (subject === 'physics' && intent === 'numerical_solving') {
+    return JEE_NEET_PROMPTS.physics_numerical.replace('{QUERY}', query);
+  }
+  else if (intent === 'concept_explanation') {
+    return JEE_NEET_PROMPTS.concept_explain.replace('{QUERY}', query);
+  }
+  else if (intent === 'hint_request') {
+    return JEE_NEET_PROMPTS.hint_socratic.replace('{QUERY}', query);
+  }
+  else if (subject === 'chemistry') {
+    return JEE_NEET_PROMPTS.chemistry_mechanism.replace('{QUERY}', query);
+  }
+  
+  // Default prompt
+  return `You are VaktaAI, an expert JEE/NEET tutor. Answer this question clearly:\n\n${query}`;
+}
+STEP 3.2: Update Model Router to Use Specialized Prompts
+typescript// In modelRouter.ts
+import { getPromptForQuery } from '../prompts/jeeNeetPrompts';
+
+async routeQuery(query: string, context?: string) {
+  const analysis = await this.classifyQuery(query);
+  const model = /* ... routing logic ... */;
+  
+  // Get specialized prompt
+  const systemPrompt = getPromptForQuery(query, analysis.intent, analysis.subject);
+  
+  return { model, systemPrompt, analysis };
+}
+EXPECTED RESULT: Accuracy improves from 70% to 95%+ on JEE/NEET validation set
+TESTING: Test with 50 past JEE questions, validate answers with official solutions
+═══════════════════════════════════════════════════════════════
+PHASE 4: VOICE INTEGRATION (STT + TTS) (PRIORITY: MEDIUM)
+═══════════════════════════════════════════════════════════════
+OBJECTIVE: Add voice interaction for natural tutoring experience
+STEP 4.1: Setup Speech-to-Text (AssemblyAI)
+Location: server/services/voiceService.ts
+typescriptimport { AssemblyAI } from 'assemblyai';
+import AWS from 'aws-sdk';
+
+const polly = new AWS.Polly({
+  region: 'ap-south-1',
+  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+});
+
+const assemblyai = new AssemblyAI({
+  apiKey: process.env.ASSEMBLYAI_API_KEY,
+});
+
+export class VoiceService {
+  // Speech to Text
+  async transcribeAudio(audioBuffer: Buffer): Promise<string> {
+    const transcript = await assemblyai.transcripts.transcribe({
+      audio: audioBuffer,
+      language_detection: true, // Auto-detect Hindi/English
+      custom_vocabulary: [ // JEE/NEET technical terms
+        'stereoisomer', 'equipotential', 'stoichiometry',
+        'thermodynamics', 'projectile', 'integration',
+      ],
+    });
+    
+    if (transcript.status === 'error') {
+      throw new Error(transcript.error);
+    }
+    
+    return transcript.text;
+  }
+  
+  // Text to Speech (AWS Polly with Indian accent)
+  async synthesizeSpeech(text: string, language: 'hindi' | 'english' = 'english'): Promise<Buffer> {
+    const params = {
+      Text: text,
+      OutputFormat: 'mp3',
+      VoiceId: language === 'hindi' ? 'Aditi' : 'Kajal', // Indian accents
+      Engine: 'neural',
+      LanguageCode: language === 'hindi' ? 'hi-IN' : 'en-IN',
+    };
+    
+    const result = await polly.synthesizeSpeech(params).promise();
+    return result.AudioStream as Buffer;
+  }
+}
+STEP 4.2: Create Voice API Endpoints
+Location: server/routes/voice.ts
+typescriptimport multer from 'multer';
+import { VoiceService } from '../services/voiceService';
+
+const upload = multer({ storage: multer.memoryStorage() });
+const voiceService = new VoiceService();
+
+router.post('/api/voice/transcribe', upload.single('audio'), async (req, res) => {
+  try {
+    const audioBuffer = req.file.buffer;
+    const text = await voiceService.transcribeAudio(audioBuffer);
+    
+    res.json({ text, confidence: 0.95 });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.post('/api/voice/synthesize', async (req, res) => {
+  try {
+    const { text, language } = req.body;
+    const audioBuffer = await voiceService.synthesizeSpeech(text, language);
+    
+    res.set('Content-Type', 'audio/mpeg');
+    res.send(audioBuffer);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+STEP 4.3: Frontend Voice Component
+Location: client/src/components/VoiceChat.tsx
+typescriptimport { useState, useRef } from 'react';
+
+export function VoiceChat() {
+  const [isRecording, setIsRecording] = useState(false);
+  const mediaRecorder = useRef<MediaRecorder | null>(null);
+  const audioChunks = useRef<Blob[]>([]);
+  
+  const startRecording = async () => {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    mediaRecorder.current = new MediaRecorder(stream);
+    
+    mediaRecorder.current.ondataavailable = (e) => {
+      audioChunks.current.push(e.data);
+    };
+    
+    mediaRecorder.current.onstop = async () => {
+      const audioBlob = new Blob(audioChunks.current, { type: 'audio/webm' });
+      audioChunks.current = [];
+      
+      // Send to backend
+      const formData = new FormData();
+      formData.append('audio', audioBlob);
+      
+      const response = await fetch('/api/voice/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      const { text } = await response.json();
+      console.log('Transcribed:', text);
+      
+      // Send text query to AI
+      // ... existing chat logic
+    };
+    
+    mediaRecorder.current.start();
+    setIsRecording(true);
+  };
+  
+  const stopRecording = () => {
+    mediaRecorder.current?.stop();
+    setIsRecording(false);
+  };
+  
+  return (
+    <button
+      onClick={isRecording ? stopRecording : startRecording}
+      className={isRecording ? 'recording' : ''}
+    >
+      {isRecording ? '🔴 Recording...' : '🎤 Voice Input'}
+    </button>
+  );
+}
+EXPECTED RESULT: Voice input with <500ms latency, natural Indian accent output
+TESTING: Record 10 Hindi queries, verify transcription accuracy >90%
+═══════════════════════════════════════════════════════════════
+PHASE 5: COST MONITORING & OPTIMIZATION (PRIORITY: HIGH)
+═══════════════════════════════════════════════════════════════
+OBJECTIVE: Track costs in real-time and optimize automatically
+STEP 5.1: Cost Tracking Service
+Location: server/services/costTracker.ts
+typescriptexport class CostTracker {
+  private costs = new Map<string, number>();
+  
+  // Model pricing (per million tokens)
+  private readonly PRICING = {
+    'gemini-flash': 0.07,
+    'gpt-4o-mini': 0.15,
+    'claude-haiku': 0.25,
+    'gpt-4': 5.00, // Old expensive model
+    'embeddings': 0.02,
+    'assemblyai-stt': 0.15 / 60, // per minute
+    'aws-polly-tts': 16.00 / 1000000, // per character
+  };
+  
+  trackTokenUsage(model: string, inputTokens: number, outputTokens: number) {
+    const totalTokens = inputTokens + outputTokens;
+    const cost = (totalTokens / 1000000) * this.PRICING[model];
+    
+    const current = this.costs.get(model) || 0;
+    this.costs.set(model, current + cost);
+    
+    console.log(`[COST] ${model}: ${totalTokens} tokens = $${cost.toFixed(4)}`);
+  }
+  
+  getDailyCost(): number {
+    return Array.from(this.costs.values()).reduce((sum, cost) => sum + cost, 0);
+  }
+  
+  getProjectedMonthlyCost(students: number): number {
+    const dailyCost = this.getDailyCost();
+    const queriesPerStudent = 20; // Average monthly
+    const costPerStudent = (dailyCost * 30) / students;
+    
+    return costPerStudent * students;
+  }
+}
+STEP 5.2: Daily Cost Alert
+typescript// Run daily via cron job
+setInterval(() => {
+  const dailyCost = costTracker.getDailyCost();
+  const monthlyProjection = dailyCost * 30;
+  
+  if (monthlyProjection > 2000) { // Alert threshold
+    console.warn(`⚠️ COST ALERT: Projected $${monthlyProjection}/month`);
+    // Send email/Slack notification
+  }
+  
+  // Reset daily counter
+  costTracker.reset();
+}, 24 * 60 * 60 * 1000);
+═══════════════════════════════════════════════════════════════
+PHASE 6: TESTING & VALIDATION (PRIORITY: CRITICAL)
+═══════════════════════════════════════════════════════════════
+STEP 6.1: Create JEE/NEET Test Suite
+Location: server/tests/jeeNeetAccuracy.test.ts
+typescriptimport { generateResponse } from '../services/aiService';
+
+const JEE_TEST_PROBLEMS = [
+  {
+    question: "A particle is projected with velocity 20 m/s at 30°. Find maximum height.",
+    expectedAnswer: "5 m",
+    subject: "physics",
+    complexity: 2,
+  },
+  {
+    question: "Derive the equation for kinetic energy from work-energy theorem.",
+    expectedAnswer: "KE = 1/2 mv²",
+    subject: "physics",
+    complexity: 4,
+  },
+  // Add 50+ problems
+];
+
+describe('JEE/NEET Accuracy Test', () => {
+  test('Should solve 95%+ problems correctly', async () => {
+    let correct = 0;
+    
+    for (const problem of JEE_TEST_PROBLEMS) {
+      const response = await generateResponse(problem.question);
+      
+      // Check if expected answer present in response
+      if (response.includes(problem.expectedAnswer)) {
+        correct++;
+      }
+    }
+    
+    const accuracy = (correct / JEE_TEST_PROBLEMS.length) * 100;
+    console.log(`Accuracy: ${accuracy.toFixed(1)}%`);
+    
+    expect(accuracy).toBeGreaterThanOrEqual(95);
+  });
+});
+STEP 6.2: Latency Benchmarking
+typescriptasync function benchmarkLatency() {
+  const queries = [/* 100 sample queries */];
+  const latencies: number[] = [];
+  
+  for (const query of queries) {
+    const start = Date.now();
+    await generateResponse(query);
+    const latency = Date.now() - start;
+    
+    latencies.push(latency);
+  }
+  
+  const p50 = latencies.sort()[Math.floor(latencies.length * 0.5)];
+  const p95 = latencies.sort()[Math.floor(latencies.length * 0.95)];
+  
+  console.log(`P50 latency: ${p50}ms`);
+  console.log(`P95 latency: ${p95}ms`);
+  
+  // Assert: P95 < 3000ms
+  expect(p95).toBeLessThan(3000);
+}
+═══════════════════════════════════════════════════════════════
+ENVIRONMENT VARIABLES TO ADD
+═══════════════════════════════════════════════════════════════
+bash# Model APIs
+GOOGLE_API_KEY=your_gemini_key           # Gemini Flash
+ANTHROPIC_API_KEY=your_claude_key        # Claude Haiku
+OPENAI_API_KEY=your_openai_key           # GPT-4o-mini
+
+# Voice Services
+ASSEMBLYAI_API_KEY=your_assemblyai_key   # Speech-to-text
+# AWS Polly uses existing AWS credentials
+
+# Caching
+REDIS_URL=redis://localhost:6379         # Local or Redis Cloud
+═══════════════════════════════════════════════════════════════
+DEPLOYMENT CHECKLIST
+═══════════════════════════════════════════════════════════════
+□ Install dependencies:
+npm install @langchain/openai @anthropic-ai/sdk assemblyai ioredis
+npm install --save-dev @types/ioredis
+□ Setup Redis (local or cloud):
+
+Local: docker run -d -p 6379:6379 redis
+Cloud: Redis Cloud free tier (30MB)
+
+□ Run tests:
+npm run test:accuracy
+□ Monitor costs for 1 week with 10-20 test users
+□ Gradually roll out (10% → 50% → 100% traffic)
+═══════════════════════════════════════════════════════════════
+EXPECTED OUTCOMES
+═══════════════════════════════════════════════════════════════
+COST REDUCTION:
+
+Before: $4,500/month (10K students, all GPT-4)
+After: $1,200-1,500/month (optimized routing + caching)
+Savings: 67-73%
+
+LATENCY:
+
+Text responses: <2 seconds (P95)
+Voice responses: <800ms total (STT + LLM + TTS)
+Cache hits: <50ms
+
+ACCURACY:
+
+JEE/NEET problems: 95%+ correct
+Concept explanations: 98% student satisfaction
+Hindi queries: 90%+ accuracy
+
+SCALE:
+
+Supports 10,000 concurrent students
+99.9% uptime
+Auto-scaling ready
+
+═══════════════════════════════════════════════════════════════
+CRITICAL SUCCESS FACTORS
+═══════════════════════════════════════════════════════════════
+
+✅ Test accuracy BEFORE rolling out (50+ JEE problems)
+✅ Monitor costs daily for first month
+✅ Keep GPT-4o-mini as fallback for complex queries
+✅ Cache aggressively (30-40% hit rate expected)
+✅ Use specialized prompts for JEE/NEET (not generic)
+
+═══════════════════════════════════════════════════════════════
+IMPLEMENTATION ORDER (PRIORITY SEQUENCE)
+═══════════════════════════════════════════════════════════════
+
+ Phase 1 (Model Routing) - 70% cost reduction
+ Phase 2 (Redis Caching) - 31% query reduction
+ Phase 3 (JEE/NEET Prompts) - 95% accuracy
+ Phase 6 (Testing & validation)
+
+ Phase 4 (Voice integration)
+ Phase 5 (Cost monitoring)
+ Final testing, documentation
+
+Gradual rollout to production
+BUILD THIS SYSTEM EXACTLY AS SPECIFIED ABOVE. Focus on:
+
+Cost optimization (primary goal)
+JEE/NEET accuracy (non-negotiable)
+Low latency (user experience)
+Production stability (monitoring)
+
+DO NOT:
+
+Skip testing phases
+Deploy without validation
+Remove existing features
+Change database schema unnecessarily
+
+START WITH PHASE 1 (Model Routing) as it provides maximum impact with minimum risk.
+
+---
+
+**Usage Instructions:**
+
+1. Copy paste yeh entire prompt Replit Agent3 me
+2. Agent step-by-step implement karega
+3. Har phase ke baad test karo
+4. Cost dashboard banao to track savings
+5. Production me gradually rollout karo (10% users first)
+
