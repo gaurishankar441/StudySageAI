@@ -222,6 +222,16 @@ export class AgenticRAGService {
   ): Promise<{ action: string; tool: string; input: any } | null> {
     const toolsJSON = JSON.stringify(this.tools, null, 2);
 
+    // Truncate gathered info to avoid context length issues
+    // For decision making, we only need a summary, not full content
+    const maxInfoLength = 2000;
+    const truncatedInfo = gatheredInfo && gatheredInfo.length > maxInfoLength
+      ? gatheredInfo.substring(0, maxInfoLength) + '\n\n[... truncated ...]'
+      : gatheredInfo || 'None yet';
+
+    console.log('[decideNextAction] Gathered info length:', gatheredInfo?.length || 0);
+    console.log('[decideNextAction] Truncated to:', truncatedInfo.length);
+
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
@@ -246,7 +256,7 @@ If you have enough information, use "synthesize_answer" as the tool.${language =
           content: `Original Query: "${originalQuery}"
 
 Information gathered so far:
-${gatheredInfo || 'None yet'}
+${truncatedInfo}
 
 Steps completed: ${steps.length}
 
@@ -367,8 +377,8 @@ Is this helpful? Do we need more information?`
 
     // Truncate gathered info to fit within context limits
     // GPT-4 has 8K context, we need room for system prompt, query, and response
-    // ~6000 chars ≈ 8000 tokens max, leaving 2K tokens for system/query/response
-    const maxInfoLength = 6000;
+    // Hindi text uses more tokens, so being more conservative: 3000 chars ≈ 5000 tokens
+    const maxInfoLength = 3000;
     const truncatedInfo = gatheredInfo.length > maxInfoLength
       ? gatheredInfo.substring(0, maxInfoLength) + '\n\n[... information truncated due to length ...]'
       : gatheredInfo;
