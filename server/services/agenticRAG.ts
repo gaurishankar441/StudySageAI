@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { documentService } from './documentService';
+import { TokenCounter } from '../utils/tokenCounter';
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
@@ -222,22 +223,7 @@ export class AgenticRAGService {
   ): Promise<{ action: string; tool: string; input: any } | null> {
     const toolsJSON = JSON.stringify(this.tools, null, 2);
 
-    // Truncate gathered info to avoid context length issues
-    // For decision making, we only need a summary, not full content
-    const maxInfoLength = 2000;
-    const truncatedInfo = gatheredInfo && gatheredInfo.length > maxInfoLength
-      ? gatheredInfo.substring(0, maxInfoLength) + '\n\n[... truncated ...]'
-      : gatheredInfo || 'None yet';
-
-    console.log('[decideNextAction] Gathered info length:', gatheredInfo?.length || 0);
-    console.log('[decideNextAction] Truncated to:', truncatedInfo.length);
-
-    const response = await openai.chat.completions.create({
-      model: 'gpt-4',
-      messages: [
-        {
-          role: 'system',
-          content: `You are an intelligent agent that decides what action to take next to answer a query. Based on the original query, information gathered so far, and available tools, decide which tool to use next.
+    const systemPrompt = `You are an intelligent agent that decides what action to take next to answer a query. Based on the original query, information gathered so far, and available tools, decide which tool to use next.
 
 Available tools:
 ${toolsJSON}
@@ -249,7 +235,39 @@ Respond in JSON format:
   "input": { ...tool parameters }
 }
 
-If you have enough information, use "synthesize_answer" as the tool.${language === 'hi' ? ' Descriptions can be in Hindi.' : ''}`
+If you have enough information, use "synthesize_answer" as the tool.${language === 'hi' ? ' Descriptions can be in Hindi.' : ''}`;
+
+    const userMessageTemplate = `Original Query: "${originalQuery}"
+
+Information gathered so far:
+{PLACEHOLDER}
+
+Steps completed: ${steps.length}
+
+What should I do next?`;
+
+    const budget = TokenCounter.calculateAvailableSpace(
+      8192,
+      systemPrompt,
+      userMessageTemplate,
+      300
+    );
+
+    const truncatedInfo = gatheredInfo
+      ? TokenCounter.truncateToTokenLimit(gatheredInfo, budget.available, '\n\n[... truncated ...]')
+      : 'None yet';
+
+    const infoTokens = TokenCounter.countTokens(gatheredInfo || '');
+    const truncatedTokens = TokenCounter.countTokens(truncatedInfo);
+    
+    console.log('[decideNextAction] Info tokens:', infoTokens, '→', truncatedTokens, `(available: ${budget.available})`);
+
+    const response = await openai.chat.completions.create({
+      model: 'gpt-4',
+      messages: [
+        {
+          role: 'system',
+          content: systemPrompt
         },
         {
           role: 'user',
