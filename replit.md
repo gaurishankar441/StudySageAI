@@ -114,3 +114,15 @@ Preferred communication style: Simple, everyday language.
 - **Benefits**: Reliable API-based embeddings, no local model loading issues, excellent multilingual support
 - **Verified**: Document processing, semantic chunking, embedding generation, vector search (66% similarity on test)
 - **Ready**: RAG pipeline fully functional for DocChat and Quick Actions
+
+### October 5, 2025 - Smart Dynamic Token Management
+**Upgraded from fixed character limits to intelligent token-based context optimization:**
+- Created `server/utils/tokenCounter.ts` with tiktoken-based token counting for GPT-4
+- **Dynamic Budget Calculation**: Calculates available context space based on model limits (8192 tokens), system prompts, and user queries
+- **Smart Truncation**: Uses actual token counts instead of character estimation to prevent context overflow
+- **Chunk Prioritization**: When context exceeds limits, prioritizes most relevant chunks by similarity score
+- **Edge Case Handling**: Handles zero/negative budgets, extremely long queries, high-token characters (emojis, Hindi), tiny remaining budgets
+- **Safety Guarantees**: Final validation ensures output never exceeds maxTokens limit, preventing "context length exceeded" errors
+- **Benefits**: Simple queries get maximum context, complex queries get intelligent truncation, no fixed limits, most relevant info always included
+- Updated `server/services/agenticRAG.ts`: Both decideNextAction and synthesizeFinalAnswer now use dynamic token management
+- **Status**: Architect-reviewed and approved for production use
