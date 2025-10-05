@@ -9,6 +9,7 @@ import { aiServiceManager } from "./services/aiService";
 import { aiService } from "./openai";
 import { insertDocumentSchema, insertChatSchema, insertNoteSchema, insertQuizSchema, insertStudyPlanSchema } from "@shared/schema";
 import multer from "multer";
+import { optimizedTutorRouter } from "./routes/optimizedTutor";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -398,6 +399,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.end();
     }
   });
+
+  // Optimized Tutor routes (with intelligent routing & caching)
+  app.use('/api/tutor/optimized', isAuthenticated, optimizedTutorRouter);
 
   // Tutor routes
   app.post('/api/tutor/session', isAuthenticated, async (req: any, res) => {

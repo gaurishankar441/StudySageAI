@@ -17,6 +17,21 @@ export class SemanticCache {
   private readonly SIMILARITY_THRESHOLD = 0.95; // 95% similar = cache hit
   private readonly TTL = 3600; // 1 hour cache
   private readonly MAX_CACHE_SIZE = 1000; // Max cached queries
+  private readonly CACHE_PREFIX = 'vaktaai:cache:'; // Namespace for VaktaAI cache
+  
+  // Get all cache keys using SCAN (non-blocking)
+  private async scanCacheKeys(): Promise<string[]> {
+    const keys: string[] = [];
+    let cursor = '0';
+    
+    do {
+      const result = await redis.scan(cursor, 'MATCH', `${this.CACHE_PREFIX}*`, 'COUNT', 100);
+      cursor = result[0];
+      keys.push(...result[1]);
+    } while (cursor !== '0');
+    
+    return keys;
+  }
   
   async check(query: string): Promise<string | null> {
     if (!redis.status || redis.status !== 'ready') {
@@ -29,8 +44,8 @@ export class SemanticCache {
       // Generate query embedding
       const queryEmbedding = await embeddingService.generateEmbedding(query);
       
-      // Search cached queries (scan all cache:* keys)
-      const cachedKeys = await redis.keys('cache:*');
+      // Search cached queries (non-blocking SCAN)
+      const cachedKeys = await this.scanCacheKeys();
       
       if (cachedKeys.length === 0) {
         console.log('[CACHE] Empty cache');
@@ -72,19 +87,20 @@ export class SemanticCache {
     }
     
     try {
-      // Enforce max cache size
-      const cacheSize = await redis.dbsize();
-      if (cacheSize >= this.MAX_CACHE_SIZE) {
-        // Remove random key (LRU would be better, but this is simpler)
-        const randomKey = (await redis.keys('cache:*'))[0];
-        if (randomKey) {
-          await redis.del(randomKey);
+      // Enforce max cache size using SCAN
+      const cacheKeys = await this.scanCacheKeys();
+      if (cacheKeys.length >= this.MAX_CACHE_SIZE) {
+        // Remove oldest key (first in scan result)
+        const oldestKey = cacheKeys[0];
+        if (oldestKey) {
+          await redis.del(oldestKey);
+          console.log(`[CACHE] Evicted oldest key: ${oldestKey}`);
         }
       }
       
       // Generate query embedding
       const queryEmbedding = await embeddingService.generateEmbedding(query);
-      const cacheKey = `cache:${Date.now()}:${Math.random().toString(36).substring(7)}`;
+      const cacheKey = `${this.CACHE_PREFIX}${Date.now()}:${Math.random().toString(36).substring(7)}`;
       
       await redis.hset(cacheKey, {
         query,
@@ -118,26 +134,26 @@ export class SemanticCache {
     return dotProduct / (magnitudeA * magnitudeB);
   }
   
-  // Clear entire cache
+  // Clear entire cache (using SCAN)
   async clear() {
     if (!redis.status || redis.status !== 'ready') {
       return;
     }
     
-    const keys = await redis.keys('cache:*');
+    const keys = await this.scanCacheKeys();
     if (keys.length > 0) {
       await redis.del(...keys);
       console.log(`[CACHE] Cleared ${keys.length} cached queries`);
     }
   }
   
-  // Get cache statistics
+  // Get cache statistics (using SCAN)
   async getStats() {
     if (!redis.status || redis.status !== 'ready') {
       return { size: 0, status: 'disconnected' };
     }
     
-    const keys = await redis.keys('cache:*');
+    const keys = await this.scanCacheKeys();
     return {
       size: keys.length,
       maxSize: this.MAX_CACHE_SIZE,

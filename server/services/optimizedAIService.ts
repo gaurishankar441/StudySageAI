@@ -20,7 +20,7 @@ export class OptimizedAIService {
       useCache?: boolean;
       stream?: boolean;
     }
-  ): Promise<string> {
+  ): Promise<{ response: string; cached: boolean; model?: string; cost?: number }> {
     const { language = 'english', useCache = true, stream = false } = options || {};
     
     // Step 1: Check semantic cache first
@@ -28,7 +28,7 @@ export class OptimizedAIService {
       const cached = await semanticCache.check(query);
       if (cached) {
         console.log('[OPTIMIZED AI] ⚡ Response served from cache (0 cost!)');
-        return cached;
+        return { response: cached, cached: true };
       }
     }
     
@@ -93,28 +93,53 @@ export class OptimizedAIService {
     }
     
     // Step 5: Track cost
-    costTracker.trackTokenUsage(modelName, inputTokens, outputTokens);
+    const cost = costTracker.trackTokenUsage(modelName, inputTokens, outputTokens);
     
     // Step 6: Store in cache for future use
     if (useCache && response) {
       await semanticCache.store(query, response);
     }
     
-    return response;
+    return {
+      response,
+      cached: false,
+      model: modelName,
+      cost,
+    };
   }
   
   /**
    * Generate response with streaming support
+   * Note: Currently uses GPT-4o-mini for all streaming (best streaming support)
+   * Non-streaming requests use intelligent routing for maximum cost savings
    */
   async generateStreamingResponse(
     query: string,
     context?: string,
-    onChunk?: (chunk: string) => void
-  ): Promise<string> {
-    // For streaming, we'll use OpenAI directly (best streaming support)
+    onChunk?: (chunk: string, meta?: any) => void
+  ): Promise<{ response: string; cached: boolean; model?: string; cost?: number }> {
+    // Step 1: Check cache first - if hit, send entire response as chunks
+    const cached = await semanticCache.check(query);
+    if (cached) {
+      console.log('[OPTIMIZED AI STREAM] ⚡ Response served from cache (0 cost!)');
+      
+      // Send cached response as chunks for smooth UX
+      if (onChunk) {
+        const words = cached.split(' ');
+        for (const word of words) {
+          onChunk(word + ' ', { cached: true, model: 'cache' });
+        }
+      }
+      
+      return { response: cached, cached: true, model: 'cache', cost: 0 };
+    }
+    
+    // Step 2: Analyze query for specialized prompt (but use GPT-4o-mini for streaming)
     const analysis = await modelRouter.classifyQuery(query);
     const systemPrompt = getPromptForQuery(query, analysis.intent, analysis.subject);
     
+    // Step 3: Stream using GPT-4o-mini (best streaming support, still 97% cheaper than GPT-4)
+    const streamModel = 'gpt-4o-mini';
     const messages: OpenAI.ChatCompletionMessageParam[] = [
       { role: 'system', content: systemPrompt },
       ...(context ? [{ role: 'system' as const, content: `Context:\n${context}` }] : []),
@@ -122,31 +147,47 @@ export class OptimizedAIService {
     ];
     
     const stream = await openai.chat.completions.create({
-      model: 'gpt-4o-mini', // Use mini for streaming (cheaper)
+      model: streamModel,
       messages,
       stream: true,
+      stream_options: { include_usage: true }, // Get actual token counts
     });
     
     let fullResponse = '';
+    let actualInputTokens = 0;
+    let actualOutputTokens = 0;
     
     for await (const chunk of stream) {
       const content = chunk.choices[0]?.delta?.content || '';
       fullResponse += content;
       
-      if (onChunk) {
-        onChunk(content);
+      // Capture actual token usage from final chunk
+      if (chunk.usage) {
+        actualInputTokens = chunk.usage.prompt_tokens;
+        actualOutputTokens = chunk.usage.completion_tokens;
+      }
+      
+      if (onChunk && content) {
+        onChunk(content, { cached: false, model: streamModel });
       }
     }
     
-    // Track cost (estimate)
-    const inputTokens = Math.ceil((systemPrompt.length + query.length + (context?.length || 0)) / 4);
-    const outputTokens = Math.ceil(fullResponse.length / 4);
-    costTracker.trackTokenUsage('gpt-4o-mini', inputTokens, outputTokens);
+    // Step 4: Track cost with actual tokens
+    const cost = costTracker.trackTokenUsage(
+      streamModel, 
+      actualInputTokens, 
+      actualOutputTokens
+    );
     
-    // Cache the complete response
+    // Step 5: Cache the complete response
     await semanticCache.store(query, fullResponse);
     
-    return fullResponse;
+    return {
+      response: fullResponse,
+      cached: false,
+      model: streamModel,
+      cost,
+    };
   }
   
   /**
