@@ -393,30 +393,56 @@ Is this helpful? Do we need more information?`
       ? 'Respond in Hindi (हिन्दी). Use Devanagari script.'
       : 'Respond in English.';
 
-    // Truncate gathered info to fit within context limits
-    // GPT-4 has 8K context, we need room for system prompt, query, and response
-    // Hindi text uses more tokens, so being more conservative: 3000 chars ≈ 5000 tokens
-    const maxInfoLength = 3000;
-    const truncatedInfo = gatheredInfo.length > maxInfoLength
-      ? gatheredInfo.substring(0, maxInfoLength) + '\n\n[... information truncated due to length ...]'
-      : gatheredInfo;
+    const systemPrompt = `You are a helpful AI tutor for Indian students. Synthesize a comprehensive answer based on the gathered information. Include citations with [source number] format. ${langInstruction}`;
 
-    console.log('[synthesizeFinalAnswer] Gathered info length:', gatheredInfo.length);
-    console.log('[synthesizeFinalAnswer] Truncated to:', truncatedInfo.length);
+    const userMessageTemplate = `Question: "${query}"
+
+Gathered Information:
+{PLACEHOLDER}
+
+Please provide a comprehensive answer with proper citations.`;
+
+    const budget = TokenCounter.calculateAvailableSpace(
+      8192,
+      systemPrompt,
+      userMessageTemplate,
+      1500
+    );
+
+    const infoTokens = TokenCounter.countTokens(gatheredInfo);
+    console.log('[synthesizeFinalAnswer] Info tokens:', infoTokens, '| Available:', budget.available);
+
+    let optimizedInfo: string;
+    
+    if (infoTokens <= budget.available) {
+      optimizedInfo = gatheredInfo;
+      console.log('[synthesizeFinalAnswer] Using full context (fits within budget)');
+    } else {
+      const chunksWithScores = sources.map((source, idx) => ({
+        text: `[Source ${idx + 1}] ${source.metadata?.docTitle || 'Document'}: ${source.text}`,
+        score: source.similarity || 0.5
+      }));
+
+      optimizedInfo = TokenCounter.prioritizeAndTruncate(chunksWithScores, budget.available);
+      
+      const optimizedTokens = TokenCounter.countTokens(optimizedInfo);
+      console.log('[synthesizeFinalAnswer] Smart truncation:', infoTokens, '→', optimizedTokens, 
+        `(${sources.length} sources, prioritized by relevance)`);
+    }
 
     const response = await openai.chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
           role: 'system',
-          content: `You are a helpful AI tutor for Indian students. Synthesize a comprehensive answer based on the gathered information. Include citations with [source number] format. ${langInstruction}`
+          content: systemPrompt
         },
         {
           role: 'user',
           content: `Question: "${query}"
 
 Gathered Information:
-${truncatedInfo}
+${optimizedInfo}
 
 Please provide a comprehensive answer with proper citations.`
         }
