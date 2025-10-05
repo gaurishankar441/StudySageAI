@@ -3,6 +3,7 @@ import { storage } from "../storage";
 import { documentService } from "./documentService";
 import { aiOrchestrator } from "./aiOrchestrator";
 import { AIProviderType } from "./aiProvider";
+import { agenticRAGService } from "./agenticRAG";
 
 export class AIServiceManager {
   private async getUserProvider(userId: string): Promise<AIProviderType> {
@@ -114,37 +115,41 @@ export class AIServiceManager {
       content: message
     });
 
-    // Get relevant context from documents
+    // Get relevant context from documents using Agentic RAG
     const docIds = chat.docIds 
       ? (typeof chat.docIds === 'string' ? JSON.parse(chat.docIds) : chat.docIds)
       : [];
-    const relevantChunks = await documentService.retrieveRelevantChunks(
+
+    // Use Agentic RAG for intelligent multi-step retrieval and reasoning
+    const agenticResult = await agenticRAGService.executeAgenticRAG(
       message,
       userId,
-      docIds
+      docIds,
+      chat.language || 'en'
     );
 
-    const context = relevantChunks
-      .map(chunk => `[${chunk.metadata.docTitle}, p.${chunk.metadata.page} §${chunk.metadata.section}]\n${chunk.text}`)
-      .join('\n\n');
-
-    // Generate response
-    const response = await aiService.generateDocChatResponse(
-      message,
-      context,
-      chat.language!
-    );
-
-    // Add assistant message
+    // Add assistant message with agentic RAG metadata
     const assistantMessage = await storage.addMessage({
       chatId,
       role: 'assistant',
-      content: response,
-      metadata: { sources: relevantChunks.map(c => c.metadata) }
+      content: agenticResult.answer,
+      metadata: { 
+        sources: agenticResult.sources.map(c => c.metadata),
+        steps: agenticResult.steps,
+        confidence: agenticResult.confidence,
+        agenticRAG: true
+      }
     });
 
-    return { response, messageId: assistantMessage.id, sources: relevantChunks };
+    return { 
+      response: agenticResult.answer, 
+      messageId: assistantMessage.id, 
+      sources: agenticResult.sources,
+      steps: agenticResult.steps,
+      confidence: agenticResult.confidence
+    };
   }
+
 
   // Quiz generation and management
   async generateQuiz(

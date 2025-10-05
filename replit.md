@@ -78,3 +78,18 @@ Preferred communication style: Simple, everyday language.
 *   **connect-pg-simple**: PostgreSQL session store.
 *   **memoizee**: Function result caching.
 *   **@xenova/transformers**: For running Vyakyarth-1-Indic embedding model locally.
+
+## Recent Changes
+
+### October 5, 2025 - Agentic RAG Implementation
+**Upgraded from Simple RAG to Agentic RAG for DocChat:**
+- Created `server/services/agenticRAG.ts` with intelligent multi-step reasoning
+- **Planning Agent**: Analyzes queries and creates execution plans before retrieval
+- **Tool System**: 4 specialized tools (search_documents, get_document_sections, verify_information, synthesize_answer)
+- **Multi-step Reasoning**: Up to 5 reasoning steps with dynamic tool selection based on query complexity
+- **Self-Reflection**: Agent evaluates information sufficiency after each step to decide if more retrieval needed
+- **Confidence Scoring**: Calculates confidence (0-100) based on sources found and reasoning steps executed
+- **Streaming Support**: Real-time progress updates via onChunk callback for transparent AI reasoning
+- **Multilingual**: Full Hindi/English support with language-aware instructions
+- Updated `aiService.ts`: Integrated Agentic RAG into sendDocChatMessage() replacing simple RAG
+- **Benefits**: Better complex query handling, transparent reasoning process, source verification, optimized retrieval (only gets what's needed)
