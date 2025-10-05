@@ -118,7 +118,8 @@ export class SarvamVoiceService {
     text: string,
     language: 'hi' | 'en' = 'en'
   ): Promise<Buffer> {
-    const speaker = language === 'hi' ? 'meera' : 'arvind';
+    // Valid speakers for bulbul:v2 - anushka, abhilash, manisha, vidya, arya, karun, hitesh
+    const speaker = language === 'hi' ? 'anushka' : 'abhilash'; // Female Hindi, Male English
 
     const response = await fetch(`${this.baseUrl}/text-to-speech`, {
       method: 'POST',
