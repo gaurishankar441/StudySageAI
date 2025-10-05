@@ -1001,10 +1001,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   app.post("/api/objects/upload", isAuthenticated, async (req: any, res) => {
-    const objectStorageService = new ObjectStorageService();
-    const { contentType } = req.body;
-    const uploadURL = await objectStorageService.getObjectEntityUploadURL(contentType);
-    res.json({ uploadURL });
+    try {
+      const objectStorageService = new ObjectStorageService();
+      const { contentType } = req.body;
+      console.log('[UPLOAD] Generating presigned URL with contentType:', contentType);
+      const uploadURL = await objectStorageService.getObjectEntityUploadURL(contentType);
+      console.log('[UPLOAD] Generated URL:', uploadURL.substring(0, 100) + '...');
+      res.json({ uploadURL });
+    } catch (error) {
+      console.error('[UPLOAD] Error generating presigned URL:', error);
+      res.status(500).json({ error: 'Failed to generate upload URL' });
+    }
   });
 
   // Dashboard API endpoints
