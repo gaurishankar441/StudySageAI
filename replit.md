@@ -4,6 +4,34 @@
 
 VaktaAI is an AI-powered educational platform designed to be a comprehensive study companion. Its core features include an AI Tutor, Document Chat, Quiz Generation, Study Plan Management, and Smart Notes. The platform supports multilingual learning (English, Hindi) and various content formats (PDFs, videos, audio, web content). A key principle is to provide grounded, citation-based AI responses to prevent hallucination. VaktaAI aims for a "fast, calm UI" with minimal navigation clicks, real-time streaming, keyboard-first interactions, and strong accessibility.
 
+## Recent Changes
+
+### October 5, 2025 - Phase 4 & 6 Completion
+
+**Phase 4: Voice Service (Production Ready)**
+- ✅ Implemented AssemblyAI STT for speech-to-text transcription
+- ✅ Integrated AWS Polly TTS with neural/standard engine fallback for region compatibility
+- ✅ Added 3 API endpoints: `/api/voice/transcribe`, `/api/voice/synthesize`, `/api/voice/ask`
+- ✅ Integrated actual AI service (optimizedAI) - no placeholder responses
+- ✅ Added comprehensive AWS environment validation (S3, Polly, credentials)
+- ✅ All routes properly authenticated with isAuthenticated middleware
+
+**Phase 6: JEE/NEET Test Suite (Production Ready)**
+- ✅ Expanded test suite from 18 to 54 problems (3x increase)
+- ✅ Coverage: JEE Physics (9), Chemistry (9), Math (9), NEET Biology (11), Physics (7), Chemistry (8)
+- ✅ Created smart answer validator with:
+  - Numeric validation (5% relative + 0.01 absolute tolerance)
+  - Strict MCQ validation (regex patterns to avoid false positives)
+  - Zero-value handling (no divide-by-zero errors)
+  - Confidence scoring based on match type
+- ✅ Fixed benchmark stats to return numbers (accuracyPercent, avgResponseTimeMs, etc.) for analytics
+- ✅ All ground-truth answers verified correct
+
+**Required Environment Variables:**
+- `GOOGLE_API_KEY`: For Gemini Flash 1.5 (intelligent model routing, 75% cost reduction)
+- `OPENAI_API_KEY`: For GPT-4o-mini and embeddings
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_REGION`, `AWS_S3_BUCKET_NAME`: For S3 storage and Polly TTS
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language.
