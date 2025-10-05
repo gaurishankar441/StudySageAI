@@ -1,4 +1,5 @@
 import OpenAI from "openai";
+import { embeddingService } from "./embeddingService";
 
 // the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
 const openai = new OpenAI({ 
@@ -317,32 +318,20 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
     }
   }
 
-  // Generate embeddings for text chunks
+  // Generate embeddings for text chunks using Vyakyarth-1-Indic
   async generateEmbedding(text: string): Promise<number[]> {
     try {
-      const response = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: text,
-        encoding_format: "float"
-      });
-      
-      return response.data[0].embedding;
+      return await embeddingService.generateEmbedding(text);
     } catch (error) {
       console.error('Embedding generation error:', error);
       throw new Error(`Failed to generate embedding: ${error}`);
     }
   }
 
-  // Generate embeddings for multiple texts in batch
+  // Generate embeddings for multiple texts in batch using Vyakyarth-1-Indic
   async generateEmbeddings(texts: string[]): Promise<number[][]> {
     try {
-      const response = await openai.embeddings.create({
-        model: "text-embedding-3-small",
-        input: texts,
-        encoding_format: "float"
-      });
-      
-      return response.data.map(item => item.embedding);
+      return await embeddingService.generateEmbeddings(texts);
     } catch (error) {
       console.error('Batch embedding generation error:', error);
       throw new Error(`Failed to generate embeddings: ${error}`);
@@ -351,21 +340,7 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
 
   // Calculate cosine similarity between two vectors
   cosineSimilarity(vecA: number[], vecB: number[]): number {
-    if (vecA.length !== vecB.length) {
-      throw new Error('Vectors must have the same length');
-    }
-    
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-    
-    for (let i = 0; i < vecA.length; i++) {
-      dotProduct += vecA[i] * vecB[i];
-      normA += vecA[i] * vecA[i];
-      normB += vecB[i] * vecB[i];
-    }
-    
-    return dotProduct / (Math.sqrt(normA) * Math.sqrt(normB));
+    return embeddingService.cosineSimilarity(vecA, vecB);
   }
 }
 

@@ -21,11 +21,14 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 
 *   **Server Framework**: Express.js with TypeScript, RESTful API, session-based authentication (connect-pg-simple), middleware for logging and error handling.
-*   **Database Layer**: PostgreSQL, Drizzle ORM for type-safe queries, Neon serverless driver, WebSocket-based connection.
-*   **Database Schema**: Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks.
-*   **AI Integration**: OpenAI API for LLM features, streaming responses, structured output, document processing, citation tracking (RAG).
+*   **Database Layer**: PostgreSQL with pgvector extension, Drizzle ORM for type-safe queries, Neon serverless driver, WebSocket-based connection.
+*   **Database Schema**: Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks (768-dimensional embeddings).
+*   **AI Integration**: 
+    - **LLM**: OpenAI API (GPT-5) for tutoring, chat, quiz generation, summarization
+    - **Embeddings**: Vyakyarth-1-Indic (768-dim) for semantic search - optimized for Hindi and Indic languages
+    - **Features**: Streaming responses, structured output, document processing, citation tracking (RAG)
 *   **File Storage**: Google Cloud Storage via `@google-cloud/storage`, Replit sidecar auth, object ACLs, Multer for multipart uploads, Uppy for direct-to-cloud uploads.
-*   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `storage` for DB abstraction, `objectStorageService` for cloud storage.
+*   **Service Layer**: `documentService` for content extraction, `aiServiceManager` for AI operations, `embeddingService` for Vyakyarth-1-Indic embeddings, `storage` for DB abstraction, `objectStorageService` for cloud storage.
 
 ### Authentication and Authorization
 
@@ -46,7 +49,8 @@ Preferred communication style: Simple, everyday language.
 
 ### Third-Party APIs
 
-*   **OpenAI API**: GPT-based models for core AI functionalities (tutoring, quiz generation, summarization).
+*   **OpenAI API**: GPT-5 for LLM features (tutoring, chat, quiz generation, summarization).
+*   **Vyakyarth-1-Indic**: Krutrim AI Labs' embedding model for semantic search (768 dimensions, optimized for Hindi/Indic languages).
 *   **Replit Authentication**: OIDC provider for user authentication.
 *   **Google Cloud Storage**: Object storage for user-uploaded files and media.
 
@@ -73,3 +77,4 @@ Preferred communication style: Simple, everyday language.
 *   **multer**: Multipart form data handling.
 *   **connect-pg-simple**: PostgreSQL session store.
 *   **memoizee**: Function result caching.
+*   **@xenova/transformers**: For running Vyakyarth-1-Indic embedding model locally.
