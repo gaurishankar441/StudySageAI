@@ -65,10 +65,13 @@ export class TutorSessionService {
     userId: string,
     subject: string,
     topic: string,
-    user: User
+    user: User,
+    personaId?: string // Optional: auto-select if not provided
   ): Promise<TutorSession> {
-    // Select persona based on subject
-    const persona = selectPersonaBySubject(subject);
+    // Select persona (use provided or auto-select based on subject)
+    const persona = personaId 
+      ? TUTOR_PERSONAS[personaId] || selectPersonaBySubject(subject)
+      : selectPersonaBySubject(subject);
     
     // Create profile snapshot
     const profileSnapshot = {

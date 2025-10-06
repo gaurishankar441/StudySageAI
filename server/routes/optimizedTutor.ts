@@ -200,11 +200,11 @@ optimizedTutorRouter.post('/cache/clear', async (req, res) => {
  */
 optimizedTutorRouter.post('/session/start', async (req, res) => {
   try {
-    const { chatId, subject, topic } = req.body;
+    const { chatId: providedChatId, subject, topic, level, language, personaId } = req.body;
     const userId = (req as any).user?.id;
     
-    if (!chatId || !subject || !topic || !userId) {
-      return res.status(400).json({ error: 'chatId, subject, topic, and authentication required' });
+    if (!subject || !topic || !userId) {
+      return res.status(400).json({ error: 'subject, topic, and authentication required' });
     }
     
     // Get user profile
@@ -213,8 +213,30 @@ optimizedTutorRouter.post('/session/start', async (req, res) => {
       return res.status(404).json({ error: 'User not found' });
     }
     
-    // Initialize session with profile data
-    const session = await tutorSessionService.initializeSession(chatId, userId, subject, topic, user);
+    // Create chat if chatId not provided
+    let chatId = providedChatId;
+    if (!chatId) {
+      const chat = await storage.createChat({
+        userId,
+        mode: 'tutor',
+        subject: subject || 'general',
+        level: level || 'intermediate',
+        language: language || 'en',
+        topic,
+        title: `${subject}: ${topic}`,
+      });
+      chatId = chat.id;
+    }
+    
+    // Initialize session with profile data and persona
+    const session = await tutorSessionService.initializeSession(
+      chatId, 
+      userId, 
+      subject, 
+      topic, 
+      user,
+      personaId // Pass persona selection
+    );
     
     // Get greeting template with persona
     const template = tutorSessionService.getCurrentPhaseTemplate(session);

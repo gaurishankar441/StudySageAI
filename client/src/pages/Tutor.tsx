@@ -35,18 +35,23 @@ export default function Tutor() {
       
       const data = await response.json();
       
-      if (!data || !data.chatId) {
+      if (!data || !data.session || !data.session.chatId) {
         throw new Error('Invalid response from server - missing chat ID');
       }
       
       return data;
     },
     onSuccess: (data: any) => {
-      setCurrentSessionId(data.chatId);
+      setCurrentSessionId(data.session.chatId);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
+      
+      // Map persona ID to name
+      const personaName = data.session.personaId === 'priya' ? 'Priya' : 
+                          data.session.personaId === 'amit' ? 'Amit' : 'your tutor';
+      
       toast({
         title: "Session Started",
-        description: `Your AI tutor ${data.personaName || ''} is ready! 🎓`,
+        description: `Your AI tutor ${personaName} is ready! 🎓`,
       });
     },
     onError: (error: any) => {
