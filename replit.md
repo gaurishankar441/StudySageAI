@@ -9,7 +9,7 @@ VaktaAI is an AI-powered educational platform designed to be a comprehensive stu
 ### October 6, 2025 - 7-Phase Conversational Tutor System ✅ COMPLETE
 
 **Production-Ready Implementation** 
-All 12 tasks completed and architect-approved for production deployment.
+Full end-to-end integration with critical API routing fix completed and architect-approved.
 
 **Backend Infrastructure (Tasks 1-6) ✅**
 - ✅ **Database Schema**: Extended with `tutorSessions` table tracking currentPhase, personaId, level, progress, adaptive metrics, profileSnapshot, subject, topic
@@ -17,23 +17,30 @@ All 12 tasks completed and architect-approved for production deployment.
 - ✅ **Phase Templates**: Built 7-phase conversation library (Greeting → Rapport → Assessment → Teaching → Practice → Feedback → Closure) with natural Hinglish flows
 - ✅ **Orchestration Service**: Implemented phase state machine with advancePhase(), recordAssessment(), adaptive level adjustment, resume context generation
 - ✅ **Enhanced Voice Service**: Added emotion-based prosody (pitch/pace/loudness), math-to-speech conversion (V=IR → "V equals I into R"), natural pause injection
-- ✅ **API Routes**: Integrated session management endpoints (/session/start, /session/ask, /session/tts, /sessions/user) with persona selection and profile context
+- ✅ **API Routes**: Optimized session endpoint with auto-chat creation, persona selection, profile integration (/session/start, /session/ask, /session/tts, /sessions/user)
 
 **Frontend Implementation (Tasks 7-12) ✅**
 - ✅ **TutorSetupWizard Auto-fill**: Auto-fills subject, level, language from user profile with useRef-based protection against input wipe
-- ✅ **Phase Indicator UI**: Visual 1-7 phase progress bar with phase names, proper mapping, complete test coverage
+- ✅ **Phase Indicator UI**: Visual 1-7 phase progress bar with phase names, proper phase mapping, complete test coverage
 - ✅ **Session Resume**: Smart wizard with loading/error states, session cards showing progress/phase, proper react-query status handling
 - ✅ **Voice Player Integration**: Conditional emotion-based TTS (uses optimized endpoint when canResume=true, fallback to standard)
 - ✅ **End-to-End Testing**: Server running without errors, all components integrated, no React violations
-- ✅ **Production Polish**: Proper error handling, TypeScript compliance, React best practices, architect-approved
+- ✅ **API Integration Fix**: Wizard now uses optimized 7-phase API, proper response parsing, persona-aware messaging
+
+**Critical Fix Applied**:
+- **Issue**: Wizard was calling old `/api/tutor/session` API - tutorSession never created, PhaseIndicator had no data
+- **Solution**: Integrated `/api/tutor/optimized/session/start` API with auto-chat creation, persona selection (Priya/Amit), proper nested response parsing
+- **Result**: New sessions now create tutorSession → PhaseIndicator shows → Resume works → Emotion-based TTS active
 
 **Key Features**:
 - 7-phase conversational flow with adaptive learning
-- Profile-based auto-fill and persona selection
+- Profile-based auto-fill and persona auto-selection
 - Resume capability for interrupted sessions
 - Emotion-based voice synthesis with SSML
-- Real-time phase progress tracking
+- Real-time phase progress tracking (1-7 visual indicator)
 - Complete error handling and loading states
+
+**Usage**: Start NEW session to see all features. Old sessions won't have 7-phase system (created before integration).
 
 ### October 6, 2025 - Database Performance Optimizations
 
