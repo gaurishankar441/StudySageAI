@@ -335,18 +335,25 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const playAudio = async (messageId: string, text: string) => {
     console.log('[TTS] playAudio called for message:', messageId);
     
-    // Stop any currently playing audio
-    if (audioElement) {
-      console.log('[TTS] Stopping currently playing audio');
+    // If clicking the same message that's playing, stop/mute it
+    if (playingAudio === messageId && audioElement) {
+      console.log('[TTS] Muting/stopping currently playing audio');
       audioElement.pause();
       audioElement.src = '';
-    }
-
-    if (playingAudio === messageId) {
-      console.log('[TTS] Toggling off audio for message:', messageId);
+      audioElement.remove();
       setPlayingAudio(null);
       setAudioElement(null);
       return;
+    }
+
+    // Stop any other currently playing audio
+    if (audioElement) {
+      console.log('[TTS] Stopping other playing audio');
+      audioElement.pause();
+      audioElement.src = '';
+      audioElement.remove();
+      setPlayingAudio(null);
+      setAudioElement(null);
     }
 
     try {
@@ -447,19 +454,32 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     }
   }, [messages, streamingMessage, isStreaming, transcribeMutation.isPending]);
 
-  // Auto-play TTS when streaming completes
+  // Track last played message to prevent replay
+  const lastPlayedRef = useRef<string | null>(null);
+
+  // Auto-play TTS when NEW assistant message arrives
   useEffect(() => {
-    if (shouldAutoPlayTTS && messages.length > 0) {
+    if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
-      if (lastMessage.role === 'assistant') {
-        // Auto-play with error handling for browser policies
+      
+      // Only play if:
+      // 1. It's an assistant message
+      // 2. We haven't played it before
+      // 3. It's not currently streaming
+      if (
+        lastMessage.role === 'assistant' && 
+        lastMessage.id !== lastPlayedRef.current &&
+        !isStreaming
+      ) {
+        console.log('[TTS] Auto-playing new assistant message:', lastMessage.id);
+        lastPlayedRef.current = lastMessage.id;
+        
         playAudio(lastMessage.id, lastMessage.content).catch((err) => {
-          console.log('Auto-play blocked, user can click speaker manually', err);
+          console.log('[TTS] Auto-play blocked, user can click speaker manually', err);
         });
-        setShouldAutoPlayTTS(false);
       }
     }
-  }, [shouldAutoPlayTTS, messages]);
+  }, [messages, isStreaming]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
