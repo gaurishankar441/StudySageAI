@@ -511,6 +511,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const questionsAnswered = userMessages;
   const estimatedTotal = Math.max(15, userMessages + 3);
 
+  // Map tutorSession phase to number for PhaseIndicator
+  const getCurrentPhaseNumber = () => {
+    if (!tutorSession?.session) return null;
+    
+    const phaseMap: Record<string, number> = {
+      'greeting': 1,
+      'rapport': 2,
+      'assessment': 3,
+      'teaching': 4,
+      'practice': 5,
+      'feedback': 6,
+      'closure': 7
+    };
+    
+    return phaseMap[tutorSession.session.currentPhase] || 1;
+  };
+
   return (
     <div className="h-full flex gap-6">
       {/* Left: Lesson Plan */}
@@ -518,82 +535,96 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
           Lesson Plan
         </h3>
-        <div className="space-y-2">
-          {/* Introduction Phase */}
-          <div className={`p-3 rounded-lg ${
-            introComplete 
-              ? 'bg-primary/10 border border-primary/20' 
-              : currentPhase === 'introduction' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              {introComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
-              ) : currentPhase === 'introduction' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-              ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-              )}
-              <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
-                Introduction
-              </span>
+        
+        {/* Show 7-Phase System if tutorSession exists */}
+        {tutorSession?.session ? (
+          <div className="space-y-3">
+            <div className="text-center py-2 bg-accent/10 rounded-lg border border-accent/20">
+              <p className="text-sm font-medium">Learning Phase {getCurrentPhaseNumber()} of 7</p>
+              <p className="text-xs text-muted-foreground capitalize">{tutorSession.session.currentPhase}</p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
-            </p>
+            
+            <PhaseIndicator currentPhase={getCurrentPhaseNumber() || 1} />
           </div>
+        ) : (
+          // Fallback to message-based lesson plan
+          <div className="space-y-2">
+            {/* Introduction Phase */}
+            <div className={`p-3 rounded-lg ${
+              introComplete 
+                ? 'bg-primary/10 border border-primary/20' 
+                : currentPhase === 'introduction' 
+                ? 'bg-accent/10 border border-accent/20' 
+                : 'bg-muted'
+            }`}>
+              <div className="flex items-center gap-2 mb-1">
+                {introComplete ? (
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                ) : currentPhase === 'introduction' ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                )}
+                <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
+                  Introduction
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
+              </p>
+            </div>
 
-          {/* Core Concepts Phase */}
-          <div className={`p-3 rounded-lg ${
-            coreConceptsComplete 
-              ? 'bg-primary/10 border border-primary/20' 
-              : currentPhase === 'core-concepts' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              {coreConceptsComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
-              ) : currentPhase === 'core-concepts' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-              ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-              )}
-              <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
-                Core Concepts
-              </span>
+            {/* Core Concepts Phase */}
+            <div className={`p-3 rounded-lg ${
+              coreConceptsComplete 
+                ? 'bg-primary/10 border border-primary/20' 
+                : currentPhase === 'core-concepts' 
+                ? 'bg-accent/10 border border-accent/20' 
+                : 'bg-muted'
+            }`}>
+              <div className="flex items-center gap-2 mb-1">
+                {coreConceptsComplete ? (
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                ) : currentPhase === 'core-concepts' ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                )}
+                <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
+                  Core Concepts
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
-            </p>
-          </div>
 
-          {/* Practice Phase */}
-          <div className={`p-3 rounded-lg ${
-            practiceComplete 
-              ? 'bg-primary/10 border border-primary/20' 
-              : currentPhase === 'practice' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
-          }`}>
-            <div className="flex items-center gap-2 mb-1">
-              {practiceComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
-              ) : currentPhase === 'practice' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-              ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-              )}
-              <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
-                Practice
-              </span>
+            {/* Practice Phase */}
+            <div className={`p-3 rounded-lg ${
+              practiceComplete 
+                ? 'bg-primary/10 border border-primary/20' 
+                : currentPhase === 'practice' 
+                ? 'bg-accent/10 border border-accent/20' 
+                : 'bg-muted'
+            }`}>
+              <div className="flex items-center gap-2 mb-1">
+                {practiceComplete ? (
+                  <CheckCircle className="w-4 h-4 text-primary" />
+                ) : currentPhase === 'practice' ? (
+                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                ) : (
+                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                )}
+                <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
+                  Practice
+                </span>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
+              </p>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
-            </p>
           </div>
-        </div>
+        )}
 
         <div className="pt-4 border-t border-border">
           <div className="flex items-center justify-between text-sm mb-2">
@@ -642,23 +673,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             End Session
           </Button>
         </div>
-
-        {/* 7-Phase Progress Indicator */}
-        {tutorSession?.session && (
-          <div className="px-4 pt-4">
-            <PhaseIndicator 
-              currentPhase={
-                tutorSession.session.currentPhase === 'greeting' ? 1 :
-                tutorSession.session.currentPhase === 'rapport' ? 2 :
-                tutorSession.session.currentPhase === 'assessment' ? 3 :
-                tutorSession.session.currentPhase === 'teaching' ? 4 :
-                tutorSession.session.currentPhase === 'practice' ? 5 :
-                tutorSession.session.currentPhase === 'feedback' ? 6 :
-                tutorSession.session.currentPhase === 'closure' ? 7 : 1
-              }
-            />
-          </div>
-        )}
 
         {/* Messages */}
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" id="chat-messages-container">
