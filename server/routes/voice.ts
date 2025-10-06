@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import multer from 'multer';
 import { voiceService } from '../services/voiceService';
+import { enhancedVoiceService } from '../services/enhancedVoiceService';
 import { s3Client } from '../objectStorage';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { nanoid } from 'nanoid';
@@ -101,11 +102,25 @@ voiceRouter.post('/transcribe', upload.single('audio'), async (req, res) => {
 
 /**
  * POST /api/voice/synthesize
- * Convert text to speech
+ * Convert text to speech with enhanced prosody
+ * Body params:
+ * - text: string (required)
+ * - language: 'hi' | 'en' (default: 'en')
+ * - emotion: string (optional, e.g., 'friendly', 'teaching', 'excited')
+ * - intent: string (optional, e.g., 'request_explanation', 'submit_answer')
+ * - personaId: string (optional, e.g., 'priya', 'amit')
+ * - enhanced: boolean (default: true) - use enhanced voice service with prosody
  */
 voiceRouter.post('/synthesize', async (req, res) => {
   try {
-    const { text, language = 'en' } = req.body;
+    const { 
+      text, 
+      language = 'en',
+      emotion,
+      intent,
+      personaId,
+      enhanced = true
+    } = req.body;
     
     if (!text) {
       return res.status(400).json({ error: 'Text is required' });
@@ -115,9 +130,25 @@ voiceRouter.post('/synthesize', async (req, res) => {
       return res.status(400).json({ error: 'Text too long (max 3000 characters)' });
     }
     
-    console.log(`[VOICE API] Synthesizing ${text.length} chars in ${language}`);
+    console.log(`[VOICE API] Synthesizing ${text.length} chars in ${language}${intent ? ` (intent: ${intent})` : ''}${emotion ? ` (emotion: ${emotion})` : ''} [enhanced: ${enhanced}]`);
     
-    const audioBuffer = await voiceService.synthesizeSpeech(text, language);
+    let audioBuffer: Buffer;
+    
+    if (enhanced) {
+      // Use enhanced voice service with all features (math, Hinglish, prosody)
+      audioBuffer = await enhancedVoiceService.synthesize(text, {
+        language: language as 'hi' | 'en',
+        emotion: emotion || 'friendly',
+        intent,
+        personaId: personaId || 'priya',
+        enableMathSpeech: true,
+        enablePauses: true,
+        enableEmphasis: true
+      });
+    } else {
+      // Use basic voice service (fallback for legacy calls)
+      audioBuffer = await voiceService.synthesizeSpeech(text, language as 'hi' | 'en');
+    }
     
     // Send audio file
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -177,8 +208,14 @@ voiceRouter.post('/ask', upload.single('audio'), async (req, res) => {
     const context = `Answer this ${language === 'hi' ? 'in Hindi' : 'in English'} for a student.`;
     const aiResult = await optimizedAI.generateResponse(transcription.text, context);
     
-    // Step 4: Synthesize AI response to speech
-    const audioBuffer = await voiceService.synthesizeSpeech(aiResult.response, language);
+    // Step 4: Synthesize AI response to speech with enhanced prosody
+    const audioBuffer = await enhancedVoiceService.synthesize(aiResult.response, {
+      language,
+      emotion: 'friendly',
+      enableMathSpeech: true,
+      enablePauses: true,
+      enableEmphasis: true
+    });
     
     // Send audio response
     res.setHeader('Content-Type', 'audio/mpeg');

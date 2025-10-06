@@ -3,31 +3,38 @@
 
 import { sarvamVoiceService } from './sarvamVoice';
 import { EMOTION_CONFIGS, TUTOR_PERSONAS } from '../config/tutorPersonas';
+import { INTENT_PROSODY_MAP, INTENT_PROSODY_DEFAULT } from '../config/intentProsody';
 
 export interface VoiceOptions {
   emotion?: string; // excited, teaching, gentle, friendly, curious, encouraging, celebratory
+  intent?: string; // request_explanation, request_example, submit_answer, etc.
   personaId?: string; // priya, amit
   language?: 'hi' | 'en';
   enableMathSpeech?: boolean;
   enablePauses?: boolean;
+  enableEmphasis?: boolean;
 }
 
 export class EnhancedVoiceService {
   /**
-   * Convert math expressions to natural speech
+   * Convert math expressions to natural speech (Indian English pattern)
    * Examples:
    * - V=IR → "V equals I into R"
-   * - E=mc² → "E equals m times c squared"
+   * - F=ma → "F equals m into a"
+   * - E=mc² → "E equals m into c squared"
    * - a²+b²=c² → "a squared plus b squared equals c squared"
    */
-  private mathToSpeech(text: string): string {
+  private mathToSpeech(text: string, language: 'hi' | 'en' = 'en'): string {
     let converted = text;
+    
+    // Indian English: Use "into" for multiplication (common in JEE/NEET coaching)
+    converted = converted.replace(/\s*×\s*/g, ' into ');
+    converted = converted.replace(/\s*\*\s*/g, ' into ');
     
     // Common operators
     converted = converted.replace(/\s*=\s*/g, ' equals ');
     converted = converted.replace(/\s*\+\s*/g, ' plus ');
     converted = converted.replace(/\s*-\s*/g, ' minus ');
-    converted = converted.replace(/\s*×\s*/g, ' times ');
     converted = converted.replace(/\s*÷\s*/g, ' divided by ');
     converted = converted.replace(/\s*\/\s*/g, ' divided by ');
     
@@ -67,33 +74,110 @@ export class EnhancedVoiceService {
     converted = converted.replace(/(\w+)₃/g, '$1 three');
     converted = converted.replace(/(\w+)₄/g, '$1 four');
     
+    // Units (common in Physics)
+    converted = converted.replace(/\bm\/s\b/g, 'meters per second');
+    converted = converted.replace(/\bm\/s²\b/g, 'meters per second squared');
+    converted = converted.replace(/\bkg\b/g, 'kilograms');
+    converted = converted.replace(/\bm\b(?![a-z])/gi, 'meters');
+    converted = converted.replace(/\bN\b/g, 'newtons');
+    converted = converted.replace(/\bJ\b/g, 'joules');
+    
+    // Hinglish math terms (if Hindi)
+    if (language === 'hi') {
+      converted = converted.replace(/equals/g, 'barabar hai');
+      converted = converted.replace(/plus/g, 'jod');
+      converted = converted.replace(/minus/g, 'ghata');
+      converted = converted.replace(/into/g, 'guna');
+      converted = converted.replace(/divided by/g, 'bhaag');
+    }
+    
     return converted;
   }
   
   /**
-   * Inject natural pauses for better comprehension
-   * - After commas: 300ms
-   * - After periods/question marks: 500ms
-   * - After colons: 400ms
-   * - Between sections: 600ms
+   * Inject natural pauses - SIMPLIFIED APPROACH
+   * 
+   * Note: Sarvam TTS doesn't support SSML, so fine-grained pause control isn't possible.
+   * Instead, we rely on:
+   * 1. Natural punctuation (periods, commas, colons) that TTS engines already pause on
+   * 2. Global pace adjustment (slower pace = longer pauses everywhere)
+   * 3. Strategic comma placement for Hinglish code-switching
+   * 
+   * This approach avoids text corruption while still providing prosody control.
    */
-  private injectPauses(text: string): string {
-    let withPauses = text;
+  private injectPauses(text: string, pauseMultiplier: number = 1.0): string {
+    // Don't inject artificial punctuation - let natural punctuation and pace control pauses
+    // The pauseMultiplier is used to adjust global pace in the calling function
+    return text;
+  }
+  
+  /**
+   * Add emphasis to key concepts for better comprehension
+   * Marks important words that should be stressed
+   */
+  private addEmphasis(text: string, emphasisWords: string[]): string {
+    let emphasized = text;
     
-    // Pause after sentence endings (., !, ?, ।)
-    withPauses = withPauses.replace(/([.!?।])\s+/g, '$1<break time="500ms"/> ');
+    // JEE/NEET key concepts (technical terms)
+    const technicalTerms = [
+      'momentum', 'velocity', 'acceleration', 'force', 'energy', 'power',
+      'electron', 'proton', 'neutron', 'atom', 'molecule', 'compound',
+      'oxidation', 'reduction', 'catalyst', 'equilibrium', 'entropy',
+      'DNA', 'RNA', 'cell', 'mitosis', 'meiosis', 'photosynthesis',
+      'theorem', 'equation', 'formula', 'derivative', 'integral'
+    ];
     
-    // Pause after commas
-    withPauses = withPauses.replace(/,\s+/g, ',<break time="300ms"/> ');
+    // Hindi/Hinglish equivalents
+    const hinglishTerms = [
+      'veg', 'gati', 'tvaran', 'bal', 'urja', 'shakti',
+      'vidyut', 'parmaanu', 'anu', 'yaugik', 'sanyog',
+      'koshika', 'prakash-sanshleshan', 'sutra', 'samikaran'
+    ];
     
-    // Pause after colons
-    withPauses = withPauses.replace(/:\s+/g, ':<break time="400ms"/> ');
+    // Combine with intent-specific emphasis words
+    const allEmphasisWords = [...emphasisWords, ...technicalTerms, ...hinglishTerms];
     
-    // Pause before section breaks (emoji or numbered lists)
-    withPauses = withPauses.replace(/([🎯📚💡🔑✅⚠️💪🌟])/g, '<break time="600ms"/>$1');
-    withPauses = withPauses.replace(/(^\d+\.\s)/gm, '<break time="400ms"/>$1');
+    // Add emphasis markers (will be converted to prosody)
+    allEmphasisWords.forEach(word => {
+      const regex = new RegExp(`\\b(${word})\\b`, 'gi');
+      emphasized = emphasized.replace(regex, '<emphasis>$1</emphasis>');
+    });
     
-    return withPauses;
+    return emphasized;
+  }
+  
+  /**
+   * Optimize for Hinglish code-switching
+   * Adds commas around Hindi script and common Hinglish transition words
+   * to trigger natural pauses in TTS for smoother code-switching
+   */
+  private optimizeHinglish(text: string): string {
+    let optimized = text;
+    
+    // Add commas around Hindi script (Devanagari) for micro-pauses
+    const hindiPattern = /[\u0900-\u097F]+/g;
+    optimized = optimized.replace(hindiPattern, (match) => {
+      return `, ${match}, `;
+    });
+    
+    // Common Hinglish transition words - add commas for code-switch clarity
+    const hinglishPhrases = [
+      'matlab', 'yaani', 'kyunki', 'isliye', 'lekin', 'aur', 
+      'toh', 'haan', 'nahi', 'bas', 'ek', 'do', 'teen',
+      'dekho', 'samjho', 'socho'
+    ];
+    
+    hinglishPhrases.forEach(phrase => {
+      const regex = new RegExp(`\\b(${phrase})\\b`, 'gi');
+      optimized = optimized.replace(regex, ', $1, ');
+    });
+    
+    // Clean up excessive commas
+    optimized = optimized.replace(/,\s*,+/g, ',');
+    optimized = optimized.replace(/^\s*,\s*/, ''); // Remove leading comma
+    optimized = optimized.replace(/\s*,\s*$/,''); // Remove trailing comma
+    
+    return optimized;
   }
   
   /**
@@ -149,11 +233,48 @@ export class EnhancedVoiceService {
   }
   
   /**
-   * Clean SSML-like tags that are not supported by the backend
+   * Clean SSML-like tags - SIMPLIFIED APPROACH
+   * 
+   * Since Sarvam doesn't support SSML, we simply remove all markup tags.
+   * Prosody control is achieved through global pitch/pace/loudness parameters.
    */
   private cleanSSMLTags(text: string): string {
-    // Remove <break> tags (already processed as pauses in timing)
-    return text.replace(/<break[^>]*>/g, '');
+    let cleaned = text;
+    
+    // Remove all <break> tags (Sarvam doesn't support them)
+    cleaned = cleaned.replace(/<break[^>]*\/>/g, '');
+    
+    // Remove <emphasis> tags but capitalize the content for subtle emphasis
+    cleaned = cleaned.replace(/<emphasis>([^<]+)<\/emphasis>/g, (match, word) => {
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    });
+    
+    // Clean up any excessive spaces created by tag removal
+    cleaned = cleaned.replace(/\s{2,}/g, ' ');
+    cleaned = cleaned.trim();
+    
+    return cleaned;
+  }
+  
+  /**
+   * Apply intent-based prosody adjustments on top of emotion
+   */
+  private applyIntentProsody(
+    basePitch: number,
+    basePace: number,
+    baseLoudness: number,
+    intent?: string
+  ): { pitch: number; pace: number; loudness: number; pauseMultiplier: number; emphasisWords: string[] } {
+    const intentConfig = intent ? (INTENT_PROSODY_MAP[intent] || INTENT_PROSODY_DEFAULT) : INTENT_PROSODY_DEFAULT;
+    
+    // Combine intent adjustments with base emotion prosody
+    return {
+      pitch: Math.max(-1.0, Math.min(1.0, basePitch + intentConfig.pitch)),
+      pace: Math.max(0.5, Math.min(2.0, basePace * intentConfig.pace)),
+      loudness: Math.max(0.5, Math.min(2.0, baseLoudness * intentConfig.loudness)),
+      pauseMultiplier: intentConfig.pauseMultiplier,
+      emphasisWords: intentConfig.emphasisWords
+    };
   }
   
   /**
@@ -162,43 +283,70 @@ export class EnhancedVoiceService {
   async synthesize(text: string, options: VoiceOptions = {}): Promise<Buffer> {
     const {
       emotion = 'friendly',
+      intent,
       personaId = 'priya',
       language = 'en',
       enableMathSpeech = true,
-      enablePauses = true
+      enablePauses = true,
+      enableEmphasis = true
     } = options;
     
     let processedText = text;
     
-    // Step 1: Convert math expressions to speech
+    // Step 1: Convert math expressions to speech (Indian English patterns)
     if (enableMathSpeech) {
-      processedText = this.mathToSpeech(processedText);
+      processedText = this.mathToSpeech(processedText, language);
     }
     
-    // Step 2: Inject natural pauses (will be timing-based, not SSML)
-    if (enablePauses) {
-      processedText = this.injectPauses(processedText);
+    // Step 2: Optimize for Hinglish code-switching (if Hindi or mixed content)
+    if (language === 'hi' || processedText.match(/[\u0900-\u097F]/)) {
+      processedText = this.optimizeHinglish(processedText);
     }
     
-    // Step 3: Apply emotion-based prosody
-    const { text: finalText, pitch, pace, loudness } = this.applyEmotionProsody(
+    // Step 3: Apply emotion-based prosody (base layer)
+    const { text: emotionText, pitch: basePitch, pace: basePace, loudness: baseLoudness } = this.applyEmotionProsody(
       processedText,
       emotion,
       personaId
     );
     
-    // Step 4: Clean SSML tags not supported
+    // Step 4: Apply intent-based prosody adjustments (override layer)
+    const { pitch, pace, loudness, pauseMultiplier, emphasisWords } = this.applyIntentProsody(
+      basePitch,
+      basePace,
+      baseLoudness,
+      intent
+    );
+    
+    // Step 5: Add key concept emphasis
+    let finalText = emotionText;
+    if (enableEmphasis) {
+      finalText = this.addEmphasis(finalText, emphasisWords);
+    }
+    
+    // Step 6: Inject natural pauses (simplified - no artificial punctuation)
+    if (enablePauses) {
+      finalText = this.injectPauses(finalText, pauseMultiplier);
+    }
+    
+    // Step 7: Adjust pace based on pause multiplier
+    // Higher multiplier = slower pace = longer natural pauses at punctuation
+    // Using square root to make the effect more subtle and natural
+    const adjustedPace = pace / Math.pow(pauseMultiplier, 0.6);
+    const clampedPace = Math.max(0.5, Math.min(2.0, adjustedPace));
+    
+    // Step 8: Clean SSML-like tags (not supported by Sarvam API)
     const cleanText = this.cleanSSMLTags(finalText);
     
-    console.log(`[ENHANCED VOICE] Emotion: ${emotion}, Pitch: ${pitch.toFixed(2)}, Pace: ${pace.toFixed(2)}, Loudness: ${loudness.toFixed(2)}`);
+    console.log(`[ENHANCED VOICE] Intent: ${intent || 'none'}, Emotion: ${emotion}, Pitch: ${pitch.toFixed(2)}, Pace: ${clampedPace.toFixed(2)} (base: ${pace.toFixed(2)}), Loudness: ${loudness.toFixed(2)}, PauseMultiplier: ${pauseMultiplier.toFixed(2)}`);
     
-    // Step 5: Synthesize with Sarvam (with prosody params)
+    // Step 9: Synthesize with Sarvam (with combined prosody params)
     try {
       if (!sarvamVoiceService.isAvailable()) {
         throw new Error('Sarvam TTS not available - missing SARVAM_API_KEY');
       }
       
-      return await this.synthesizeWithSarvam(cleanText, language, pitch, pace, loudness, personaId);
+      return await this.synthesizeWithSarvam(cleanText, language, pitch, clampedPace, loudness, personaId);
       
     } catch (error) {
       console.error('[ENHANCED VOICE] Synthesis failed:', error);
