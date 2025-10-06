@@ -4,6 +4,7 @@ import { costTracker } from '../services/costTracker';
 import { semanticCache } from '../services/semanticCache';
 import { tutorSessionService } from '../services/tutorSessionService';
 import { enhancedVoiceService } from '../services/enhancedVoiceService';
+import { intentClassifier } from '../services/intentClassifier';
 import { storage } from '../storage';
 
 export const optimizedTutorRouter = express.Router();
@@ -302,8 +303,43 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
     // Get persona
     const persona = tutorSessionService.getPersona(session);
     
-    // Build context with session state
-    const sessionContext = `
+    // Get user
+    const user = await storage.getUser(userId);
+    if (!user) {
+      return res.status(401).json({ error: 'User not found' });
+    }
+    
+    // Get last AI message for context
+    const allMessages = await storage.getChatMessages(chatId, 10);
+    const lastAIMessage = allMessages.reverse().find(m => m.role === 'assistant')?.content;
+    
+    // 🆕 INTENT CLASSIFICATION
+    const intentResult = await intentClassifier.classify(query, {
+      currentPhase: session.currentPhase,
+      currentTopic: session.topic,
+      lastAIMessage,
+      isInPracticeMode: session.currentPhase === 'practice'
+    });
+    
+    console.log(`[INTENT] Detected: ${intentResult.intent} (confidence: ${intentResult.confidence})`);
+    if (intentResult.entities && Object.keys(intentResult.entities).length > 0) {
+      console.log(`[INTENT] Entities:`, intentResult.entities);
+    }
+    
+    // Store user message with intent metadata
+    await storage.addMessage({
+      chatId,
+      role: 'user',
+      content: query,
+      metadata: {
+        intent: intentResult.intent,
+        intentConfidence: intentResult.confidence,
+        entities: intentResult.entities
+      }
+    });
+    
+    // Build context with session state and intent
+    let sessionContext = `
 You are ${persona.name}, a ${persona.personality.toneOfVoice} ${session.subject} teacher.
 Current Phase: ${session.currentPhase}
 Student Level: ${session.level}
@@ -323,6 +359,19 @@ Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None y
 Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality.catchphrases.slice(0, 2).join(', ')}.
     `.trim();
     
+    // Add intent-specific instructions
+    if (intentResult.intent === 'request_hint') {
+      sessionContext += '\n\nIMPORTANT: Student wants a hint, NOT the full solution. Give a guiding question or narrow down the approach.';
+    } else if (intentResult.intent === 'frustration') {
+      sessionContext += '\n\nIMPORTANT: Student is frustrated. Be empathetic, simplify the explanation, and offer encouragement or a break.';
+    } else if (intentResult.intent === 'celebration') {
+      sessionContext += '\n\nIMPORTANT: Student is celebrating success! Be enthusiastic and motivate them for next challenge.';
+    } else if (intentResult.intent === 'request_simplification') {
+      sessionContext += '\n\nIMPORTANT: Student didn\'t understand. Use simpler language, analogies, and step-by-step breakdown.';
+    } else if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
+      sessionContext += `\n\nIMPORTANT: Student submitted answer: ${intentResult.entities.answer}${intentResult.entities.unit ? ' ' + intentResult.entities.unit : ''}. Evaluate if correct and provide feedback.`;
+    }
+    
     // Check if assessment phase - analyze response
     if (session.currentPhase === 'assessment') {
       const assessmentResult = tutorSessionService.analyzeResponse(query);
@@ -334,6 +383,19 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
     const result = await optimizedAI.generateResponse(query, sessionContext, {
       language: persona.languageStyle.hindiPercentage > 50 ? 'hindi' : 'english',
       useCache: true
+    });
+    
+    // Store AI message
+    await storage.addMessage({
+      chatId,
+      role: 'assistant',
+      content: result.response,
+      metadata: {
+        model: result.model,
+        cost: result.cost,
+        cached: result.cached,
+        personaId: session.personaId
+      }
     });
     
     // Get current chat messages to check if should auto-advance
