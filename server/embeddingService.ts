@@ -1,12 +1,24 @@
-import OpenAI from 'openai';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+import { pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
 
 class EmbeddingService {
-  private modelName = 'text-embedding-3-small'; // 1536 dimensions, multilingual support
-  private dimensions = 1536;
+  private modelName = 'sentence-transformers/msmarco-distilbert-base-tas-b';
+  private dimensions = 768;
+  private extractor: FeatureExtractionPipeline | null = null;
+  private initPromise: Promise<void> | null = null;
+
+  private async initialize() {
+    if (this.extractor) return;
+    
+    if (!this.initPromise) {
+      this.initPromise = (async () => {
+        console.log(`[EmbeddingService] Loading ${this.modelName}...`);
+        this.extractor = await pipeline('feature-extraction', this.modelName);
+        console.log(`[EmbeddingService] Model loaded successfully`);
+      })();
+    }
+    
+    await this.initPromise;
+  }
 
   async generateEmbedding(text: string): Promise<number[]> {
     if (!text || text.trim().length === 0) {
@@ -14,15 +26,15 @@ class EmbeddingService {
     }
 
     try {
+      await this.initialize();
       console.log(`[EmbeddingService] Generating embedding for text (${text.length} chars)`);
       
-      const response = await openai.embeddings.create({
-        model: this.modelName,
-        input: text,
-        dimensions: this.dimensions,
+      const output = await this.extractor!(text, {
+        pooling: 'cls',
+        normalize: false
       });
 
-      const embedding = response.data[0].embedding;
+      const embedding = Array.from(output.data);
       
       if (embedding.length !== this.dimensions) {
         console.warn(`[EmbeddingService] Expected ${this.dimensions} dimensions, got ${embedding.length}`);
@@ -42,15 +54,20 @@ class EmbeddingService {
     }
 
     try {
+      await this.initialize();
       console.log(`[EmbeddingService] Generating embeddings for ${texts.length} texts in batch`);
       
-      const response = await openai.embeddings.create({
-        model: this.modelName,
-        input: texts,
-        dimensions: this.dimensions,
+      const output = await this.extractor!(texts, {
+        pooling: 'cls',
+        normalize: false
       });
 
-      const embeddings = response.data.map(item => item.embedding);
+      const embeddings: number[][] = [];
+      for (let i = 0; i < texts.length; i++) {
+        const start = i * this.dimensions;
+        const end = start + this.dimensions;
+        embeddings.push(Array.from(output.data.slice(start, end)));
+      }
       
       console.log(`[EmbeddingService] Generated ${embeddings.length} embeddings successfully`);
       return embeddings;
@@ -58,6 +75,19 @@ class EmbeddingService {
       console.error('[EmbeddingService] Error generating batch embeddings:', error);
       throw new Error(`Failed to generate batch embeddings: ${error}`);
     }
+  }
+
+  dotProductSimilarity(vecA: number[], vecB: number[]): number {
+    if (vecA.length !== vecB.length) {
+      throw new Error('Vectors must have the same length');
+    }
+    
+    let dotProduct = 0;
+    for (let i = 0; i < vecA.length; i++) {
+      dotProduct += vecA[i] * vecB[i];
+    }
+    
+    return dotProduct;
   }
 
   cosineSimilarity(vecA: number[], vecB: number[]): number {
