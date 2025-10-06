@@ -7,6 +7,7 @@ import { enhancedVoiceService } from '../services/enhancedVoiceService';
 import { intentClassifier } from '../services/intentClassifier';
 import { emotionDetector } from '../services/emotionDetector';
 import { promptBuilder } from '../services/promptBuilder';
+import { responseAdapter } from '../config/responseAdaptation';
 import { storage } from '../storage';
 
 export const optimizedTutorRouter = express.Router();
@@ -403,7 +404,20 @@ Suggested approach: ${emotionModifiers.suggestedActions.join(', ')}
 Encouragement level: ${emotionModifiers.encouragement}
     `.trim();
     
-    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}\n\n${emotionContext}`;
+    // 🆕 CALCULATE DYNAMIC RESPONSE CONFIGURATION
+    const responseConfig = responseAdapter.calculateResponseConfig(
+      intentResult.intent,
+      emotionResult.emotion,
+      session.currentPhase
+    );
+    
+    console.log(`[RESPONSE ADAPTATION] Structure: ${responseConfig.structure}, Target: ${responseConfig.targetWordCount} words (${responseConfig.minWords}-${responseConfig.maxWords})`);
+    
+    // Build length constraint and structure guidance
+    const lengthConstraint = responseAdapter.buildLengthConstraint(responseConfig, userLanguage);
+    const structureGuidance = responseAdapter.buildStructureGuidance(responseConfig);
+    
+    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}\n\n${emotionContext}\n\n${lengthConstraint}\n\n${structureGuidance}`;
     
     // Add entity-specific instructions
     if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
@@ -423,7 +437,7 @@ Encouragement level: ${emotionModifiers.encouragement}
       useCache: true
     });
     
-    // Store AI message
+    // Store AI message with response config metadata
     await storage.addMessage({
       chatId,
       role: 'assistant',
@@ -432,7 +446,10 @@ Encouragement level: ${emotionModifiers.encouragement}
         model: result.model,
         cost: result.cost,
         cached: result.cached,
-        personaId: session.personaId
+        personaId: session.personaId,
+        responseStructure: responseConfig.structure,
+        targetWordCount: responseConfig.targetWordCount,
+        actualWordCount: result.response.split(/\s+/).length
       }
     });
     
