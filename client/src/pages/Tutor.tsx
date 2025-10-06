@@ -14,7 +14,19 @@ export default function Tutor() {
 
   const startSessionMutation = useMutation({
     mutationFn: async (config: TutorConfig) => {
-      const response = await apiRequest("POST", "/api/tutor/session", config);
+      // Auto-select persona based on subject
+      const personaId = ['physics', 'mathematics'].includes(config.subject) 
+        ? 'priya' 
+        : 'amit';
+      
+      // Use optimized 7-phase session API
+      const response = await apiRequest("POST", "/api/tutor/optimized/session/start", {
+        subject: config.subject,
+        topic: config.topic,
+        level: config.level,
+        language: config.language,
+        personaId,
+      });
       
       if (!response.ok) {
         const errorText = await response.text();
@@ -23,18 +35,18 @@ export default function Tutor() {
       
       const data = await response.json();
       
-      if (!data || !data.id) {
-        throw new Error('Invalid response from server - missing session ID');
+      if (!data || !data.chatId) {
+        throw new Error('Invalid response from server - missing chat ID');
       }
       
       return data;
     },
     onSuccess: (data: any) => {
-      setCurrentSessionId(data.id);
+      setCurrentSessionId(data.chatId);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
       toast({
         title: "Session Started",
-        description: "Your AI tutor session has begun!",
+        description: `Your AI tutor ${data.personaName || ''} is ready! 🎓`,
       });
     },
     onError: (error: any) => {
