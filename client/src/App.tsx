@@ -15,6 +15,7 @@ import Quiz from "@/pages/Quiz";
 import QuizAttempt from "@/pages/QuizAttempt";
 import StudyPlan from "@/pages/StudyPlan";
 import Notes from "@/pages/Notes";
+import NoteDetail from "@/pages/NoteDetail";
 import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
@@ -50,6 +51,7 @@ function Router() {
         <Route path="/quiz/:id" component={QuizAttempt} />
         <Route path="/quiz" component={Quiz} />
         <Route path="/study-plan" component={StudyPlan} />
+        <Route path="/notes/:id" component={NoteDetail} />
         <Route path="/notes" component={Notes} />
         <Route path="/settings" component={Settings} />
         <Route component={NotFound} />

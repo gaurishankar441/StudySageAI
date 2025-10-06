@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -62,6 +63,7 @@ const templates = [
 ];
 
 export default function NotesView() {
+  const [, navigate] = useLocation();
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTemplate, setSelectedTemplate] = useState<string>("");
@@ -188,7 +190,12 @@ export default function NotesView() {
             const gradientClass = getTemplateColor(note.template || undefined);
             
             return (
-              <Card key={note.id} className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group">
+              <Card 
+                key={note.id} 
+                className="overflow-hidden hover:shadow-md transition-all duration-200 cursor-pointer group"
+                onClick={() => navigate(`/notes/${note.id}`)}
+                data-testid={`card-note-${note.id}`}
+              >
                 <div className={`h-32 bg-gradient-to-br ${gradientClass} p-4 flex items-end relative`}>
                   <div className="absolute top-4 right-4">
                     <Button
