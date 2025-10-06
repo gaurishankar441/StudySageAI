@@ -6,6 +6,29 @@ VaktaAI is an AI-powered educational platform designed to be a comprehensive stu
 
 ## Recent Changes
 
+### October 6, 2025 - 7-Phase Conversational Tutor System (In Progress)
+
+**Backend Infrastructure Complete (Tasks 1-6) ✅**
+- ✅ **Database Schema**: Extended with `tutorSessions` table tracking currentPhase, personaId, level, progress, adaptive metrics, profileSnapshot, subject, topic
+- ✅ **Persona System**: Created Priya (Physics/Math, energetic voice) and Amit (Chemistry/Biology, calm voice) with emotion-based SSML configs
+- ✅ **Phase Templates**: Built 7-phase conversation library (Greeting → Rapport → Assessment → Teaching → Practice → Feedback → Closure) with natural Hinglish flows
+- ✅ **Orchestration Service**: Implemented phase state machine with advancePhase(), recordAssessment(), adaptive level adjustment, resume context generation
+- ✅ **Enhanced Voice Service**: Added emotion-based prosody (pitch/pace/loudness), math-to-speech conversion (V=IR → "V equals I into R"), natural pause injection
+- ✅ **API Routes**: Integrated session management endpoints (/session/start, /session/ask, /session/tts, etc.) with persona selection and profile context
+
+**Frontend Auto-fill Complete (Task 7) ✅**
+- ✅ **TutorSetupWizard**: Auto-fills subject, level, language from user profile (currentClass, subjects, preferredLanguage)
+- ✅ **UX Safety**: useRef-based initialization prevents topic input from being wiped when profile loads
+- ✅ **Test Coverage**: Added data-testid attributes to all interactive elements (buttons, inputs)
+- ✅ **Architect Approved**: Production-ready with proper user edit preservation
+
+**Remaining Frontend Tasks (8-12)**
+- ⏳ Phase-indicator UI component with visual progress bar
+- ⏳ Session resume capability from tutorSessions state
+- ⏳ SSML voice player with emotion rendering
+- ⏳ End-to-end 7-phase flow testing
+- ⏳ Final polish and optimization
+
 ### October 6, 2025 - Database Performance Optimizations
 
 **Production-Ready Query Optimization (5-20x Faster)**
