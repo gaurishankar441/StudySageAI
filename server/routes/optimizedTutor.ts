@@ -8,6 +8,7 @@ import { intentClassifier } from '../services/intentClassifier';
 import { emotionDetector } from '../services/emotionDetector';
 import { promptBuilder } from '../services/promptBuilder';
 import { responseAdapter } from '../config/responseAdaptation';
+import { hintService } from '../services/hintService';
 import { storage } from '../storage';
 
 export const optimizedTutorRouter = express.Router();
@@ -314,7 +315,7 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
     
     // Get last AI message for context
     const allMessages = await storage.getChatMessages(chatId, 10);
-    const lastAIMessage = allMessages.reverse().find(m => m.role === 'assistant')?.content;
+    const lastAIMessage = [...allMessages].reverse().find(m => m.role === 'assistant')?.content;
     
     // 🆕 INTENT CLASSIFICATION
     const intentResult = await intentClassifier.classify(query, {
@@ -424,6 +425,63 @@ Encouragement level: ${emotionModifiers.encouragement}
       sessionContext += `\n\nIMPORTANT: Student submitted answer: ${intentResult.entities.answer}${intentResult.entities.unit ? ' ' + intentResult.entities.unit : ''}. Evaluate if correct and provide feedback.`;
     }
     
+    // 🆕 PROGRESSIVE HINT SYSTEM
+    let hintMetadata: Record<string, any> = {};
+    let hintDisclaimer = '';
+    let updatedHintState: any = null;
+    
+    if (intentResult.intent === 'request_hint') {
+      const existingHintState = hintService.getHintState(allMessages);
+      
+      const problemContext = session.topic || 'Current problem';
+      const hintState = existingHintState || hintService.initializeHintState(problemContext);
+      
+      console.log(`[HINT] Current state: Level ${hintState.currentLevel}, Used ${hintState.totalHintsUsed}/4`);
+      
+      const advancement = hintService.advanceHintLevel(hintState);
+      
+      if (!advancement.canAdvance) {
+        console.log(`[HINT] Cannot advance: ${advancement.message}`);
+        
+        updatedHintState = { 
+          ...hintState, 
+          lastHintTimestamp: new Date().toISOString() 
+        };
+        
+        if (advancement.message?.includes('Take a moment')) {
+          const timeSinceLastHint = Date.now() - new Date(hintState.lastHintTimestamp).getTime();
+          const timeRemaining = Math.max(0, 30000 - timeSinceLastHint);
+          const cooldownMsg = hintService.generateCooldownMessage(timeRemaining, userLanguage);
+          sessionContext += `\n\nIMPORTANT: Student asked for hint too soon. Respond with: "${cooldownMsg}"`;
+        } else {
+          sessionContext += `\n\nIMPORTANT: Maximum hints reached. Encourage student to try solving with given information.`;
+        }
+        
+        hintMetadata = { 
+          hintDenied: true, 
+          reason: advancement.message,
+          currentLevel: hintState.currentLevel,
+          totalHintsUsed: hintState.totalHintsUsed
+        };
+      } else {
+        const hintPrompt = hintService.buildHintPrompt(
+          advancement.nextLevel,
+          userLanguage,
+          problemContext,
+          query,
+          hintState.previousHints
+        );
+        
+        sessionContext = hintPrompt;
+        
+        updatedHintState = advancement.newState;
+        hintMetadata = hintService.generateHintMetadata(advancement.nextLevel, advancement.newState);
+        hintDisclaimer = hintService.formatHintDisclaimer(advancement.nextLevel, userLanguage);
+        
+        console.log(`[HINT] Providing Level ${advancement.nextLevel}/4 hint - Total hints: ${advancement.newState.totalHintsUsed}`);
+      }
+    }
+    
     // Check if assessment phase - analyze response
     if (session.currentPhase === 'assessment') {
       const assessmentResult = tutorSessionService.analyzeResponse(query);
@@ -434,14 +492,20 @@ Encouragement level: ${emotionModifiers.encouragement}
     // Generate AI response with session context
     const result = await optimizedAI.generateResponse(query, sessionContext, {
       language: persona.languageStyle.hindiPercentage > 50 ? 'hindi' : 'english',
-      useCache: true
+      useCache: intentResult.intent === 'request_hint' ? false : true
     });
     
-    // Store AI message with response config metadata
+    const finalResponse = result.response + hintDisclaimer;
+    
+    if (updatedHintState) {
+      updatedHintState = hintService.updateHintStateWithResponse(updatedHintState, result.response);
+    }
+    
+    // Store AI message with response config + hint metadata
     await storage.addMessage({
       chatId,
       role: 'assistant',
-      content: result.response,
+      content: finalResponse,
       metadata: {
         model: result.model,
         cost: result.cost,
@@ -449,7 +513,9 @@ Encouragement level: ${emotionModifiers.encouragement}
         personaId: session.personaId,
         responseStructure: responseConfig.structure,
         targetWordCount: responseConfig.targetWordCount,
-        actualWordCount: result.response.split(/\s+/).length
+        actualWordCount: finalResponse.split(/\s+/).length,
+        ...hintMetadata,
+        hintState: updatedHintState
       }
     });
     
@@ -473,7 +539,7 @@ Encouragement level: ${emotionModifiers.encouragement}
     }
     
     res.json({
-      response: result.response,
+      response: finalResponse,
       session: {
         currentPhase: session.currentPhase,
         progress: session.progress,
@@ -484,7 +550,8 @@ Encouragement level: ${emotionModifiers.encouragement}
         cached: result.cached,
         model: result.model,
         cost: result.cost,
-        personaId: session.personaId
+        personaId: session.personaId,
+        ...hintMetadata
       }
     });
   } catch (error) {
