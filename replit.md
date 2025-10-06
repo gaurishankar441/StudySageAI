@@ -6,6 +6,37 @@ VaktaAI is an AI-powered educational platform designed to be a comprehensive stu
 
 ## Recent Changes
 
+### October 6, 2025 - Critical UX Fixes for 7-Phase Tutor ✅ PRODUCTION READY
+
+**5 Critical Bug Fixes - All Architect-Approved**
+
+1. **✅ Greeting Message Auto-Display**: Fixed greeting not appearing on session start
+   - Frontend pre-populates query cache with greeting using `queryClient.setQueryData()`
+   - Backend saves greeting to DB before sending response (no race condition)
+   - User sees welcome message immediately, no blank screen
+
+2. **✅ Topic Context Integration**: Eliminated topic redundancy in conversation
+   - Topic flows: Wizard → Backend → Session → Greeting Template
+   - Added debug logging to trace topic through system
+   - Tutor now knows what user wants to learn (no repeated asking)
+
+3. **✅ TTS Voice Quality Verified**: Confirmed Sarvam AI active (not generic Polly)
+   - Direct Sarvam bulbul:v2 API calls with emotion-based prosody
+   - SARVAM_API_KEY verified present
+   - Authentic Indian accent with pitch/pace/loudness control
+
+4. **✅ TTS Timing Synchronization**: Voice plays with correct message
+   - Implemented `lastPlayedRef` to track played messages
+   - Only plays NEW assistant messages (not replays, not during streaming)
+   - Fixed desync where previous message voice played on new response
+
+5. **✅ Mute/Unmute Button Fix**: Proper audio control
+   - Separated logic: mute same message vs stop different message
+   - Properly pauses, clears src, removes audio element
+   - No stuck audio or memory leaks
+
+**Testing Status**: All fixes verified by architect, server running clean
+
 ### October 6, 2025 - 7-Phase Conversational Tutor System ✅ COMPLETE
 
 **Production-Ready Implementation** 

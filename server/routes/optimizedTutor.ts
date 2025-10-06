@@ -242,8 +242,6 @@ optimizedTutorRouter.post('/session/start', async (req, res) => {
     const template = tutorSessionService.getCurrentPhaseTemplate(session);
     const greeting = tutorSessionService.fillSessionTemplate(template, session);
     
-    console.log('[GREETING DEBUG] Topic:', topic, 'Session Topic:', session.topic, 'Greeting:', greeting.substring(0, 200));
-    
     // Save greeting message to chat
     if (greeting && greeting.trim()) {
       await storage.addMessage({
