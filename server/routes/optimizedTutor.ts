@@ -361,6 +361,137 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
 });
 
 /**
+ * POST /api/tutor/optimized/session/ask-stream
+ * Ask a question in an active tutor session with streaming response
+ */
+optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
+  try {
+    const { chatId, query } = req.body;
+    const userId = (req as any).user?.id;
+    
+    if (!chatId || !query || !userId) {
+      return res.status(400).json({ error: 'chatId, query, and authentication required' });
+    }
+    
+    // Get session
+    const session = await storage.getTutorSession(chatId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    // Get persona
+    const persona = tutorSessionService.getPersona(session);
+    
+    // Build context with session state
+    const sessionContext = `
+You are ${persona.name}, a ${persona.personality.toneOfVoice} ${session.subject} teacher.
+Current Phase: ${session.currentPhase}
+Student Level: ${session.level}
+Student Name: ${session.profileSnapshot?.firstName || 'Student'}
+Exam Target: ${session.profileSnapshot?.examTarget || 'General'}
+Current Class: ${session.profileSnapshot?.currentClass || 'Class 12'}
+Topic: ${session.topic}
+Progress: ${session.progress}%
+
+Personality: ${persona.personality.traits.join(', ')}
+Language: ${persona.languageStyle.hindiPercentage}% Hindi, ${persona.languageStyle.englishPercentage}% English
+Code-switch style: ${persona.languageStyle.codeSwitch}
+
+Strong Concepts: ${session.adaptiveMetrics?.strongConcepts?.join(', ') || 'None yet'}
+Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None yet'}
+
+Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality.catchphrases.slice(0, 2).join(', ')}.
+    `.trim();
+    
+    // Check if assessment phase - analyze response
+    if (session.currentPhase === 'assessment') {
+      const assessmentResult = tutorSessionService.analyzeResponse(query);
+      await tutorSessionService.recordAssessment(chatId, assessmentResult);
+      console.log(`[SESSION ASSESSMENT] Level: ${assessmentResult.level}, Score: ${assessmentResult.score}`);
+    }
+    
+    // Set up SSE
+    res.setHeader('Content-Type', 'text/event-stream');
+    res.setHeader('Cache-Control', 'no-cache');
+    res.setHeader('Connection', 'keep-alive');
+    
+    // Determine emotion based on phase
+    let emotion = 'friendly';
+    if (session.currentPhase === 'greeting' || session.currentPhase === 'rapport') {
+      emotion = 'enthusiastic';
+    } else if (session.currentPhase === 'teaching') {
+      emotion = 'teaching';
+    } else if (session.currentPhase === 'practice') {
+      emotion = 'encouraging';
+    } else if (session.currentPhase === 'feedback') {
+      emotion = 'celebratory';
+    }
+    
+    let terminalEventSent = false;
+    
+    try {
+      await optimizedAI.generateStreamingResponse(query, sessionContext, (chunk, meta) => {
+        if (meta?.type === 'complete') {
+          terminalEventSent = true;
+          res.write(`data: ${JSON.stringify({ 
+            type: 'complete',
+            content: chunk, // Include final content
+            session: {
+              currentPhase: session.currentPhase,
+              progress: session.progress,
+              level: session.level
+            },
+            emotion,
+            cached: meta.cached,
+            model: meta.model,
+            cost: meta.cost,
+            personaId: session.personaId
+          })}\n\n`);
+        } else if (meta?.type === 'error') {
+          terminalEventSent = true;
+          res.write(`data: ${JSON.stringify({ 
+            type: 'error',
+            error: meta.error || 'Stream failed'
+          })}\n\n`);
+        } else {
+          // Send chunk with proper format: type + content
+          res.write(`data: ${JSON.stringify({ 
+            type: 'chunk',
+            content: chunk, // Frontend expects 'content' field
+            session: {
+              currentPhase: session.currentPhase
+            }
+          })}\n\n`);
+        }
+      });
+      
+      // Check if should auto-advance phase
+      const messages = await storage.getChatMessages(chatId);
+      if (tutorSessionService.shouldAutoAdvance(session, messages.length)) {
+        await tutorSessionService.advancePhase(chatId);
+        console.log(`[SESSION STREAM] Auto-advanced to next phase`);
+      }
+      
+      res.write('data: [DONE]\n\n');
+      res.end();
+    } catch (streamError) {
+      console.error('[SESSION ASK STREAM] Error:', streamError);
+      if (!terminalEventSent && !res.writableEnded) {
+        res.write(`data: ${JSON.stringify({ 
+          type: 'error',
+          error: 'Stream failed'
+        })}\n\n`);
+        res.write('data: [DONE]\n\n');
+        res.end();
+      }
+    }
+  } catch (error) {
+    console.error('[SESSION ASK STREAM] Setup error:', error);
+    res.status(500).json({ error: 'Failed to initialize stream' });
+  }
+});
+
+/**
  * POST /api/tutor/optimized/session/tts
  * Generate TTS with emotion-based prosody for tutor response
  */

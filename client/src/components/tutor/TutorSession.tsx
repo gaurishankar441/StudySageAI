@@ -110,37 +110,122 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       setIsStreaming(true);
       setStreamingMessage("");
 
-      const eventSource = new EventSource(
-        `/api/chats/${chatId}/stream?message=${encodeURIComponent(messageText)}`,
-        { withCredentials: true }
-      );
+      // Use optimized session streaming if tutorSession exists
+      const useSessionStream = !!tutorSession?.session;
+      
+      if (useSessionStream) {
+        // POST to session streaming endpoint
+        const response = await fetch('/api/tutor/optimized/session/ask-stream', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          credentials: 'include',
+          body: JSON.stringify({
+            chatId,
+            query: messageText
+          })
+        });
 
-      return new Promise((resolve, reject) => {
-        eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'chunk') {
-            setStreamingMessage(prev => prev + data.content);
-          } else if (data.type === 'complete') {
-            setStreamingMessage(data.content);
-          } else if (data.type === 'done') {
+        if (!response.ok) {
+          throw new Error('Failed to stream response');
+        }
+
+        const reader = response.body?.getReader();
+        const decoder = new TextDecoder();
+
+        return new Promise((resolve, reject) => {
+          let buffer = ''; // Buffer for partial lines
+          let sessionMetadata: any = null;
+
+          const readStream = async () => {
+            try {
+              while (reader) {
+                const { done, value } = await reader.read();
+                if (done) break;
+
+                // Decode chunk and add to buffer
+                buffer += decoder.decode(value, { stream: true });
+                const lines = buffer.split('\n');
+                
+                // Keep last incomplete line in buffer
+                buffer = lines.pop() || '';
+
+                for (const line of lines) {
+                  if (line.startsWith('data: ')) {
+                    const data = line.slice(6).trim();
+                    if (data === '[DONE]') continue;
+                    
+                    try {
+                      const parsed = JSON.parse(data);
+                      
+                      if (parsed.type === 'chunk') {
+                        setStreamingMessage(prev => prev + parsed.content);
+                      } else if (parsed.type === 'complete') {
+                        setIsStreaming(false);
+                        sessionMetadata = parsed.session; // Capture session metadata
+                        setShouldAutoPlayTTS(true); // Enable voice playback
+                        queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
+                        queryClient.invalidateQueries({ queryKey: [`/api/tutor/optimized/session/${chatId}`] });
+                        resolve({ 
+                          success: true, 
+                          emotion: parsed.emotion,
+                          personaId: parsed.personaId,
+                          session: sessionMetadata
+                        });
+                      } else if (parsed.type === 'error') {
+                        setIsStreaming(false);
+                        reject(new Error(parsed.error));
+                      }
+                    } catch (e) {
+                      // Ignore parse errors for partial chunks
+                      console.warn('Parse error:', e, 'Line:', line);
+                    }
+                  }
+                }
+              }
+            } catch (error) {
+              setIsStreaming(false);
+              reject(error);
+            }
+          };
+
+          readStream();
+        });
+      } else {
+        // Fallback to legacy EventSource
+        const eventSource = new EventSource(
+          `/api/chats/${chatId}/stream?message=${encodeURIComponent(messageText)}`,
+          { withCredentials: true }
+        );
+
+        return new Promise((resolve, reject) => {
+          eventSource.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            
+            if (data.type === 'chunk') {
+              setStreamingMessage(prev => prev + data.content);
+            } else if (data.type === 'complete') {
+              setStreamingMessage(data.content);
+            } else if (data.type === 'done') {
+              eventSource.close();
+              setIsStreaming(false);
+              setShouldAutoPlayTTS(true);
+              resolve(data);
+            } else if (data.type === 'error') {
+              eventSource.close();
+              setIsStreaming(false);
+              reject(new Error(data.message));
+            }
+          };
+
+          eventSource.onerror = () => {
             eventSource.close();
             setIsStreaming(false);
-            setShouldAutoPlayTTS(true);
-            resolve(data);
-          } else if (data.type === 'error') {
-            eventSource.close();
-            setIsStreaming(false);
-            reject(new Error(data.message));
-          }
-        };
-
-        eventSource.onerror = () => {
-          eventSource.close();
-          setIsStreaming(false);
-          reject(new Error('Connection error'));
-        };
-      });
+            reject(new Error('Connection error'));
+          };
+        });
+      }
     },
     onSuccess: () => {
       setMessage("");
@@ -535,96 +620,82 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
           Lesson Plan
         </h3>
-        
-        {/* Show 7-Phase System if tutorSession exists */}
-        {tutorSession?.session ? (
-          <div className="space-y-3">
-            <div className="text-center py-2 bg-accent/10 rounded-lg border border-accent/20">
-              <p className="text-sm font-medium">Learning Phase {getCurrentPhaseNumber()} of 7</p>
-              <p className="text-xs text-muted-foreground capitalize">{tutorSession.session.currentPhase}</p>
+        <div className="space-y-2">
+          {/* Introduction Phase */}
+          <div className={`p-3 rounded-lg ${
+            introComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'introduction' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
+            <div className="flex items-center gap-2 mb-1">
+              {introComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'introduction' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
+                Introduction
+              </span>
             </div>
-            
-            <PhaseIndicator currentPhase={getCurrentPhaseNumber() || 1} />
+            <p className="text-xs text-muted-foreground">
+              {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
+            </p>
           </div>
-        ) : (
-          // Fallback to message-based lesson plan
-          <div className="space-y-2">
-            {/* Introduction Phase */}
-            <div className={`p-3 rounded-lg ${
-              introComplete 
-                ? 'bg-primary/10 border border-primary/20' 
-                : currentPhase === 'introduction' 
-                ? 'bg-accent/10 border border-accent/20' 
-                : 'bg-muted'
-            }`}>
-              <div className="flex items-center gap-2 mb-1">
-                {introComplete ? (
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                ) : currentPhase === 'introduction' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-                )}
-                <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
-                  Introduction
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
-              </p>
-            </div>
 
-            {/* Core Concepts Phase */}
-            <div className={`p-3 rounded-lg ${
-              coreConceptsComplete 
-                ? 'bg-primary/10 border border-primary/20' 
-                : currentPhase === 'core-concepts' 
-                ? 'bg-accent/10 border border-accent/20' 
-                : 'bg-muted'
-            }`}>
-              <div className="flex items-center gap-2 mb-1">
-                {coreConceptsComplete ? (
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                ) : currentPhase === 'core-concepts' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-                )}
-                <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
-                  Core Concepts
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
-              </p>
+          {/* Core Concepts Phase */}
+          <div className={`p-3 rounded-lg ${
+            coreConceptsComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'core-concepts' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
+            <div className="flex items-center gap-2 mb-1">
+              {coreConceptsComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'core-concepts' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
+                Core Concepts
+              </span>
             </div>
-
-            {/* Practice Phase */}
-            <div className={`p-3 rounded-lg ${
-              practiceComplete 
-                ? 'bg-primary/10 border border-primary/20' 
-                : currentPhase === 'practice' 
-                ? 'bg-accent/10 border border-accent/20' 
-                : 'bg-muted'
-            }`}>
-              <div className="flex items-center gap-2 mb-1">
-                {practiceComplete ? (
-                  <CheckCircle className="w-4 h-4 text-primary" />
-                ) : currentPhase === 'practice' ? (
-                  <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
-                ) : (
-                  <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
-                )}
-                <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
-                  Practice
-                </span>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
-              </p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
+            </p>
           </div>
-        )}
+
+          {/* Practice Phase */}
+          <div className={`p-3 rounded-lg ${
+            practiceComplete 
+              ? 'bg-primary/10 border border-primary/20' 
+              : currentPhase === 'practice' 
+              ? 'bg-accent/10 border border-accent/20' 
+              : 'bg-muted'
+          }`}>
+            <div className="flex items-center gap-2 mb-1">
+              {practiceComplete ? (
+                <CheckCircle className="w-4 h-4 text-primary" />
+              ) : currentPhase === 'practice' ? (
+                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+              ) : (
+                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+              )}
+              <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
+                Practice
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
+            </p>
+          </div>
+        </div>
 
         <div className="pt-4 border-t border-border">
           <div className="flex items-center justify-between text-sm mb-2">
@@ -658,20 +729,35 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       {/* Center: Chat */}
       <div className="flex-1 bg-card rounded-xl border border-border flex flex-col">
         {/* Chat Header */}
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div>
-            <h2 className="font-semibold">{chat.subject} • {chat.level}</h2>
-            <p className="text-sm text-muted-foreground">{chat.topic}</p>
+        <div className="border-b border-border">
+          <div className="p-4 flex items-center justify-between">
+            <div>
+              <h2 className="font-semibold">{chat.subject} • {chat.level}</h2>
+              <p className="text-sm text-muted-foreground">{chat.topic}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={onEndSession}
+              className="text-destructive hover:text-destructive"
+              data-testid="button-end-session"
+            >
+              End Session
+            </Button>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={onEndSession}
-            className="text-destructive hover:text-destructive"
-            data-testid="button-end-session"
-          >
-            End Session
-          </Button>
+          
+          {/* 7-Phase Indicator (only if tutorSession exists) */}
+          {tutorSession?.session && (
+            <div className="px-4 pb-3">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm text-muted-foreground">Learning Phase</span>
+                <span className="text-sm font-medium">
+                  {getCurrentPhaseNumber()} of 7 • <span className="capitalize">{tutorSession.session.currentPhase}</span>
+                </span>
+              </div>
+              <PhaseIndicator currentPhase={getCurrentPhaseNumber() || 1} />
+            </div>
+          )}
         </div>
 
         {/* Messages */}
