@@ -251,6 +251,50 @@ export const flashcards = pgTable("flashcards", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Tutor Sessions table - tracks 7-phase conversation flow
+export const tutorSessions = pgTable("tutor_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  chatId: varchar("chat_id").references(() => chats.id, { onDelete: "cascade" }).notNull().unique(),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  
+  // Session state
+  currentPhase: varchar("current_phase").notNull().default('greeting'), // greeting, rapport, assessment, teaching, practice, feedback, closure
+  phaseStep: integer("phase_step").default(0), // sub-step within current phase
+  progress: integer("progress").default(0), // 0-100 overall progress
+  
+  // Persona & adaptation
+  personaId: varchar("persona_id").notNull(), // 'priya', 'amit'
+  level: varchar("level").default('beginner'), // beginner, intermediate, advanced
+  adaptiveMetrics: jsonb("adaptive_metrics").$type<{
+    diagnosticScore?: number; // 0-100
+    checkpointsPassed?: number;
+    hintsUsed?: number;
+    misconceptions?: string[];
+    strongConcepts?: string[];
+  }>(),
+  
+  // User context snapshot (from profile at session start)
+  profileSnapshot: jsonb("profile_snapshot").$type<{
+    firstName?: string;
+    lastName?: string;
+    currentClass?: string;
+    examTarget?: string;
+    educationBoard?: string;
+  }>(),
+  
+  // Session data
+  lastCheckpoint: jsonb("last_checkpoint"), // last question/state for resume
+  voiceEnabled: boolean("voice_enabled").default(false),
+  
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  // Index for user's tutor sessions
+  index("tutor_sessions_user_id_idx").on(table.userId),
+  // Index for phase queries
+  index("tutor_sessions_phase_idx").on(table.currentPhase),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
@@ -260,6 +304,7 @@ export const usersRelations = relations(users, ({ many }) => ({
   studyPlans: many(studyPlans),
   flashcards: many(flashcards),
   quizAttempts: many(quizAttempts),
+  tutorSessions: many(tutorSessions),
 }));
 
 export const documentsRelations = relations(documents, ({ one, many }) => ({
@@ -283,6 +328,10 @@ export const chatsRelations = relations(chats, ({ one, many }) => ({
     references: [users.id],
   }),
   messages: many(messages),
+  tutorSession: one(tutorSessions, {
+    fields: [chats.id],
+    references: [tutorSessions.chatId],
+  }),
 }));
 
 export const messagesRelations = relations(messages, ({ one }) => ({
@@ -358,6 +407,17 @@ export const flashcardsRelations = relations(flashcards, ({ one }) => ({
   }),
 }));
 
+export const tutorSessionsRelations = relations(tutorSessions, ({ one }) => ({
+  user: one(users, {
+    fields: [tutorSessions.userId],
+    references: [users.id],
+  }),
+  chat: one(chats, {
+    fields: [tutorSessions.chatId],
+    references: [chats.id],
+  }),
+}));
+
 // Insert schemas
 export const insertDocumentSchema = createInsertSchema(documents).omit({
   id: true,
@@ -415,6 +475,12 @@ export const insertChunkSchema = createInsertSchema(chunks).omit({
   createdAt: true,
 });
 
+export const insertTutorSessionSchema = createInsertSchema(tutorSessions).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
 // Insert schema for users (exclude password_hash from inserts, handle separately)
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -449,3 +515,5 @@ export type InsertFlashcard = typeof insertFlashcardSchema._type;
 export type Flashcard = typeof flashcards.$inferSelect;
 export type InsertChunk = typeof insertChunkSchema._type;
 export type Chunk = typeof chunks.$inferSelect;
+export type InsertTutorSession = typeof insertTutorSessionSchema._type;
+export type TutorSession = typeof tutorSessions.$inferSelect;
