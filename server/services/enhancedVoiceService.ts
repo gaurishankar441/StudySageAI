@@ -252,6 +252,8 @@ export class EnhancedVoiceService {
   ): Promise<Buffer> {
     const apiKey = process.env.SARVAM_API_KEY || '';
     
+    console.log(`[SARVAM TTS] Calling Sarvam API - Speaker: ${speaker}, Model: bulbul:v2, Lang: ${language}, Text: "${text.substring(0, 50)}..."`);
+    
     const response = await fetch('https://api.sarvam.ai/text-to-speech', {
       method: 'POST',
       headers: {
@@ -271,15 +273,19 @@ export class EnhancedVoiceService {
     });
     
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error(`[SARVAM TTS] ❌ API call failed - Status: ${response.status}, Error: ${errorText}`);
       throw new Error(`Sarvam TTS failed: ${response.status}`);
     }
     
     const result = await response.json();
     
     if (!result.audios || result.audios.length === 0) {
+      console.error('[SARVAM TTS] ❌ No audio in response');
       throw new Error('No audio received from Sarvam TTS');
     }
     
+    console.log(`[SARVAM TTS] ✅ Successfully generated audio - Size: ${result.audios[0].length} bytes`);
     return Buffer.from(result.audios[0], 'base64');
   }
   
