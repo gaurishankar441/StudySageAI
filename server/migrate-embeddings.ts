@@ -2,7 +2,7 @@ import { db } from './db';
 import { sql } from 'drizzle-orm';
 
 async function migrateEmbeddings() {
-  console.log('🔄 Starting embedding migration from 1536 to 768 dimensions...');
+  console.log('🔄 Starting embedding migration from 768 to 384 dimensions...');
   
   try {
     console.log('Step 1: Dropping existing vector index...');
@@ -13,8 +13,8 @@ async function migrateEmbeddings() {
     await db.execute(sql`ALTER TABLE chunks DROP COLUMN IF EXISTS embedding`);
     console.log('✅ Embedding column dropped');
 
-    console.log('Step 3: Adding new embedding column with 768 dimensions...');
-    await db.execute(sql`ALTER TABLE chunks ADD COLUMN embedding vector(768)`);
+    console.log('Step 3: Adding new embedding column with 384 dimensions...');
+    await db.execute(sql`ALTER TABLE chunks ADD COLUMN embedding vector(384)`);
     console.log('✅ New embedding column added');
 
     console.log('Step 4: Creating new IVFFlat vector index for dot-product similarity...');
@@ -42,8 +42,9 @@ async function migrateEmbeddings() {
   }
 }
 
-// Run if executed directly
-if (require.main === module) {
+// Run if executed directly (ES module detection)
+const isMainModule = import.meta.url === `file://${process.argv[1]}`;
+if (isMainModule) {
   migrateEmbeddings()
     .then(() => {
       console.log('\n✨ Done!');

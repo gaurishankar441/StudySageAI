@@ -21,8 +21,8 @@ Preferred communication style: Simple, everyday language.
 ### Backend Architecture
 
 *   **Server Framework**: Express.js with TypeScript, RESTful API, session-based authentication.
-*   **Database Layer**: PostgreSQL with pgvector, Drizzle ORM, Neon serverless driver. Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks (1536-dimensional embeddings). Optimized with B-tree and IVFFlat vector indexes for performance.
-*   **AI Integration**: Utilizes OpenAI API (GPT-5, GPT-4o-mini), Google Gemini Flash 1.5, and Anthropic Claude Haiku for various AI features including streaming responses, structured output, document processing, and citation tracking (RAG). Agentic RAG is used for DocChat, incorporating planning agents, specialized tools, multi-step reasoning, self-reflection, and confidence scoring. Features include intelligent model routing, semantic caching, and dynamic token management. AI Tutor optimizations include: (1) Intent classification system with 19 categories and fast-path keyword detection, (2) Language-aware prompt engineering with separate Hindi/English system prompts, (3) Emotion detection layer (5 states: confident, confused, frustrated, bored, neutral), (4) Dynamic response adaptation (50-350 words based on intent+emotion), (5) Progressive hint system with 4-level Socratic progression and 30-second cooldown enforcement. All systems integrated into optimizedTutor.ts with production-ready error handling.
+*   **Database Layer**: PostgreSQL with pgvector, Drizzle ORM, Neon serverless driver. Multi-tenant design with tables for users, documents, chats, messages, notes, quizzes, study plans, flashcards, and vector-searchable content chunks (384-dimensional embeddings using all-MiniLM-L6-v2). Optimized with B-tree and IVFFlat vector indexes (dot-product similarity) for performance.
+*   **AI Integration**: Utilizes OpenAI API (GPT-4o, GPT-4o-mini), Google Gemini Flash 1.5, and Anthropic Claude Haiku for various AI features including streaming responses, structured output, document processing, and citation tracking (RAG). **Embedding Generation**: Uses local all-MiniLM-L6-v2 model via @xenova/transformers (384 dimensions, 100% free, no external API calls) for semantic search and RAG. Agentic RAG is used for DocChat, incorporating planning agents, specialized tools, multi-step reasoning, self-reflection, and confidence scoring. Features include intelligent model routing, semantic caching with dot-product similarity, and dynamic token management. AI Tutor optimizations include: (1) Intent classification system with 19 categories and fast-path keyword detection, (2) Language-aware prompt engineering with separate Hindi/English system prompts, (3) Emotion detection layer (5 states: confident, confused, frustrated, bored, neutral), (4) Dynamic response adaptation (50-350 words based on intent+emotion), (5) Progressive hint system with 4-level Socratic progression and 30-second cooldown enforcement. All systems integrated into optimizedTutor.ts with production-ready error handling.
 *   **Voice Services**: Integrates Sarvam AI (Saarika v2 STT, Bulbul v2 TTS) for authentic Indian accent support (Hinglish code-mixing, natural prosody), with AssemblyAI STT and AWS Polly TTS as fallbacks. Enhanced TTS pipeline includes: (1) Indian English math pronunciation (× → "into", ÷ → "divided by"), (2) Hinglish math terms (barabar hai, guna), (3) Physics unit normalization (m/s, kg), (4) Intent+emotion combined prosody (19 intent types with pitch/pace/loudness adjustments), (5) Hinglish code-switching optimization via strategic comma placement around Devanagari script and transition words, (6) Technical term capitalization via emphasis markers. Default enhanced mode with backward compatibility for legacy systems.
 *   **File Storage**: AWS S3 for object storage, using presigned URLs and metadata-based ACLs.
 *   **Service Layer**: Modular services for document processing (PDF, DOCX, YouTube, Web content), AI operations, embedding generation, database abstraction, and object storage.
@@ -33,7 +33,7 @@ Preferred communication style: Simple, everyday language.
 
 ### Third-Party APIs
 
-*   **OpenAI API**: For LLM features and text-embedding-3-small for semantic search.
+*   **OpenAI API**: For LLM features (GPT-4o, GPT-4o-mini).
 *   **AWS S3**: Object storage.
 *   **Google Gemini API**: For Gemini Flash 1.5.
 *   **Anthropic API**: For Claude Haiku.
@@ -67,3 +67,4 @@ Preferred communication style: Simple, everyday language.
 *   **memoizee**: Function result caching.
 *   **@langchain/***: Integration with various LLM providers.
 *   **ioredis**: Redis client.
+*   **@xenova/transformers**: Local embedding generation (all-MiniLM-L6-v2) for cost-free semantic search.

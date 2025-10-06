@@ -1,8 +1,8 @@
 import { pipeline, FeatureExtractionPipeline } from '@xenova/transformers';
 
 class EmbeddingService {
-  private modelName = 'sentence-transformers/msmarco-distilbert-base-tas-b';
-  private dimensions = 768;
+  private modelName = 'Xenova/all-MiniLM-L6-v2';
+  private dimensions = 384;
   private extractor: FeatureExtractionPipeline | null = null;
   private initPromise: Promise<void> | null = null;
 
@@ -12,7 +12,9 @@ class EmbeddingService {
     if (!this.initPromise) {
       this.initPromise = (async () => {
         console.log(`[EmbeddingService] Loading ${this.modelName}...`);
-        this.extractor = await pipeline('feature-extraction', this.modelName);
+        this.extractor = await pipeline('feature-extraction', this.modelName, {
+          quantized: false
+        });
         console.log(`[EmbeddingService] Model loaded successfully`);
       })();
     }
