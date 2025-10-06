@@ -46,7 +46,7 @@ export const users = pgTable("users", {
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
   locale: varchar("locale").default('en'),
-  aiProvider: varchar("ai_provider").default('cohere'), // 'cohere' or 'openai' - cohere is default
+  aiProvider: varchar("ai_provider").default('openai'), // 'cohere' or 'openai' - openai is default
   
   // India-centric student profile fields
   educationBoard: varchar("education_board"), // 'CBSE', 'ICSE', 'State Board', etc.
