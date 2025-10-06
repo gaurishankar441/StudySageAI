@@ -257,10 +257,14 @@ export const tutorSessions = pgTable("tutor_sessions", {
   chatId: varchar("chat_id").references(() => chats.id, { onDelete: "cascade" }).notNull().unique(),
   userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
   
+  // Subject & topic
+  subject: varchar("subject").notNull(), // Physics, Chemistry, Math, Biology
+  topic: varchar("topic").notNull(), // current topic being taught
+  
   // Session state
   currentPhase: varchar("current_phase").notNull().default('greeting'), // greeting, rapport, assessment, teaching, practice, feedback, closure
   phaseStep: integer("phase_step").default(0), // sub-step within current phase
-  progress: integer("progress").default(0), // 0-100 overall progress
+  progress: integer("progress").default(0).notNull(), // 0-100 overall progress
   
   // Persona & adaptation
   personaId: varchar("persona_id").notNull(), // 'priya', 'amit'
@@ -280,6 +284,7 @@ export const tutorSessions = pgTable("tutor_sessions", {
     currentClass?: string;
     examTarget?: string;
     educationBoard?: string;
+    subjects?: string[];
   }>(),
   
   // Session data
