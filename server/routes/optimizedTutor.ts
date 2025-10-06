@@ -475,3 +475,42 @@ optimizedTutorRouter.post('/session/advance', async (req, res) => {
     res.status(500).json({ error: 'Failed to advance phase' });
   }
 });
+
+/**
+ * GET /api/tutor/optimized/sessions/user
+ * Get all tutor sessions for current user (for resume functionality)
+ */
+optimizedTutorRouter.get('/sessions/user', async (req, res) => {
+  try {
+    const userId = (req as any).user?.id;
+    
+    if (!userId) {
+      return res.status(401).json({ error: 'Unauthorized' });
+    }
+    
+    const sessions = await storage.getTutorSessionByUserId(userId);
+    
+    // Filter for resumable sessions (not in closure phase, recent activity)
+    const resumableSessions = sessions.filter(session => 
+      session.currentPhase !== 'closure' && 
+      session.progress < 100
+    ).slice(0, 5); // Limit to 5 most recent
+    
+    res.json({
+      sessions: resumableSessions.map(s => ({
+        id: s.id,
+        chatId: s.chatId,
+        subject: s.subject,
+        topic: s.topic,
+        currentPhase: s.currentPhase,
+        progress: s.progress,
+        personaId: s.personaId,
+        level: s.level,
+        createdAt: s.createdAt
+      }))
+    });
+  } catch (error) {
+    console.error('[USER SESSIONS] Error:', error);
+    res.status(500).json({ error: 'Failed to get user sessions' });
+  }
+});

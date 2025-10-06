@@ -30,6 +30,7 @@ import {
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
+import PhaseIndicator from "./PhaseIndicator";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -82,6 +83,26 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
+  });
+
+  // Fetch tutor session for 7-phase tracking
+  const { data: tutorSession } = useQuery<{
+    session: {
+      id: string;
+      chatId: string;
+      currentPhase: string;
+      progress: number;
+      personaId: string;
+      level: string;
+      subject: string;
+      topic: string;
+    };
+    resumeText: string;
+    canResume: boolean;
+  }>({
+    queryKey: [`/api/tutor/optimized/session/${chatId}`],
+    enabled: !!chatId,
+    retry: false, // Don't retry if session doesn't exist yet
   });
 
   const sendMessageMutation = useMutation({
@@ -247,17 +268,25 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       console.log('[TTS] Setting playing audio to:', messageId);
       setPlayingAudio(messageId);
 
-      console.log('[TTS] Fetching TTS for text:', text.substring(0, 50) + '...');
-      const response = await fetch('/api/tutor/tts', {
+      console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
+      
+      // Use emotion-based TTS only if session exists AND can resume
+      const useOptimizedTTS = tutorSession?.session && tutorSession?.canResume;
+      const ttsEndpoint = useOptimizedTTS
+        ? '/api/tutor/optimized/session/tts'
+        : '/api/tutor/tts';
+      
+      const requestBody = useOptimizedTTS
+        ? { chatId, text }
+        : { text: text, voice: 'nova' };
+
+      const response = await fetch(ttsEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         credentials: 'include',
-        body: JSON.stringify({
-          text: text,
-          voice: 'nova',
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('[TTS] Response status:', response.status);
@@ -608,10 +637,28 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             size="sm"
             onClick={onEndSession}
             className="text-destructive hover:text-destructive"
+            data-testid="button-end-session"
           >
             End Session
           </Button>
         </div>
+
+        {/* 7-Phase Progress Indicator */}
+        {tutorSession?.session && (
+          <div className="px-4 pt-4">
+            <PhaseIndicator 
+              currentPhase={
+                tutorSession.session.currentPhase === 'greeting' ? 1 :
+                tutorSession.session.currentPhase === 'rapport' ? 2 :
+                tutorSession.session.currentPhase === 'assessment' ? 3 :
+                tutorSession.session.currentPhase === 'teaching' ? 4 :
+                tutorSession.session.currentPhase === 'practice' ? 5 :
+                tutorSession.session.currentPhase === 'feedback' ? 6 :
+                tutorSession.session.currentPhase === 'closure' ? 7 : 1
+              }
+            />
+          </div>
+        )}
 
         {/* Messages */}
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" id="chat-messages-container">

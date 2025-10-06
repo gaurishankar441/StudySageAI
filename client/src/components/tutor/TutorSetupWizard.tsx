@@ -41,7 +41,7 @@ const languages = [
 ];
 
 export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: TutorSetupWizardProps) {
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(0); // Start at 0 for resume screen
   const initializedRef = useRef(false); // Track if we've auto-filled from profile
   
   // Fetch user profile to auto-fill wizard
@@ -49,6 +49,40 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
     queryKey: ['/api/user'],
     enabled: open, // Only fetch when dialog is open
   });
+
+  // Fetch resumable sessions
+  const { data: resumableData, status: resumableStatus, isError: resumableError } = useQuery<{
+    sessions: Array<{
+      id: string;
+      chatId: string;
+      subject: string;
+      topic: string;
+      currentPhase: string;
+      progress: number;
+      level: string;
+      createdAt: Date;
+    }>;
+  }>({
+    queryKey: ['/api/tutor/optimized/sessions/user'],
+    enabled: open,
+    retry: false,
+  });
+
+  const resumableSessions = resumableData?.sessions || [];
+
+  // Auto-advance past resume screen if no sessions (after data successfully loads)
+  useEffect(() => {
+    if (step === 0 && resumableStatus === 'success' && resumableSessions.length === 0) {
+      setStep(1); // Skip to subject selection
+    }
+  }, [step, resumableStatus, resumableSessions.length]);
+
+  // Reset to step 0 when dialog reopens
+  useEffect(() => {
+    if (open && step > 0) {
+      setStep(0); // Start at resume screen
+    }
+  }, [open]);
   
   // Auto-detect subject from user profile
   const getInitialSubject = () => {
@@ -102,6 +136,16 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
     }
   }, [user, open]);
 
+  const handleResume = (chatId: string) => {
+    // Navigate to the existing chat
+    window.location.href = `/tutor?chatId=${chatId}`;
+    onOpenChange(false);
+  };
+
+  const handleStartNew = () => {
+    setStep(1); // Move to subject selection
+  };
+
   const handleNext = () => {
     if (step < 4) {
       setStep(step + 1);
@@ -109,7 +153,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
       onSubmit(config);
       onOpenChange(false);
       // Reset for next time
-      setStep(1);
+      setStep(0);
       setConfig({
         subject: 'mathematics',
         level: 'intermediate',
@@ -120,13 +164,15 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
   };
 
   const handlePrev = () => {
-    if (step > 1) {
+    if (step > 0) {
       setStep(step - 1);
     }
   };
 
   const canProceed = () => {
     switch (step) {
+      case 0:
+        return true; // Resume screen, can always proceed to new session
       case 1:
         return config.subject;
       case 2:
@@ -142,6 +188,79 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
 
   const renderStep = () => {
     switch (step) {
+      case 0:
+        // Resume or Start New screen
+        // Show loading while query is pending
+        if (resumableStatus === 'pending') {
+          return (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-center">
+                <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+                <p className="text-sm text-muted-foreground">Loading sessions...</p>
+              </div>
+            </div>
+          );
+        }
+        
+        // Show error state if query failed
+        if (resumableError) {
+          return (
+            <div className="text-center py-8">
+              <p className="text-sm text-muted-foreground mb-4">Could not load sessions</p>
+              <Button onClick={handleStartNew} data-testid="button-start-new-after-error">
+                Start New Session
+              </Button>
+            </div>
+          );
+        }
+        
+        // This will be skipped by useEffect if no sessions
+        return (
+          <div className="space-y-4">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold mb-2">Continue Learning?</h3>
+              <p className="text-sm text-muted-foreground">
+                You have {resumableSessions.length} session{resumableSessions.length > 1 ? 's' : ''} in progress
+              </p>
+            </div>
+            
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {resumableSessions.map((session) => (
+                <button
+                  key={session.id}
+                  onClick={() => handleResume(session.chatId)}
+                  className="w-full p-4 border-2 border-border rounded-xl hover:border-primary hover:bg-primary/5 transition-all text-left"
+                  data-testid={`button-resume-${session.chatId}`}
+                >
+                  <div className="flex justify-between items-start mb-2">
+                    <div>
+                      <h4 className="font-semibold">{session.subject}</h4>
+                      <p className="text-sm text-muted-foreground">{session.topic}</p>
+                    </div>
+                    <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">
+                      {session.progress}% complete
+                    </span>
+                  </div>
+                  <div className="flex gap-2 text-xs text-muted-foreground">
+                    <span>Phase: {session.currentPhase}</span>
+                    <span>•</span>
+                    <span>Level: {session.level}</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+            
+            <Button
+              variant="outline"
+              className="w-full"
+              onClick={handleStartNew}
+              data-testid="button-start-new-session"
+            >
+              Start New Session Instead
+            </Button>
+          </div>
+        );
+      
       case 1:
         return (
           <div className="space-y-4">
@@ -282,64 +401,68 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
       onClose={() => onOpenChange(false)}
       size="lg"
       closeOnOuterClick={false}
-      title="Start AI Tutor Session"
-      description={`Step ${step} of 4: Set up your personalized learning experience`}
+      title={step === 0 ? "AI Tutor" : "Start AI Tutor Session"}
+      description={step === 0 ? "Resume a session or start a new one" : `Step ${step} of 4: Set up your personalized learning experience`}
     >
       <div className="space-y-6" data-testid="dialog-tutor-setup">
 
-        {/* Progress Indicator */}
-        <div className="flex items-center gap-2">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="flex items-center gap-2 flex-1">
-              <div
-                className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors duration-200 ${
-                  i <= step
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted text-muted-foreground'
-                }`}
-              >
-                {i}
-              </div>
-              {i < 4 && (
+        {/* Progress Indicator - Hide on resume screen */}
+        {step > 0 && (
+          <div className="flex items-center gap-2">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="flex items-center gap-2 flex-1">
                 <div
-                  className={`h-1 flex-1 rounded transition-colors duration-200 ${
-                    i < step ? 'bg-primary' : 'bg-muted'
+                  className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors duration-200 ${
+                    i <= step
+                      ? 'bg-primary text-primary-foreground'
+                      : 'bg-muted text-muted-foreground'
                   }`}
-                />
-              )}
-            </div>
-          ))}
-        </div>
+                >
+                  {i}
+                </div>
+                {i < 4 && (
+                  <div
+                    className={`h-1 flex-1 rounded transition-colors duration-200 ${
+                      i < step ? 'bg-primary' : 'bg-muted'
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        )}
 
         {/* Step Content */}
         <div className="min-h-[200px]">
           {renderStep()}
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex justify-between pt-4 border-t border-border">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handlePrev}
-            disabled={step === 1}
-            className="flex items-center gap-2"
-            data-testid="button-wizard-prev"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Previous
-          </Button>
-          <Button
-            type="button"
-            onClick={handleNext}
-            disabled={!canProceed()}
-            className="flex items-center gap-2"
-            data-testid="button-wizard-next"
-          >
-            {step === 4 ? 'Start Learning' : 'Next'}
-            {step < 4 && <ChevronRight className="w-4 h-4" />}
-          </Button>
-        </div>
+        {/* Footer Actions - Hide on resume screen */}
+        {step > 0 && (
+          <div className="flex justify-between pt-4 border-t border-border">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handlePrev}
+              disabled={step === 1}
+              className="flex items-center gap-2"
+              data-testid="button-wizard-prev"
+            >
+              <ChevronLeft className="w-4 h-4" />
+              Previous
+            </Button>
+            <Button
+              type="button"
+              onClick={handleNext}
+              disabled={!canProceed()}
+              className="flex items-center gap-2"
+              data-testid="button-wizard-next"
+            >
+              {step === 4 ? 'Start Learning' : 'Next'}
+              {step < 4 && <ChevronRight className="w-4 h-4" />}
+            </Button>
+          </div>
+        )}
       </div>
     </DialogUnified>
   );
