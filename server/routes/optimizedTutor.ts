@@ -5,6 +5,7 @@ import { semanticCache } from '../services/semanticCache';
 import { tutorSessionService } from '../services/tutorSessionService';
 import { enhancedVoiceService } from '../services/enhancedVoiceService';
 import { intentClassifier } from '../services/intentClassifier';
+import { emotionDetector } from '../services/emotionDetector';
 import { promptBuilder } from '../services/promptBuilder';
 import { storage } from '../storage';
 
@@ -327,7 +328,27 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       console.log(`[INTENT] Entities:`, intentResult.entities);
     }
     
-    // Store user message with intent metadata
+    // 🆕 EMOTION DETECTION
+    const localePrefix = user.locale?.split('-')[0]?.toLowerCase() ?? 'en';
+    const userLanguage: 'hi' | 'en' = (localePrefix === 'hi') ? 'hi' : 'en';
+    
+    const recentMessages = allMessages.slice(-4).map(m => ({
+      role: m.role,
+      content: m.content
+    }));
+    
+    const emotionResult = await emotionDetector.detectEmotion(
+      query,
+      recentMessages,
+      userLanguage
+    );
+    
+    console.log(`[EMOTION] Detected: ${emotionResult.emotion} (confidence: ${emotionResult.confidence.toFixed(2)}) via ${emotionResult.detectionMethod}`);
+    if (emotionResult.reasoning) {
+      console.log(`[EMOTION] Reasoning: ${emotionResult.reasoning}`);
+    }
+    
+    // Store user message with intent + emotion metadata
     await storage.addMessage({
       chatId,
       role: 'user',
@@ -335,13 +356,13 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       metadata: {
         intent: intentResult.intent,
         intentConfidence: intentResult.confidence,
-        entities: intentResult.entities
+        entities: intentResult.entities,
+        emotion: emotionResult.emotion,
+        emotionConfidence: emotionResult.confidence
       }
     });
     
     // 🆕 BUILD LANGUAGE-AWARE SYSTEM PROMPT
-    const localePrefix = user.locale?.split('-')[0].toLowerCase();
-    const userLanguage: 'hi' | 'en' = (localePrefix === 'hi') ? 'hi' : 'en';
     const baseSystemPrompt = promptBuilder.buildSystemPrompt({
       userLanguage,
       subject: session.subject || 'General',
@@ -350,6 +371,10 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       currentPhase: session.currentPhase || 'teaching',
       intent: intentResult.intent
     });
+    
+    // 🆕 GET EMOTION-BASED RESPONSE MODIFIERS
+    const emotionModifiers = emotionDetector.getEmotionModifiers(emotionResult.emotion);
+    console.log(`[EMOTION MODIFIERS] Tone: ${emotionModifiers.tone}, Length: ${emotionModifiers.responseLength}`);
     
     // Add persona-specific context
     const personaContext = `
@@ -369,7 +394,16 @@ Strong Concepts: ${session.adaptiveMetrics?.strongConcepts?.join(', ') || 'None 
 Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None yet'}
     `.trim();
     
-    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}`;
+    // 🆕 Add emotion-aware instructions
+    const emotionContext = `
+STUDENT EMOTIONAL STATE: ${emotionResult.emotion.toUpperCase()}
+Tone to use: ${emotionModifiers.tone}
+Response length: ${emotionModifiers.responseLength}
+Suggested approach: ${emotionModifiers.suggestedActions.join(', ')}
+Encouragement level: ${emotionModifiers.encouragement}
+    `.trim();
+    
+    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}\n\n${emotionContext}`;
     
     // Add entity-specific instructions
     if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
