@@ -428,9 +428,23 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
     }
     
     let terminalEventSent = false;
+    let fullResponse = '';
     
     try {
+      // Save user message first
+      await storage.addMessage({
+        chatId,
+        role: 'user',
+        content: query,
+        tool: null,
+        metadata: null
+      });
+      
       await optimizedAI.generateStreamingResponse(query, sessionContext, (chunk, meta) => {
+        // Accumulate response
+        if (meta?.type !== 'complete' && meta?.type !== 'error') {
+          fullResponse += chunk;
+        }
         if (meta?.type === 'complete') {
           terminalEventSent = true;
           res.write(`data: ${JSON.stringify({ 
@@ -464,6 +478,21 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
           })}\n\n`);
         }
       });
+      
+      // Save AI response to database
+      if (fullResponse.trim()) {
+        await storage.addMessage({
+          chatId,
+          role: 'assistant',
+          content: fullResponse.trim(),
+          tool: null,
+          metadata: {
+            personaId: session.personaId,
+            emotion,
+            phase: session.currentPhase
+          }
+        });
+      }
       
       // Check if should auto-advance phase
       const messages = await storage.getChatMessages(chatId);
