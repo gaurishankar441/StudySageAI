@@ -242,6 +242,22 @@ optimizedTutorRouter.post('/session/start', async (req, res) => {
     const template = tutorSessionService.getCurrentPhaseTemplate(session);
     const greeting = tutorSessionService.fillSessionTemplate(template, session);
     
+    // Save greeting message to chat
+    if (greeting && greeting.trim()) {
+      await storage.addMessage({
+        chatId,
+        role: 'assistant',
+        content: greeting.trim(),
+        tool: null,
+        metadata: {
+          personaId: session.personaId,
+          emotion: template.emotion,
+          phase: 'greeting',
+          isGreeting: true
+        }
+      });
+    }
+    
     res.json({
       success: true,
       session: {

@@ -44,6 +44,7 @@ export default function Tutor() {
     onSuccess: (data: any) => {
       setCurrentSessionId(data.session.chatId);
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
+      queryClient.invalidateQueries({ queryKey: [`/api/chats/${data.session.chatId}/messages`] });
       
       // Map persona ID to name
       const personaName = data.session.personaId === 'priya' ? 'Priya' : 
