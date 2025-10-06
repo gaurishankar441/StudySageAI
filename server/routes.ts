@@ -1210,6 +1210,88 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin endpoint to re-embed all documents with new embedding model
+  app.post('/api/admin/reembed-all', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      
+      // Get all documents for the user
+      const documents = await storage.getDocumentsByUser(userId);
+      
+      if (documents.length === 0) {
+        return res.json({ 
+          message: 'No documents found to re-embed',
+          processedCount: 0,
+          totalCount: 0
+        });
+      }
+
+      console.log(`[Re-embedding] Starting re-embedding for ${documents.length} documents`);
+      
+      let processedCount = 0;
+      let errorCount = 0;
+      const errors: { docId: string; title: string; error: string }[] = [];
+
+      // Process each document
+      for (const doc of documents) {
+        try {
+          console.log(`[Re-embedding] Processing document ${doc.id}: ${doc.title}`);
+          
+          // Get all chunks for this document
+          const existingChunks = await storage.getChunksByDocument(doc.id);
+          
+          if (existingChunks.length === 0) {
+            console.log(`[Re-embedding] No chunks found for ${doc.id}, skipping`);
+            continue;
+          }
+
+          // Generate new embeddings for all chunks
+          const chunkTexts = existingChunks.map(c => c.text);
+          const batchSize = 100;
+          let allEmbeddings: number[][] = [];
+          
+          for (let i = 0; i < chunkTexts.length; i += batchSize) {
+            const batch = chunkTexts.slice(i, i + batchSize);
+            const embeddings = await aiService.generateEmbeddings(batch);
+            allEmbeddings = allEmbeddings.concat(embeddings);
+          }
+
+          // Update chunks with new embeddings
+          for (let i = 0; i < existingChunks.length; i++) {
+            const chunk = existingChunks[i];
+            await storage.updateChunkEmbedding(chunk.id, allEmbeddings[i]);
+          }
+
+          console.log(`[Re-embedding] ✅ Completed ${doc.title}: ${existingChunks.length} chunks updated`);
+          processedCount++;
+        } catch (error) {
+          console.error(`[Re-embedding] ❌ Error processing ${doc.id}:`, error);
+          errorCount++;
+          errors.push({
+            docId: doc.id,
+            title: doc.title,
+            error: error instanceof Error ? error.message : 'Unknown error'
+          });
+        }
+      }
+
+      res.json({
+        message: 'Re-embedding completed',
+        processedCount,
+        errorCount,
+        totalCount: documents.length,
+        errors: errors.length > 0 ? errors : undefined
+      });
+
+    } catch (error) {
+      console.error('[Re-embedding] Fatal error:', error);
+      res.status(500).json({ 
+        message: 'Failed to re-embed documents',
+        error: error instanceof Error ? error.message : 'Unknown error'
+      });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

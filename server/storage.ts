@@ -392,6 +392,12 @@ export class DatabaseStorage implements IStorage {
     await db.delete(chunks).where(eq(chunks.docId, docId));
   }
 
+  async updateChunkEmbedding(chunkId: string, embedding: number[]): Promise<void> {
+    await db.update(chunks)
+      .set({ embedding })
+      .where(eq(chunks.id, chunkId));
+  }
+
   async searchChunks(query: string, limit: number = 10): Promise<Chunk[]> {
     // Basic text search for now - will implement vector search later
     // For now, just return all chunks (will be improved with embeddings)

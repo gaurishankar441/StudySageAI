@@ -84,8 +84,8 @@ export class SemanticCache {
         // Parse stored embedding
         const cachedEmbedding = JSON.parse(cached.embedding);
         
-        // Calculate cosine similarity
-        const similarity = this.cosineSimilarity(queryEmbedding, cachedEmbedding);
+        // Calculate dot-product similarity (for msmarco model)
+        const similarity = this.dotProductSimilarity(queryEmbedding, cachedEmbedding);
         
         if (similarity > this.SIMILARITY_THRESHOLD) {
           console.log(`[CACHE HIT] ✅ Similarity: ${similarity.toFixed(3)}, Latency: ${Date.now() - startTime}ms`);
@@ -141,21 +141,14 @@ export class SemanticCache {
     }
   }
   
-  // Calculate cosine similarity between two vectors
-  private cosineSimilarity(a: number[], b: number[]): number {
+  // Calculate dot-product similarity between two vectors
+  // Used for msmarco-distilbert model which uses dot-product similarity
+  private dotProductSimilarity(a: number[], b: number[]): number {
     if (a.length !== b.length) {
       throw new Error('Vectors must have same length');
     }
     
-    const dotProduct = a.reduce((sum, val, i) => sum + val * b[i], 0);
-    const magnitudeA = Math.sqrt(a.reduce((sum, val) => sum + val * val, 0));
-    const magnitudeB = Math.sqrt(b.reduce((sum, val) => sum + val * val, 0));
-    
-    if (magnitudeA === 0 || magnitudeB === 0) {
-      return 0;
-    }
-    
-    return dotProduct / (magnitudeA * magnitudeB);
+    return a.reduce((sum, val, i) => sum + val * b[i], 0);
   }
   
   // Clear entire cache (using SCAN)
