@@ -260,7 +260,7 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
           { role: "user", content: `Title: ${title}\nType: ${sourceType}\nContent: ${contentPreview}` }
         ],
         response_format: { type: "json_object" },
-        max_completion_tokens: 1000,
+        max_completion_tokens: 4000,
       });
 
       console.log('[analyzeDocument] API Response received');
