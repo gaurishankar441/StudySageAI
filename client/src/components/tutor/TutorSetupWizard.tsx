@@ -1,9 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DialogUnified } from "@/components/ui/dialog-unified";
 import { Calculator, FlaskConical, Book, Globe, ChevronLeft, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface TutorSetupWizardProps {
   open: boolean;
@@ -41,12 +42,65 @@ const languages = [
 
 export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: TutorSetupWizardProps) {
   const [step, setStep] = useState(1);
+  const initializedRef = useRef(false); // Track if we've auto-filled from profile
+  
+  // Fetch user profile to auto-fill wizard
+  const { data: user } = useQuery<any>({
+    queryKey: ['/api/user'],
+    enabled: open, // Only fetch when dialog is open
+  });
+  
+  // Auto-detect subject from user profile
+  const getInitialSubject = () => {
+    if (user?.subjects && Array.isArray(user.subjects) && user.subjects.length > 0) {
+      const firstSubject = String(user.subjects[0]).toLowerCase();
+      // Map profile subject to wizard subject
+      if (firstSubject.includes('math')) return 'mathematics';
+      if (firstSubject.includes('physics')) return 'physics';
+      if (firstSubject.includes('chemistry')) return 'chemistry';
+      if (firstSubject.includes('science')) return 'science';
+      if (firstSubject.includes('history')) return 'history';
+      if (firstSubject.includes('literature') || firstSubject.includes('english')) return 'literature';
+    }
+    return 'mathematics'; // Default
+  };
+  
+  // Auto-detect level from currentClass
+  const getInitialLevel = () => {
+    if (user?.currentClass && typeof user.currentClass === 'string') {
+      const classNum = parseInt(user.currentClass.replace(/\D/g, ''));
+      if (classNum <= 8) return 'beginner';
+      if (classNum <= 10) return 'intermediate';
+      if (classNum <= 12) return 'advanced';
+      return 'expert';
+    }
+    return 'intermediate'; // Default
+  };
+  
   const [config, setConfig] = useState<TutorConfig>({
     subject: 'mathematics',
     level: 'intermediate',
     topic: '',
     language: 'en',
   });
+  
+  // Auto-populate config ONCE when user profile loads (preserve all user edits)
+  useEffect(() => {
+    if (user && open && !initializedRef.current) {
+      setConfig(prev => ({
+        ...prev, // Keep any existing values (especially topic!)
+        subject: getInitialSubject(),
+        level: getInitialLevel(),
+        language: user.preferredLanguage || prev.language,
+      }));
+      initializedRef.current = true;
+    }
+    
+    // Reset initialization flag when dialog closes
+    if (!open) {
+      initializedRef.current = false;
+    }
+  }, [user, open]);
 
   const handleNext = () => {
     if (step < 4) {
@@ -105,12 +159,13 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
                         ? 'border-primary bg-primary/5'
                         : 'border-border hover:border-primary/50'
                     }`}
+                    data-testid={`button-subject-${subject.id}`}
                   >
                     <div className="flex flex-col items-center text-center">
                       <div className={`w-12 h-12 rounded-lg flex items-center justify-center mb-2 ${subject.color}`}>
                         <Icon className="w-6 h-6" />
                       </div>
-                      <span className="font-medium text-sm">{subject.name}</span>
+                      <span className="font-medium text-sm" data-testid={`text-subject-${subject.id}`}>{subject.name}</span>
                     </div>
                   </button>
                 );
@@ -134,8 +189,9 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
                   }`}
+                  data-testid={`button-level-${level.id}`}
                 >
-                  <span className="font-medium">{level.name}</span>
+                  <span className="font-medium" data-testid={`text-level-${level.id}`}>{level.name}</span>
                 </button>
               ))}
             </div>
@@ -157,6 +213,7 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
               onChange={(e) => setConfig({ ...config, topic: e.target.value })}
               placeholder="e.g., Quadratic Equations, Newton's Laws, French Revolution"
               className="text-base"
+              data-testid="input-topic"
             />
             <div className="mt-4 p-4 bg-muted/50 rounded-lg">
               <p className="text-sm text-muted-foreground">
@@ -204,9 +261,10 @@ export default function TutorSetupWizard({ open, onOpenChange, onSubmit }: Tutor
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-primary/50'
                   }`}
+                  data-testid={`button-language-${language.id}`}
                 >
                   <Globe className="w-5 h-5" />
-                  <span className="font-medium">{language.name}</span>
+                  <span className="font-medium" data-testid={`text-language-${language.id}`}>{language.name}</span>
                 </button>
               ))}
             </div>
