@@ -5,6 +5,7 @@ import { semanticCache } from '../services/semanticCache';
 import { tutorSessionService } from '../services/tutorSessionService';
 import { enhancedVoiceService } from '../services/enhancedVoiceService';
 import { intentClassifier } from '../services/intentClassifier';
+import { promptBuilder } from '../services/promptBuilder';
 import { storage } from '../storage';
 
 export const optimizedTutorRouter = express.Router();
@@ -338,37 +339,40 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       }
     });
     
-    // Build context with session state and intent
-    let sessionContext = `
+    // 🆕 BUILD LANGUAGE-AWARE SYSTEM PROMPT
+    const localePrefix = user.locale?.split('-')[0].toLowerCase();
+    const userLanguage: 'hi' | 'en' = (localePrefix === 'hi') ? 'hi' : 'en';
+    const baseSystemPrompt = promptBuilder.buildSystemPrompt({
+      userLanguage,
+      subject: session.subject || 'General',
+      topic: session.topic || 'General',
+      level: session.level || 'intermediate',
+      currentPhase: session.currentPhase || 'teaching',
+      intent: intentResult.intent
+    });
+    
+    // Add persona-specific context
+    const personaContext = `
+PERSONA:
 You are ${persona.name}, a ${persona.personality.toneOfVoice} ${session.subject} teacher.
-Current Phase: ${session.currentPhase}
-Student Level: ${session.level}
 Student Name: ${session.profileSnapshot?.firstName || 'Student'}
 Exam Target: ${session.profileSnapshot?.examTarget || 'General'}
 Current Class: ${session.profileSnapshot?.currentClass || 'Class 12'}
-Topic: ${session.topic}
 Progress: ${session.progress}%
 
-Personality: ${persona.personality.traits.join(', ')}
-Language: ${persona.languageStyle.hindiPercentage}% Hindi, ${persona.languageStyle.englishPercentage}% English
-Code-switch style: ${persona.languageStyle.codeSwitch}
+Personality Traits: ${persona.personality.traits.join(', ')}
+Voice Style: ${persona.languageStyle.hindiPercentage}% Hindi, ${persona.languageStyle.englishPercentage}% English
+Catchphrases: ${persona.personality.catchphrases.slice(0, 2).join(', ')}
 
+ADAPTIVE LEARNING:
 Strong Concepts: ${session.adaptiveMetrics?.strongConcepts?.join(', ') || 'None yet'}
 Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None yet'}
-
-Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality.catchphrases.slice(0, 2).join(', ')}.
     `.trim();
     
-    // Add intent-specific instructions
-    if (intentResult.intent === 'request_hint') {
-      sessionContext += '\n\nIMPORTANT: Student wants a hint, NOT the full solution. Give a guiding question or narrow down the approach.';
-    } else if (intentResult.intent === 'frustration') {
-      sessionContext += '\n\nIMPORTANT: Student is frustrated. Be empathetic, simplify the explanation, and offer encouragement or a break.';
-    } else if (intentResult.intent === 'celebration') {
-      sessionContext += '\n\nIMPORTANT: Student is celebrating success! Be enthusiastic and motivate them for next challenge.';
-    } else if (intentResult.intent === 'request_simplification') {
-      sessionContext += '\n\nIMPORTANT: Student didn\'t understand. Use simpler language, analogies, and step-by-step breakdown.';
-    } else if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
+    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}`;
+    
+    // Add entity-specific instructions
+    if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
       sessionContext += `\n\nIMPORTANT: Student submitted answer: ${intentResult.entities.answer}${intentResult.entities.unit ? ' ' + intentResult.entities.unit : ''}. Evaluate if correct and provide feedback.`;
     }
     
