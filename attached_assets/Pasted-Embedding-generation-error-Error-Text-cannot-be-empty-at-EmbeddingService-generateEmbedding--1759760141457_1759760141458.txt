@@ -1,0 +1,32 @@
+Embedding generation error: Error: Text cannot be empty
+    at EmbeddingService.generateEmbedding (/home/runner/workspace/server/embeddingService.ts:27:13)
+    at AIService.generateEmbedding (/home/runner/workspace/server/openai.ts:350:37)
+    at DocumentService.retrieveRelevantChunks (/home/runner/workspace/server/services/documentService.ts:531:46)
+    at AIServiceManager.generateNoteFromSources (/home/runner/workspace/server/services/aiService.ts:301:44)
+    at <anonymous> (/home/runner/workspace/server/routes.ts:899:43)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+Error retrieving relevant chunks: Error: Failed to generate embedding: Error: Text cannot be empty
+    at AIService.generateEmbedding (/home/runner/workspace/server/openai.ts:353:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async DocumentService.retrieveRelevantChunks (/home/runner/workspace/server/services/documentService.ts:531:30)
+    at async AIServiceManager.generateNoteFromSources (/home/runner/workspace/server/services/aiService.ts:301:22)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:899:20)
+Generating notes using cohere provider for user e38a2835-af88-4c6f-924b-1b229f3a1ce4
+Failed to parse Cohere notes response: SyntaxError: Unexpected token '`', "```json
+{
+"... is not valid JSON
+    at JSON.parse (<anonymous>)
+    at CohereProvider.generateNotes (/home/runner/workspace/server/services/providers/cohere.ts:194:27)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async AIOrchestrator.executeWithFallback (/home/runner/workspace/server/services/aiOrchestrator.ts:37:22)
+    at async AIServiceManager.generateNoteFromSources (/home/runner/workspace/server/services/aiService.ts:310:48)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:899:20)
+Error with cohere: Error: Invalid JSON response from Cohere: ```json
+{
+  "title": "Photosynthesis and Cellular Respiration",
+  "content": "Photosynthesis is the process by which plants, algae, and some bacteria convert light energy into chemical energy in the f
+    at CohereProvider.generateNotes (/home/runner/workspace/server/services/providers/cohere.ts:198:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:95:5)
+    at async AIOrchestrator.executeWithFallback (/home/runner/workspace/server/services/aiOrchestrator.ts:37:22)
+    at async AIServiceManager.generateNoteFromSources (/home/runner/workspace/server/services/aiService.ts:310:48)
+    at async <anonymous> (/home/runner/workspace/server/routes.ts:899:20)

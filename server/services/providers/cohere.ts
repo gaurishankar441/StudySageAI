@@ -32,7 +32,10 @@ Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."
     });
 
     const contentItem = response.message?.content?.[0];
-    const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    let text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    
+    // Strip markdown code blocks if present
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     try {
       const result = JSON.parse(text);
@@ -64,7 +67,10 @@ ${content}`;
     });
 
     const contentItem = response.message?.content?.[0];
-    const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    let text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    
+    // Strip markdown code blocks if present
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     try {
       const result = JSON.parse(text);
@@ -114,7 +120,10 @@ Return valid JSON: {
     });
 
     const contentItem = response.message?.content?.[0];
-    const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    let text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    
+    // Strip markdown code blocks if present
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     try {
       const result = JSON.parse(text);
@@ -146,7 +155,10 @@ ${content}`;
     });
 
     const contentItem = response.message?.content?.[0];
-    const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    let text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    
+    // Strip markdown code blocks if present
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     try {
       const result = JSON.parse(text);
@@ -188,7 +200,10 @@ Return valid JSON: {
     });
 
     const contentItem = response.message?.content?.[0];
-    const text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    let text = contentItem && 'text' in contentItem ? contentItem.text : '{}';
+    
+    // Strip markdown code blocks if present
+    text = text.replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
     
     try {
       const result = JSON.parse(text);

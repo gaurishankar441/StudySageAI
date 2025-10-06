@@ -527,6 +527,12 @@ export class DocumentService {
     limit: number = 8
   ): Promise<{ text: string; metadata: any; score: number }[]> {
     try {
+      // Validate query
+      if (!query || query.trim().length === 0) {
+        console.warn('[DocumentService] Empty query provided to retrieveRelevantChunks, returning empty results');
+        return [];
+      }
+      
       // Generate embedding for the query
       const queryEmbedding = await aiService.generateEmbedding(query);
       
