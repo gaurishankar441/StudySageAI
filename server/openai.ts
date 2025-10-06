@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 import { embeddingService } from "./embeddingService";
 
-// the newest OpenAI model is "gpt-5" which was released August 7, 2025. do not change this unless explicitly requested by the user
+// Cost-optimized: GPT-4o for core features (tutor, docChat), GPT-4o-mini for simple tasks (quiz, notes, study plans, doc analysis)
 const openai = new OpenAI({ 
   apiKey: process.env.OPENAI_API_KEY || process.env.OPENAI_API_KEY_ENV_VAR || ""
 });
@@ -77,10 +77,10 @@ ${context ? `\nDOCS (optional context):\n${context}` : ''}`;
     ];
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages,
       response_format: { type: "json_object" },
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     const content = response.choices[0].message.content;
@@ -104,12 +104,12 @@ CONTEXT:
 ${context}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: question }
       ],
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     return response.choices[0].message.content || '';
@@ -141,10 +141,10 @@ Constraints:
 ${context ? `\nSOURCE CONTEXT:\n${context}` : ''}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: systemPrompt }],
       response_format: { type: "json_object" },
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     const content = response.choices[0].message.content;
@@ -171,13 +171,13 @@ Include source breadcrumbs (URL title or Doc page). Be concise.
 Return valid JSON with structure: {"bigIdea": "...", "keyTerms": [...], "summary": "...", "sections": [...], "flashcards": [...], "quizableFacts": [...]}`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content: `SOURCE:\n${content}` }
       ],
       response_format: { type: "json_object" },
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     const responseContent = response.choices[0].message.content;
@@ -207,10 +207,10 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
       console.log('[generateStudyPlan] Creating study plan with prompt:', systemPrompt);
 
       const response = await openai.chat.completions.create({
-        model: "gpt-5",
+        model: "gpt-4o-mini",
         messages: [{ role: "user", content: systemPrompt }],
         response_format: { type: "json_object" },
-        max_completion_tokens: 8192,
+        max_completion_tokens: 4096,
       });
 
       console.log('[generateStudyPlan] Response received:', JSON.stringify(response, null, 2));
@@ -254,13 +254,13 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
 
     try {
       const response = await openai.chat.completions.create({
-        model: "gpt-5",
+        model: "gpt-4o-mini",
         messages: [
           { role: "system", content: systemPrompt },
           { role: "user", content: `Title: ${title}\nType: ${sourceType}\nContent: ${contentPreview}` }
         ],
         response_format: { type: "json_object" },
-        max_completion_tokens: 4000,
+        max_completion_tokens: 2000,
       });
 
       console.log('[analyzeDocument] API Response received');
@@ -293,13 +293,13 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
     systemPrompt: string
   ): AsyncGenerator<string, void, unknown> {
     const stream = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o",
       messages: [
         { role: "system", content: systemPrompt },
         ...messages.map(msg => ({ role: msg.role as any, content: msg.content }))
       ],
       stream: true,
-      max_completion_tokens: 8192,
+      max_completion_tokens: 4096,
     });
 
     for await (const chunk of stream) {
@@ -324,7 +324,7 @@ Return JSON object with "tasks" array containing tasks with {"date": "YYYY-MM-DD
     const prompt = `Rank these ${results.length} text passages by relevance to the query: "${query}"\n\nPassages:\n${results.map((r, i) => `${i + 1}. ${r.text.substring(0, 200)}...`).join('\n\n')}\n\nReturn only the numbers of the most relevant ${topK} passages, in order of relevance (most relevant first), separated by commas.`;
 
     const response = await openai.chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [{ role: "user", content: prompt }],
       max_completion_tokens: 100,
     });
