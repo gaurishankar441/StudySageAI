@@ -402,6 +402,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Vector similarity search using pgvector with IVFFlat optimization
+  // Using inner product (dot-product) for msmarco-distilbert model
   async searchChunksByEmbedding(
     queryEmbedding: number[],
     docIds?: string[],
@@ -411,6 +412,7 @@ export class DatabaseStorage implements IStorage {
     
     // Build query with probes setting in same SQL statement (ensures same connection)
     // Using CTE to set probes, then execute search in same query
+    // <#> is negative inner product operator, so we multiply by -1 to get actual score
     let query;
     if (docIds && docIds.length > 0) {
       // Filter by specific documents using parameterized array (SQL injection safe)
@@ -421,10 +423,10 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           id, doc_id as "docId", ord, text, tokens, page, section, heading, 
           lang as language, hash, embedding, metadata, created_at as "createdAt",
-          (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
+          ((embedding <#> ${embeddingStr}::vector) * -1) as similarity
         FROM chunks
         WHERE doc_id = ANY(ARRAY[${sql.join(docIdsLiterals, sql`, `)}])
-        ORDER BY embedding <=> ${embeddingStr}::vector
+        ORDER BY embedding <#> ${embeddingStr}::vector
         LIMIT ${limit}
       `;
     } else {
@@ -434,9 +436,9 @@ export class DatabaseStorage implements IStorage {
         SELECT 
           id, doc_id as "docId", ord, text, tokens, page, section, heading, 
           lang as language, hash, embedding, metadata, created_at as "createdAt",
-          (1 - (embedding <=> ${embeddingStr}::vector)) as similarity
+          ((embedding <#> ${embeddingStr}::vector) * -1) as similarity
         FROM chunks
-        ORDER BY embedding <=> ${embeddingStr}::vector
+        ORDER BY embedding <#> ${embeddingStr}::vector
         LIMIT ${limit}
       `;
     }
