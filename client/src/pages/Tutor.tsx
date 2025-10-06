@@ -42,9 +42,31 @@ export default function Tutor() {
       return data;
     },
     onSuccess: (data: any) => {
-      setCurrentSessionId(data.session.chatId);
+      const chatId = data.session.chatId;
+      setCurrentSessionId(chatId);
+      
+      // Pre-populate cache with greeting message
+      if (data.message && data.message.trim()) {
+        const greetingMessage = {
+          id: `greeting-${Date.now()}`,
+          chatId: chatId,
+          role: 'assistant',
+          content: data.message.trim(),
+          tool: null,
+          metadata: {
+            personaId: data.session.personaId,
+            emotion: data.emotion || 'enthusiastic',
+            phase: 'greeting',
+            isGreeting: true
+          },
+          createdAt: new Date().toISOString()
+        };
+        
+        // Seed the messages cache with greeting
+        queryClient.setQueryData([`/api/chats/${chatId}/messages`], [greetingMessage]);
+      }
+      
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
-      queryClient.invalidateQueries({ queryKey: [`/api/chats/${data.session.chatId}/messages`] });
       
       // Map persona ID to name
       const personaName = data.session.personaId === 'priya' ? 'Priya' : 
