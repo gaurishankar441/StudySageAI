@@ -108,69 +108,87 @@ export default function Dashboard() {
 
       {/* Stats Grid with Glass Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6" data-testid="stats-grid">
-        <div className="glass-card card-hover rounded-xl p-6 shadow-md" data-testid="card-active-sessions">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
-                <BookOpen className="w-7 h-7 text-white" />
+        {statsLoading ? (
+          <>
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className={`glass-card rounded-xl p-6 shadow-md animate-fade-in-up stagger-${i}`} data-testid={`skeleton-stat-${i}`}>
+                <div className="flex flex-col gap-4">
+                  <div className="w-14 h-14 rounded-xl skeleton-shimmer" />
+                  <div>
+                    <div className="h-10 w-24 skeleton-shimmer rounded-lg mb-2" />
+                    <div className="h-4 w-32 skeleton-shimmer rounded" />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </>
+        ) : (
+          <>
+            <div className="glass-card card-hover rounded-xl p-6 shadow-md animate-fade-in-up stagger-1" data-testid="card-active-sessions">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center shadow-lg">
+                    <BookOpen className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-active-sessions-count">
+                    {stats?.activeSessions || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Active Sessions</p>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-active-sessions-count">
-                {stats?.activeSessions || 0}
-              </div>
-              <p className="text-sm text-muted-foreground font-medium">Active Sessions</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="glass-card card-hover rounded-xl p-6 shadow-md" data-testid="card-quiz-accuracy">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
-                <CheckCircle className="w-7 h-7 text-white" />
+            <div className="glass-card card-hover rounded-xl p-6 shadow-md animate-fade-in-up stagger-2" data-testid="card-quiz-accuracy">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                    <CheckCircle className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-quiz-accuracy">
+                    {stats?.quizAccuracy || 0}%
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Quiz Accuracy</p>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-quiz-accuracy">
-                {stats?.quizAccuracy || 0}%
-              </div>
-              <p className="text-sm text-muted-foreground font-medium">Quiz Accuracy</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="glass-card card-hover rounded-xl p-6 shadow-md" data-testid="card-study-time">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
-                <Clock className="w-7 h-7 text-white" />
+            <div className="glass-card card-hover rounded-xl p-6 shadow-md animate-fade-in-up stagger-3" data-testid="card-study-time">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg">
+                    <Clock className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-study-time">
+                    {stats?.studyTime || 0}h
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Study Time</p>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-study-time">
-                {stats?.studyTime || 0}h
-              </div>
-              <p className="text-sm text-muted-foreground font-medium">Study Time</p>
-            </div>
-          </div>
-        </div>
 
-        <div className="glass-card card-hover rounded-xl p-6 shadow-md" data-testid="card-goals">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-              <div className="w-14 h-14 rounded-xl bg-gradient-accent flex items-center justify-center shadow-lg">
-                <Target className="w-7 h-7 text-white" />
+            <div className="glass-card card-hover rounded-xl p-6 shadow-md animate-fade-in-up stagger-4" data-testid="card-goals">
+              <div className="flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <div className="w-14 h-14 rounded-xl bg-gradient-accent flex items-center justify-center shadow-lg">
+                    <Target className="w-7 h-7 text-white" />
+                  </div>
+                </div>
+                <div>
+                  <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-goals-achieved">
+                    {stats?.goalsAchieved || 0}/{stats?.totalGoals || 0}
+                  </div>
+                  <p className="text-sm text-muted-foreground font-medium">Goals Achieved</p>
+                </div>
               </div>
             </div>
-            <div>
-              <div className="text-4xl font-bold gradient-text mb-1" data-testid="text-goals-achieved">
-                {stats?.goalsAchieved || 0}/{stats?.totalGoals || 0}
-              </div>
-              <p className="text-sm text-muted-foreground font-medium">Goals Achieved</p>
-            </div>
-          </div>
-        </div>
+          </>
+        )}
       </div>
 
       {/* Quick Actions & Recent Activity */}
@@ -183,32 +201,52 @@ export default function Dashboard() {
               <h2 className="text-2xl font-bold gradient-text">Recent Activity</h2>
             </div>
             <div className="space-y-4">
-              {recentActivity && recentActivity.length > 0 ? recentActivity.map((activity: ActivityItem) => {
-                const Icon = getIconComponent(activity.icon);
-                return (
-                  <div 
-                    key={activity.id} 
-                    className="card-interactive rounded-xl p-4 group cursor-pointer"
-                    data-testid={`activity-item-${activity.id}`}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow duration-200">
-                        <Icon className="w-6 h-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className="font-semibold mb-1 group-hover:text-primary transition-colors duration-200">
-                          {activity.title}
-                        </p>
-                        <p className="text-sm text-muted-foreground flex items-center gap-2">
-                          <Clock className="w-3 h-3" />
-                          {activity.time}
-                        </p>
+              {activityLoading ? (
+                <>
+                  {[1, 2, 3].map((i) => (
+                    <div 
+                      key={i} 
+                      className={`rounded-xl p-4 animate-fade-in stagger-${i}`}
+                      data-testid={`skeleton-activity-${i}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-lg skeleton-shimmer flex-shrink-0" />
+                        <div className="flex-1 space-y-2">
+                          <div className="h-5 w-3/4 skeleton-shimmer rounded" />
+                          <div className="h-4 w-1/2 skeleton-shimmer rounded" />
+                        </div>
                       </div>
                     </div>
-                  </div>
-                );
-              }) : (
-                <div className="text-center py-12">
+                  ))}
+                </>
+              ) : recentActivity && recentActivity.length > 0 ? (
+                recentActivity.map((activity: ActivityItem, index: number) => {
+                  const Icon = getIconComponent(activity.icon);
+                  return (
+                    <div 
+                      key={activity.id} 
+                      className={`card-interactive rounded-xl p-4 group cursor-pointer animate-fade-in-up stagger-${Math.min(index + 1, 6)}`}
+                      data-testid={`activity-item-${activity.id}`}
+                    >
+                      <div className="flex items-start gap-4">
+                        <div className="w-12 h-12 rounded-lg bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-md group-hover:shadow-lg transition-shadow duration-200">
+                          <Icon className="w-6 h-6 text-white" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-semibold mb-1 group-hover:text-primary transition-colors duration-200">
+                            {activity.title}
+                          </p>
+                          <p className="text-sm text-muted-foreground flex items-center gap-2">
+                            <Clock className="w-3 h-3" />
+                            {activity.time}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })
+              ) : (
+                <div className="text-center py-12 animate-fade-in">
                   <div className="w-20 h-20 rounded-full bg-gradient-subtle dark:bg-muted/20 flex items-center justify-center mx-auto mb-4">
                     <TrendingUp className="w-10 h-10 text-muted-foreground/50" />
                   </div>

@@ -140,7 +140,7 @@ export default function QuizAttempt() {
         </Card>
 
         {/* Questions Review */}
-        <h2 className="text-2xl font-bold mb-6 gradient-text">Detailed Review</h2>
+        <h2 className="text-2xl font-bold mb-6 gradient-text animate-fade-in-up">Detailed Review</h2>
         {questions.map((question, index) => {
           const userAnswer = answers[question.id];
           const isUnattempted = !userAnswer;
@@ -150,7 +150,7 @@ export default function QuizAttempt() {
           const isCorrect = userAnswer === correctAnswer;
 
           return (
-            <Card key={question.id} className="glass-card border-0 mb-6" data-testid={`card-result-${index}`}>
+            <Card key={question.id} className={`glass-card border-0 mb-6 animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)}`} data-testid={`card-result-${index}`}>
               <CardContent className="p-8">
                 <div className="flex items-start gap-4">
                   {isUnattempted ? (
@@ -250,7 +250,7 @@ export default function QuizAttempt() {
 
       {/* Questions */}
       {questions.map((question, index) => (
-        <Card key={question.id} className="glass-card border-0 mb-6" data-testid={`card-question-${index}`}>
+        <Card key={question.id} className={`glass-card border-0 mb-6 animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)}`} data-testid={`card-question-${index}`}>
           <CardContent className="p-8">
             <p className="font-semibold text-lg mb-6" data-testid={`text-question-text-${index}`}>
               {index + 1}. {question.stem}
@@ -293,7 +293,7 @@ export default function QuizAttempt() {
       >
         {submitAttemptMutation.isPending ? (
           <>
-            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" />
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2" data-testid="spinner-submitting" />
             Submitting...
           </>
         ) : (

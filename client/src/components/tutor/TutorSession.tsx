@@ -774,7 +774,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         {/* Messages */}
         <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth bg-gradient-to-b from-transparent to-primary/5" id="chat-messages-container">
           {messages.map((msg, index) => (
-            <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
+            <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)}`}>
               {msg.role === 'assistant' && (
                 <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
                   <Bot className="w-6 h-6 text-white" />
@@ -850,21 +850,31 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           )}
 
           {isStreaming && (
-            <div className="flex gap-4 animate-fade-in">
-              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+            <div className="flex gap-4 animate-fade-in-up">
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow">
                 <Bot className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 max-w-3xl">
                 <div className="bg-gradient-to-br from-slate-50/90 via-white/90 to-indigo-50/90 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-6 shadow-md">
-                  <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed inline-block">
-                    <ReactMarkdown
-                      remarkPlugins={[remarkMath]}
-                      rehypePlugins={[rehypeKatex]}
-                    >
-                      {streamingMessage}
-                    </ReactMarkdown>
-                  </div>
-                  <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />
+                  {streamingMessage ? (
+                    <>
+                      <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed inline-block">
+                        <ReactMarkdown
+                          remarkPlugins={[remarkMath]}
+                          rehypePlugins={[rehypeKatex]}
+                        >
+                          {streamingMessage}
+                        </ReactMarkdown>
+                      </div>
+                      <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />
+                    </>
+                  ) : (
+                    <div className="typing-indicator" data-testid="typing-indicator">
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                      <div className="typing-dot"></div>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>

@@ -52,8 +52,45 @@ export default function QuizView() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-12 w-64 skeleton-shimmer rounded-lg mb-2" />
+            <div className="h-6 w-96 skeleton-shimmer rounded" />
+          </div>
+          <div className="h-14 w-36 skeleton-shimmer rounded-lg" />
+        </div>
+        <div className="grid grid-cols-4 gap-6 mb-10">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className={`glass-card border-0 animate-fade-in-up stagger-${i}`} data-testid={`skeleton-stat-${i}`}>
+              <div className="p-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl skeleton-shimmer" />
+                  <div className="flex-1">
+                    <div className="h-8 w-16 skeleton-shimmer rounded mb-2" />
+                    <div className="h-4 w-24 skeleton-shimmer rounded" />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className={`glass-card border-0 rounded-xl p-6 shadow-md animate-fade-in-up stagger-${Math.min(i, 6)}`} data-testid={`skeleton-quiz-${i}`}>
+              <div className="flex items-center justify-between mb-4">
+                <div className="h-8 w-8 skeleton-shimmer rounded-full" />
+                <div className="h-6 w-20 skeleton-shimmer rounded-full" />
+              </div>
+              <div className="h-6 w-3/4 skeleton-shimmer rounded mb-2" />
+              <div className="h-4 w-1/2 skeleton-shimmer rounded mb-4" />
+              <div className="flex items-center gap-2">
+                <div className="h-9 w-24 skeleton-shimmer rounded-lg" />
+                <div className="h-9 w-9 skeleton-shimmer rounded-lg" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }

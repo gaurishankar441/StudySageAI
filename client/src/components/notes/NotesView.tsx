@@ -118,8 +118,31 @@ export default function NotesView() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      <div className="max-w-7xl mx-auto p-8">
+        <div className="flex items-center justify-between mb-8">
+          <div>
+            <div className="h-12 w-64 skeleton-shimmer rounded-lg mb-2" />
+            <div className="h-6 w-96 skeleton-shimmer rounded" />
+          </div>
+          <div className="h-14 w-32 skeleton-shimmer rounded-lg" />
+        </div>
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <div key={i} className={`glass-card rounded-xl p-6 shadow-md animate-fade-in-up stagger-${Math.min(i, 6)}`} data-testid={`skeleton-note-${i}`}>
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-lg skeleton-shimmer" />
+                <div className="flex-1">
+                  <div className="h-5 w-32 skeleton-shimmer rounded mb-2" />
+                  <div className="h-4 w-24 skeleton-shimmer rounded" />
+                </div>
+              </div>
+              <div className="space-y-2">
+                <div className="h-4 w-full skeleton-shimmer rounded" />
+                <div className="h-4 w-5/6 skeleton-shimmer rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -152,13 +175,13 @@ export default function NotesView() {
           <Sparkles className="w-5 h-5 text-primary" />
         </div>
         <div className="grid md:grid-cols-2 lg:grid-cols-5 gap-4">
-          {templates.map((template) => {
+          {templates.map((template, index) => {
             const Icon = template.icon;
             return (
               <button
                 key={template.id}
                 onClick={() => handleTemplateSelect(template.id)}
-                className="group p-6 rounded-2xl border-2 border-dashed border-border hover:border-transparent transition-all duration-300 text-center relative overflow-hidden"
+                className={`group p-6 rounded-2xl border-2 border-dashed border-border hover:border-transparent transition-all duration-300 text-center relative overflow-hidden animate-scale-in stagger-${Math.min(index + 1, 6)}`}
                 data-testid={`template-${template.id}`}
               >
                 <div className={`absolute inset-0 bg-gradient-to-br ${template.gradient} opacity-0 group-hover:opacity-10 transition-opacity duration-300`} />
@@ -191,14 +214,14 @@ export default function NotesView() {
       {/* Notes Grid */}
       {filteredNotes.length > 0 ? (
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredNotes.map((note) => {
+          {filteredNotes.map((note, index) => {
             const TemplateIcon = getTemplateIcon(note.template || undefined);
             const gradientClass = getTemplateColor(note.template || undefined);
             
             return (
               <Card 
                 key={note.id} 
-                className="card-interactive overflow-hidden group cursor-pointer"
+                className={`card-interactive overflow-hidden group cursor-pointer animate-fade-in-up stagger-${Math.min((index % 6) + 1, 6)}`}
                 onClick={() => navigate(`/notes/${note.id}`)}
                 data-testid={`card-note-${note.id}`}
               >

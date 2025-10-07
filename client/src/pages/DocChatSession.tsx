@@ -50,7 +50,7 @@ export default function DocChatSession() {
     enabled: !!chatId,
   });
 
-  const { data: messages = [] } = useQuery<Message[]>({
+  const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: ["/api/chats", chatId, "messages"],
     enabled: !!chatId,
   });
