@@ -598,6 +598,16 @@ export const insertTutorSessionSchema = createInsertSchema(tutorSessions).omit({
   updatedAt: true,
 });
 
+export const insertLanguageDetectionLogSchema = createInsertSchema(languageDetectionLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertResponseValidationLogSchema = createInsertSchema(responseValidationLogs).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Insert schema for users (exclude password_hash from inserts, handle separately)
 export const insertUserSchema = createInsertSchema(users).omit({
   id: true,
@@ -634,3 +644,7 @@ export type InsertChunk = typeof insertChunkSchema._type;
 export type Chunk = typeof chunks.$inferSelect;
 export type InsertTutorSession = typeof insertTutorSessionSchema._type;
 export type TutorSession = typeof tutorSessions.$inferSelect;
+export type InsertLanguageDetectionLog = typeof insertLanguageDetectionLogSchema._type;
+export type LanguageDetectionLog = typeof languageDetectionLogs.$inferSelect;
+export type InsertResponseValidationLog = typeof insertResponseValidationLogSchema._type;
+export type ResponseValidationLog = typeof responseValidationLogs.$inferSelect;

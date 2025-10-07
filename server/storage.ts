@@ -12,6 +12,8 @@ import {
   flashcards,
   chunks,
   tutorSessions,
+  languageDetectionLogs,
+  responseValidationLogs,
   type User,
   type UpsertUser,
   type InsertDocument,
@@ -38,6 +40,10 @@ import {
   type Chunk,
   type InsertTutorSession,
   type TutorSession,
+  type InsertLanguageDetectionLog,
+  type LanguageDetectionLog,
+  type InsertResponseValidationLog,
+  type ResponseValidationLog,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, desc, and, inArray, sql } from "drizzle-orm";
@@ -107,6 +113,12 @@ export interface IStorage {
   getTutorSessionByUserId(userId: string): Promise<TutorSession[]>;
   updateTutorSession(chatId: string, updates: Partial<InsertTutorSession>): Promise<TutorSession>;
   deleteTutorSession(chatId: string): Promise<void>;
+  
+  // Language Detection Logging
+  logLanguageDetection(log: InsertLanguageDetectionLog): Promise<LanguageDetectionLog>;
+  
+  // Response Validation Logging
+  logResponseValidation(log: InsertResponseValidationLog): Promise<ResponseValidationLog>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -489,6 +501,18 @@ export class DatabaseStorage implements IStorage {
 
   async deleteTutorSession(chatId: string): Promise<void> {
     await db.delete(tutorSessions).where(eq(tutorSessions.chatId, chatId));
+  }
+
+  // Language Detection Logging
+  async logLanguageDetection(log: InsertLanguageDetectionLog): Promise<LanguageDetectionLog> {
+    const [result] = await db.insert(languageDetectionLogs).values(log).returning();
+    return result;
+  }
+
+  // Response Validation Logging
+  async logResponseValidation(log: InsertResponseValidationLog): Promise<ResponseValidationLog> {
+    const [result] = await db.insert(responseValidationLogs).values(log).returning();
+    return result;
   }
 }
 

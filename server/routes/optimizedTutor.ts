@@ -394,6 +394,69 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
     
     const detectedLang = langDetection?.language || 'english';
     
+    // 🔥 GET/UPDATE SESSION CONTEXT
+    let sessionCtx = await sessionContextManager.getContext(userId, chatId);
+    
+    // Update session context with language detection
+    if (langDetection) {
+      await sessionContextManager.addLanguageDetection(
+        userId,
+        chatId,
+        langDetection.language,
+        langDetection.confidence
+      );
+    }
+    
+    // Update session context with emotion
+    await sessionContextManager.addEmotionDetection(
+      userId,
+      chatId,
+      emotionResult.emotion,
+      emotionResult.confidence
+    );
+    
+    // Update session metrics
+    await sessionContextManager.updateContext(userId, chatId, {
+      messageCount: (sessionCtx?.messageCount || 0) + 1,
+      lastMessageTime: Date.now(),
+      currentTopic: session.topic,
+      currentSubject: session.subject,
+      currentPhase: session.currentPhase
+    });
+    
+    // Get updated context
+    sessionCtx = await sessionContextManager.getContext(userId, chatId);
+    
+    // 💾 LOG LANGUAGE DETECTION TO DATABASE
+    if (langDetection) {
+      // Calculate scores from analysis
+      const lexicalScore = langDetection.analysis.lexical.devanagariRatio;
+      const syntacticScore = langDetection.analysis.syntactic.wordOrder === 'SOV' ? 0.8 : 
+                              langDetection.analysis.syntactic.wordOrder === 'SVO' ? 0.2 : 0.5;
+      const statisticalScore = langDetection.analysis.statistical.languageScore.hindi;
+      const contextualScore = langDetection.analysis.contextual?.consistencyScore || 0;
+      
+      await storage.logLanguageDetection({
+        userId,
+        chatId,
+        inputText: query,
+        detectedLanguage: langDetection.language,
+        confidence: langDetection.confidence,
+        confidenceLevel: langDetection.confidenceLevel,
+        lexicalScore,
+        syntacticScore,
+        statisticalScore,
+        contextualScore,
+        processingTime: langDetectionTime,
+        detectionMethod: langDetection.detectionMethod,
+        metadata: {
+          devanagariCount: langDetection.analysis.lexical.devanagariCount,
+          hindiWords: langDetection.analysis.lexical.hindiWords.length,
+          englishWords: langDetection.analysis.lexical.englishWords.length
+        }
+      });
+    }
+    
     // Store user message with intent + emotion + language metadata
     await storage.addMessage({
       chatId,
@@ -411,19 +474,39 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       }
     });
     
-    // 🆕 BUILD LANGUAGE-AWARE SYSTEM PROMPT
-    const baseSystemPrompt = promptBuilder.buildSystemPrompt({
-      userLanguage,
+    // 🔥 GENERATE DYNAMIC CONTEXT-AWARE PROMPT
+    const promptContext = {
+      // Language context
+      detectedLanguage: detectedLang,
+      languageConfidence: langDetection?.confidence || 0.5,
+      preferredLanguage: sessionCtx?.preferredLanguage,
+      
+      // Emotional context
+      currentEmotion: emotionResult.emotion,
+      emotionConfidence: emotionResult.confidence,
+      emotionalStability: sessionCtx?.emotionalHistory?.length ? 
+        sessionCtx.emotionalHistory.slice(-3).filter(e => e.emotion === emotionResult.emotion).length / 3 : 0.5,
+      
+      // Learning context
       subject: session.subject || 'General',
       topic: session.topic || 'General',
       level: session.level || 'intermediate',
       currentPhase: session.currentPhase || 'teaching',
-      intent: intentResult.intent
-    });
+      
+      // Intent context
+      intent: intentResult.intent,
+      
+      // Session context
+      messageCount: sessionCtx?.messageCount || 0,
+      misconceptions: session.adaptiveMetrics?.misconceptions || [],
+      strongConcepts: session.adaptiveMetrics?.strongConcepts || [],
+      avgResponseTime: sessionCtx?.avgResponseTime
+    };
     
-    // 🆕 GET EMOTION-BASED RESPONSE MODIFIERS
-    const emotionModifiers = emotionDetector.getEmotionModifiers(emotionResult.emotion);
-    console.log(`[EMOTION MODIFIERS] Tone: ${emotionModifiers.tone}, Length: ${emotionModifiers.responseLength}`);
+    const generatedPrompt = dynamicPromptEngine.generateSystemPrompt(promptContext);
+    
+    console.log(`[DYNAMIC PROMPT] Generated with adaptations: ${generatedPrompt.adaptations.join(', ')}`);
+    console.log(`[DYNAMIC PROMPT] Guidelines: ${generatedPrompt.responseGuidelines.length} rules applied`);
     
     // Add persona-specific context
     const personaContext = `
@@ -437,35 +520,9 @@ Progress: ${session.progress}%
 Personality Traits: ${persona.personality.traits.join(', ')}
 Voice Style: ${persona.languageStyle.hindiPercentage}% Hindi, ${persona.languageStyle.englishPercentage}% English
 Catchphrases: ${persona.personality.catchphrases.slice(0, 2).join(', ')}
-
-ADAPTIVE LEARNING:
-Strong Concepts: ${session.adaptiveMetrics?.strongConcepts?.join(', ') || 'None yet'}
-Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None yet'}
     `.trim();
     
-    // 🆕 Add emotion-aware instructions
-    const emotionContext = `
-STUDENT EMOTIONAL STATE: ${emotionResult.emotion.toUpperCase()}
-Tone to use: ${emotionModifiers.tone}
-Response length: ${emotionModifiers.responseLength}
-Suggested approach: ${emotionModifiers.suggestedActions.join(', ')}
-Encouragement level: ${emotionModifiers.encouragement}
-    `.trim();
-    
-    // 🆕 CALCULATE DYNAMIC RESPONSE CONFIGURATION
-    const responseConfig = responseAdapter.calculateResponseConfig(
-      intentResult.intent,
-      emotionResult.emotion,
-      session.currentPhase
-    );
-    
-    console.log(`[RESPONSE ADAPTATION] Structure: ${responseConfig.structure}, Target: ${responseConfig.targetWordCount} words (${responseConfig.minWords}-${responseConfig.maxWords})`);
-    
-    // Build length constraint and structure guidance
-    const lengthConstraint = responseAdapter.buildLengthConstraint(responseConfig, userLanguage);
-    const structureGuidance = responseAdapter.buildStructureGuidance(responseConfig);
-    
-    let sessionContext = `${baseSystemPrompt}\n\n${personaContext}\n\n${emotionContext}\n\n${lengthConstraint}\n\n${structureGuidance}`;
+    let sessionContext = `${generatedPrompt.systemPrompt}\n\n${personaContext}\n\n${generatedPrompt.responseGuidelines.join('\n')}`;
     
     // Add entity-specific instructions
     if (intentResult.intent === 'submit_answer' && intentResult.entities?.answer) {
@@ -575,7 +632,32 @@ Encouragement level: ${emotionModifiers.encouragement}
       console.log(`[VALIDATION] Recommendations: ${validation.recommendations.join(', ')}`);
     }
     
-    // Store AI message with response config + hint metadata + validation
+    // 💾 LOG VALIDATION RESULTS TO DATABASE
+    const aiMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await storage.logResponseValidation({
+      userId,
+      chatId,
+      messageId: aiMessageId,
+      expectedLanguage: detectedLang,
+      userEmotion: emotionResult.emotion,
+      currentPhase: session.currentPhase,
+      isValid: validation.isValid,
+      overallScore: validation.overallScore,
+      languageMatchScore: validation.layers.languageMatch.score,
+      toneScore: validation.layers.toneAppropriate.score,
+      qualityScore: validation.layers.educationalQuality.score,
+      safetyScore: validation.layers.safety.score,
+      issues: validation.issues,
+      recommendations: validation.recommendations,
+      shouldRegenerate: validation.shouldRegenerate,
+      metadata: {
+        detectedLanguage: validation.layers.languageMatch.detectedLanguage,
+        wordCount: finalResponse.split(/\s+/).length
+      }
+    });
+    
+    // Store AI message with hint metadata + validation
     await storage.addMessage({
       chatId,
       role: 'assistant',
@@ -585,8 +667,6 @@ Encouragement level: ${emotionModifiers.encouragement}
         cost: result.cost,
         cached: result.cached,
         personaId: session.personaId,
-        responseStructure: responseConfig.structure,
-        targetWordCount: responseConfig.targetWordCount,
         actualWordCount: finalResponse.split(/\s+/).length,
         ...hintMetadata,
         hintState: updatedHintState,
