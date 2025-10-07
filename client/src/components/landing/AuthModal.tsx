@@ -118,8 +118,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8"
-        glassmorphism
+        className="max-w-md p-8 bg-white/95 backdrop-blur-xl border border-slate-200"
         aria-describedby="auth-description"
       >
         <DialogTitle className="sr-only">Authentication</DialogTitle>
