@@ -9,9 +9,9 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectionProps) {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-800 via-slate-700 to-indigo-900 p-8">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-700 via-slate-600 to-indigo-800 p-8">
       {/* Animated gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/25 via-blue-500/20 to-purple-500/25 animate-pulse-subtle pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/30 via-blue-400/25 to-purple-400/30 animate-pulse-subtle pointer-events-none" />
       
       {/* Tech grid pattern background */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">

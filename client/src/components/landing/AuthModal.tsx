@@ -118,15 +118,15 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8 border-2 border-cyan-400/50 bg-slate-800/98 shadow-2xl shadow-cyan-500/30"
+        className="max-w-md p-8 border-2 border-cyan-400/60 bg-white/95 shadow-2xl shadow-cyan-500/40"
         style={{
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          background: 'linear-gradient(135deg, rgba(30, 41, 59, 0.98) 0%, rgba(51, 65, 85, 0.98) 100%)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 248, 255, 0.95) 100%)',
         }}
       >
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-200 p-1 rounded-xl border border-slate-300">
             <TabsTrigger 
               value="login" 
               data-testid="tab-login"
@@ -154,14 +154,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-semibold">Email address</FormLabel>
+                      <FormLabel className="text-sm font-semibold text-slate-900">Email address</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="email"
                           placeholder="you@example.com"
                           data-testid="input-email-login"
-                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                          className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -174,14 +174,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-semibold">Password</FormLabel>
+                      <FormLabel className="text-sm font-semibold text-slate-900">Password</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="password"
                           placeholder="••••••••"
                           data-testid="input-password-login"
-                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                          className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -220,13 +220,13 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                     name="firstName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold">First name</FormLabel>
+                        <FormLabel className="text-sm font-semibold text-slate-900">First name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="John"
                             data-testid="input-firstname"
-                            className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                            className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                           />
                         </FormControl>
                         <FormMessage />
@@ -239,13 +239,13 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                     name="lastName"
                     render={({ field }) => (
                       <FormItem>
-                        <FormLabel className="text-sm font-semibold">Last name</FormLabel>
+                        <FormLabel className="text-sm font-semibold text-slate-900">Last name</FormLabel>
                         <FormControl>
                           <Input
                             {...field}
                             placeholder="Doe"
                             data-testid="input-lastname"
-                            className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                            className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                           />
                         </FormControl>
                         <FormMessage />
@@ -259,14 +259,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   name="email"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-semibold">Email address</FormLabel>
+                      <FormLabel className="text-sm font-semibold text-slate-900">Email address</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="email"
                           placeholder="you@example.com"
                           data-testid="input-email-signup"
-                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                          className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -279,14 +279,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                   name="password"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="text-sm font-semibold">Password</FormLabel>
+                      <FormLabel className="text-sm font-semibold text-slate-900">Password</FormLabel>
                       <FormControl>
                         <Input
                           {...field}
                           type="password"
                           placeholder="••••••••"
                           data-testid="input-password-signup"
-                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
+                          className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />

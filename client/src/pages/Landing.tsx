@@ -60,13 +60,13 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-800 via-slate-700 to-slate-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-slate-600 to-indigo-800">
       {/* Fixed Navigation Bar */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-slate-800/90 backdrop-blur-xl shadow-xl border-b border-cyan-400/30' 
-            : 'bg-slate-800/70 backdrop-blur-md'
+            ? 'bg-slate-700/90 backdrop-blur-xl shadow-xl border-b border-cyan-400/50' 
+            : 'bg-slate-700/80 backdrop-blur-md'
         }`}
         data-testid="navbar"
       >
