@@ -53,8 +53,8 @@
   --z-nested-sheet: 1010;
   
   /* Modal System Tokens (Material Design spec) */
-  --scrim-opaque: rgba(15, 23, 42, 0.6);
-  --scrim-heavy: rgba(15, 23, 42, 0.72);
+  --scrim-opaque: rgba(0, 0, 0, 0.75);
+  --scrim-heavy: rgba(0, 0, 0, 0.85);
   --modal-shadow: 0 20px 60px -12px rgba(2, 6, 23, 0.35);
   --modal-radius: 12px;
   --modal-animation: 180ms ease-out;
