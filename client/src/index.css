@@ -226,6 +226,17 @@ body.modal-open {
   100% { opacity: 0.3; }
 }
 
+@keyframes typingDot {
+  0%, 60%, 100% { 
+    opacity: 0.3;
+    transform: translateY(0);
+  }
+  30% { 
+    opacity: 1;
+    transform: translateY(-4px);
+  }
+}
+
 @keyframes shimmer {
   0% {
     background-position: -1000px 0;
@@ -278,6 +289,19 @@ body.modal-open {
 .stagger-4 { animation-delay: 300ms; }
 .stagger-5 { animation-delay: 400ms; }
 .stagger-6 { animation-delay: 500ms; }
+
+/* Typing indicator animations */
+.animate-typing-dot-1 {
+  animation: typingDot 1.4s ease-in-out infinite;
+}
+
+.animate-typing-dot-2 {
+  animation: typingDot 1.4s ease-in-out 0.2s infinite;
+}
+
+.animate-typing-dot-3 {
+  animation: typingDot 1.4s ease-in-out 0.4s infinite;
+}
 
 /* Math typography */
 .math {
@@ -435,6 +459,217 @@ body.modal-open {
 @keyframes spin {
   0% { transform: rotate(0deg); }
   100% { transform: rotate(360deg); }
+}
+
+/* ========================================
+   PHASE 4: MICRO-INTERACTIONS
+   ======================================== */
+
+/* Button Hover Glow Effects */
+.btn-gradient {
+  @apply relative overflow-hidden;
+  background: var(--gradient-primary);
+  transition: all 200ms var(--ease-out);
+}
+
+.btn-gradient:hover {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.4), 0 8px 16px -4px rgba(124, 58, 237, 0.3);
+  transform: translateY(-1px);
+}
+
+.btn-gradient:active {
+  transform: translateY(0);
+  box-shadow: 0 0 10px rgba(124, 58, 237, 0.3);
+}
+
+/* Enhanced Button Hover States */
+.btn-hover-glow {
+  position: relative;
+  transition: all 200ms var(--ease-out);
+}
+
+.btn-hover-glow::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(135deg, rgba(124, 58, 237, 0.1), rgba(168, 85, 247, 0.1));
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.btn-hover-glow:hover::before {
+  opacity: 1;
+}
+
+.btn-hover-glow:hover {
+  box-shadow: var(--shadow-glow);
+}
+
+/* Success Animation with Bounce */
+@keyframes successBounce {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-success {
+  animation: successBounce 400ms var(--ease-bounce);
+}
+
+/* Shake Animation for Errors */
+@keyframes shake {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  10%, 30%, 50%, 70%, 90% {
+    transform: translateX(-4px);
+  }
+  20%, 40%, 60%, 80% {
+    transform: translateX(4px);
+  }
+}
+
+.animate-shake {
+  animation: shake 400ms ease-in-out;
+}
+
+/* Form Focus Effects with Glow */
+.input-focus-glow {
+  transition: all 200ms var(--ease-out);
+}
+
+.input-focus-glow:focus {
+  box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.15), 0 0 10px rgba(124, 58, 237, 0.1);
+  border-color: hsl(var(--primary));
+}
+
+/* Ripple Effect for Click Actions */
+@keyframes ripple {
+  0% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+
+.ripple-effect {
+  position: relative;
+  overflow: hidden;
+}
+
+.ripple-effect::after {
+  content: '';
+  position: absolute;
+  inset: 50%;
+  width: 100%;
+  height: 100%;
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  pointer-events: none;
+}
+
+.ripple-effect:active::after {
+  animation: ripple 600ms ease-out;
+}
+
+/* Hover Lift Effect for Cards */
+.hover-lift {
+  transition: all 250ms var(--ease-out);
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-xl);
+}
+
+/* Gradient Border Glow */
+.gradient-border-glow {
+  position: relative;
+  background: hsl(var(--background));
+  border-radius: 12px;
+}
+
+.gradient-border-glow::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: var(--gradient-primary);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 200ms var(--ease-out);
+}
+
+.gradient-border-glow:hover::before {
+  opacity: 1;
+}
+
+/* Smooth Scale Hover */
+.scale-hover {
+  transition: transform 200ms var(--ease-out);
+}
+
+.scale-hover:hover {
+  transform: scale(1.05);
+}
+
+.scale-hover:active {
+  transform: scale(0.98);
+}
+
+/* Icon Spin on Hover */
+.icon-spin-hover {
+  transition: transform 300ms var(--ease-out);
+}
+
+.icon-spin-hover:hover {
+  transform: rotate(180deg);
+}
+
+/* Slide In Animations */
+@keyframes slideInFromRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right-toast {
+  animation: slideInFromRight 300ms var(--ease-out);
+}
+
+/* Pulse Glow for Active States */
+@keyframes pulseGlowActive {
+  0%, 100% {
+    box-shadow: 0 0 10px rgba(124, 58, 237, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(124, 58, 237, 0.6);
+  }
+}
+
+.animate-pulse-glow-active {
+  animation: pulseGlowActive 2s ease-in-out infinite;
 }
 
 /* Glassmorphism effect */

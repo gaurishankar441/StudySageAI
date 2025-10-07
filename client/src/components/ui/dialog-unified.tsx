@@ -118,12 +118,14 @@ export function DialogUnified({
       className="fixed inset-0 z-[1000] grid place-items-center p-4"
       data-dialog-container
     >
-      {/* Opaque Scrim - Material Design spec: 56-60% opacity */}
+      {/* Modern Glassmorphism Backdrop with Gradient Overlay */}
       <div
         data-backdrop
         className={`
-          fixed inset-0 bg-slate-900/60 
-          transition-opacity duration-[180ms] ease-out
+          fixed inset-0 
+          bg-gradient-to-br from-indigo-500/20 via-purple-500/20 to-pink-500/20
+          backdrop-blur-md
+          transition-opacity duration-300 ease-out
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
         style={{ zIndex: 1000 }}
@@ -131,24 +133,30 @@ export function DialogUnified({
         aria-hidden="true"
       />
 
-      {/* Modal Panel - scale + opacity animation 180ms */}
+      {/* Modern Modal Panel - Glassmorphism + Gradient Border */}
       <div
         ref={ref}
         className={`
           relative ${sizeClasses[size]}
-          rounded-xl bg-white dark:bg-slate-900
-          shadow-[0_20px_60px_-12px_rgba(2,6,23,0.35)]
+          rounded-2xl
+          bg-white/95 dark:bg-slate-900/95
+          backdrop-blur-xl
+          border border-slate-200/50 dark:border-slate-700/50
+          shadow-[0_25px_50px_-12px_rgba(124,58,237,0.25)]
           outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
-          transition-all duration-[180ms] ease-out
-          ${isAnimating ? 'scale-100 opacity-100' : 'scale-[0.98] opacity-0'}
+          transition-all duration-300 ease-out
+          ${isAnimating ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}
+          before:absolute before:inset-0 before:rounded-2xl 
+          before:bg-gradient-to-br before:from-indigo-500/10 before:via-purple-500/10 before:to-pink-500/10
+          before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
         `}
         style={{ zIndex: 1001 }}
         data-dialog-panel
       >
         {title && (
-          <div className="flex items-start justify-between p-6 sm:p-7 border-b border-slate-200 dark:border-slate-700">
+          <div className="flex items-start justify-between p-6 sm:p-7 border-b border-slate-200/50 dark:border-slate-700/50">
             <div>
-              <h2 id="dialog-title" className="text-lg font-semibold text-foreground">
+              <h2 id="dialog-title" className="text-lg font-semibold bg-gradient-to-r from-indigo-600 to-purple-600 dark:from-indigo-400 dark:to-purple-400 bg-clip-text text-transparent">
                 {title}
               </h2>
               {description && (
@@ -161,10 +169,10 @@ export function DialogUnified({
               type="button"
               onClick={() => onCloseRef.current()}
               aria-label="Close dialog"
-              className="rounded-md p-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+              className="rounded-lg p-2 hover:bg-gradient-to-br hover:from-indigo-50 hover:to-purple-50 dark:hover:from-indigo-950 dark:hover:to-purple-950 transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
               data-testid="button-close-dialog"
             >
-              <X className="w-4 h-4" />
+              <X className="w-4 h-4 text-slate-600 dark:text-slate-400" />
             </button>
           </div>
         )}
