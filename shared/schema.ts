@@ -300,6 +300,118 @@ export const tutorSessions = pgTable("tutor_sessions", {
   index("tutor_sessions_phase_idx").on(table.currentPhase),
 ]);
 
+// Language Detection Logs - tracks language detection analytics
+export const languageDetectionLogs = pgTable("language_detection_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  chatId: varchar("chat_id").references(() => chats.id, { onDelete: "cascade" }),
+  
+  // Input
+  inputText: text("input_text").notNull(),
+  
+  // Detection results
+  detectedLanguage: varchar("detected_language").notNull(), // 'hindi', 'hinglish', 'english'
+  confidence: real("confidence").notNull(),
+  confidenceLevel: varchar("confidence_level").notNull(), // 'very_high', 'high', 'medium', 'low'
+  
+  // Multi-layer analysis results
+  lexicalScore: real("lexical_score"),
+  syntacticScore: real("syntactic_score"),
+  statisticalScore: real("statistical_score"),
+  contextualScore: real("contextual_score"),
+  
+  // Performance metrics
+  processingTime: integer("processing_time"), // in ms
+  detectionMethod: varchar("detection_method"), // 'multi_layer', 'fallback'
+  
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("lang_detection_user_idx").on(table.userId),
+  index("lang_detection_chat_idx").on(table.chatId),
+  index("lang_detection_created_idx").on(table.createdAt),
+]);
+
+// Response Validation Logs - tracks response quality validation
+export const responseValidationLogs = pgTable("response_validation_logs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  chatId: varchar("chat_id").references(() => chats.id, { onDelete: "cascade" }),
+  messageId: varchar("message_id").references(() => messages.id, { onDelete: "cascade" }),
+  
+  // Validation context
+  expectedLanguage: varchar("expected_language").notNull(),
+  userEmotion: varchar("user_emotion").notNull(),
+  currentPhase: varchar("current_phase"),
+  
+  // Validation results
+  isValid: boolean("is_valid").notNull(),
+  overallScore: real("overall_score").notNull(),
+  
+  // Layer scores
+  languageMatchScore: real("language_match_score"),
+  toneScore: real("tone_score"),
+  qualityScore: real("quality_score"),
+  safetyScore: real("safety_score"),
+  
+  // Issues and recommendations
+  issues: jsonb("issues").$type<string[]>(),
+  recommendations: jsonb("recommendations").$type<string[]>(),
+  shouldRegenerate: boolean("should_regenerate"),
+  
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("response_val_user_idx").on(table.userId),
+  index("response_val_chat_idx").on(table.chatId),
+  index("response_val_score_idx").on(table.overallScore),
+  index("response_val_created_idx").on(table.createdAt),
+]);
+
+// Tutor Metrics - aggregate tutor performance metrics
+export const tutorMetrics = pgTable("tutor_metrics", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").references(() => users.id, { onDelete: "cascade" }).notNull(),
+  chatId: varchar("chat_id").references(() => chats.id, { onDelete: "cascade" }),
+  sessionId: varchar("session_id").references(() => tutorSessions.id, { onDelete: "cascade" }),
+  
+  // Time period (for aggregation)
+  periodStart: timestamp("period_start").notNull(),
+  periodEnd: timestamp("period_end").notNull(),
+  periodType: varchar("period_type").notNull(), // 'session', 'daily', 'weekly', 'monthly'
+  
+  // Language metrics
+  avgLanguageConfidence: real("avg_language_confidence"),
+  languageConsistencyScore: real("language_consistency_score"),
+  primaryLanguage: varchar("primary_language"),
+  languageSwitchCount: integer("language_switch_count"),
+  
+  // Response quality metrics
+  avgResponseQuality: real("avg_response_quality"),
+  avgValidationScore: real("avg_validation_score"),
+  failedValidationCount: integer("failed_validation_count"),
+  regenerationCount: integer("regeneration_count"),
+  
+  // Performance metrics
+  avgResponseTime: integer("avg_response_time"), // in ms
+  totalMessages: integer("total_messages"),
+  avgMessagesPerSession: real("avg_messages_per_session"),
+  
+  // Learning progress metrics
+  conceptsMastered: integer("concepts_mastered"),
+  misconceptionsResolved: integer("misconceptions_resolved"),
+  avgDifficulty: real("avg_difficulty"),
+  progressRate: real("progress_rate"), // 0-100
+  
+  metadata: jsonb("metadata"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("tutor_metrics_user_idx").on(table.userId),
+  index("tutor_metrics_session_idx").on(table.sessionId),
+  index("tutor_metrics_period_idx").on(table.periodStart, table.periodEnd),
+  index("tutor_metrics_type_idx").on(table.periodType),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
