@@ -4,6 +4,7 @@ import connectPg from 'connect-pg-simple';
 import type { Express, RequestHandler } from 'express';
 import { storage } from './storage';
 import type { AuthUser, User } from '@shared/schema';
+import { authLimiter, signupLimiter, validatePasswordStrength } from './middleware/security';
 
 const SALT_ROUNDS = 10;
 
@@ -51,8 +52,8 @@ export function setupAuth(app: Express) {
   app.set('trust proxy', 1);
   app.use(getSession());
 
-  // Signup endpoint
-  app.post('/api/auth/signup', async (req, res) => {
+  // Signup endpoint with rate limiting
+  app.post('/api/auth/signup', signupLimiter, async (req, res) => {
     try {
       const { email, password, firstName, lastName } = req.body;
 
@@ -60,8 +61,13 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ message: 'Email and password are required' });
       }
 
-      if (password.length < 8) {
-        return res.status(400).json({ message: 'Password must be at least 8 characters' });
+      // Strong password validation
+      const passwordValidation = validatePasswordStrength(password);
+      if (!passwordValidation.isValid) {
+        return res.status(400).json({ 
+          message: 'Password does not meet security requirements',
+          errors: passwordValidation.errors 
+        });
       }
 
       // Check if user already exists
@@ -94,8 +100,8 @@ export function setupAuth(app: Express) {
     }
   });
 
-  // Login endpoint
-  app.post('/api/auth/login', async (req, res) => {
+  // Login endpoint with rate limiting
+  app.post('/api/auth/login', authLimiter, async (req, res) => {
     try {
       const { email, password } = req.body;
 
