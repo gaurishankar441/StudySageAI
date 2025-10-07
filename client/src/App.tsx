@@ -1,4 +1,4 @@
-import { Switch, Route, useLocation } from "wouter";
+import { Switch, Route } from "wouter";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { queryClient } from "./lib/queryClient";
 import { Toaster } from "@/components/ui/toaster";
@@ -8,7 +8,6 @@ import { OverlayProvider } from "@/lib/useOverlay";
 
 // Pages
 import Landing from "@/pages/Landing";
-import Onboarding from "@/pages/Onboarding";
 import Dashboard from "@/pages/Dashboard";
 import Tutor from "@/pages/Tutor";
 import DocChatSources from "@/pages/DocChatSources";
@@ -22,8 +21,7 @@ import Settings from "@/pages/Settings";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isAuthenticated, isLoading, user } = useAuth();
-  const [location] = useLocation();
+  const { isAuthenticated, isLoading } = useAuth();
 
   // Show loading state while checking authentication
   if (isLoading) {
@@ -42,16 +40,6 @@ function Router() {
         <Route component={Landing} />
       </Switch>
     );
-  }
-
-  // Redirect to onboarding if user hasn't completed it (except if already on onboarding page)
-  if (user && !user.onboardingCompleted && location !== "/onboarding") {
-    return <Onboarding />;
-  }
-
-  // Show onboarding page if explicitly navigating to it
-  if (location === "/onboarding") {
-    return <Onboarding />;
   }
 
   // Authenticated users get the full app with layout

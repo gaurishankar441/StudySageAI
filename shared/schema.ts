@@ -48,33 +48,11 @@ export const users = pgTable("users", {
   locale: varchar("locale").default('en'),
   aiProvider: varchar("ai_provider").default('openai'), // 'cohere' or 'openai' - openai is default
   
-  // India-centric student profile fields (Legacy - kept for backward compatibility)
+  // India-centric student profile fields
   educationBoard: varchar("education_board"), // 'CBSE', 'ICSE', 'State Board', etc.
   examTarget: varchar("exam_target"), // 'JEE', 'NEET', 'Board Exams', 'Other'
   currentClass: varchar("current_class"), // '10th', '12th', 'BSc Year 1', etc.
   subjects: text("subjects").array(), // Array of subjects
-  
-  // Enhanced onboarding fields (October 2025)
-  onboardingCompleted: boolean("onboarding_completed").default(false),
-  educationLevel: varchar("education_level"), // 'middle_school', 'high_school', 'senior_secondary', 'college', 'job_prep'
-  class: integer("class"), // 6-12 for school students
-  board: varchar("board"), // 'cbse', 'icse', 'state', 'ib', 'igcse'
-  stateBoard: varchar("state_board"), // Specific state board if board='state'
-  stream: varchar("stream"), // 'science_pcm', 'science_pcb', 'commerce', 'arts' (for class 11-12)
-  course: varchar("course"), // For college students (e.g., 'btech', 'mbbs', 'bcom')
-  yearSemester: integer("year_semester"), // Year/semester for college students
-  examGoals: text("exam_goals").array(), // ['jee_main', 'neet', 'board_exams', 'olympiad', etc.]
-  subjectPreferences: text("subject_preferences").array(), // ['math', 'physics', 'chemistry', etc.]
-  learningStyle: jsonb("learning_style").$type<{
-    prefersVideo?: boolean;
-    prefersText?: boolean;
-    prefersPractice?: boolean;
-    prefersVoice?: boolean;
-    prefersVisual?: boolean;
-  }>(),
-  primaryGoal: varchar("primary_goal"), // 'exam_topper', 'improve_weak', 'last_minute', 'concept_clarity', 'daily_practice'
-  whatsappNotifications: boolean("whatsapp_notifications").default(false),
-  mobileNumber: varchar("mobile_number"),
   
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
