@@ -10,6 +10,17 @@ import { promptBuilder } from '../services/promptBuilder';
 import { responseAdapter } from '../config/responseAdaptation';
 import { hintService } from '../services/hintService';
 import { storage } from '../storage';
+import { LanguageDetectionEngine } from '../services/LanguageDetectionEngine';
+import { SessionContextManager } from '../services/SessionContextManager';
+import { DynamicPromptEngine } from '../services/DynamicPromptEngine';
+import { ResponseValidator } from '../services/ResponseValidator';
+import { performanceOptimizer, metricsTracker } from '../services/PerformanceOptimizer';
+
+// Initialize new services
+const languageDetector = new LanguageDetectionEngine();
+const sessionContextManager = new SessionContextManager();
+const dynamicPromptEngine = new DynamicPromptEngine();
+const responseValidator = new ResponseValidator();
 
 export const optimizedTutorRouter = express.Router();
 
@@ -350,7 +361,40 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
       console.log(`[EMOTION] Reasoning: ${emotionResult.reasoning}`);
     }
     
-    // Store user message with intent + emotion metadata
+    // 🔥 MULTI-LAYER LANGUAGE DETECTION
+    const startLangDetection = Date.now();
+    
+    // Check cache first
+    const cachedLangResult = await performanceOptimizer.getCachedLanguageDetection(query);
+    let langDetection = cachedLangResult;
+    
+    if (!cachedLangResult) {
+      // Perform detection with conversation history
+      const langHistory = allMessages.slice(-5).map(m => m.content);
+      
+      langDetection = await languageDetector.detectLanguage(query, {
+        conversationHistory: langHistory.map((text, idx) => ({
+          language: 'unknown' as any
+        })),
+        topic: session.topic
+      });
+      
+      // Cache result
+      await performanceOptimizer.cacheLanguageDetection(query, langDetection);
+    }
+    
+    const langDetectionTime = Date.now() - startLangDetection;
+    metricsTracker.record('language_detection_ms', langDetectionTime);
+    
+    if (langDetection) {
+      console.log(`[LANGUAGE] Detected: ${langDetection.language} (${langDetection.confidenceLevel}) - ${langDetectionTime}ms ${cachedLangResult ? '(cached)' : ''}`);
+      console.log(`[LANGUAGE] Analysis - Devanagari: ${langDetection.analysis.lexical.devanagariCount}, Hindi Words: ${langDetection.analysis.lexical.hindiWords.length}`);
+      console.log(`[LANGUAGE] Confidence: ${(langDetection.confidence * 100).toFixed(1)}% - Method: ${langDetection.detectionMethod}`);
+    }
+    
+    const detectedLang = langDetection?.language || 'english';
+    
+    // Store user message with intent + emotion + language metadata
     await storage.addMessage({
       chatId,
       role: 'user',
@@ -360,7 +404,10 @@ optimizedTutorRouter.post('/session/ask', async (req, res) => {
         intentConfidence: intentResult.confidence,
         entities: intentResult.entities,
         emotion: emotionResult.emotion,
-        emotionConfidence: emotionResult.confidence
+        emotionConfidence: emotionResult.confidence,
+        detectedLanguage: detectedLang,
+        languageConfidence: langDetection?.confidence,
+        languageDetectionTime: langDetectionTime
       }
     });
     
@@ -490,10 +537,13 @@ Encouragement level: ${emotionModifiers.encouragement}
     }
     
     // Generate AI response with session context
+    const startAIGeneration = Date.now();
     const result = await optimizedAI.generateResponse(query, sessionContext, {
       language: persona.languageStyle.hindiPercentage > 50 ? 'hindi' : 'english',
       useCache: intentResult.intent === 'request_hint' ? false : true
     });
+    const aiGenerationTime = Date.now() - startAIGeneration;
+    metricsTracker.record('ai_generation_ms', aiGenerationTime);
     
     const finalResponse = result.response + hintDisclaimer;
     
@@ -501,7 +551,31 @@ Encouragement level: ${emotionModifiers.encouragement}
       updatedHintState = hintService.updateHintStateWithResponse(updatedHintState, result.response);
     }
     
-    // Store AI message with response config + hint metadata
+    // 🔥 VALIDATE RESPONSE QUALITY
+    const startValidation = Date.now();
+    const validation = await responseValidator.validate(finalResponse, {
+      expectedLanguage: detectedLang,
+      userEmotion: emotionResult.emotion,
+      currentPhase: session.currentPhase,
+      subject: session.subject || 'General',
+      topic: session.topic || 'General',
+      userMessage: query
+    });
+    const validationTime = Date.now() - startValidation;
+    metricsTracker.record('validation_ms', validationTime);
+    
+    console.log(`[VALIDATION] Overall Score: ${(validation.overallScore * 100).toFixed(1)}% - Valid: ${validation.isValid} (${validationTime}ms)`);
+    console.log(`[VALIDATION] Language Match: ${(validation.layers.languageMatch.score * 100).toFixed(1)}%, Tone: ${(validation.layers.toneAppropriate.score * 100).toFixed(1)}%, Quality: ${(validation.layers.educationalQuality.score * 100).toFixed(1)}%, Safety: ${(validation.layers.safety.score * 100).toFixed(1)}%`);
+    
+    if (validation.issues.length > 0) {
+      console.log(`[VALIDATION] Issues: ${validation.issues.join(', ')}`);
+    }
+    
+    if (validation.recommendations.length > 0) {
+      console.log(`[VALIDATION] Recommendations: ${validation.recommendations.join(', ')}`);
+    }
+    
+    // Store AI message with response config + hint metadata + validation
     await storage.addMessage({
       chatId,
       role: 'assistant',
@@ -515,7 +589,26 @@ Encouragement level: ${emotionModifiers.encouragement}
         targetWordCount: responseConfig.targetWordCount,
         actualWordCount: finalResponse.split(/\s+/).length,
         ...hintMetadata,
-        hintState: updatedHintState
+        hintState: updatedHintState,
+        // 🔥 Validation metadata
+        validation: {
+          isValid: validation.isValid,
+          overallScore: validation.overallScore,
+          languageMatchScore: validation.layers.languageMatch.score,
+          toneScore: validation.layers.toneAppropriate.score,
+          qualityScore: validation.layers.educationalQuality.score,
+          safetyScore: validation.layers.safety.score,
+          issues: validation.issues,
+          recommendations: validation.recommendations,
+          validationTime: validationTime
+        },
+        // Performance metrics
+        timings: {
+          languageDetection: langDetectionTime,
+          aiGeneration: aiGenerationTime,
+          validation: validationTime,
+          total: langDetectionTime + aiGenerationTime + validationTime
+        }
       }
     });
     
