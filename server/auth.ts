@@ -193,6 +193,58 @@ export function setupAuth(app: Express) {
       res.status(500).json({ message: 'Failed to update profile' });
     }
   });
+
+  // Complete onboarding endpoint
+  app.post('/api/auth/complete-onboarding', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user.id;
+      const { 
+        educationLevel,
+        class: userClass,
+        board,
+        stateBoard,
+        stream,
+        course,
+        yearSemester,
+        examGoals,
+        subjectPreferences,
+        learningStyle,
+        primaryGoal,
+        whatsappNotifications,
+        mobileNumber
+      } = req.body;
+
+      // Update user with onboarding data
+      await storage.updateUser(userId, {
+        onboardingCompleted: true,
+        educationLevel,
+        class: userClass,
+        board,
+        stateBoard,
+        stream,
+        course,
+        yearSemester,
+        examGoals,
+        subjectPreferences,
+        learningStyle,
+        primaryGoal,
+        whatsappNotifications,
+        mobileNumber,
+        // Also update legacy fields for backward compatibility
+        currentClass: userClass ? `Class ${userClass}` : course,
+        examTarget: examGoals?.[0] || null,
+        subjects: subjectPreferences,
+        updatedAt: new Date(),
+      });
+
+      // Get updated user
+      const updatedUser = await storage.getUser(userId);
+      res.json(sanitizeUser(updatedUser!));
+    } catch (error) {
+      console.error('Error completing onboarding:', error);
+      res.status(500).json({ message: 'Failed to complete onboarding' });
+    }
+  });
 }
 
 // Authentication middleware
