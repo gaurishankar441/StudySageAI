@@ -115,7 +115,8 @@ export function DialogUnified({
       aria-modal="true"
       aria-labelledby={title ? "dialog-title" : undefined}
       aria-describedby={description ? "dialog-description" : undefined}
-      className="fixed inset-0 z-[1000] grid place-items-center p-4"
+      className="fixed inset-0 grid place-items-center p-4"
+      style={{ zIndex: 'var(--z-modal-scrim)' }}
       data-dialog-container
     >
       {/* Modern Glassmorphism Backdrop with Gradient Overlay */}
@@ -128,7 +129,6 @@ export function DialogUnified({
           transition-opacity duration-300 ease-out
           ${isAnimating ? 'opacity-100' : 'opacity-0'}
         `}
-        style={{ zIndex: 1000 }}
         onClick={() => closeOnOuterClick && onCloseRef.current()}
         aria-hidden="true"
       />
@@ -146,11 +146,11 @@ export function DialogUnified({
           outline-none focus-visible:ring-2 focus-visible:ring-indigo-500
           transition-all duration-300 ease-out
           ${isAnimating ? 'scale-100 opacity-100 translate-y-0' : 'scale-95 opacity-0 translate-y-4'}
-          before:absolute before:inset-0 before:rounded-2xl 
+          before:absolute before:inset-0 before:rounded-2xl before:pointer-events-none
           before:bg-gradient-to-br before:from-indigo-500/10 before:via-purple-500/10 before:to-pink-500/10
           before:opacity-0 hover:before:opacity-100 before:transition-opacity before:duration-300
         `}
-        style={{ zIndex: 1001 }}
+        style={{ zIndex: 'var(--z-modal-panel)' }}
         data-dialog-panel
       >
         {title && (
