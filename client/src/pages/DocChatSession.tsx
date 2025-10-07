@@ -21,6 +21,7 @@ import {
   Highlighter,
   Layers,
   BookOpen,
+  Sparkles,
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
 import DocChatActionModal from "@/components/docchat/DocChatActionModal";
@@ -203,28 +204,30 @@ export default function DocChatSession() {
   const selectedDocs = chatDocs.map(d => ({ id: d.id, title: d.title }));
 
   return (
-    <div className="h-full flex gap-6 p-6">
+    <div className="h-full flex gap-6 p-8">
       {/* Center: Document Viewer */}
-      <div className="flex-1 bg-card rounded-xl border border-border overflow-hidden flex flex-col">
+      <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col shadow-lg">
         {currentDoc ? (
           <>
-            <div className="p-4 border-b border-border flex items-center justify-between">
+            <div className="p-5 border-b border-border/50 flex items-center justify-between backdrop-blur-sm bg-card/50">
               <div className="flex items-center gap-3">
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                  className="btn-gradient text-white border-0"
                   data-testid="button-prev-page"
                 >
                   <ChevronLeft className="w-4 h-4" />
                 </Button>
-                <span className="text-sm font-medium" data-testid="text-page-info">
+                <span className="text-sm font-medium px-3 py-1 rounded-lg bg-gradient-subtle" data-testid="text-page-info">
                   Page {currentPage} of {currentDoc.pages || 1}
                 </span>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setCurrentPage(currentPage + 1)}
+                  className="btn-gradient text-white border-0"
                   data-testid="button-next-page"
                 >
                   <ChevronRight className="w-4 h-4" />
@@ -235,15 +238,17 @@ export default function DocChatSession() {
                   variant="outline" 
                   size="sm" 
                   onClick={() => setZoom(Math.max(50, zoom - 25))}
+                  className="transition-all duration-200 hover:scale-105"
                   data-testid="button-zoom-out"
                 >
                   <ZoomOut className="w-4 h-4" />
                 </Button>
-                <span className="text-sm" data-testid="text-zoom-level">{zoom}%</span>
+                <span className="text-sm px-3 py-1 rounded-lg bg-gradient-subtle font-medium" data-testid="text-zoom-level">{zoom}%</span>
                 <Button 
                   variant="outline" 
                   size="sm" 
                   onClick={() => setZoom(Math.min(200, zoom + 25))}
+                  className="transition-all duration-200 hover:scale-105"
                   data-testid="button-zoom-in"
                 >
                   <ZoomIn className="w-4 h-4" />
@@ -251,6 +256,7 @@ export default function DocChatSession() {
                 <Button 
                   variant="outline" 
                   size="sm"
+                  className="transition-all duration-200 hover:scale-105"
                   data-testid="button-download"
                 >
                   <Download className="w-4 h-4" />
@@ -258,7 +264,7 @@ export default function DocChatSession() {
               </div>
             </div>
 
-            <div className="flex-1 bg-muted overflow-hidden">
+            <div className="flex-1 bg-muted/50 overflow-hidden backdrop-blur-sm">
               {currentDoc.sourceType === 'pdf' && currentDoc.fileKey ? (
                 <div className="w-full h-full overflow-auto bg-gray-200">
                   <iframe
@@ -319,82 +325,92 @@ export default function DocChatSession() {
       </div>
 
       {/* Right: Quick Actions & Chat */}
-      <div className="w-96 flex flex-col gap-4">
+      <div className="w-96 flex flex-col gap-6">
         {/* Quick Actions */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('summary')}
-                disabled={chatDocs.length === 0}
-                data-testid="button-quick-summary"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="text-xs">Summary</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('highlights')}
-                disabled={chatDocs.length === 0}
-                data-testid="button-quick-highlights"
-              >
-                <Highlighter className="w-4 h-4" />
-                <span className="text-xs">Highlights</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('quiz')}
-                disabled={chatDocs.length === 0}
-                data-testid="button-quick-quiz"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="text-xs">Quiz</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('flashcards')}
-                disabled={chatDocs.length === 0}
-                data-testid="button-quick-flashcards"
-              >
-                <Layers className="w-4 h-4" />
-                <span className="text-xs">Flashcards</span>
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+        <div className="glass-card rounded-xl p-6 shadow-lg">
+          <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" />
+            Quick Actions
+          </h3>
+          <div className="grid grid-cols-2 gap-3">
+            <Button 
+              variant="outline" 
+              className="p-4 h-auto flex-col gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg border-primary/20 hover:border-primary/40"
+              onClick={() => setActiveActionModal('summary')}
+              disabled={chatDocs.length === 0}
+              data-testid="button-quick-summary"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+                <FileText className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium">Summary</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="p-4 h-auto flex-col gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg border-primary/20 hover:border-primary/40"
+              onClick={() => setActiveActionModal('highlights')}
+              disabled={chatDocs.length === 0}
+              data-testid="button-quick-highlights"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-accent flex items-center justify-center">
+                <Highlighter className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium">Highlights</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="p-4 h-auto flex-col gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg border-primary/20 hover:border-primary/40"
+              onClick={() => setActiveActionModal('quiz')}
+              disabled={chatDocs.length === 0}
+              data-testid="button-quick-quiz"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-primary flex items-center justify-center">
+                <BookOpen className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium">Quiz</span>
+            </Button>
+            <Button 
+              variant="outline" 
+              className="p-4 h-auto flex-col gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg border-primary/20 hover:border-primary/40"
+              onClick={() => setActiveActionModal('flashcards')}
+              disabled={chatDocs.length === 0}
+              data-testid="button-quick-flashcards"
+            >
+              <div className="w-10 h-10 rounded-lg bg-gradient-accent flex items-center justify-center">
+                <Layers className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xs font-medium">Flashcards</span>
+            </Button>
+          </div>
+        </div>
 
         {/* Chat Panel */}
-        <Card className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-semibold">Chat with Documents</h3>
+        <div className="glass-card rounded-xl flex-1 flex flex-col overflow-hidden shadow-lg">
+          <div className="p-5 border-b border-border/50 backdrop-blur-sm bg-card/50">
+            <h3 className="font-semibold flex items-center gap-2">
+              <Bot className="w-5 h-5 text-primary" />
+              Chat with Documents
+            </h3>
           </div>
 
           {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          <div className="flex-1 overflow-y-auto p-5 space-y-4">
             {messages.map((msg) => (
               <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`} data-testid={`message-${msg.id}`}>
                 {msg.role === 'assistant' && (
-                  <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                    <Bot className="w-4 h-4 text-primary-foreground" />
+                  <div className="w-8 h-8 rounded-full bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-md">
+                    <Bot className="w-4 h-4 text-white" />
                   </div>
                 )}
                 
-                <div className={msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-lg p-3 text-sm max-w-xs' : 'flex-1'}>
+                <div className={msg.role === 'user' ? 'bg-gradient-primary text-white rounded-2xl px-4 py-3 text-sm max-w-xs shadow-md' : 'flex-1'}>
                   {msg.role === 'assistant' ? (
-                    <div className="bg-muted rounded-lg p-3 text-sm">
+                    <div className="bg-card/80 backdrop-blur-sm rounded-2xl px-4 py-3 text-sm border border-border/50 shadow-sm">
                       <p className="mb-2">{msg.content}</p>
                       {msg.metadata && typeof msg.metadata === 'object' && 'sources' in msg.metadata ? (
-                        <div className="mt-2 pt-2 border-t border-border">
-                          <p className="text-xs text-muted-foreground">
-                            <BookOpen className="w-3 h-3 inline mr-1" />
+                        <div className="mt-2 pt-2 border-t border-border/50">
+                          <p className="text-xs text-muted-foreground flex items-center gap-1">
+                            <BookOpen className="w-3 h-3" />
                             Sources referenced
                           </p>
                         </div>
@@ -406,7 +422,7 @@ export default function DocChatSession() {
                 </div>
 
                 {msg.role === 'user' && (
-                  <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
+                  <div className="w-8 h-8 rounded-full bg-accent flex items-center justify-center flex-shrink-0 shadow-md">
                     <User className="w-4 h-4" />
                   </div>
                 )}
@@ -415,7 +431,9 @@ export default function DocChatSession() {
 
             {messages.length === 0 && (
               <div className="text-center py-8">
-                <Bot className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
+                <div className="w-16 h-16 rounded-full bg-gradient-subtle mx-auto mb-4 flex items-center justify-center">
+                  <Bot className="w-8 h-8 text-muted-foreground/50" />
+                </div>
                 <p className="text-sm text-muted-foreground">Start a conversation</p>
                 <p className="text-xs text-muted-foreground mt-1">Ask questions about your documents</p>
               </div>
@@ -423,27 +441,28 @@ export default function DocChatSession() {
           </div>
 
           {/* Input */}
-          <div className="p-4 border-t border-border">
-            <form onSubmit={handleSubmit} className="flex gap-2">
+          <div className="p-5 border-t border-border/50 backdrop-blur-sm bg-card/50">
+            <form onSubmit={handleSubmit} className="flex gap-3">
               <Input
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 placeholder="Ask a question..."
                 disabled={sendMessageMutation.isPending}
-                className="flex-1"
+                className="flex-1 transition-all duration-200 focus:shadow-md"
                 data-testid="input-chat-message"
               />
               <Button 
                 type="submit" 
                 disabled={!message.trim() || sendMessageMutation.isPending}
                 size="sm"
+                className="btn-gradient px-4 shadow-md"
                 data-testid="button-send-message"
               >
                 <Send className="w-4 h-4" />
               </Button>
             </form>
           </div>
-        </Card>
+        </div>
       </div>
 
       {/* DocChat Action Modal */}
