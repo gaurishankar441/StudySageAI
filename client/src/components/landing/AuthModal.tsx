@@ -1,4 +1,4 @@
-import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
@@ -124,7 +124,13 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           WebkitBackdropFilter: 'blur(24px)',
           background: 'linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(240, 248, 255, 1) 100%) !important',
         }}
+        aria-describedby="auth-description"
       >
+        <DialogTitle className="sr-only">Authentication</DialogTitle>
+        <DialogDescription id="auth-description" className="sr-only">
+          Login or sign up to access VaktaAI
+        </DialogDescription>
+        
         <Tabs defaultValue={defaultTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-200 p-1 rounded-xl border border-slate-300">
             <TabsTrigger 
