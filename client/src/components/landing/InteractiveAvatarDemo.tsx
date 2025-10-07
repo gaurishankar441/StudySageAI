@@ -96,7 +96,7 @@ export default function InteractiveAvatarDemo() {
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-blue-600/5 pointer-events-none" />
       
-      <div className="relative z-10 max-w-7xl mx-auto">
+      <div className="relative max-w-7xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-12 space-y-4">
           <h2 className="text-4xl sm:text-5xl font-bold text-slate-900">

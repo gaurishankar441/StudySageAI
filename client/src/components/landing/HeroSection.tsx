@@ -41,7 +41,7 @@ export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectio
       </div>
 
       {/* Main content container */}
-      <div className="relative z-10 w-full max-w-7xl mx-auto">
+      <div className="relative w-full max-w-7xl mx-auto">
         <div className="flex flex-col lg:flex-row items-center justify-between gap-12 lg:gap-16">
           
           {/* Left content - Text and CTAs */}
