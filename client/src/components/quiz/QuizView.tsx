@@ -60,7 +60,7 @@ export default function QuizView() {
           </div>
           <div className="h-14 w-36 skeleton-shimmer rounded-lg" />
         </div>
-        <div className="grid grid-cols-4 gap-6 mb-10">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className={`glass-card border-0 animate-fade-in-up stagger-${i}`} data-testid={`skeleton-stat-${i}`}>
               <div className="p-6">
@@ -114,7 +114,7 @@ export default function QuizView() {
       </div>
 
       {/* Statistics Grid with Glass Cards */}
-      <div className="grid grid-cols-4 gap-6 mb-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6 mb-10">
         <Card className="glass-card border-0">
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
