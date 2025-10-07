@@ -30,6 +30,52 @@ VaktaAI is an AI-powered educational platform designed as a comprehensive study 
 
 **Impact**: All 50+ dialog instances across TutorSetupWizard, DocChatActionModal, QuickToolModal, NotesModal, QuizModal, StudyPlanWizard, AuthModal, and base dialog components now have consistent, stable appearance with no unwanted movement.
 
+### Priority 1 Security Hardening (Production-Ready)
+**Date**: October 7, 2025
+
+**Objective**: Implement essential security features to protect against common web vulnerabilities and abuse.
+
+**Implementation Details**:
+
+1. **Rate Limiting** (`server/middleware/security.ts`):
+   - **Global API Limiter**: 100 requests per 15 minutes per IP for general API endpoints
+   - **Authentication Limiter**: 5 requests per 15 minutes per IP for login attempts
+   - **Signup Limiter**: 3 requests per hour per IP to prevent account creation spam
+   - **AI Limiter**: 30 requests per minute per authenticated user (userId + IP composite key) for all AI endpoints
+   - **Upload Limiter**: 10 requests per hour per authenticated user for file uploads
+   - All limiters return 429 status with JSON error messages
+   - Optional Redis support for distributed rate limiting (fallbacks to in-memory store)
+
+2. **Helmet.js Security Headers** (`server/index.ts`):
+   - **Environment-Aware CSP**:
+     - Production: Strict CSP with `script-src: ['self']` only, `unsafe-inline` removed for script safety
+     - Development: Permissive CSP allowing `unsafe-inline` and `unsafe-eval` for Vite HMR
+   - **Other Security Headers**: XSS protection, frame denial, MIME sniffing prevention, referrer policy
+   - Cross-origin policies configured for external resource access
+
+3. **Strong Password Policy** (`server/auth.ts`):
+   - Minimum 8 characters, maximum 128 characters
+   - Required character types: uppercase letter, lowercase letter, digit, special character
+   - Zod validation with clear error messages
+   - Enforced at signup and applied to all new user registrations
+
+**Route Coverage**:
+- Auth endpoints: `/api/auth/login`, `/api/auth/signup` (with specific auth/signup limiters)
+- AI streaming: `GET/POST /api/chats/:id/stream` (with aiLimiter)
+- Tutor routes: `/api/tutor/optimized/*` (with aiLimiter)
+- Upload endpoints: `/api/documents/upload`, `/api/notes/*/attachments` (with uploadLimiter)
+- All other API routes protected by global apiLimiter
+
+**Security Status**:
+- ✅ Session-based authentication (NOT JWT)
+- ✅ Comprehensive rate limiting across all critical endpoints
+- ✅ Production-ready Helmet CSP configuration
+- ✅ Strong password validation
+- ⏳ 2FA/MFA (Priority 2 - deferred)
+- ⏳ Account lockout after failed attempts (Priority 2 - deferred)
+
+**Architect Approval**: Security implementation reviewed and approved. All AI endpoints properly rate-limited, Helmet CSP production-ready with environment detection.
+
 ## User Preferences
 
 Preferred communication style: Simple, everyday language (Hindi/English/Hinglish mix for Indian students).
