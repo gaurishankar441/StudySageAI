@@ -16,7 +16,9 @@ import {
   Bell,
   User,
   Home,
-  LogOut
+  LogOut,
+  Menu,
+  X
 } from "lucide-react";
 import logoPath from "@assets/Vakta AI.122_1759509648531.png";
 
@@ -67,20 +69,34 @@ export default function AppLayout({ children }: AppLayoutProps) {
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
       <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-card border-r border-border flex flex-col transition-all duration-200`}>
-        {/* Logo */}
+        {/* Logo and Toggle */}
         <div className="p-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <img 
-              src={logoPath} 
-              alt="Vakta AI" 
-              className="w-10 h-10 object-contain"
-            />
-            {!sidebarCollapsed && (
-              <div>
-                <h1 className="font-semibold text-lg leading-tight">VaktaAI</h1>
-                <p className="text-xs text-muted-foreground">Study Assistant</p>
-              </div>
-            )}
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <img 
+                src={logoPath} 
+                alt="Vakta AI" 
+                className="w-10 h-10 object-contain flex-shrink-0"
+              />
+              {!sidebarCollapsed && (
+                <div className="min-w-0">
+                  <h1 className="font-semibold text-lg leading-tight">VaktaAI</h1>
+                  <p className="text-xs text-muted-foreground">Study Assistant</p>
+                </div>
+              )}
+            </div>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 flex-shrink-0"
+              data-testid="button-toggle-sidebar"
+              title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+            >
+              {sidebarCollapsed ? (
+                <Menu className="w-5 h-5" />
+              ) : (
+                <X className="w-5 h-5" />
+              )}
+            </button>
           </div>
         </div>
 
