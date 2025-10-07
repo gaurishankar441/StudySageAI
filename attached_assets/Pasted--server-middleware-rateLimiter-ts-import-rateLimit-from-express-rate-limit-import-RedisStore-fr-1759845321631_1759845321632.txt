@@ -1,0 +1,175 @@
+// server/middleware/rateLimiter.ts
+import rateLimit from 'express-rate-limit';
+import RedisStore from 'rate-limit-redis';
+import Redis from 'ioredis';
+
+// Redis client (optional - falls back to memory)
+const redis = process.env.REDIS_URL 
+  ? new Redis(process.env.REDIS_URL)
+  : null;
+
+/**
+ * General API Rate Limiter
+ * 100 requests per 15 minutes per IP
+ */
+export const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100,
+  message: {
+    error: 'Too many requests from this IP, please try again later.',
+    retryAfter: '15 minutes'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  ...(redis && {
+    store: new RedisStore({
+      client: redis,
+      prefix: 'rl:api:',
+    }),
+  }),
+});
+
+/**
+ * Authentication Rate Limiter
+ * 5 login attempts per 15 minutes per IP
+ */
+export const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  message: {
+    error: 'Too many login attempts, please try again after 15 minutes.',
+    retryAfter: '15 minutes'
+  },
+  skipSuccessfulRequests: true, // Don't count successful logins
+  ...(redis && {
+    store: new RedisStore({
+      client: redis,
+      prefix: 'rl:auth:',
+    }),
+  }),
+});
+
+/**
+ * Strict Rate Limiter for sensitive operations
+ * 3 requests per hour (Password reset, email change, etc.)
+ */
+export const strictLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 3,
+  message: {
+    error: 'Too many requests for this operation. Please try again later.',
+    retryAfter: '1 hour'
+  },
+  ...(redis && {
+    store: new RedisStore({
+      client: redis,
+      prefix: 'rl:strict:',
+    }),
+  }),
+});
+
+/**
+ * AI Service Rate Limiter
+ * 30 AI requests per minute per user
+ */
+export const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: {
+    error: 'AI rate limit exceeded. Please slow down.',
+    retryAfter: '1 minute'
+  },
+  keyGenerator: (req) => {
+    // Rate limit by user ID if authenticated, otherwise by IP
+    return (req as any).user?.id?.toString() || req.ip;
+  },
+  ...(redis && {
+    store: new RedisStore({
+      client: redis,
+      prefix: 'rl:ai:',
+    }),
+  }),
+});
+
+/**
+ * File Upload Rate Limiter
+ * 10 uploads per hour per user
+ */
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: {
+    error: 'Upload limit exceeded. You can upload 10 files per hour.',
+    retryAfter: '1 hour'
+  },
+  keyGenerator: (req) => {
+    return (req as any).user?.id?.toString() || req.ip;
+  },
+  ...(redis && {
+    store: new RedisStore({
+      client: redis,
+      prefix: 'rl:upload:',
+    }),
+  }),
+});
+
+/**
+ * Custom Rate Limiter with Dynamic Limits
+ */
+export const createDynamicLimiter = (config: {
+  windowMs: number;
+  maxFree: number;
+  maxPro: number;
+  maxPremium: number;
+}) => {
+  return rateLimit({
+    windowMs: config.windowMs,
+    max: async (req) => {
+      const user = (req as any).user;
+      if (!user) return config.maxFree;
+      
+      // Check user subscription tier
+      switch (user.subscriptionTier) {
+        case 'premium':
+          return config.maxPremium;
+        case 'pro':
+          return config.maxPro;
+        default:
+          return config.maxFree;
+      }
+    },
+    message: (req) => ({
+      error: 'Rate limit exceeded for your subscription tier.',
+      upgrade: 'Upgrade to Pro or Premium for higher limits.',
+    }),
+    keyGenerator: (req) => {
+      return (req as any).user?.id?.toString() || req.ip;
+    },
+    ...(redis && {
+      store: new RedisStore({
+        client: redis,
+        prefix: 'rl:dynamic:',
+      }),
+    }),
+  });
+};
+
+/**
+ * Quiz Attempt Rate Limiter (Prevent Abuse)
+ */
+export const quizLimiter = createDynamicLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxFree: 5,
+  maxPro: 20,
+  maxPremium: 100,
+});
+
+/**
+ * Document Chat Rate Limiter
+ */
+export const docChatLimiter = createDynamicLimiter({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  maxFree: 50,
+  maxPro: 200,
+  maxPremium: 1000,
+});
