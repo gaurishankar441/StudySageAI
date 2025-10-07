@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { GraduationCap, FileText, Brain, Sparkles, Calendar, ArrowRight } from "lucide-react";
+import { GraduationCap, FileText, Brain, Sparkles, Calendar, ArrowRight, MessageCircle, CheckCircle, Clock, Tag, BookOpen, BarChart3, Lightbulb } from "lucide-react";
 import avatarPath from "@assets/ChatGPT Image Oct 7, 2025, 10_31_06 AM_1759813335869.png";
 
 export default function FeatureShowcase() {
@@ -92,88 +92,237 @@ export default function FeatureShowcase() {
     switch (type) {
       case "avatar":
         return (
-          <div className="relative mt-6 h-32 flex items-center justify-center">
-            <div className="relative w-24 h-24">
-              <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-30 blur-xl rounded-full animate-pulse-glow`} />
-              <img
-                src={avatarPath}
-                alt="AI Tutor Avatar"
-                className="relative w-full h-full rounded-full object-cover border-2 border-white/20"
-              />
+          <div className="relative mt-6 h-48 space-y-3">
+            {/* AI Message */}
+            <div className="flex items-start gap-3 animate-fade-in-up">
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-30 blur-lg rounded-full animate-pulse-glow`} />
+                <img
+                  src={avatarPath}
+                  alt="AI Tutor"
+                  className="relative w-full h-full rounded-full object-cover border-2 border-white/20"
+                />
+              </div>
+              <div className="flex-1 glass-card rounded-2xl p-3 max-w-[200px]">
+                <p className="text-sm text-slate-200">
+                  Let me explain photosynthesis in simple terms...
+                </p>
+              </div>
+            </div>
+
+            {/* User Message */}
+            <div className="flex items-start gap-3 justify-end animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
+              <div className="glass-card rounded-2xl p-3 max-w-[180px] bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
+                <p className="text-sm text-slate-200">
+                  Can you give an example?
+                </p>
+              </div>
+            </div>
+
+            {/* Typing Indicator */}
+            <div className="flex items-start gap-3 animate-fade-in-up" style={{ animationDelay: '0.4s' }}>
+              <div className="relative w-10 h-10 flex-shrink-0">
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-30 blur-lg rounded-full animate-pulse-glow`} />
+                <img
+                  src={avatarPath}
+                  alt="AI Tutor"
+                  className="relative w-full h-full rounded-full object-cover border-2 border-white/20"
+                />
+              </div>
+              <div className="glass-card rounded-2xl p-3 flex gap-1">
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0s' }} />
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-bounce" style={{ animationDelay: '0.4s' }} />
+              </div>
             </div>
           </div>
         );
       
       case "document":
         return (
-          <div className="relative mt-6 h-32 flex items-center justify-center space-x-2">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className={`w-16 h-20 bg-gradient-to-br ${gradient} rounded-lg shadow-lg transform transition-all duration-300 hover:scale-110`}
-                style={{
-                  opacity: 0.3 + i * 0.1,
-                  transform: `translateY(${i * 4}px) rotate(${(i - 1) * 8}deg)`,
-                  animationDelay: `${i * 0.1}s`
-                }}
-              >
-                <div className="p-2 space-y-1">
-                  <div className="h-1 bg-white/40 rounded" />
-                  <div className="h-1 bg-white/30 rounded w-3/4" />
-                  <div className="h-1 bg-white/30 rounded w-1/2" />
-                </div>
+          <div className="relative mt-6 h-48 space-y-3">
+            {/* PDF Preview */}
+            <div className="glass-card rounded-xl p-3 space-y-2 animate-fade-in-up">
+              <div className="flex items-center gap-2">
+                <BookOpen className="w-4 h-4 text-purple-400" />
+                <span className="text-xs text-slate-300">Cell Biology.pdf</span>
+                <span className="text-xs text-slate-500">• pg. 45</span>
               </div>
-            ))}
+              <div className="bg-white/5 rounded-lg p-2 space-y-1">
+                <div className="h-1.5 bg-white/30 rounded w-full" />
+                <div className="h-1.5 bg-white/30 rounded w-5/6" />
+                <div className="h-1.5 bg-purple-400/40 rounded w-3/4" />
+              </div>
+            </div>
+
+            {/* Question */}
+            <div className="glass-card rounded-xl p-3 bg-gradient-to-br from-purple-500/10 to-pink-600/10 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
+              <div className="flex items-start gap-2">
+                <MessageCircle className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-slate-200">What is mitochondria?</p>
+              </div>
+            </div>
+
+            {/* AI Answer with Citation */}
+            <div className="glass-card rounded-xl p-3 space-y-2 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <p className="text-xs text-slate-200">
+                Mitochondria is the powerhouse of the cell...
+                <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px]">
+                  <Tag className="w-3 h-3" />
+                  pg. 45
+                </span>
+              </p>
+            </div>
           </div>
         );
       
       case "quiz":
         return (
-          <div className="relative mt-6 h-32 flex flex-col justify-center space-y-2 px-4">
-            {[...Array(3)].map((_, i) => (
-              <div
-                key={i}
-                className="flex items-center space-x-3 bg-white/5 rounded-lg p-2 backdrop-blur-sm border border-white/10 hover:bg-white/10 transition-all duration-300"
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className={`w-4 h-4 rounded-full bg-gradient-to-br ${gradient} opacity-60`} />
-                <div className="flex-1 h-2 bg-white/20 rounded" />
+          <div className="relative mt-6 h-48 space-y-3">
+            {/* Quiz Header */}
+            <div className="flex items-center justify-between animate-fade-in-up">
+              <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5">
+                  <BarChart3 className="w-4 h-4 text-orange-400" />
+                  <span className="text-xs text-slate-300">3/10</span>
+                </div>
+                <div className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/20 to-pink-600/20 border border-orange-500/30">
+                  <span className="text-xs font-semibold text-orange-300">+120 pts</span>
+                </div>
               </div>
-            ))}
+              <div className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-orange-500/10 border border-orange-500/20">
+                <Clock className="w-3 h-3 text-orange-400" />
+                <span className="text-xs text-orange-300">0:45</span>
+              </div>
+            </div>
+
+            {/* Question */}
+            <div className="glass-card rounded-xl p-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
+              <p className="text-sm text-slate-200 font-medium">
+                What is the speed of light?
+              </p>
+            </div>
+
+            {/* MCQ Options */}
+            <div className="space-y-2">
+              {[
+                { label: 'A', text: '3 × 10⁸ m/s', isCorrect: true },
+                { label: 'B', text: '3 × 10⁶ m/s', isCorrect: false },
+                { label: 'C', text: '3 × 10⁷ m/s', isCorrect: false },
+                { label: 'D', text: '3 × 10⁹ m/s', isCorrect: false }
+              ].map((option, i) => (
+                <div
+                  key={i}
+                  className={`group glass-card rounded-lg p-2.5 flex items-center gap-3 cursor-pointer transition-all duration-300 hover:bg-orange-500/10 animate-fade-in-up ${
+                    option.isCorrect ? 'border border-orange-500/30' : ''
+                  }`}
+                  style={{ animationDelay: `${0.2 + i * 0.1}s` }}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs font-semibold ${
+                    option.isCorrect 
+                      ? 'bg-gradient-to-br from-orange-500 to-pink-600 text-white' 
+                      : 'bg-white/10 text-slate-400 group-hover:bg-white/20'
+                  }`}>
+                    {option.label}
+                  </div>
+                  <span className="text-xs text-slate-200">{option.text}</span>
+                  {option.isCorrect && (
+                    <CheckCircle className="w-4 h-4 text-orange-400 ml-auto" />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
         );
       
       case "notes":
         return (
-          <div className="relative mt-6 h-32 grid grid-cols-2 gap-2 px-4">
-            {[...Array(4)].map((_, i) => (
-              <div
-                key={i}
-                className={`bg-gradient-to-br ${gradient} opacity-20 rounded-lg p-3 backdrop-blur-sm border border-white/10 hover:opacity-30 transition-all duration-300`}
-                style={{ animationDelay: `${i * 0.1}s` }}
-              >
-                <div className="h-1.5 bg-white/50 rounded mb-2" />
-                <div className="h-1 bg-white/30 rounded mb-1" />
-                <div className="h-1 bg-white/30 rounded w-3/4" />
+          <div className="relative mt-6 h-48 space-y-3">
+            {/* Note Card */}
+            <div className="glass-card rounded-xl p-4 space-y-3 animate-fade-in-up">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-emerald-400">Cell Biology Notes</h4>
+                <Sparkles className="w-4 h-4 text-emerald-400" />
               </div>
-            ))}
+              
+              {/* Key Points */}
+              <div className="space-y-2">
+                {[
+                  'Cells are basic units of life',
+                  'Mitochondria generates energy'
+                ].map((point, i) => (
+                  <div key={i} className="flex items-start gap-2 animate-fade-in-up" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
+                    <Lightbulb className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
+                    <span className="text-xs text-slate-300">{point}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Tags */}
+              <div className="flex gap-2 pt-2">
+                <span className="px-2 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] text-emerald-300">
+                  Biology
+                </span>
+                <span className="px-2 py-1 rounded-full bg-teal-500/10 border border-teal-500/20 text-[10px] text-teal-300">
+                  Chapter 3
+                </span>
+              </div>
+            </div>
+
+            {/* Flashcard Preview */}
+            <div className="glass-card rounded-xl p-3 bg-gradient-to-br from-emerald-500/10 to-teal-600/10 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
+              <div className="flex items-center gap-2 mb-2">
+                <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center">
+                  <span className="text-xs text-emerald-400">Q</span>
+                </div>
+                <span className="text-xs text-slate-300">What is photosynthesis?</span>
+              </div>
+            </div>
           </div>
         );
       
       case "calendar":
         return (
-          <div className="relative mt-6 h-32 px-4">
-            <div className="grid grid-cols-7 gap-1">
-              {[...Array(21)].map((_, i) => (
+          <div className="relative mt-6 h-48 space-y-3">
+            {/* Week Header */}
+            <div className="flex items-center justify-between animate-fade-in-up">
+              <span className="text-xs font-semibold text-slate-300">This Week</span>
+              <div className="flex items-center gap-1.5">
+                <div className="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                  <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" style={{ width: '65%' }} />
+                </div>
+                <span className="text-[10px] text-indigo-400">65%</span>
+              </div>
+            </div>
+
+            {/* Tasks */}
+            <div className="space-y-2">
+              {[
+                { task: 'Study Mathematics', time: '9:00 AM - 11:00 AM', done: true },
+                { task: 'Physics Practice', time: '2:00 PM - 3:30 PM', done: false },
+                { task: 'Chemistry Quiz', time: '4:00 PM - 5:00 PM', done: false }
+              ].map((item, i) => (
                 <div
                   key={i}
-                  className={`aspect-square rounded ${
-                    i % 7 === 2 || i % 7 === 5
-                      ? `bg-gradient-to-br ${gradient} opacity-40`
-                      : 'bg-white/10'
-                  } hover:opacity-60 transition-all duration-300`}
-                  style={{ animationDelay: `${i * 0.02}s` }}
-                />
+                  className={`glass-card rounded-lg p-2.5 flex items-center gap-3 animate-fade-in-up ${
+                    item.done ? 'bg-indigo-500/5' : ''
+                  }`}
+                  style={{ animationDelay: `${0.1 + i * 0.1}s` }}
+                >
+                  <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                    item.done
+                      ? 'bg-gradient-to-br from-indigo-500 to-violet-600 border-indigo-500'
+                      : 'border-white/20'
+                  }`}>
+                    {item.done && <CheckCircle className="w-3.5 h-3.5 text-white" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs font-medium ${item.done ? 'text-slate-400 line-through' : 'text-slate-200'}`}>
+                      {item.task}
+                    </p>
+                    <p className="text-[10px] text-slate-500">{item.time}</p>
+                  </div>
+                </div>
               ))}
             </div>
           </div>
