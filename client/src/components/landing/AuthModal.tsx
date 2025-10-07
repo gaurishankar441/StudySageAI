@@ -118,12 +118,12 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8 border-2 border-cyan-400/60 shadow-2xl shadow-cyan-500/40 dark:!bg-white dark:!text-slate-900"
+        className="max-w-md p-8 border-2 border-cyan-400/60 shadow-2xl shadow-cyan-500/40"
         style={{
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.98) 0%, rgba(248, 250, 252, 0.98) 100%)',
-          border: '2px solid rgba(14, 165, 233, 0.3)',
+          background: 'rgb(255, 255, 255)',
+          border: '2px solid rgba(14, 165, 233, 0.4)',
         }}
         aria-describedby="auth-description"
       >
