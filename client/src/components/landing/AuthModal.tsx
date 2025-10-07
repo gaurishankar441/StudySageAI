@@ -118,11 +118,11 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8 border-2 border-cyan-400/60 bg-white/95 shadow-2xl shadow-cyan-500/40"
+        className="max-w-md p-8 border-2 border-cyan-400/60 !bg-white shadow-2xl shadow-cyan-500/40 dark:!bg-white dark:!text-slate-900"
         style={{
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
-          background: 'linear-gradient(135deg, rgba(255, 255, 255, 0.95) 0%, rgba(240, 248, 255, 0.95) 100%)',
+          background: 'linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(240, 248, 255, 1) 100%) !important',
         }}
       >
         <Tabs defaultValue={defaultTab} className="w-full">
@@ -130,14 +130,14 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
             <TabsTrigger 
               value="login" 
               data-testid="tab-login"
-              className="rounded-lg transition-smooth data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-cyan-500 data-[state=active]:after:to-purple-500"
+              className="rounded-lg transition-smooth text-slate-700 data-[state=active]:!bg-white data-[state=active]:!text-slate-900 data-[state=active]:shadow-md relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-cyan-500 data-[state=active]:after:to-purple-500"
             >
               Login
             </TabsTrigger>
             <TabsTrigger 
               value="signup" 
               data-testid="tab-signup"
-              className="rounded-lg transition-smooth data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-cyan-500 data-[state=active]:after:to-purple-500"
+              className="rounded-lg transition-smooth text-slate-700 data-[state=active]:!bg-white data-[state=active]:!text-slate-900 data-[state=active]:shadow-md relative data-[state=active]:after:absolute data-[state=active]:after:bottom-0 data-[state=active]:after:left-0 data-[state=active]:after:right-0 data-[state=active]:after:h-0.5 data-[state=active]:after:bg-gradient-to-r data-[state=active]:after:from-cyan-500 data-[state=active]:after:to-purple-500"
             >
               Sign Up
             </TabsTrigger>
@@ -145,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           
           {/* Login Tab */}
           <TabsContent value="login" className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Welcome back</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Welcome back</h2>
             
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-5">
@@ -210,7 +210,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           
           {/* Signup Tab */}
           <TabsContent value="signup" className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Create account</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Create account</h2>
             
             <Form {...signupForm}>
               <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-5">
