@@ -126,7 +126,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
         }}
       >
         <Tabs defaultValue={defaultTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50 p-1 rounded-xl">
+          <TabsList className="grid w-full grid-cols-2 mb-8 bg-slate-800/80 p-1 rounded-xl border border-slate-700/50">
             <TabsTrigger 
               value="login" 
               data-testid="tab-login"
@@ -145,7 +145,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           
           {/* Login Tab */}
           <TabsContent value="login" className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8 text-center">Welcome back</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Welcome back</h2>
             
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-5">
@@ -161,7 +161,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                           type="email"
                           placeholder="you@example.com"
                           data-testid="input-email-login"
-                          className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -181,7 +181,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                           type="password"
                           placeholder="••••••••"
                           data-testid="input-password-login"
-                          className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -210,7 +210,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           
           {/* Signup Tab */}
           <TabsContent value="signup" className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8 text-center">Create account</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">Create account</h2>
             
             <Form {...signupForm}>
               <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-5">
@@ -226,7 +226,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                             {...field}
                             placeholder="John"
                             data-testid="input-firstname"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                            className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                           />
                         </FormControl>
                         <FormMessage />
@@ -245,7 +245,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                             {...field}
                             placeholder="Doe"
                             data-testid="input-lastname"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                            className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                           />
                         </FormControl>
                         <FormMessage />
@@ -266,7 +266,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                           type="email"
                           placeholder="you@example.com"
                           data-testid="input-email-signup"
-                          className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
@@ -286,7 +286,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                           type="password"
                           placeholder="••••••••"
                           data-testid="input-password-signup"
-                          className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
+                          className="h-12 px-4 bg-slate-800/60 border-slate-600/60 text-white placeholder:text-slate-400 focus:border-cyan-500 focus:bg-slate-800/80 transition-smooth"
                         />
                       </FormControl>
                       <FormMessage />
