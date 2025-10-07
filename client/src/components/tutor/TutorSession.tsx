@@ -27,6 +27,8 @@ import {
   Volume2,
   VolumeX,
   Loader2,
+  ChevronLeft,
+  ChevronRight,
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
@@ -66,6 +68,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [playingAudio, setPlayingAudio] = useState<string | null>(null);
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null);
   const [shouldAutoPlayTTS, setShouldAutoPlayTTS] = useState(false);
+  const [lessonPlanCollapsed, setLessonPlanCollapsed] = useState(false);
+  const [quickToolsCollapsed, setQuickToolsCollapsed] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -636,10 +640,29 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   return (
     <div className="h-full flex gap-6">
       {/* Left: Lesson Plan */}
-      <div className="w-64 bg-card rounded-xl p-4 border border-border space-y-4 overflow-y-auto">
-        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-          Lesson Plan
-        </h3>
+      <div className={`${lessonPlanCollapsed ? 'w-12' : 'w-64'} bg-card rounded-xl border border-border overflow-hidden transition-all duration-200 flex flex-col`}>
+        <div className="p-4 flex items-center justify-between border-b border-border">
+          {!lessonPlanCollapsed && (
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              Lesson Plan
+            </h3>
+          )}
+          <button
+            onClick={() => setLessonPlanCollapsed(!lessonPlanCollapsed)}
+            className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 ml-auto"
+            data-testid="button-toggle-lesson-plan"
+            title={lessonPlanCollapsed ? "Expand Lesson Plan" : "Collapse Lesson Plan"}
+          >
+            {lessonPlanCollapsed ? (
+              <ChevronRight className="w-5 h-5" />
+            ) : (
+              <ChevronLeft className="w-5 h-5" />
+            )}
+          </button>
+        </div>
+        
+        {!lessonPlanCollapsed && (
+          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         <div className="space-y-2">
           {/* Introduction Phase */}
           <div className={`p-3 rounded-lg ${
@@ -744,6 +767,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             <span className="font-medium">{Math.floor(totalMessages / 2)}</span>
           </div>
         </div>
+          </div>
+        )}
       </div>
 
       {/* Center: Chat */}
@@ -929,105 +954,125 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       </div>
 
       {/* Right: Tools */}
-      <div className="w-72 bg-card rounded-xl p-4 border border-border space-y-4 overflow-y-auto">
-        <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
-          Quick Tools
-        </h3>
-
-        <div className="space-y-2">
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => setActiveToolModal('explain')}
-            data-testid="button-explain-concept"
+      <div className={`${quickToolsCollapsed ? 'w-12' : 'w-72'} bg-card rounded-xl border border-border overflow-hidden transition-all duration-200 flex flex-col`}>
+        <div className="p-4 flex items-center justify-between border-b border-border">
+          {!quickToolsCollapsed && (
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+              Quick Tools
+            </h3>
+          )}
+          <button
+            onClick={() => setQuickToolsCollapsed(!quickToolsCollapsed)}
+            className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 ml-auto"
+            data-testid="button-toggle-quick-tools"
+            title={quickToolsCollapsed ? "Expand Quick Tools" : "Collapse Quick Tools"}
           >
-            <Lightbulb className="w-4 h-4" />
-            Explain Concept
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => setActiveToolModal('hint')}
-            data-testid="button-give-hint"
-          >
-            <HelpCircle className="w-4 h-4" />
-            Give Me a Hint
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => setActiveToolModal('example')}
-            data-testid="button-show-example"
-          >
-            <BookOpen className="w-4 h-4" />
-            Show Example
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => setActiveToolModal('practice5')}
-            data-testid="button-practice-5"
-          >
-            <Brain className="w-4 h-4" />
-            Practice 5 Qs
-          </Button>
-          <Button
-            variant="outline"
-            className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
-            onClick={() => setActiveToolModal('summary')}
-            data-testid="button-get-summary"
-          >
-            <FileText className="w-4 h-4" />
-            Get Summary
-          </Button>
+            {quickToolsCollapsed ? (
+              <ChevronLeft className="w-5 h-5" />
+            ) : (
+              <ChevronRight className="w-5 h-5" />
+            )}
+          </button>
         </div>
 
-        {/* Learning Insights */}
-        <div className="pt-4 border-t border-border">
-          <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">
-            Learning Insights
-          </h4>
-          <div className="space-y-3">
-            <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-              <div className="flex items-start gap-2">
-                <TrendingUp className="w-4 h-4 text-success mt-0.5" />
-                <div>
-                  <p className="text-xs font-medium text-success-foreground">Strong grasp of basics</p>
-                  <p className="text-xs text-success/80 mt-1">You're excelling at fundamental concepts</p>
+        {!quickToolsCollapsed && (
+          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+            <div className="space-y-2">
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setActiveToolModal('explain')}
+                data-testid="button-explain-concept"
+              >
+                <Lightbulb className="w-4 h-4" />
+                Explain Concept
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setActiveToolModal('hint')}
+                data-testid="button-give-hint"
+              >
+                <HelpCircle className="w-4 h-4" />
+                Give Me a Hint
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setActiveToolModal('example')}
+                data-testid="button-show-example"
+              >
+                <BookOpen className="w-4 h-4" />
+                Show Example
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setActiveToolModal('practice5')}
+                data-testid="button-practice-5"
+              >
+                <Brain className="w-4 h-4" />
+                Practice 5 Qs
+              </Button>
+              <Button
+                variant="outline"
+                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                onClick={() => setActiveToolModal('summary')}
+                data-testid="button-get-summary"
+              >
+                <FileText className="w-4 h-4" />
+                Get Summary
+              </Button>
+            </div>
+
+            {/* Learning Insights */}
+            <div className="pt-4 border-t border-border">
+              <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">
+                Learning Insights
+              </h4>
+              <div className="space-y-3">
+                <div className="bg-success/10 border border-success/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <TrendingUp className="w-4 h-4 text-success mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-success-foreground">Strong grasp of basics</p>
+                      <p className="text-xs text-success/80 mt-1">You're excelling at fundamental concepts</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
+                  <div className="flex items-start gap-2">
+                    <AlertCircle className="w-4 h-4 text-warning mt-0.5" />
+                    <div>
+                      <p className="text-xs font-medium text-warning-foreground">Review needed</p>
+                      <p className="text-xs text-warning/80 mt-1">Complex factoring patterns</p>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
-            <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
-              <div className="flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 text-warning mt-0.5" />
-                <div>
-                  <p className="text-xs font-medium text-warning-foreground">Review needed</p>
-                  <p className="text-xs text-warning/80 mt-1">Complex factoring patterns</p>
+            {/* Session Stats */}
+            <div className="pt-4 border-t border-border">
+              <h4 className="font-semibold text-sm mb-3">Session Stats</h4>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Questions Asked</span>
+                  <span className="font-medium">3</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Concepts Covered</span>
+                  <span className="font-medium">2</span>
+                </div>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-muted-foreground">Time Spent</span>
+                  <span className="font-medium">12 min</span>
                 </div>
               </div>
             </div>
           </div>
-        </div>
-
-        {/* Session Stats */}
-        <div className="pt-4 border-t border-border">
-          <h4 className="font-semibold text-sm mb-3">Session Stats</h4>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Questions Asked</span>
-              <span className="font-medium">3</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Concepts Covered</span>
-              <span className="font-medium">2</span>
-            </div>
-            <div className="flex items-center justify-between text-sm">
-              <span className="text-muted-foreground">Time Spent</span>
-              <span className="font-medium">12 min</span>
-            </div>
-          </div>
-        </div>
+        )}
       </div>
 
       {/* Quick Tool Modal */}
