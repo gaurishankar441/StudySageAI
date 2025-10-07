@@ -10,7 +10,7 @@ import { useMutation } from "@tanstack/react-query";
 import { apiRequest, queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { useLocation } from "wouter";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 // Login schema
 const loginSchema = z.object({
@@ -116,9 +116,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
+    <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8 border-2 border-cyan-400/60 !bg-white shadow-2xl shadow-cyan-500/40 dark:!bg-white dark:!text-slate-900 pointer-events-auto"
+        className="max-w-md p-8 border-2 border-cyan-400/60 !bg-white shadow-2xl shadow-cyan-500/40 dark:!bg-white dark:!text-slate-900 pointer-events-auto relative"
         style={{
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
@@ -126,6 +126,10 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           pointerEvents: 'auto',
         }}
         aria-describedby="auth-description"
+        onInteractOutside={(e) => {
+          // Prevent closing on content clicks
+          e.preventDefault();
+        }}
       >
         <DialogTitle className="sr-only">Authentication</DialogTitle>
         <DialogDescription id="auth-description" className="sr-only">
