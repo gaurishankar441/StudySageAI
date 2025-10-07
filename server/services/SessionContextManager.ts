@@ -67,11 +67,39 @@ export class SessionContextManager {
   private readonly SESSION_TTL = 3600 * 24; // 24 hours
   private readonly SESSION_PREFIX = 'vaktaai:session:';
   private readonly MAX_HISTORY_SIZE = 20; // Keep last 20 language/emotion detections
+  
+  // In-memory fallback when Redis is unavailable
+  private inMemoryCache = new Map<string, SessionContext>();
 
   /**
-   * Get session context from Redis
+   * Get session context from Redis or in-memory fallback
    */
   async getContext(userId: string, chatId: string): Promise<SessionContext | null> {
+    const key = this.getSessionKey(userId, chatId);
+    
+    // Try Redis first
+    if (redis && redis.status === 'ready') {
+      try {
+        const data = await redis.hgetall(key);
+        
+        if (!data || Object.keys(data).length === 0) {
+          return null;
+        }
+
+        return this.deserializeContext(data);
+      } catch (error) {
+        console.error('[SESSION CONTEXT] Redis error, falling back to in-memory:', error);
+      }
+    }
+    
+    // Fallback to in-memory
+    return this.inMemoryCache.get(key) || null;
+  }
+
+  /**
+   * DEPRECATED - kept for compatibility
+   */
+  async getContextOld(userId: string, chatId: string): Promise<SessionContext | null> {
     if (!redis || !redis.status || redis.status !== 'ready') {
       return null;
     }
@@ -92,9 +120,52 @@ export class SessionContextManager {
   }
 
   /**
-   * Update session context in Redis
+   * Update session context in Redis or in-memory fallback
    */
   async updateContext(
+    userId: string,
+    chatId: string,
+    updates: Partial<SessionContext>
+  ): Promise<void> {
+    const key = this.getSessionKey(userId, chatId);
+    
+    // Get existing context or create new
+    let context = await this.getContext(userId, chatId);
+    if (!context) {
+      context = this.createEmptyContext(userId, chatId);
+    }
+
+    // Merge updates
+    context = { ...context, ...updates };
+
+    // Trim history arrays to max size
+    if (context.languageHistory.length > this.MAX_HISTORY_SIZE) {
+      context.languageHistory = context.languageHistory.slice(-this.MAX_HISTORY_SIZE);
+    }
+    if (context.emotionalHistory.length > this.MAX_HISTORY_SIZE) {
+      context.emotionalHistory = context.emotionalHistory.slice(-this.MAX_HISTORY_SIZE);
+    }
+    
+    // Try to save to Redis first
+    if (redis && redis.status === 'ready') {
+      try {
+        const serialized = this.serializeContext(context);
+        await redis.hset(key, serialized);
+        await redis.expire(key, this.SESSION_TTL);
+        return;
+      } catch (error) {
+        console.error('[SESSION CONTEXT] Redis error, saving to in-memory:', error);
+      }
+    }
+    
+    // Fallback: save to in-memory cache
+    this.inMemoryCache.set(key, context);
+  }
+
+  /**
+   * DEPRECATED - kept for compatibility
+   */
+  async updateContextOld(
     userId: string,
     chatId: string,
     updates: Partial<SessionContext>

@@ -6,7 +6,6 @@ import { tutorSessionService } from '../services/tutorSessionService';
 import { enhancedVoiceService } from '../services/enhancedVoiceService';
 import { intentClassifier } from '../services/intentClassifier';
 import { emotionDetector } from '../services/emotionDetector';
-import { promptBuilder } from '../services/promptBuilder';
 import { responseAdapter } from '../config/responseAdaptation';
 import { hintService } from '../services/hintService';
 import { storage } from '../storage';
@@ -755,26 +754,86 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
     // Get persona
     const persona = tutorSessionService.getPersona(session);
     
-    // Build context with session state
-    const sessionContext = `
-You are ${persona.name}, a ${persona.personality.toneOfVoice} ${session.subject} teacher.
-Current Phase: ${session.currentPhase}
-Student Level: ${session.level}
-Student Name: ${session.profileSnapshot?.firstName || 'Student'}
-Exam Target: ${session.profileSnapshot?.examTarget || 'General'}
-Current Class: ${session.profileSnapshot?.currentClass || 'Class 12'}
-Topic: ${session.topic}
-Progress: ${session.progress}%
-
-Personality: ${persona.personality.traits.join(', ')}
-Language: ${persona.languageStyle.hindiPercentage}% Hindi, ${persona.languageStyle.englishPercentage}% English
-Code-switch style: ${persona.languageStyle.codeSwitch}
-
-Strong Concepts: ${session.adaptiveMetrics?.strongConcepts?.join(', ') || 'None yet'}
-Misconceptions: ${session.adaptiveMetrics?.misconceptions?.join(', ') || 'None yet'}
-
-Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality.catchphrases.slice(0, 2).join(', ')}.
-    `.trim();
+    // 🔥 STEP 1: LANGUAGE DETECTION WITH 4-LAYER ANALYSIS
+    const startLangDetection = Date.now();
+    
+    // Check cache first
+    const cachedLangResult = await performanceOptimizer.getCachedLanguageDetection(query);
+    let langDetection = cachedLangResult;
+    
+    if (!cachedLangResult) {
+      // No cache hit - run detection
+      langDetection = await languageDetector.detect(query, {
+        userId,
+        chatId,
+        checkHistory: true
+      });
+      
+      // Cache result
+      await performanceOptimizer.cacheLanguageDetection(query, langDetection);
+    }
+    
+    const langDetectionTime = Date.now() - startLangDetection;
+    metricsTracker.record('language_detection_ms', langDetectionTime);
+    
+    const detectedLang = langDetection?.language || 'english';
+    console.log(`[STREAM LANG] Detected: ${detectedLang} (${langDetection?.confidence.toFixed(2)}, ${langDetection?.confidenceLevel}) - ${langDetectionTime}ms`);
+    
+    // 🔥 STEP 2: ADD LANGUAGE DETECTION TO SESSION CONTEXT
+    await sessionContextManager.addLanguageDetection(
+      userId,
+      chatId,
+      detectedLang,
+      langDetection?.confidence || 0.5
+    );
+    
+    // Get current context
+    let sessionCtx = await sessionContextManager.getContext(userId, chatId);
+    
+    // 💾 LOG LANGUAGE DETECTION TO DATABASE
+    if (langDetection) {
+      const lexicalScore = langDetection.analysis.lexical.devanagariRatio;
+      const syntacticScore = langDetection.analysis.syntactic.wordOrder === 'SOV' ? 0.8 : 
+                              langDetection.analysis.syntactic.wordOrder === 'SVO' ? 0.2 : 0.5;
+      const statisticalScore = langDetection.analysis.statistical.languageScore.hindi;
+      const contextualScore = langDetection.analysis.contextual?.consistencyScore || 0;
+      
+      await storage.logLanguageDetection({
+        userId,
+        chatId,
+        inputText: query,
+        detectedLanguage: langDetection.language,
+        confidence: langDetection.confidence,
+        confidenceLevel: langDetection.confidenceLevel,
+        lexicalScore,
+        syntacticScore,
+        statisticalScore,
+        contextualScore,
+        processingTime: langDetectionTime,
+        detectionMethod: langDetection.detectionMethod,
+        metadata: {
+          devanagariCount: langDetection.analysis.lexical.devanagariCount,
+          hindiWords: langDetection.analysis.lexical.hindiWords.length,
+          englishWords: langDetection.analysis.lexical.englishWords.length
+        }
+      });
+    }
+    
+    // 🔥 STEP 3: INTENT CLASSIFICATION + EMOTION DETECTION
+    const intent = intentClassifier.classifyIntent(query);
+    const emotionResult = emotionDetector.detectEmotion(query, sessionCtx?.conversationHistory || []);
+    
+    console.log(`[STREAM INTENT] ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) | EMOTION: ${emotionResult.emotion}`);
+    
+    // Add emotion detection to session context
+    await sessionContextManager.addEmotionDetection(
+      userId,
+      chatId,
+      emotionResult.emotion,
+      emotionResult.confidence
+    );
+    
+    sessionCtx = await sessionContextManager.getContext(userId, chatId);
     
     // Check if assessment phase - analyze response
     if (session.currentPhase === 'assessment') {
@@ -783,46 +842,85 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
       console.log(`[SESSION ASSESSMENT] Level: ${assessmentResult.level}, Score: ${assessmentResult.score}`);
     }
     
+    // 🔥 STEP 4: GENERATE DYNAMIC PROMPT USING MULTI-FACTOR ANALYSIS
+    const systemPrompt = await dynamicPromptEngine.generatePrompt({
+      language: detectedLang,
+      emotion: emotionResult.emotion,
+      phase: session.currentPhase,
+      intent: intent.type,
+      sessionContext: sessionCtx,
+      userProfile: {
+        firstName: session.profileSnapshot?.firstName || 'Student',
+        examTarget: session.profileSnapshot?.examTarget || 'General',
+        currentClass: session.profileSnapshot?.currentClass || 'Class 12',
+        preferredLanguage: session.profileSnapshot?.preferredLanguage || 'english'
+      },
+      tutorPersona: persona,
+      subject: session.subject,
+      topic: session.topic,
+      level: session.level,
+      progress: session.progress || 0,
+      adaptiveMetrics: session.adaptiveMetrics || {
+        diagnosticScore: 0,
+        checkpointsPassed: 0,
+        hintsUsed: 0,
+        misconceptions: [],
+        strongConcepts: []
+      }
+    });
+    
+    console.log(`[STREAM PROMPT] Generated ${systemPrompt.length} chars for ${detectedLang} | ${emotionResult.emotion} | ${session.currentPhase}`);
+    
     // Set up SSE
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
     
-    // Determine emotion based on phase
-    let emotion = 'friendly';
-    if (session.currentPhase === 'greeting' || session.currentPhase === 'rapport') {
-      emotion = 'enthusiastic';
-    } else if (session.currentPhase === 'teaching') {
-      emotion = 'teaching';
-    } else if (session.currentPhase === 'practice') {
-      emotion = 'encouraging';
-    } else if (session.currentPhase === 'feedback') {
-      emotion = 'celebratory';
-    }
+    // Determine emotion for frontend
+    let emotion = emotionResult.emotion || 'friendly';
     
     let terminalEventSent = false;
     let fullResponse = '';
     
     try {
-      // Save user message first
+      // Save user message first with intent + emotion + language metadata
       await storage.addMessage({
         chatId,
         role: 'user',
         content: query,
         tool: null,
-        metadata: null
+        metadata: {
+          intent: intent.type,
+          intentConfidence: intent.confidence,
+          emotion: emotionResult.emotion,
+          emotionConfidence: emotionResult.confidence,
+          detectedLanguage: detectedLang,
+          languageConfidence: langDetection?.confidence || 0
+        }
       });
       
-      await optimizedAI.generateStreamingResponse(query, sessionContext, (chunk, meta) => {
-        // Accumulate response
+      // 🔥 STEP 5: GENERATE AI RESPONSE WITH STREAMING
+      const startAIGeneration = Date.now();
+      let aiModel = 'unknown';
+      let aiCost = 0;
+      let aiCached = false;
+      
+      await optimizedAI.generateStreamingResponse(query, systemPrompt, (chunk, meta) => {
+        // Accumulate response and metadata
         if (meta?.type !== 'complete' && meta?.type !== 'error') {
           fullResponse += chunk;
         }
+        
+        // Track metadata
+        if (meta?.model) aiModel = meta.model;
+        if (meta?.cost) aiCost = meta.cost;
+        if (meta?.cached !== undefined) aiCached = meta.cached;
+        
         if (meta?.type === 'complete') {
           terminalEventSent = true;
           res.write(`data: ${JSON.stringify({ 
             type: 'complete',
-            content: chunk, // Include final content
+            content: chunk,
             session: {
               currentPhase: session.currentPhase,
               progress: session.progress,
@@ -844,7 +942,7 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
           // Send chunk with proper format: type + content
           res.write(`data: ${JSON.stringify({ 
             type: 'chunk',
-            content: chunk, // Frontend expects 'content' field
+            content: chunk,
             session: {
               currentPhase: session.currentPhase
             }
@@ -852,7 +950,50 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
         }
       });
       
-      // Save AI response to database
+      const aiGenerationTime = Date.now() - startAIGeneration;
+      metricsTracker.record('ai_generation_ms', aiGenerationTime);
+      
+      // 🔥 STEP 6: VALIDATE RESPONSE QUALITY
+      const startValidation = Date.now();
+      const validation = await responseValidator.validate(fullResponse, {
+        expectedLanguage: detectedLang,
+        userEmotion: emotionResult.emotion,
+        currentPhase: session.currentPhase,
+        subject: session.subject || 'General',
+        topic: session.topic || 'General',
+        userMessage: query
+      });
+      const validationTime = Date.now() - startValidation;
+      metricsTracker.record('validation_ms', validationTime);
+      
+      console.log(`[STREAM VALIDATION] Score: ${(validation.overallScore * 100).toFixed(1)}% - Valid: ${validation.isValid} (${validationTime}ms)`);
+      
+      // 💾 LOG VALIDATION RESULTS TO DATABASE
+      const aiMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      
+      await storage.logResponseValidation({
+        userId,
+        chatId,
+        messageId: aiMessageId,
+        expectedLanguage: detectedLang,
+        userEmotion: emotionResult.emotion,
+        currentPhase: session.currentPhase,
+        isValid: validation.isValid,
+        overallScore: validation.overallScore,
+        languageMatchScore: validation.layers.languageMatch.score,
+        toneScore: validation.layers.toneAppropriate.score,
+        qualityScore: validation.layers.educationalQuality.score,
+        safetyScore: validation.layers.safety.score,
+        issues: validation.issues,
+        recommendations: validation.recommendations,
+        shouldRegenerate: validation.shouldRegenerate,
+        metadata: {
+          detectedLanguage: validation.layers.languageMatch.detectedLanguage,
+          wordCount: fullResponse.split(/\s+/).length
+        }
+      });
+      
+      // Save AI response to database with validation metadata
       if (fullResponse.trim()) {
         await storage.addMessage({
           chatId,
@@ -860,9 +1001,32 @@ Respond in ${persona.name}'s style. Use catchphrases like: ${persona.personality
           content: fullResponse.trim(),
           tool: null,
           metadata: {
+            model: aiModel,
+            cost: aiCost,
+            cached: aiCached,
             personaId: session.personaId,
             emotion,
-            phase: session.currentPhase
+            phase: session.currentPhase,
+            actualWordCount: fullResponse.split(/\s+/).length,
+            // 🔥 Validation metadata
+            validation: {
+              isValid: validation.isValid,
+              overallScore: validation.overallScore,
+              languageMatchScore: validation.layers.languageMatch.score,
+              toneScore: validation.layers.toneAppropriate.score,
+              qualityScore: validation.layers.educationalQuality.score,
+              safetyScore: validation.layers.safety.score,
+              issues: validation.issues,
+              recommendations: validation.recommendations,
+              validationTime: validationTime
+            },
+            // Performance metrics
+            timings: {
+              languageDetection: langDetectionTime,
+              aiGeneration: aiGenerationTime,
+              validation: validationTime,
+              total: langDetectionTime + aiGenerationTime + validationTime
+            }
           }
         });
       }
