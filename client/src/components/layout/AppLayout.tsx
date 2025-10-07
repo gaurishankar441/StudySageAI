@@ -68,26 +68,26 @@ export default function AppLayout({ children }: AppLayoutProps) {
   return (
     <div className="flex h-screen bg-background overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-card border-r border-border flex flex-col transition-all duration-200`}>
+      <aside className={`${sidebarCollapsed ? 'w-16' : 'w-64'} bg-card-subtle border-r border-border flex flex-col transition-smooth`}>
         {/* Logo and Toggle */}
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between gap-3">
+        <div className="p-6 border-b border-border">
+          <div className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-3 flex-1 min-w-0">
               <img 
                 src={logoPath} 
                 alt="Vakta AI" 
-                className="w-10 h-10 object-contain flex-shrink-0"
+                className="w-12 h-12 object-contain flex-shrink-0"
               />
               {!sidebarCollapsed && (
                 <div className="min-w-0">
-                  <h1 className="font-semibold text-lg leading-tight">VaktaAI</h1>
-                  <p className="text-xs text-muted-foreground">Study Assistant</p>
+                  <h1 className="font-bold text-xl leading-tight gradient-text">VaktaAI</h1>
+                  <p className="text-xs text-muted-foreground mt-0.5">Study Assistant</p>
                 </div>
               )}
             </div>
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 flex-shrink-0"
+              className="w-9 h-9 flex items-center justify-center hover:bg-accent rounded-full transition-smooth shadow-sm flex-shrink-0"
               data-testid="button-toggle-sidebar"
               title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
             >
@@ -101,19 +101,19 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 p-3 space-y-1 overflow-y-auto">
+        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
               <Link key={item.name} href={item.href}>
                 <a
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors duration-200 ${
+                  className={`flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-smooth ${
                     item.current
-                      ? 'bg-accent text-accent-foreground'
-                      : 'text-muted-foreground hover:bg-accent hover:text-accent-foreground'
+                      ? 'bg-gradient-subtle text-foreground shadow-sm'
+                      : 'text-muted-foreground card-interactive'
                   }`}
                 >
-                  <Icon className="w-5 h-5 flex-shrink-0" />
+                  <Icon className="w-6 h-6 flex-shrink-0" />
                   {!sidebarCollapsed && <span>{item.name}</span>}
                 </a>
               </Link>
@@ -121,10 +121,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
           })}
 
           {!sidebarCollapsed && (
-            <div className="pt-3 mt-3 border-t border-border">
+            <div className="pt-4 mt-4 border-t border-border">
               <Link href="/settings">
-                <a className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm text-muted-foreground hover:bg-accent hover:text-accent-foreground transition-colors duration-200">
-                  <Settings className="w-5 h-5" />
+                <a className="flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium text-muted-foreground card-interactive transition-smooth">
+                  <Settings className="w-6 h-6" />
                   <span>Settings</span>
                 </a>
               </Link>
@@ -133,14 +133,14 @@ export default function AppLayout({ children }: AppLayoutProps) {
         </nav>
 
         {/* User Profile */}
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-accent cursor-pointer transition-colors duration-200">
-            <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-medium">
+        <div className="p-4 border-t border-border">
+          <div className="flex items-center gap-3 p-3 rounded-lg bg-card cursor-pointer transition-smooth hover:shadow-md card-subtle">
+            <div className="w-10 h-10 rounded-full bg-gradient-primary text-white flex items-center justify-center text-sm font-semibold shadow-sm">
               {initials}
             </div>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+                <p className="text-sm font-semibold truncate">
                   {user?.firstName} {user?.lastName}
                 </p>
                 <p className="text-xs text-muted-foreground truncate">
@@ -151,7 +151,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
             {!sidebarCollapsed && (
               <button
                 onClick={handleLogout}
-                className="p-1 hover:bg-muted-foreground/10 rounded transition-colors duration-200"
+                className="p-2 hover:bg-muted rounded-lg transition-smooth"
                 title="Sign out"
                 disabled={logoutMutation.isPending}
                 data-testid="button-logout"

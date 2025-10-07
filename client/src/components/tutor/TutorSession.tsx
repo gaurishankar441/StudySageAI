@@ -89,7 +89,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     queryKey: ["/api/auth/user"],
   });
 
-  // Fetch tutor session for 7-phase tracking
   const { data: tutorSession } = useQuery<{
     session: {
       id: string;
@@ -106,7 +105,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   }>({
     queryKey: [`/api/tutor/optimized/session/${chatId}`],
     enabled: !!chatId,
-    retry: false, // Don't retry if session doesn't exist yet
+    retry: false,
   });
 
   const sendMessageMutation = useMutation({
@@ -114,11 +113,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       setIsStreaming(true);
       setStreamingMessage("");
 
-      // Use optimized session streaming if tutorSession exists
       const useSessionStream = !!tutorSession?.session;
       
       if (useSessionStream) {
-        // POST to session streaming endpoint
         const response = await fetch('/api/tutor/optimized/session/ask-stream', {
           method: 'POST',
           headers: {
@@ -139,7 +136,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         const decoder = new TextDecoder();
 
         return new Promise((resolve, reject) => {
-          let buffer = ''; // Buffer for partial lines
+          let buffer = '';
           let sessionMetadata: any = null;
 
           const readStream = async () => {
@@ -148,11 +145,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                 const { done, value } = await reader.read();
                 if (done) break;
 
-                // Decode chunk and add to buffer
                 buffer += decoder.decode(value, { stream: true });
                 const lines = buffer.split('\n');
                 
-                // Keep last incomplete line in buffer
                 buffer = lines.pop() || '';
 
                 for (const line of lines) {
@@ -167,8 +162,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                         setStreamingMessage(prev => prev + parsed.content);
                       } else if (parsed.type === 'complete') {
                         setIsStreaming(false);
-                        sessionMetadata = parsed.session; // Capture session metadata
-                        setShouldAutoPlayTTS(true); // Enable voice playback
+                        sessionMetadata = parsed.session;
+                        setShouldAutoPlayTTS(true);
                         queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
                         queryClient.invalidateQueries({ queryKey: [`/api/tutor/optimized/session/${chatId}`] });
                         resolve({ 
@@ -182,7 +177,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                         reject(new Error(parsed.error));
                       }
                     } catch (e) {
-                      // Ignore parse errors for partial chunks
                       console.warn('Parse error:', e, 'Line:', line);
                     }
                   }
@@ -197,7 +191,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           readStream();
         });
       } else {
-        // Fallback to legacy EventSource
         const eventSource = new EventSource(
           `/api/chats/${chatId}/stream?message=${encodeURIComponent(messageText)}`,
           { withCredentials: true }
@@ -237,7 +230,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
     },
     onError: (error) => {
-      // Rollback optimistic update - refetch to remove phantom message
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
       toast({
         title: "Error",
@@ -268,7 +260,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     onSuccess: (data) => {
       const transcript = data.transcript;
       if (transcript && transcript.trim()) {
-        // Optimistically add user message to UI
         const tempUserMessage: Message = {
           id: `temp-${Date.now()}`,
           chatId: chatId,
@@ -279,13 +270,11 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           metadata: null,
         };
         
-        // Update messages cache optimistically
         queryClient.setQueryData<Message[]>(
           [`/api/chats/${chatId}/messages`],
           (old = []) => [...old, tempUserMessage]
         );
         
-        // Send to AI for response
         sendMessageMutation.mutate(transcript.trim());
       }
     },
@@ -339,7 +328,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const playAudio = async (messageId: string, text: string) => {
     console.log('[TTS] playAudio called for message:', messageId);
     
-    // If clicking the same message that's playing, stop/mute it
     if (playingAudio === messageId && audioElement) {
       console.log('[TTS] Muting/stopping currently playing audio');
       audioElement.pause();
@@ -350,7 +338,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       return;
     }
 
-    // Stop any other currently playing audio
     if (audioElement) {
       console.log('[TTS] Stopping other playing audio');
       audioElement.pause();
@@ -366,7 +353,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
       console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
       
-      // Use emotion-based TTS only if session exists AND can resume
       const useOptimizedTTS = tutorSession?.session && tutorSession?.canResume;
       const ttsEndpoint = useOptimizedTTS
         ? '/api/tutor/optimized/session/tts'
@@ -427,7 +413,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       setPlayingAudio(null);
       setAudioElement(null);
       
-      // Handle autoplay policy errors gracefully
       if (error.name === 'NotAllowedError') {
         console.log('[TTS] Audio autoplay blocked by browser policy');
         toast({
@@ -445,31 +430,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     }
   };
 
-  // Auto-scroll to bottom when messages change or streaming (only if user is near bottom)
   useEffect(() => {
     if (chatContainerRef.current) {
       const container = chatContainerRef.current;
       const isNearBottom = container.scrollHeight - container.scrollTop - container.clientHeight < 100;
       
-      // Only auto-scroll if user is already near the bottom or if it's a new message/streaming
       if (isNearBottom) {
         container.scrollTop = container.scrollHeight;
       }
     }
   }, [messages, streamingMessage, isStreaming, transcribeMutation.isPending]);
 
-  // Track last played message to prevent replay
   const lastPlayedRef = useRef<string | null>(null);
 
-  // Auto-play TTS when NEW assistant message arrives
   useEffect(() => {
     if (messages.length > 0) {
       const lastMessage = messages[messages.length - 1];
       
-      // Only play if:
-      // 1. It's an assistant message
-      // 2. We haven't played it before
-      // 3. It's not currently streaming
       if (
         lastMessage.role === 'assistant' && 
         lastMessage.id !== lastPlayedRef.current &&
@@ -596,31 +573,24 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     );
   }
 
-  // Calculate dynamic lesson plan based on chat progress
   const userMessages = messages.filter(m => m.role === 'user').length;
   const totalMessages = messages.length;
   
-  // Calculate progress based on message exchanges
   const progress = totalMessages > 0 ? Math.min(Math.round((userMessages / 15) * 100), 100) : 0;
   
-  // Determine lesson phases based on message count
   const introComplete = userMessages >= 2;
   const coreConceptsComplete = userMessages >= 8;
   const practiceComplete = userMessages >= 15;
   
-  // Determine current active phase
   const currentPhase = userMessages >= 8 ? 'practice' : userMessages >= 2 ? 'core-concepts' : 'introduction';
   
-  // Calculate time elapsed
   const startTime = chat.createdAt ? new Date(chat.createdAt) : new Date();
   const elapsedMs = new Date().getTime() - startTime.getTime();
   const elapsedMin = Math.floor(elapsedMs / 60000);
   
-  // Calculate questions answered (user messages)
   const questionsAnswered = userMessages;
   const estimatedTotal = Math.max(15, userMessages + 3);
 
-  // Map tutorSession phase to number for PhaseIndicator
   const getCurrentPhaseNumber = () => {
     if (!tutorSession?.session) return null;
     
@@ -638,18 +608,18 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   };
 
   return (
-    <div className="h-full flex gap-6">
+    <div className="h-full flex gap-6 p-6">
       {/* Left: Lesson Plan */}
-      <div className={`${lessonPlanCollapsed ? 'w-12' : 'w-64'} bg-card rounded-xl border border-border overflow-hidden transition-all duration-200 flex flex-col`}>
-        <div className="p-4 flex items-center justify-between border-b border-border">
+      <div className={`${lessonPlanCollapsed ? 'w-12' : 'w-72'} bg-gradient-to-br from-card-subtle to-card rounded-2xl border border-border overflow-hidden transition-all duration-300 flex flex-col shadow-lg`}>
+        <div className="p-5 flex items-center justify-between border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
           {!lessonPlanCollapsed && (
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            <h3 className="font-semibold text-sm text-foreground uppercase tracking-wide">
               Lesson Plan
             </h3>
           )}
           <button
             onClick={() => setLessonPlanCollapsed(!lessonPlanCollapsed)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 ml-auto"
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-xl transition-all duration-200 ml-auto"
             data-testid="button-toggle-lesson-plan"
             title={lessonPlanCollapsed ? "Expand Lesson Plan" : "Collapse Lesson Plan"}
           >
@@ -662,109 +632,106 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
         
         {!lessonPlanCollapsed && (
-          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        <div className="space-y-2">
-          {/* Introduction Phase */}
-          <div className={`p-3 rounded-lg ${
+          <div className="flex-1 p-6 space-y-4 overflow-y-auto">
+        <div className="space-y-3">
+          <div className={`p-4 rounded-xl transition-all duration-300 ${
             introComplete 
-              ? 'bg-primary/10 border border-primary/20' 
+              ? 'bg-gradient-to-br from-primary/15 to-purple-500/10 border-2 border-primary/30 shadow-md' 
               : currentPhase === 'introduction' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
+              ? 'bg-gradient-to-br from-primary/10 to-purple-500/5 border-2 border-primary/20 shadow-sm' 
+              : 'bg-card-subtle/50 border border-border/50'
           }`}>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-3 mb-2">
               {introComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
+                <CheckCircle className="w-5 h-5 text-primary" />
               ) : currentPhase === 'introduction' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-primary animate-pulse bg-primary/20"></div>
               ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30"></div>
               )}
-              <span className={`text-sm font-medium ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : ''}`}>
+              <span className={`text-sm font-semibold ${!introComplete && currentPhase !== 'introduction' ? 'text-muted-foreground' : 'text-foreground'}`}>
                 Introduction
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {introComplete ? 'Completed' : currentPhase === 'introduction' ? 'In Progress' : 'Not started'}
+            <p className="text-xs text-muted-foreground pl-8">
+              {introComplete ? 'Completed ✓' : currentPhase === 'introduction' ? 'In Progress...' : 'Not started'}
             </p>
           </div>
 
-          {/* Core Concepts Phase */}
-          <div className={`p-3 rounded-lg ${
+          <div className={`p-4 rounded-xl transition-all duration-300 ${
             coreConceptsComplete 
-              ? 'bg-primary/10 border border-primary/20' 
+              ? 'bg-gradient-to-br from-primary/15 to-purple-500/10 border-2 border-primary/30 shadow-md' 
               : currentPhase === 'core-concepts' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
+              ? 'bg-gradient-to-br from-primary/10 to-purple-500/5 border-2 border-primary/20 shadow-sm' 
+              : 'bg-card-subtle/50 border border-border/50'
           }`}>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-3 mb-2">
               {coreConceptsComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
+                <CheckCircle className="w-5 h-5 text-primary" />
               ) : currentPhase === 'core-concepts' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-primary animate-pulse bg-primary/20"></div>
               ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30"></div>
               )}
-              <span className={`text-sm font-medium ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : ''}`}>
+              <span className={`text-sm font-semibold ${!coreConceptsComplete && currentPhase !== 'core-concepts' ? 'text-muted-foreground' : 'text-foreground'}`}>
                 Core Concepts
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {coreConceptsComplete ? 'Completed' : currentPhase === 'core-concepts' ? 'In Progress' : 'Not started'}
+            <p className="text-xs text-muted-foreground pl-8">
+              {coreConceptsComplete ? 'Completed ✓' : currentPhase === 'core-concepts' ? 'In Progress...' : 'Not started'}
             </p>
           </div>
 
-          {/* Practice Phase */}
-          <div className={`p-3 rounded-lg ${
+          <div className={`p-4 rounded-xl transition-all duration-300 ${
             practiceComplete 
-              ? 'bg-primary/10 border border-primary/20' 
+              ? 'bg-gradient-to-br from-primary/15 to-purple-500/10 border-2 border-primary/30 shadow-md' 
               : currentPhase === 'practice' 
-              ? 'bg-accent/10 border border-accent/20' 
-              : 'bg-muted'
+              ? 'bg-gradient-to-br from-primary/10 to-purple-500/5 border-2 border-primary/20 shadow-sm' 
+              : 'bg-card-subtle/50 border border-border/50'
           }`}>
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-3 mb-2">
               {practiceComplete ? (
-                <CheckCircle className="w-4 h-4 text-primary" />
+                <CheckCircle className="w-5 h-5 text-primary" />
               ) : currentPhase === 'practice' ? (
-                <div className="w-4 h-4 rounded-full border-2 border-accent animate-pulse"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-primary animate-pulse bg-primary/20"></div>
               ) : (
-                <div className="w-4 h-4 rounded-full border-2 border-muted-foreground/30"></div>
+                <div className="w-5 h-5 rounded-full border-2 border-muted-foreground/30"></div>
               )}
-              <span className={`text-sm font-medium ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : ''}`}>
+              <span className={`text-sm font-semibold ${!practiceComplete && currentPhase !== 'practice' ? 'text-muted-foreground' : 'text-foreground'}`}>
                 Practice
               </span>
             </div>
-            <p className="text-xs text-muted-foreground">
-              {practiceComplete ? 'Completed' : currentPhase === 'practice' ? 'In Progress' : 'Not started'}
+            <p className="text-xs text-muted-foreground pl-8">
+              {practiceComplete ? 'Completed ✓' : currentPhase === 'practice' ? 'In Progress...' : 'Not started'}
             </p>
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border">
-          <div className="flex items-center justify-between text-sm mb-2">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium">{progress}%</span>
+        <div className="pt-5 border-t border-border/50">
+          <div className="flex items-center justify-between text-sm mb-3">
+            <span className="text-muted-foreground font-medium">Overall Progress</span>
+            <span className="font-semibold text-primary">{progress}%</span>
           </div>
-          <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
+          <div className="w-full h-3 bg-muted/50 rounded-full overflow-hidden shadow-inner">
             <div 
-              className="h-full bg-gradient-to-r from-primary to-accent transition-all duration-500"
+              className="h-full bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 transition-all duration-500 shadow-lg"
               style={{ width: `${progress}%` }}
             />
           </div>
         </div>
 
-        <div className="pt-4 border-t border-border space-y-2">
-          <div className="flex justify-between text-xs">
+        <div className="pt-5 border-t border-border/50 space-y-3">
+          <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Questions Asked</span>
-            <span className="font-medium">{questionsAnswered} / {estimatedTotal}</span>
+            <span className="font-semibold">{questionsAnswered} / {estimatedTotal}</span>
           </div>
-          <div className="flex justify-between text-xs">
+          <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Time Elapsed</span>
-            <span className="font-medium">{elapsedMin} min</span>
+            <span className="font-semibold">{elapsedMin} min</span>
           </div>
-          <div className="flex justify-between text-xs">
+          <div className="flex justify-between text-sm">
             <span className="text-muted-foreground">Total Exchanges</span>
-            <span className="font-medium">{Math.floor(totalMessages / 2)}</span>
+            <span className="font-semibold">{Math.floor(totalMessages / 2)}</span>
           </div>
         </div>
           </div>
@@ -772,31 +739,30 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       </div>
 
       {/* Center: Chat */}
-      <div className="flex-1 bg-card rounded-xl border border-border flex flex-col">
+      <div className="flex-1 bg-gradient-to-br from-card to-card-subtle rounded-2xl border border-border flex flex-col shadow-xl overflow-hidden">
         {/* Chat Header */}
-        <div className="border-b border-border">
-          <div className="p-4 flex items-center justify-between">
+        <div className="border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
+          <div className="p-5 flex items-center justify-between">
             <div>
-              <h2 className="font-semibold">{chat.subject} • {chat.level}</h2>
+              <h2 className="font-bold text-lg">{chat.subject} • {chat.level}</h2>
               <p className="text-sm text-muted-foreground">{chat.topic}</p>
             </div>
             <Button
               variant="outline"
               size="sm"
               onClick={onEndSession}
-              className="text-destructive hover:text-destructive"
+              className="text-destructive hover:text-destructive hover:bg-destructive/10 transition-colors duration-200"
               data-testid="button-end-session"
             >
               End Session
             </Button>
           </div>
           
-          {/* 7-Phase Indicator (only if tutorSession exists) */}
           {tutorSession?.session && (
-            <div className="px-4 pb-3">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm text-muted-foreground">Learning Phase</span>
-                <span className="text-sm font-medium">
+            <div className="px-5 pb-4">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-sm text-muted-foreground font-medium">Learning Phase</span>
+                <span className="text-sm font-semibold">
                   {getCurrentPhaseNumber()} of 7 • <span className="capitalize">{tutorSession.session.currentPhase}</span>
                 </span>
               </div>
@@ -806,23 +772,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
 
         {/* Messages */}
-        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-6 space-y-6 scroll-smooth" id="chat-messages-container">
+        <div ref={chatContainerRef} className="flex-1 overflow-y-auto p-8 space-y-8 scroll-smooth bg-gradient-to-b from-transparent to-primary/5" id="chat-messages-container">
           {messages.map((msg, index) => (
             <div key={msg.id} className={`flex gap-4 ${msg.role === 'user' ? 'justify-end' : ''} animate-fade-in`}>
               {msg.role === 'assistant' && (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <Bot className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <Bot className="w-6 h-6 text-white" />
                 </div>
               )}
               
               <div className={`flex-1 ${msg.role === 'user' ? 'max-w-2xl' : 'max-w-3xl'}`}>
-                <div className={`rounded-2xl p-5 shadow-sm ${
+                <div className={`rounded-2xl p-6 shadow-md transition-all duration-200 hover:shadow-lg ${
                   msg.role === 'user' 
-                    ? 'bg-gradient-to-br from-indigo-600 to-indigo-700 text-white ml-auto' 
-                    : 'bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700'
+                    ? 'bg-gradient-to-br from-indigo-600 to-purple-600 text-white ml-auto' 
+                    : 'bg-gradient-to-br from-slate-50/90 via-white/90 to-indigo-50/90 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50'
                 }`}>
                   {msg.role === 'assistant' ? (
-                    <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed">
+                    <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed">
                       <ReactMarkdown
                         remarkPlugins={[remarkMath]}
                         rehypePlugins={[rehypeKatex]}
@@ -831,7 +797,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       </ReactMarkdown>
                     </div>
                   ) : (
-                    <p className="leading-relaxed">{msg.content}</p>
+                    <p className="leading-relaxed text-base">{msg.content}</p>
                   )}
                 </div>
                 <div className="flex items-center justify-between mt-2 px-1">
@@ -844,7 +810,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       size="sm"
                       onClick={() => playAudio(msg.id, msg.content)}
                       disabled={playingAudio !== null && playingAudio !== msg.id}
-                      className="h-7 px-2 hover:bg-indigo-100 dark:hover:bg-indigo-900/30"
+                      className="h-8 px-3 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-all duration-200"
                       data-testid={`button-play-audio-${msg.id}`}
                     >
                       {playingAudio === msg.id ? (
@@ -860,21 +826,20 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               </div>
 
               {msg.role === 'user' && (
-                <div className="w-9 h-9 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center flex-shrink-0 shadow-lg">
-                  <User className="w-5 h-5 text-white" />
+                <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-slate-300 to-slate-400 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center flex-shrink-0 shadow-lg">
+                  <User className="w-6 h-6 text-white" />
                 </div>
               )}
             </div>
           ))}
 
-          {/* Transcribing Indicator */}
           {transcribeMutation.isPending && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                <Mic className="w-5 h-5 text-white animate-pulse" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Mic className="w-6 h-6 text-white animate-pulse" />
               </div>
               <div className="flex-1">
-                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-4 shadow-sm">
+                <div className="bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-950 dark:to-purple-950 border border-indigo-200 dark:border-indigo-800 rounded-2xl p-5 shadow-md">
                   <p className="text-sm text-indigo-700 dark:text-indigo-300 font-medium flex items-center gap-2">
                     <span className="w-2 h-2 bg-indigo-600 rounded-full animate-pulse" />
                     Transcribing your voice...
@@ -884,15 +849,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             </div>
           )}
 
-          {/* Streaming Message */}
           {isStreaming && (
             <div className="flex gap-4 animate-fade-in">
-              <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
-                <Bot className="w-5 h-5 text-white" />
+              <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <Bot className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 max-w-3xl">
-                <div className="bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border border-slate-200 dark:border-slate-700 rounded-2xl p-5 shadow-sm">
-                  <div className="prose prose-sm max-w-none dark:prose-invert leading-relaxed inline-block">
+                <div className="bg-gradient-to-br from-slate-50/90 via-white/90 to-indigo-50/90 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-6 shadow-md">
+                  <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed inline-block">
                     <ReactMarkdown
                       remarkPlugins={[remarkMath]}
                       rehypePlugins={[rehypeKatex]}
@@ -908,22 +872,23 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
 
         {/* Input Area */}
-        <div className="p-4 border-t border-border">
-          <form onSubmit={handleSubmit} className="flex gap-2">
+        <div className="p-6 border-t border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
+          <form onSubmit={handleSubmit} className="flex gap-3">
             <Input
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               placeholder={isRecording ? "Recording..." : transcribeMutation.isPending ? "Transcribing..." : "Type your response or question..."}
               disabled={isStreaming || isRecording || transcribeMutation.isPending}
-              className="flex-1"
+              className="flex-1 h-12 text-base border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
               data-testid="input-chat-message"
             />
             <Button 
               type="submit" 
               disabled={!message.trim() || isStreaming || isRecording}
+              className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
               data-testid="button-send-message"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-5 h-5" />
             </Button>
             <Button 
               type="button" 
@@ -931,14 +896,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               disabled={isStreaming || transcribeMutation.isPending}
               onClick={isRecording ? stopRecording : startRecording}
               data-testid="button-voice-input"
-              className={isRecording ? "animate-pulse" : ""}
+              className={`h-12 px-6 transition-all duration-200 ${isRecording ? "animate-pulse shadow-lg" : "shadow-md hover:shadow-lg"}`}
             >
-              <Mic className="w-4 h-4" />
+              <Mic className="w-5 h-5" />
             </Button>
           </form>
-          <p className="text-xs text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-3">
             {isRecording ? (
-              <span className="text-destructive font-medium flex items-center gap-1">
+              <span className="text-destructive font-medium flex items-center gap-2">
                 <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
                 Recording... Click mic to stop
               </span>
@@ -954,16 +919,16 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       </div>
 
       {/* Right: Tools */}
-      <div className={`${quickToolsCollapsed ? 'w-12' : 'w-72'} bg-card rounded-xl border border-border overflow-hidden transition-all duration-200 flex flex-col`}>
-        <div className="p-4 flex items-center justify-between border-b border-border">
+      <div className={`${quickToolsCollapsed ? 'w-12' : 'w-80'} bg-gradient-to-br from-card-subtle to-card rounded-2xl border border-border overflow-hidden transition-all duration-300 flex flex-col shadow-lg`}>
+        <div className="p-5 flex items-center justify-between border-b border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
           {!quickToolsCollapsed && (
-            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+            <h3 className="font-semibold text-sm text-foreground uppercase tracking-wide">
               Quick Tools
             </h3>
           )}
           <button
             onClick={() => setQuickToolsCollapsed(!quickToolsCollapsed)}
-            className="w-8 h-8 flex items-center justify-center hover:bg-accent rounded-lg transition-colors duration-200 ml-auto"
+            className="w-9 h-9 flex items-center justify-center hover:bg-primary/10 rounded-xl transition-all duration-200 ml-auto"
             data-testid="button-toggle-quick-tools"
             title={quickToolsCollapsed ? "Expand Quick Tools" : "Collapse Quick Tools"}
           >
@@ -976,76 +941,75 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
 
         {!quickToolsCollapsed && (
-          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-            <div className="space-y-2">
+          <div className="flex-1 p-6 space-y-5 overflow-y-auto">
+            <div className="space-y-3">
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full justify-start gap-3 h-12 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={() => setActiveToolModal('explain')}
                 data-testid="button-explain-concept"
               >
-                <Lightbulb className="w-4 h-4" />
-                Explain Concept
+                <Lightbulb className="w-5 h-5" />
+                <span className="font-medium">Explain Concept</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full justify-start gap-3 h-12 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={() => setActiveToolModal('hint')}
                 data-testid="button-give-hint"
               >
-                <HelpCircle className="w-4 h-4" />
-                Give Me a Hint
+                <HelpCircle className="w-5 h-5" />
+                <span className="font-medium">Give Me a Hint</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full justify-start gap-3 h-12 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={() => setActiveToolModal('example')}
                 data-testid="button-show-example"
               >
-                <BookOpen className="w-4 h-4" />
-                Show Example
+                <BookOpen className="w-5 h-5" />
+                <span className="font-medium">Show Example</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full justify-start gap-3 h-12 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={() => setActiveToolModal('practice5')}
                 data-testid="button-practice-5"
               >
-                <Brain className="w-4 h-4" />
-                Practice 5 Qs
+                <Brain className="w-5 h-5" />
+                <span className="font-medium">Practice 5 Qs</span>
               </Button>
               <Button
                 variant="outline"
-                className="w-full justify-start gap-2 hover:bg-primary hover:text-primary-foreground transition-colors"
+                className="w-full justify-start gap-3 h-12 hover:bg-gradient-to-r hover:from-indigo-600 hover:to-purple-600 hover:text-white hover:border-transparent transition-all duration-200 shadow-sm hover:shadow-md"
                 onClick={() => setActiveToolModal('summary')}
                 data-testid="button-get-summary"
               >
-                <FileText className="w-4 h-4" />
-                Get Summary
+                <FileText className="w-5 h-5" />
+                <span className="font-medium">Get Summary</span>
               </Button>
             </div>
 
-            {/* Learning Insights */}
-            <div className="pt-4 border-t border-border">
-              <h4 className="font-semibold text-sm mb-3 text-muted-foreground uppercase tracking-wide">
+            <div className="pt-5 border-t border-border/50">
+              <h4 className="font-semibold text-sm mb-4 text-muted-foreground uppercase tracking-wide">
                 Learning Insights
               </h4>
               <div className="space-y-3">
-                <div className="bg-success/10 border border-success/20 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <TrendingUp className="w-4 h-4 text-success mt-0.5" />
+                <div className="bg-gradient-to-br from-success/10 to-success/5 border-2 border-success/30 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <TrendingUp className="w-5 h-5 text-success mt-0.5" />
                     <div>
-                      <p className="text-xs font-medium text-success-foreground">Strong grasp of basics</p>
+                      <p className="text-sm font-semibold text-success-foreground">Strong grasp of basics</p>
                       <p className="text-xs text-success/80 mt-1">You're excelling at fundamental concepts</p>
                     </div>
                   </div>
                 </div>
 
-                <div className="bg-warning/10 border border-warning/20 rounded-lg p-3">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 text-warning mt-0.5" />
+                <div className="bg-gradient-to-br from-warning/10 to-warning/5 border-2 border-warning/30 rounded-xl p-4 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="w-5 h-5 text-warning mt-0.5" />
                     <div>
-                      <p className="text-xs font-medium text-warning-foreground">Review needed</p>
+                      <p className="text-sm font-semibold text-warning-foreground">Review needed</p>
                       <p className="text-xs text-warning/80 mt-1">Complex factoring patterns</p>
                     </div>
                   </div>
@@ -1053,21 +1017,20 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               </div>
             </div>
 
-            {/* Session Stats */}
-            <div className="pt-4 border-t border-border">
-              <h4 className="font-semibold text-sm mb-3">Session Stats</h4>
+            <div className="pt-5 border-t border-border/50">
+              <h4 className="font-semibold text-sm mb-4">Session Stats</h4>
               <div className="space-y-3">
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Questions Asked</span>
-                  <span className="font-medium">3</span>
+                  <span className="font-semibold">3</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Concepts Covered</span>
-                  <span className="font-medium">2</span>
+                  <span className="font-semibold">2</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-muted-foreground">Time Spent</span>
-                  <span className="font-medium">12 min</span>
+                  <span className="font-semibold">12 min</span>
                 </div>
               </div>
             </div>
@@ -1075,7 +1038,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         )}
       </div>
 
-      {/* Quick Tool Modal */}
       {chat && (
         <QuickToolModal
           open={activeToolModal !== null}
