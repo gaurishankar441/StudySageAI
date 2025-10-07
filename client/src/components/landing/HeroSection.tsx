@@ -9,9 +9,9 @@ interface HeroSectionProps {
 
 export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectionProps) {
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-700 via-slate-600 to-indigo-800 p-8">
+    <section className="relative min-h-screen flex items-center justify-center overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-8">
       {/* Animated gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-300/30 via-blue-400/25 to-purple-400/30 animate-pulse-subtle pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/20 via-blue-500/15 to-purple-500/20 animate-pulse-subtle pointer-events-none" />
       
       {/* Tech grid pattern background */}
       <div className="absolute inset-0 opacity-20 pointer-events-none">
@@ -48,14 +48,14 @@ export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectio
           <div className="flex-1 text-center lg:text-left space-y-8 order-2 lg:order-1">
             <div className="space-y-6 animate-fade-in-up stagger-1">
               <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold leading-tight">
-                <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent animate-gradient">
+                <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent animate-gradient">
                   Meet Your Personal
                 </span>
                 <br />
-                <span className="text-white">AI Tutor</span>
+                <span className="text-slate-900">AI Tutor</span>
               </h1>
               
-              <p className="text-xl sm:text-2xl text-slate-300 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+              <p className="text-xl sm:text-2xl text-slate-700 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
                 Learn from an AI companion that adapts to your pace, language & learning style
               </p>
             </div>
@@ -74,7 +74,7 @@ export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectio
               <Button
                 onClick={onWatchDemo}
                 variant="outline"
-                className="h-14 px-8 text-lg font-semibold border-2 border-slate-600 hover:border-cyan-400 hover:bg-cyan-400/10 text-white transition-all duration-300"
+                className="h-14 px-8 text-lg font-semibold border-2 border-slate-400 hover:border-cyan-600 hover:bg-cyan-50 text-slate-800 transition-all duration-300"
                 data-testid="button-watch-demo"
               >
                 Watch Demo
@@ -82,17 +82,17 @@ export default function HeroSection({ onStartLearning, onWatchDemo }: HeroSectio
             </div>
 
             {/* Trust indicators */}
-            <div className="flex items-center gap-6 justify-center lg:justify-start text-sm text-slate-400 animate-fade-in-up stagger-3">
+            <div className="flex items-center gap-6 justify-center lg:justify-start text-sm text-slate-600 animate-fade-in-up stagger-3">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse-subtle" />
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse-subtle" />
                 <span>AI-Powered</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse-subtle" />
+                <div className="w-2 h-2 bg-cyan-500 rounded-full animate-pulse-subtle" />
                 <span>Multilingual</span>
               </div>
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-blue-400 rounded-full animate-pulse-subtle" />
+                <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse-subtle" />
                 <span>Adaptive Learning</span>
               </div>
             </div>

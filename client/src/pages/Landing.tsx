@@ -60,13 +60,13 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-700 via-slate-600 to-indigo-800">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Fixed Navigation Bar */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'bg-slate-700/90 backdrop-blur-xl shadow-xl border-b border-cyan-400/50' 
-            : 'bg-slate-700/80 backdrop-blur-md'
+            ? 'bg-white/95 backdrop-blur-xl shadow-xl border-b border-cyan-500/30' 
+            : 'bg-white/90 backdrop-blur-md'
         }`}
         data-testid="navbar"
       >
@@ -80,7 +80,7 @@ export default function Landing() {
                 className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]"
                 data-testid="img-logo"
               />
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                 VaktaAI
               </span>
             </div>
@@ -89,21 +89,21 @@ export default function Landing() {
             <div className="hidden md:flex items-center gap-8">
               <button
                 onClick={() => scrollToSection(featuresRef)}
-                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                className="text-slate-700 hover:text-slate-900 transition-colors text-sm font-medium"
                 data-testid="link-features"
               >
                 Features
               </button>
               <button
                 onClick={() => scrollToSection(howItWorksRef)}
-                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                className="text-slate-700 hover:text-slate-900 transition-colors text-sm font-medium"
                 data-testid="link-how-it-works"
               >
                 How it Works
               </button>
               <button
                 onClick={() => scrollToSection(featuresRef)}
-                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                className="text-slate-700 hover:text-slate-900 transition-colors text-sm font-medium"
                 data-testid="link-pricing"
               >
                 Pricing
@@ -115,7 +115,7 @@ export default function Landing() {
               {/* Language Toggle */}
               <button
                 onClick={toggleLanguage}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-full glass-card text-sm text-foreground hover:bg-white/10 transition-smooth"
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full glass-card text-sm text-slate-700 hover:bg-slate-200/50 transition-smooth"
                 data-testid="button-language-toggle"
               >
                 <Globe className="w-4 h-4" />
@@ -126,7 +126,7 @@ export default function Landing() {
               <Button
                 onClick={onSignIn}
                 variant="outline"
-                className="hidden md:inline-flex border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400"
+                className="hidden md:inline-flex border-cyan-600/60 text-cyan-700 hover:bg-cyan-50 hover:border-cyan-600"
                 data-testid="button-signin"
               >
                 Sign In
