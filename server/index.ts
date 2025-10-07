@@ -17,7 +17,7 @@ app.use(helmet({
       connectSrc: ["'self'", "https:", "wss:"],
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
+      mediaSrc: ["'self'", "blob:"],
       frameSrc: ["'none'"],
     },
   } : {
@@ -29,7 +29,7 @@ app.use(helmet({
       connectSrc: ["'self'", "https:", "wss:"],
       fontSrc: ["'self'", "data:"],
       objectSrc: ["'none'"],
-      mediaSrc: ["'self'"],
+      mediaSrc: ["'self'", "blob:"],
       frameSrc: ["'none'"],
     },
   },
