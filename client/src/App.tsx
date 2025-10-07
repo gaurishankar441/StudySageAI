@@ -10,7 +10,8 @@ import { OverlayProvider } from "@/lib/useOverlay";
 import Landing from "@/pages/Landing";
 import Dashboard from "@/pages/Dashboard";
 import Tutor from "@/pages/Tutor";
-import DocChat from "@/pages/DocChat";
+import DocChatSources from "@/pages/DocChatSources";
+import DocChatSession from "@/pages/DocChatSession";
 import Quiz from "@/pages/Quiz";
 import QuizAttempt from "@/pages/QuizAttempt";
 import StudyPlan from "@/pages/StudyPlan";
@@ -47,7 +48,8 @@ function Router() {
       <Switch>
         <Route path="/" component={Dashboard} />
         <Route path="/tutor" component={Tutor} />
-        <Route path="/docchat" component={DocChat} />
+        <Route path="/docchat/:chatId" component={DocChatSession} />
+        <Route path="/docchat" component={DocChatSources} />
         <Route path="/quiz/:id" component={QuizAttempt} />
         <Route path="/quiz" component={Quiz} />
         <Route path="/study-plan" component={StudyPlan} />
