@@ -1,329 +1,317 @@
+import { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { GraduationCap, Globe } from "lucide-react";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { apiRequest, queryClient } from "@/lib/queryClient";
-import { useToast } from "@/hooks/use-toast";
-import { useLocation } from "wouter";
+import { Globe, Menu, X } from "lucide-react";
+import { FaGithub, FaTwitter, FaLinkedin } from "react-icons/fa";
 import logoPath from "@assets/Vakta AI.122_1759509648531.png";
-
-// Login schema
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(1, "Password is required"),
-});
-
-// Signup schema
-const signupSchema = z.object({
-  email: z.string().email("Please enter a valid email"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
-  firstName: z.string().min(1, "First name is required"),
-  lastName: z.string().optional(),
-});
-
-type LoginForm = z.infer<typeof loginSchema>;
-type SignupForm = z.infer<typeof signupSchema>;
+import HeroSection from "@/components/landing/HeroSection";
+import InteractiveAvatarDemo from "@/components/landing/InteractiveAvatarDemo";
+import FeatureShowcase from "@/components/landing/FeatureShowcase";
+import HowItWorks from "@/components/landing/HowItWorks";
+import StatsSection from "@/components/landing/StatsSection";
+import AuthModal from "@/components/landing/AuthModal";
 
 export default function Landing() {
   const [currentLang, setCurrentLang] = useState("English");
-  const [, setLocation] = useLocation();
-  const { toast } = useToast();
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
+  const [authModalTab, setAuthModalTab] = useState<'login' | 'signup'>('login');
+  const [isScrolled, setIsScrolled] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const interactiveDemoRef = useRef<HTMLDivElement>(null);
+  const featuresRef = useRef<HTMLDivElement>(null);
+  const howItWorksRef = useRef<HTMLDivElement>(null);
 
   const toggleLanguage = () => {
     setCurrentLang(currentLang === "English" ? "हिन्दी" : "English");
   };
 
-  // Login form
-  const loginForm = useForm<LoginForm>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  // Signup form
-  const signupForm = useForm<SignupForm>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-      firstName: "",
-      lastName: "",
-    },
-  });
-
-  // Login mutation
-  const loginMutation = useMutation({
-    mutationFn: async (data: LoginForm) => {
-      const response = await apiRequest("POST", "/api/auth/login", data);
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Welcome back!",
-        description: "You have successfully logged in.",
-      });
-      setLocation("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Login failed",
-        description: error.message || "Invalid email or password",
-        variant: "destructive",
-      });
-    },
-  });
-
-  // Signup mutation
-  const signupMutation = useMutation({
-    mutationFn: async (data: SignupForm) => {
-      const response = await apiRequest("POST", "/api/auth/signup", data);
-      return response;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
-      toast({
-        title: "Account created!",
-        description: "Welcome to VaktaAI. Let's get started!",
-      });
-      setLocation("/");
-    },
-    onError: (error: Error) => {
-      toast({
-        title: "Signup failed",
-        description: error.message || "Could not create account",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const onLogin = (data: LoginForm) => {
-    loginMutation.mutate(data);
+  const onStartLearning = () => {
+    setAuthModalTab('signup');
+    setIsAuthModalOpen(true);
   };
 
-  const onSignup = (data: SignupForm) => {
-    signupMutation.mutate(data);
+  const onWatchDemo = () => {
+    interactiveDemoRef.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
   };
+
+  const onSignIn = () => {
+    setAuthModalTab('login');
+    setIsAuthModalOpen(true);
+  };
+
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>) => {
+    ref.current?.scrollIntoView({ 
+      behavior: 'smooth',
+      block: 'start'
+    });
+    setIsMobileMenuOpen(false);
+  };
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   return (
-    <div className="min-h-screen relative flex items-center justify-center bg-gradient-radial p-4 overflow-hidden">
-      {/* Vibrant background gradient overlay */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-accent/10 pointer-events-none" />
-      
-      {/* Language Toggle - Top Right */}
-      <div className="absolute top-6 right-6 z-10">
-        <button
-          onClick={toggleLanguage}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card text-sm text-foreground hover:bg-white/10 transition-smooth shadow-lg"
-          data-testid="button-language-toggle"
-        >
-          <Globe className="w-4 h-4" />
-          <span className="font-medium">{currentLang}</span>
-        </button>
+    <div className="min-h-screen bg-slate-950">
+      {/* Fixed Navigation Bar */}
+      <nav 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+          isScrolled 
+            ? 'glass-card bg-slate-900/95 backdrop-blur-xl shadow-xl' 
+            : 'bg-transparent backdrop-blur-sm'
+        }`}
+        data-testid="navbar"
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16 sm:h-20">
+            {/* Logo */}
+            <div className="flex items-center gap-3" data-testid="logo-container">
+              <img 
+                src={logoPath} 
+                alt="VaktaAI" 
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                data-testid="img-logo"
+              />
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                VaktaAI
+              </span>
+            </div>
+
+            {/* Desktop Navigation Links */}
+            <div className="hidden md:flex items-center gap-8">
+              <button
+                onClick={() => scrollToSection(featuresRef)}
+                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                data-testid="link-features"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => scrollToSection(howItWorksRef)}
+                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                data-testid="link-how-it-works"
+              >
+                How it Works
+              </button>
+              <button
+                onClick={() => scrollToSection(featuresRef)}
+                className="text-slate-300 hover:text-white transition-colors text-sm font-medium"
+                data-testid="link-pricing"
+              >
+                Pricing
+              </button>
+            </div>
+
+            {/* Right Section - Language & Sign In */}
+            <div className="flex items-center gap-3 sm:gap-4">
+              {/* Language Toggle */}
+              <button
+                onClick={toggleLanguage}
+                className="inline-flex items-center gap-2 px-3 py-2 rounded-full glass-card text-sm text-foreground hover:bg-white/10 transition-smooth"
+                data-testid="button-language-toggle"
+              >
+                <Globe className="w-4 h-4" />
+                <span className="hidden sm:inline font-medium">{currentLang}</span>
+              </button>
+
+              {/* Sign In Button - Desktop */}
+              <Button
+                onClick={onSignIn}
+                variant="outline"
+                className="hidden md:inline-flex border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400"
+                data-testid="button-signin"
+              >
+                Sign In
+              </Button>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+                className="md:hidden p-2 text-slate-300 hover:text-white transition-colors"
+                data-testid="button-mobile-menu"
+              >
+                {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Mobile Menu */}
+        {isMobileMenuOpen && (
+          <div 
+            className="md:hidden glass-card bg-slate-900/95 backdrop-blur-xl border-t border-slate-800"
+            data-testid="mobile-menu"
+          >
+            <div className="px-4 py-4 space-y-3">
+              <button
+                onClick={() => scrollToSection(featuresRef)}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                data-testid="link-features-mobile"
+              >
+                Features
+              </button>
+              <button
+                onClick={() => scrollToSection(howItWorksRef)}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                data-testid="link-how-it-works-mobile"
+              >
+                How it Works
+              </button>
+              <button
+                onClick={() => scrollToSection(featuresRef)}
+                className="block w-full text-left px-4 py-2 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
+                data-testid="link-pricing-mobile"
+              >
+                Pricing
+              </button>
+              <Button
+                onClick={onSignIn}
+                variant="outline"
+                className="w-full border-cyan-400/50 text-cyan-400 hover:bg-cyan-400/10 hover:border-cyan-400"
+                data-testid="button-signin-mobile"
+              >
+                Sign In
+              </Button>
+            </div>
+          </div>
+        )}
+      </nav>
+
+      {/* Hero Section */}
+      <HeroSection 
+        onStartLearning={onStartLearning}
+        onWatchDemo={onWatchDemo}
+      />
+
+      {/* Interactive Avatar Demo */}
+      <div ref={interactiveDemoRef}>
+        <InteractiveAvatarDemo />
       </div>
 
-      <div className="w-full max-w-md relative z-0">
-        {/* Logo & Branding */}
-        <div className="text-center mb-10 animate-fade-in">
-          <div className="inline-flex items-center justify-center mb-6">
-            <img 
-              src={logoPath} 
-              alt="Vakta AI" 
-              className="w-36 h-36 object-contain drop-shadow-2xl"
-            />
-          </div>
-          <h1 className="text-5xl font-bold gradient-text mb-3">VaktaAI</h1>
-          <p className="text-lg text-muted-foreground">Your AI-powered study companion</p>
-        </div>
-        
-        {/* Auth Card with Glassmorphism */}
-        <div className="glass-card rounded-2xl p-8 animate-slide-in" style={{ boxShadow: 'var(--shadow-xl)' }}>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-8 bg-muted/50 p-1 rounded-xl">
-              <TabsTrigger 
-                value="login" 
-                data-testid="tab-login"
-                className="rounded-lg transition-smooth data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md"
-              >
-                Login
-              </TabsTrigger>
-              <TabsTrigger 
-                value="signup" 
-                data-testid="tab-signup"
-                className="rounded-lg transition-smooth data-[state=active]:bg-white dark:data-[state=active]:bg-white/10 data-[state=active]:shadow-md"
-              >
-                Sign Up
-              </TabsTrigger>
-            </TabsList>
-            
-            {/* Login Tab */}
-            <TabsContent value="login">
-              <h2 className="text-2xl font-bold mb-8 text-center">Welcome back</h2>
-              
-              <Form {...loginForm}>
-                <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-5">
-                  <FormField
-                    control={loginForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold">Email address</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="you@example.com"
-                            data-testid="input-email-login"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={loginForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold">Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="••••••••"
-                            data-testid="input-password-login"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button
-                    type="submit"
-                    className="w-full h-12 btn-gradient text-base font-semibold mt-6"
-                    disabled={loginMutation.isPending}
-                    data-testid="button-login"
-                  >
-                    {loginMutation.isPending ? "Signing in..." : "Sign in"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-            
-            {/* Signup Tab */}
-            <TabsContent value="signup">
-              <h2 className="text-2xl font-bold mb-8 text-center">Create account</h2>
-              
-              <Form {...signupForm}>
-                <form onSubmit={signupForm.handleSubmit(onSignup)} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="firstName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-semibold">First name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="John"
-                              data-testid="input-firstname"
-                              className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="lastName"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-sm font-semibold">Last name</FormLabel>
-                          <FormControl>
-                            <Input
-                              {...field}
-                              placeholder="Doe"
-                              data-testid="input-lastname"
-                              className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  
-                  <FormField
-                    control={signupForm.control}
-                    name="email"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold">Email address</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="email"
-                            placeholder="you@example.com"
-                            data-testid="input-email-signup"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <FormField
-                    control={signupForm.control}
-                    name="password"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-sm font-semibold">Password</FormLabel>
-                        <FormControl>
-                          <Input
-                            {...field}
-                            type="password"
-                            placeholder="••••••••"
-                            data-testid="input-password-signup"
-                            className="h-12 px-4 bg-background/50 border-border/50 focus:border-primary focus:bg-background transition-smooth"
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  
-                  <Button
-                    type="submit"
-                    className="w-full h-12 btn-gradient text-base font-semibold mt-6"
-                    disabled={signupMutation.isPending}
-                    data-testid="button-signup"
-                  >
-                    {signupMutation.isPending ? "Creating account..." : "Create account"}
-                  </Button>
-                </form>
-              </Form>
-            </TabsContent>
-          </Tabs>
-        </div>
+      {/* Feature Showcase */}
+      <div ref={featuresRef}>
+        <FeatureShowcase />
       </div>
+
+      {/* How It Works */}
+      <div ref={howItWorksRef}>
+        <HowItWorks />
+      </div>
+
+      {/* Stats & Testimonials */}
+      <StatsSection />
+
+      {/* Footer */}
+      <footer className="relative bg-slate-950 border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8" data-testid="footer">
+        <div className="max-w-7xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+            {/* Logo & Tagline */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <img 
+                  src={logoPath} 
+                  alt="VaktaAI" 
+                  className="w-10 h-10 object-contain"
+                  data-testid="img-footer-logo"
+                />
+                <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                  VaktaAI
+                </span>
+              </div>
+              <p className="text-slate-400 text-sm leading-relaxed">
+                Your AI-powered study companion. Learn smarter with personalized tutoring, adaptive content, and multilingual support.
+              </p>
+            </div>
+
+            {/* Quick Links */}
+            <div className="space-y-4">
+              <h3 className="text-white font-semibold">Quick Links</h3>
+              <ul className="space-y-2">
+                <li>
+                  <button
+                    onClick={() => scrollToSection(featuresRef)}
+                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    data-testid="link-footer-features"
+                  >
+                    Features
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection(howItWorksRef)}
+                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    data-testid="link-footer-how-it-works"
+                  >
+                    How it Works
+                  </button>
+                </li>
+                <li>
+                  <button
+                    onClick={() => scrollToSection(featuresRef)}
+                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    data-testid="link-footer-pricing"
+                  >
+                    Pricing
+                  </button>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social Links */}
+            <div className="space-y-4">
+              <h3 className="text-white font-semibold">Connect With Us</h3>
+              <div className="flex gap-4">
+                <a
+                  href="#"
+                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  data-testid="link-github"
+                  aria-label="GitHub"
+                >
+                  <FaGithub className="w-5 h-5" />
+                </a>
+                <a
+                  href="#"
+                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  data-testid="link-twitter"
+                  aria-label="Twitter"
+                >
+                  <FaTwitter className="w-5 h-5" />
+                </a>
+                <a
+                  href="#"
+                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  data-testid="link-linkedin"
+                  aria-label="LinkedIn"
+                >
+                  <FaLinkedin className="w-5 h-5" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="pt-8 border-t border-slate-800">
+            <p className="text-center text-slate-500 text-sm" data-testid="text-copyright">
+              © {new Date().getFullYear()} VaktaAI. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </footer>
+
+      {/* Auth Modal */}
+      <AuthModal 
+        isOpen={isAuthModalOpen}
+        onClose={() => setIsAuthModalOpen(false)}
+        defaultTab={authModalTab}
+      />
     </div>
   );
 }
