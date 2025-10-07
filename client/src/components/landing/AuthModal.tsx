@@ -118,13 +118,8 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent 
-        className="max-w-md p-8 border-2 border-cyan-400/60 shadow-2xl shadow-cyan-500/40"
-        style={{
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          background: 'rgb(255, 255, 255)',
-          border: '2px solid rgba(14, 165, 233, 0.4)',
-        }}
+        className="max-w-md p-8"
+        glassmorphism
         aria-describedby="auth-description"
       >
         <DialogTitle className="sr-only">Authentication</DialogTitle>
@@ -152,7 +147,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
           
           {/* Login Tab */}
           <TabsContent value="login" className="animate-fade-in">
-            <h2 className="text-2xl font-bold mb-8 text-center bg-gradient-to-r from-cyan-600 to-blue-600 bg-clip-text text-transparent">Welcome back</h2>
+            <h2 className="text-2xl font-bold mb-8 text-center gradient-text">Welcome back</h2>
             
             <Form {...loginForm}>
               <form onSubmit={loginForm.handleSubmit(onLogin)} className="space-y-5">

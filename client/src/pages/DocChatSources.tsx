@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { ObjectUploader } from "@/components/ObjectUploader";
+import LoadingScreen from "@/components/LoadingScreen";
 import {
   Upload,
   FileText,
@@ -23,6 +24,7 @@ export default function DocChatSources() {
   const [websiteUrl, setWebsiteUrl] = useState("");
   const [textContent, setTextContent] = useState("");
   const [textTitle, setTextTitle] = useState("");
+  const [uploadingFile, setUploadingFile] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [, setLocation] = useLocation();
@@ -43,6 +45,7 @@ export default function DocChatSources() {
         description: "Document uploaded successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setUploadingFile(false);
     },
     onError: (error) => {
       console.error('Document upload error:', error);
@@ -51,6 +54,7 @@ export default function DocChatSources() {
         description: "Failed to upload document",
         variant: "destructive",
       });
+      setUploadingFile(false);
     },
   });
 
@@ -206,6 +210,7 @@ export default function DocChatSources() {
                     const uploadURL = uploadedFile?.uploadURL;
                     const fileName = uploadedFile?.name || 'Uploaded Document';
                     if (uploadedFile && uploadURL && typeof uploadURL === 'string') {
+                      setUploadingFile(true);
                       uploadDocumentMutation.mutate({
                         uploadURL: uploadURL,
                         fileName: fileName,
@@ -410,6 +415,18 @@ export default function DocChatSources() {
           </div>
         </div>
       </div>
+      
+      {/* Loading Screen for File Upload */}
+      {uploadingFile && (
+        <LoadingScreen context="doc_upload" />
+      )}
+      
+      {/* Loading Screen for YouTube/Web URL Processing */}
+      {addUrlMutation.isPending && (
+        <LoadingScreen 
+          context={youtubeUrl ? "youtube_upload" : "web_upload"} 
+        />
+      )}
     </div>
   );
 }
