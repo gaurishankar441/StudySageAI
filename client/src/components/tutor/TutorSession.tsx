@@ -384,6 +384,16 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       
       const audio = new Audio(audioUrl);
       console.log('[TTS] Audio element created');
+      
+      // Add load event handlers
+      audio.onloadstart = () => console.log('[TTS] Audio loading started');
+      audio.onloadedmetadata = () => {
+        console.log('[TTS] Audio metadata loaded');
+        console.log('[TTS] Duration:', audio.duration);
+        console.log('[TTS] Audio type:', audioBlob.type);
+      };
+      audio.oncanplay = () => console.log('[TTS] Audio can start playing');
+      audio.oncanplaythrough = () => console.log('[TTS] Audio can play through without buffering');
 
       audio.onended = () => {
         console.log('[TTS] Audio playback ended');
@@ -393,12 +403,47 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       };
 
       audio.onerror = (e) => {
-        console.error('[TTS] Audio playback error:', e);
+        console.error('[TTS] Audio playback error event:', e);
+        
+        // Get detailed error information from audio element
+        const mediaError = audio.error;
+        let errorDetails = 'Unknown error';
+        let errorCode = 'UNKNOWN';
+        
+        if (mediaError) {
+          errorCode = mediaError.code.toString();
+          switch (mediaError.code) {
+            case MediaError.MEDIA_ERR_ABORTED:
+              errorDetails = 'Audio loading aborted by user';
+              break;
+            case MediaError.MEDIA_ERR_NETWORK:
+              errorDetails = 'Network error while loading audio';
+              break;
+            case MediaError.MEDIA_ERR_DECODE:
+              errorDetails = 'Audio decoding failed - format may be unsupported or corrupt';
+              break;
+            case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+              errorDetails = 'Audio format not supported by browser';
+              break;
+            default:
+              errorDetails = mediaError.message || 'Unknown media error';
+          }
+          console.error('[TTS] Media Error Code:', mediaError.code);
+          console.error('[TTS] Media Error Message:', mediaError.message);
+          console.error('[TTS] Error Details:', errorDetails);
+        }
+        
+        console.error('[TTS] Audio src:', audio.src);
+        console.error('[TTS] Audio readyState:', audio.readyState);
+        console.error('[TTS] Audio networkState:', audio.networkState);
+        
         setPlayingAudio(null);
         setAudioElement(null);
+        URL.revokeObjectURL(audioUrl);
+        
         toast({
           title: "Audio Playback Error",
-          description: "Could not play the audio. Please try again.",
+          description: `${errorDetails} (Code: ${errorCode})`,
           variant: "destructive",
         });
       };
