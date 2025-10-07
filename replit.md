@@ -4,9 +4,35 @@
 
 VaktaAI is an AI-powered educational platform designed as a comprehensive study companion. It features an AI Tutor, Document Chat, Quiz Generation, Study Plan Management, and Smart Notes. The platform supports multilingual learning (English, Hindi) and various content formats (PDFs, videos, audio, web content). A core principle is to provide grounded, citation-based AI responses to prevent hallucination. VaktaAI aims for a "fast, calm UI" with minimal navigation clicks, real-time streaming, keyboard-first interactions, and strong accessibility, with a business vision to revolutionize personalized education through adaptive AI.
 
+## Recent Changes (December 2024)
+
+### UI/UX Theme Consistency - Dialog Boxes
+**Date**: December 18, 2024
+
+**Problem**: Dialog boxes across the application had inconsistent theming and unwanted hover movement that affected user experience.
+
+**Changes Made**:
+1. **Removed Hover Movement**: Eliminated transform animations on all dialog components that caused boxes to move when cursor hovered over them
+2. **Unified Theme Applied to All Dialog Components**:
+   - **Dialog** (`client/src/components/ui/dialog.tsx`): Removed `glassmorphism` prop, applied stable background `bg-white/95 dark:bg-slate-900/95` with `backdrop-blur-xl`
+   - **AlertDialog** (`client/src/components/ui/alert-dialog.tsx`): Same stable theme with backdrop blur
+   - **Drawer** (`client/src/components/ui/drawer.tsx`): Updated bottom sheet with consistent theme and improved rounded corners (20px)
+   - **DialogUnified** (`client/src/components/ui/dialog-unified.tsx`): Already had stable theme, no changes needed
+   - **AuthModal** (`client/src/components/landing/AuthModal.tsx`): Previously fixed to remove hover movement
+
+**Theme Specifications**:
+- Background: `bg-white/95 dark:bg-slate-900/95` (95% opacity for subtle transparency)
+- Backdrop: `backdrop-blur-xl` (glassmorphism effect without movement)
+- Border: `border-slate-200 dark:border-slate-700`
+- Rounded corners: `rounded-2xl` for main dialogs, `rounded-t-[20px]` for drawers
+- Shadows: Using `var(--shadow-2xl)` for depth
+- Z-index: Proper layering with `var(--z-modal-scrim)` and `var(--z-modal-panel)`
+
+**Impact**: All 50+ dialog instances across TutorSetupWizard, DocChatActionModal, QuickToolModal, NotesModal, QuizModal, StudyPlanWizard, AuthModal, and base dialog components now have consistent, stable appearance with no unwanted movement.
+
 ## User Preferences
 
-Preferred communication style: Simple, everyday language.
+Preferred communication style: Simple, everyday language (Hindi/English/Hinglish mix for Indian students).
 
 ## System Architecture
 
@@ -14,9 +40,9 @@ Preferred communication style: Simple, everyday language.
 
 *   **Framework & Build System**: React with TypeScript, Vite, Wouter, TanStack Query.
 *   **UI Component System**: Radix UI, shadcn/ui (New York style), Tailwind CSS, custom design tokens, Lucide icons.
-*   **Design System**: **Sarvam AI-Inspired Modern Design** (October 2025) - Purple/Indigo gradient palette with glassmorphism effects. Gradient variables (`--gradient-primary`, `--gradient-accent`, `--gradient-subtle`) for consistent theming. Enhanced shadow system (shadow-sm to shadow-2xl). Animation tokens (200-400ms durations, custom easing). Design utilities: `glass-card` (glassmorphism), `btn-gradient` (gradient buttons), `gradient-text` (gradient text), `card-interactive` (hover effects), `transition-smooth`. Skeleton loaders with shimmer effects, typing indicators, stagger animations for lists/grids. Fully responsive with mobile-first breakpoints (sm:640px, md:768px, lg:1024px). Complete `data-testid` coverage for testing.
+*   **Design System**: **Sarvam AI-Inspired Modern Design** (October 2025) - Purple/Indigo gradient palette with glassmorphism effects. Gradient variables (`--gradient-primary`, `--gradient-accent`, `--gradient-subtle`) for consistent theming. Enhanced shadow system (shadow-sm to shadow-2xl). Animation tokens (200-400ms durations, custom easing). Design utilities: `glass-card` (glassmorphism), `btn-gradient` (gradient buttons), `gradient-text` (gradient text), `card-interactive` (hover effects), `transition-smooth`. Skeleton loaders with shimmer effects, typing indicators, stagger animations for lists/grids. Fully responsive with mobile-first breakpoints (sm:640px, md:768px, lg:1024px). Complete `data-testid` coverage for testing. **Dialog System** (December 2024): Unified stable dialog theme across all components - no hover movement, consistent backdrop blur glassmorphism (`bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl`), Material Design z-index layering.
 *   **State Management**: TanStack Query for server state, local component state, session persistence, optimistic updates.
-*   **UI/UX Decisions**: Material Design compliant global modal system with accessibility features. Premium gradient-based chat UI with distinct user/AI message styles and auto-scroll. Implements a 7-phase conversational tutor system (Greeting → Rapport → Assessment → Teaching → Practice → Feedback → Closure) with a visual phase indicator and adaptive learning based on user profile and real-time interaction. Emotion detection (confident, confused, frustrated, bored, neutral) adapts tutor tone, response length, and difficulty.
+*   **UI/UX Decisions**: Material Design compliant global modal system with accessibility features and stable, no-movement interactions. Premium gradient-based chat UI with distinct user/AI message styles and auto-scroll. Implements a 7-phase conversational tutor system (Greeting → Rapport → Assessment → Teaching → Practice → Feedback → Closure) with a visual phase indicator and adaptive learning based on user profile and real-time interaction. Emotion detection (confident, confused, frustrated, bored, neutral) adapts tutor tone, response length, and difficulty.
 
 ### Backend Architecture
 
