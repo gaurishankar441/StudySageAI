@@ -159,9 +159,9 @@ export default function StatsSection() {
   }, [emblaApi]);
 
   return (
-    <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 overflow-hidden">
+    <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-600/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-purple-500/10 pointer-events-none" />
 
       {/* Grid pattern */}
       <div className="absolute inset-0 opacity-10 pointer-events-none">
@@ -179,11 +179,11 @@ export default function StatsSection() {
         <div className="space-y-12">
           <div className="text-center">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                 Trusted by Thousands
               </span>
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-700 max-w-2xl mx-auto">
               Join students who are achieving their academic goals with VaktaAI
             </p>
           </div>
@@ -229,7 +229,7 @@ export default function StatsSection() {
                       </div>
 
                       {/* Label */}
-                      <p className="text-slate-300 font-medium">
+                      <p className="text-slate-700 font-medium">
                         {stat.label}
                       </p>
                     </div>
@@ -244,11 +244,11 @@ export default function StatsSection() {
         <div className="space-y-12">
           <div className="text-center">
             <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-              <span className="bg-gradient-to-r from-purple-400 via-pink-500 to-orange-600 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-purple-600 via-pink-600 to-orange-600 bg-clip-text text-transparent">
                 Student Success Stories
               </span>
             </h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto">
+            <p className="text-xl text-slate-700 max-w-2xl mx-auto">
               Hear from students who transformed their learning journey
             </p>
           </div>
@@ -287,19 +287,19 @@ export default function StatsSection() {
                             {/* Name and role */}
                             <div className="flex-1">
                               <div className="flex items-center gap-2">
-                                <h3 className="text-xl font-bold text-white">
+                                <h3 className="text-xl font-bold text-slate-900">
                                   {testimonial.name}
                                 </h3>
                                 <CheckCircle className="w-5 h-5 text-blue-400" data-testid={`icon-verified-${testimonial.id}`} />
                               </div>
-                              <p className="text-sm text-slate-400 mt-1">
+                              <p className="text-sm text-slate-600 mt-1">
                                 {testimonial.role}
                               </p>
                             </div>
                           </div>
 
                           {/* Quote */}
-                          <blockquote className="text-lg text-slate-300 italic leading-relaxed">
+                          <blockquote className="text-lg text-slate-700 italic leading-relaxed">
                             "{testimonial.quote}"
                           </blockquote>
 

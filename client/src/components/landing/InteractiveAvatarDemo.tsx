@@ -99,17 +99,17 @@ export default function InteractiveAvatarDemo() {
       <div className="relative z-10 max-w-7xl mx-auto">
         {/* Section header */}
         <div className="text-center mb-12 space-y-4">
-          <h2 className="text-4xl sm:text-5xl font-bold text-white">
+          <h2 className="text-4xl sm:text-5xl font-bold text-slate-900">
             See It In <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">Action</span>
           </h2>
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <p className="text-xl text-slate-700 max-w-2xl mx-auto">
             Watch how our AI tutor adapts to your learning style and language preference
           </p>
         </div>
 
         {/* Main demo container - Glass card */}
         <div className="glass-card rounded-3xl p-1 bg-gradient-to-br from-cyan-400/20 via-blue-500/20 to-purple-600/20 animate-fade-in-up" data-testid="container-demo">
-          <div className="bg-slate-900/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-10">
+          <div className="bg-slate-50/90 backdrop-blur-xl rounded-3xl p-6 sm:p-8 lg:p-10">
             
             {/* Split layout */}
             <div className="flex flex-col lg:flex-row gap-8 lg:gap-10">
@@ -153,7 +153,7 @@ export default function InteractiveAvatarDemo() {
                 {/* Status indicator */}
                 <div className="flex items-center gap-3 px-4 py-2 bg-slate-800/50 rounded-full border border-slate-700/50" data-testid="status-indicator">
                   <div className={`w-3 h-3 rounded-full ${getStatusColor(avatarStatus)} animate-pulse-subtle`} />
-                  <span className="text-sm font-medium text-slate-300">{getStatusLabel(avatarStatus)}</span>
+                  <span className="text-sm font-medium text-slate-700">{getStatusLabel(avatarStatus)}</span>
                 </div>
 
                 {/* Feature badges */}
@@ -165,9 +165,9 @@ export default function InteractiveAvatarDemo() {
                       data-testid={`badge-${feature.label.toLowerCase()}`}
                     >
                       <div className={`p-2 bg-gradient-to-br ${feature.gradient} rounded-lg`}>
-                        <feature.icon className="w-4 h-4 text-white" />
+                        <feature.icon className="w-4 h-4 text-slate-900" />
                       </div>
-                      <span className="text-sm font-medium text-slate-300">{feature.label}</span>
+                      <span className="text-sm font-medium text-slate-700">{feature.label}</span>
                     </div>
                   ))}
                 </div>
@@ -221,9 +221,9 @@ export default function InteractiveAvatarDemo() {
                       data-testid={`badge-mobile-${feature.label.toLowerCase()}`}
                     >
                       <div className={`p-1.5 bg-gradient-to-br ${feature.gradient} rounded-md`}>
-                        <feature.icon className="w-3 h-3 text-white" />
+                        <feature.icon className="w-3 h-3 text-slate-900" />
                       </div>
-                      <span className="text-xs font-medium text-slate-300">{feature.label}</span>
+                      <span className="text-xs font-medium text-slate-700">{feature.label}</span>
                     </div>
                   ))}
                 </div>

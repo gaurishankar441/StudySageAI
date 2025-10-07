@@ -242,7 +242,7 @@ export default function HowItWorks() {
                       </h3>
 
                       {/* Description */}
-                      <p className="text-slate-300 leading-relaxed">
+                      <p className="text-slate-700 leading-relaxed">
                         {step.description}
                       </p>
 

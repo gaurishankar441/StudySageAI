@@ -210,7 +210,7 @@ export default function Landing() {
       <StatsSection />
 
       {/* Footer */}
-      <footer className="relative bg-slate-950 border-t border-slate-800 py-12 px-4 sm:px-6 lg:px-8" data-testid="footer">
+      <footer className="relative bg-white border-t border-slate-200 py-12 px-4 sm:px-6 lg:px-8" data-testid="footer">
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
             {/* Logo & Tagline */}
@@ -222,23 +222,23 @@ export default function Landing() {
                   className="w-10 h-10 object-contain"
                   data-testid="img-footer-logo"
                 />
-                <span className="text-xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+                <span className="text-xl font-bold bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
                   VaktaAI
                 </span>
               </div>
-              <p className="text-slate-400 text-sm leading-relaxed">
+              <p className="text-slate-600 text-sm leading-relaxed">
                 Your AI-powered study companion. Learn smarter with personalized tutoring, adaptive content, and multilingual support.
               </p>
             </div>
 
             {/* Quick Links */}
             <div className="space-y-4">
-              <h3 className="text-white font-semibold">Quick Links</h3>
+              <h3 className="text-slate-900 font-semibold">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
                   <button
                     onClick={() => scrollToSection(featuresRef)}
-                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    className="text-slate-600 hover:text-slate-900 transition-colors text-sm"
                     data-testid="link-footer-features"
                   >
                     Features
@@ -247,7 +247,7 @@ export default function Landing() {
                 <li>
                   <button
                     onClick={() => scrollToSection(howItWorksRef)}
-                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    className="text-slate-600 hover:text-slate-900 transition-colors text-sm"
                     data-testid="link-footer-how-it-works"
                   >
                     How it Works
@@ -256,7 +256,7 @@ export default function Landing() {
                 <li>
                   <button
                     onClick={() => scrollToSection(featuresRef)}
-                    className="text-slate-400 hover:text-white transition-colors text-sm"
+                    className="text-slate-600 hover:text-slate-900 transition-colors text-sm"
                     data-testid="link-footer-pricing"
                   >
                     Pricing
@@ -267,11 +267,11 @@ export default function Landing() {
 
             {/* Social Links */}
             <div className="space-y-4">
-              <h3 className="text-white font-semibold">Connect With Us</h3>
+              <h3 className="text-slate-900 font-semibold">Connect With Us</h3>
               <div className="flex gap-4">
                 <a
                   href="#"
-                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-cyan-500/20 hover:text-cyan-600 transition-colors"
                   data-testid="link-github"
                   aria-label="GitHub"
                 >
@@ -279,7 +279,7 @@ export default function Landing() {
                 </a>
                 <a
                   href="#"
-                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-cyan-500/20 hover:text-cyan-600 transition-colors"
                   data-testid="link-twitter"
                   aria-label="Twitter"
                 >
@@ -287,7 +287,7 @@ export default function Landing() {
                 </a>
                 <a
                   href="#"
-                  className="p-2 rounded-full bg-slate-800 text-slate-400 hover:bg-cyan-500/20 hover:text-cyan-400 transition-colors"
+                  className="p-2 rounded-full bg-slate-100 text-slate-600 hover:bg-cyan-500/20 hover:text-cyan-600 transition-colors"
                   data-testid="link-linkedin"
                   aria-label="LinkedIn"
                 >
@@ -298,8 +298,8 @@ export default function Landing() {
           </div>
 
           {/* Copyright */}
-          <div className="pt-8 border-t border-slate-800">
-            <p className="text-center text-slate-500 text-sm" data-testid="text-copyright">
+          <div className="pt-8 border-t border-slate-200">
+            <p className="text-center text-slate-600 text-sm" data-testid="text-copyright">
               © {new Date().getFullYear()} VaktaAI. All rights reserved.
             </p>
           </div>

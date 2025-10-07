@@ -103,8 +103,8 @@ export default function FeatureShowcase() {
                   className="relative w-full h-full rounded-full object-cover border-2 border-white/20"
                 />
               </div>
-              <div className="flex-1 glass-card rounded-2xl p-3 max-w-[200px]">
-                <p className="text-sm text-slate-200">
+              <div className="flex-1 glass-card rounded-2xl p-3 max-w-[200px] bg-white/80">
+                <p className="text-sm text-slate-700">
                   Let me explain photosynthesis in simple terms...
                 </p>
               </div>
@@ -112,8 +112,8 @@ export default function FeatureShowcase() {
 
             {/* User Message */}
             <div className="flex items-start gap-3 justify-end animate-fade-in-up" style={{ animationDelay: '0.2s' }}>
-              <div className="glass-card rounded-2xl p-3 max-w-[180px] bg-gradient-to-br from-cyan-500/20 to-blue-600/20">
-                <p className="text-sm text-slate-200">
+              <div className="glass-card rounded-2xl p-3 max-w-[180px] bg-gradient-to-br from-cyan-500/20 to-blue-600/20 border border-cyan-500/30">
+                <p className="text-sm text-slate-800">
                   Can you give an example?
                 </p>
               </div>
@@ -145,7 +145,7 @@ export default function FeatureShowcase() {
             <div className="glass-card rounded-xl p-3 space-y-2 animate-fade-in-up">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-4 h-4 text-purple-400" />
-                <span className="text-xs text-slate-300">Cell Biology.pdf</span>
+                <span className="text-xs text-slate-700">Cell Biology.pdf</span>
                 <span className="text-xs text-slate-500">• pg. 45</span>
               </div>
               <div className="bg-white/5 rounded-lg p-2 space-y-1">
@@ -159,13 +159,13 @@ export default function FeatureShowcase() {
             <div className="glass-card rounded-xl p-3 bg-gradient-to-br from-purple-500/10 to-pink-600/10 animate-fade-in-up" style={{ animationDelay: '0.15s' }}>
               <div className="flex items-start gap-2">
                 <MessageCircle className="w-4 h-4 text-purple-400 flex-shrink-0 mt-0.5" />
-                <p className="text-xs text-slate-200">What is mitochondria?</p>
+                <p className="text-xs text-slate-700">What is mitochondria?</p>
               </div>
             </div>
 
             {/* AI Answer with Citation */}
             <div className="glass-card rounded-xl p-3 space-y-2 animate-fade-in-up" style={{ animationDelay: '0.3s' }}>
-              <p className="text-xs text-slate-200">
+              <p className="text-xs text-slate-700">
                 Mitochondria is the powerhouse of the cell...
                 <span className="inline-flex items-center gap-1 ml-1 px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[10px]">
                   <Tag className="w-3 h-3" />
@@ -184,7 +184,7 @@ export default function FeatureShowcase() {
               <div className="flex items-center gap-3">
                 <div className="flex items-center gap-1.5">
                   <BarChart3 className="w-4 h-4 text-orange-400" />
-                  <span className="text-xs text-slate-300">3/10</span>
+                  <span className="text-xs text-slate-700">3/10</span>
                 </div>
                 <div className="px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/20 to-pink-600/20 border border-orange-500/30">
                   <span className="text-xs font-semibold text-orange-300">+120 pts</span>
@@ -198,7 +198,7 @@ export default function FeatureShowcase() {
 
             {/* Question */}
             <div className="glass-card rounded-xl p-3 animate-fade-in-up" style={{ animationDelay: '0.1s' }}>
-              <p className="text-sm text-slate-200 font-medium">
+              <p className="text-sm text-slate-700 font-medium">
                 What is the speed of light?
               </p>
             </div>
@@ -225,7 +225,7 @@ export default function FeatureShowcase() {
                   }`}>
                     {option.label}
                   </div>
-                  <span className="text-xs text-slate-200">{option.text}</span>
+                  <span className="text-xs text-slate-700">{option.text}</span>
                   {option.isCorrect && (
                     <CheckCircle className="w-4 h-4 text-orange-400 ml-auto" />
                   )}
@@ -253,7 +253,7 @@ export default function FeatureShowcase() {
                 ].map((point, i) => (
                   <div key={i} className="flex items-start gap-2 animate-fade-in-up" style={{ animationDelay: `${0.1 + i * 0.1}s` }}>
                     <Lightbulb className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-xs text-slate-300">{point}</span>
+                    <span className="text-xs text-slate-700">{point}</span>
                   </div>
                 ))}
               </div>
@@ -275,7 +275,7 @@ export default function FeatureShowcase() {
                 <div className="w-6 h-6 rounded bg-emerald-500/20 flex items-center justify-center">
                   <span className="text-xs text-emerald-400">Q</span>
                 </div>
-                <span className="text-xs text-slate-300">What is photosynthesis?</span>
+                <span className="text-xs text-slate-700">What is photosynthesis?</span>
               </div>
             </div>
           </div>
@@ -286,7 +286,7 @@ export default function FeatureShowcase() {
           <div className="relative mt-6 h-48 space-y-3">
             {/* Week Header */}
             <div className="flex items-center justify-between animate-fade-in-up">
-              <span className="text-xs font-semibold text-slate-300">This Week</span>
+              <span className="text-xs font-semibold text-slate-700">This Week</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-12 h-1.5 bg-white/10 rounded-full overflow-hidden">
                   <div className="h-full bg-gradient-to-r from-indigo-500 to-violet-600 rounded-full" style={{ width: '65%' }} />
@@ -317,7 +317,7 @@ export default function FeatureShowcase() {
                     {item.done && <CheckCircle className="w-3.5 h-3.5 text-white" />}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className={`text-xs font-medium ${item.done ? 'text-slate-400 line-through' : 'text-slate-200'}`}>
+                    <p className={`text-xs font-medium ${item.done ? 'text-slate-400 line-through' : 'text-slate-700'}`}>
                       {item.task}
                     </p>
                     <p className="text-[10px] text-slate-500">{item.time}</p>
@@ -334,20 +334,20 @@ export default function FeatureShowcase() {
   };
 
   return (
-    <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-900 to-slate-950 overflow-hidden">
+    <section className="relative py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-50 via-blue-50 to-indigo-100 overflow-hidden">
       {/* Background effects */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 via-transparent to-purple-600/5 pointer-events-none" />
+      <div className="absolute inset-0 bg-gradient-to-br from-cyan-400/10 via-transparent to-purple-500/10 pointer-events-none" />
       
       {/* Section header */}
       <div className="relative z-10 max-w-7xl mx-auto mb-16 text-center">
         <h2 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
-          <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+          <span className="bg-gradient-to-r from-cyan-600 via-blue-600 to-purple-600 bg-clip-text text-transparent">
             Everything You Need
           </span>
           <br />
-          <span className="text-white">To Master Any Subject</span>
+          <span className="text-slate-900">To Master Any Subject</span>
         </h2>
-        <p className="text-xl text-slate-400 max-w-3xl mx-auto">
+        <p className="text-xl text-slate-700 max-w-3xl mx-auto">
           A complete AI-powered learning platform with tools designed to help you study smarter, not harder
         </p>
       </div>
@@ -391,7 +391,7 @@ export default function FeatureShowcase() {
                     </h3>
 
                     {/* Description */}
-                    <p className="text-slate-300 mb-4 leading-relaxed">
+                    <p className="text-slate-700 mb-4 leading-relaxed">
                       {feature.description}
                     </p>
 
