@@ -32,7 +32,6 @@ import {
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
-import PhaseIndicator from "./PhaseIndicator";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -636,22 +635,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const questionsAnswered = userMessages;
   const estimatedTotal = Math.max(15, userMessages + 3);
 
-  const getCurrentPhaseNumber = () => {
-    if (!tutorSession?.session) return null;
-    
-    const phaseMap: Record<string, number> = {
-      'greeting': 1,
-      'rapport': 2,
-      'assessment': 3,
-      'teaching': 4,
-      'practice': 5,
-      'feedback': 6,
-      'closure': 7
-    };
-    
-    return phaseMap[tutorSession.session.currentPhase] || 1;
-  };
-
   return (
     <div className="h-full flex gap-6 p-6">
       {/* Left: Lesson Plan */}
@@ -802,18 +785,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               End Session
             </Button>
           </div>
-          
-          {tutorSession?.session && (
-            <div className="px-5 pb-4">
-              <div className="flex items-center justify-between mb-3">
-                <span className="text-sm text-muted-foreground font-medium">Learning Phase</span>
-                <span className="text-sm font-semibold">
-                  {getCurrentPhaseNumber()} of 7 • <span className="capitalize">{tutorSession.session.currentPhase}</span>
-                </span>
-              </div>
-              <PhaseIndicator currentPhase={getCurrentPhaseNumber() || 1} />
-            </div>
-          )}
         </div>
 
         {/* Messages */}
