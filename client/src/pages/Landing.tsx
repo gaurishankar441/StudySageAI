@@ -60,13 +60,13 @@ export default function Landing() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-slate-950">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
       {/* Fixed Navigation Bar */}
       <nav 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled 
-            ? 'glass-card bg-slate-900/95 backdrop-blur-xl shadow-xl' 
-            : 'bg-transparent backdrop-blur-sm'
+            ? 'bg-slate-900/90 backdrop-blur-xl shadow-xl border-b border-cyan-500/20' 
+            : 'bg-slate-900/60 backdrop-blur-md'
         }`}
         data-testid="navbar"
       >
@@ -77,10 +77,10 @@ export default function Landing() {
               <img 
                 src={logoPath} 
                 alt="VaktaAI" 
-                className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+                className="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-[0_0_8px_rgba(6,182,212,0.6)]"
                 data-testid="img-logo"
               />
-              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-cyan-300 via-blue-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_12px_rgba(6,182,212,0.4)]">
                 VaktaAI
               </span>
             </div>
