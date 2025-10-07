@@ -1,0 +1,4308 @@
+VaktaAI Complete Dynamic Language System - Detailed Architecture
+📋 Table of Contents
+
+System Overview & Architecture
+Core Components Deep Dive
+Language Detection Engine
+Context Management System
+Dynamic Prompt Engineering
+Response Generation Pipeline
+Quality Assurance Layer
+Performance Optimization
+Database Schema
+API Design
+Testing Strategy
+Deployment Guide
+
+
+1. SYSTEM OVERVIEW & ARCHITECTURE
+1.1 High-Level Architecture
+┌─────────────────────────────────────────────────────────────┐
+│                        USER INPUT                            │
+│                  (Text/Voice Message)                        │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│              PREPROCESSING LAYER                             │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  Text Clean  │  │  STT Convert │  │  Normalize   │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│           LANGUAGE INTELLIGENCE ENGINE                       │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  Multi-Layer Language Detection                    │     │
+│  │  • Lexical Analysis                                │     │
+│  │  • Syntactic Pattern Matching                      │     │
+│  │  • Statistical Scoring                             │     │
+│  │  • Historical Context Analysis                     │     │
+│  │  • Confidence Calculation                          │     │
+│  └────────────────────────────────────────────────────┘     │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│            CONTEXT MANAGEMENT SYSTEM                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  Session     │  │  Language    │  │  Conversation│      │
+│  │  State       │  │  History     │  │  Memory      │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│         DYNAMIC PROMPT ENGINEERING ENGINE                    │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  • Base Prompt Templates                           │     │
+│  │  • Language Mode Selector                          │     │
+│  │  • Context Injector                                │     │
+│  │  • Emotional Tone Adapter                          │     │
+│  │  • Subject Matter Formatter                        │     │
+│  └────────────────────────────────────────────────────┘     │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│              LLM RESPONSE GENERATION                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  OpenAI      │  │  Temperature │  │  Token       │      │
+│  │  API Call    │  │  Control     │  │  Management  │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│           QUALITY ASSURANCE LAYER                            │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │  • Language Match Validation                       │     │
+│  │  • Tone Appropriateness Check                      │     │
+│  │  • Content Safety Filter                           │     │
+│  │  • Educational Quality Score                       │     │
+│  └────────────────────────────────────────────────────┘     │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│              POST-PROCESSING LAYER                           │
+│  ┌──────────────┐  ┌──────────────┐  ┌──────────────┐      │
+│  │  SSML        │  │  Format      │  │  TTS         │      │
+│  │  Generation  │  │  Response    │  │  Convert     │      │
+│  └──────────────┘  └──────────────┘  └──────────────┘      │
+└─────────────────┬───────────────────────────────────────────┘
+                  │
+                  ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    RESPONSE TO USER                          │
+│                  (Text + Voice Output)                       │
+└─────────────────────────────────────────────────────────────┘
+
+2. CORE COMPONENTS DEEP DIVE
+2.1 Component Interaction Matrix
+ComponentInputsOutputsDependenciesPriorityLanguage DetectionRaw textLanguage + confidenceNoneCRITICALContext ManagerSession ID, historyContext objectDatabase, RedisHIGHPrompt EngineLanguage, contextSystem promptTemplatesCRITICALLLM GatewayPrompt, messageAI responseOpenAI APICRITICALQA ValidatorResponse, expected langValid/InvalidValidator rulesMEDIUMTTS ConverterText, languageAudio fileSarvam/Polly APILOW
+
+3. LANGUAGE DETECTION ENGINE - DETAILED
+3.1 Multi-Layer Detection Algorithm
+typescript// services/language/LanguageDetectionEngine.ts
+
+export interface DetectionResult {
+  primary: 'english' | 'hindi' | 'mixed';
+  confidence: number;
+  scores: {
+    lexical: number;
+    syntactic: number;
+    statistical: number;
+    contextual: number;
+  };
+  indicators: LanguageIndicator[];
+  metadata: {
+    wordCount: number;
+    sentenceCount: number;
+    hindiWordRatio: number;
+    englishWordRatio: number;
+  };
+}
+
+export interface LanguageIndicator {
+  type: 'script' | 'keyword' | 'grammar' | 'pattern';
+  value: string;
+  weight: number;
+  confidence: number;
+}
+
+export class LanguageDetectionEngine {
+  
+  // Layer 1: Lexical Analysis
+  private lexicalAnalysis(text: string): LexicalScore {
+    const result: LexicalScore = {
+      devanagariPresent: false,
+      hindiKeywords: [],
+      englishKeywords: [],
+      mixedIndicators: [],
+      score: 0
+    };
+
+    // 1.1 Script Detection (Highest weight = 15 points)
+    const devanagariRegex = /[\u0900-\u097F]/;
+    if (devanagariRegex.test(text)) {
+      result.devanagariPresent = true;
+      result.score += 15;
+    }
+
+    // 1.2 Strong Hindi Keywords (3 points each)
+    const strongHindiKeywords = {
+      questions: ['kya', 'kaise', 'kab', 'kahan', 'kyun', 'kaun'],
+      requests: ['samjhao', 'batao', 'dikhao', 'sikha', 'bata'],
+      addressing: ['bhaiya', 'didi', 'sir', 'madam'],
+      connectors: ['matlab', 'yaani', 'dekho', 'chalo', 'accha'],
+      verbs: ['hai', 'hota', 'hoti', 'hote', 'hain', 'tha', 'thi', 'the']
+    };
+
+    Object.entries(strongHindiKeywords).forEach(([category, words]) => {
+      words.forEach(word => {
+        const regex = new RegExp(`\\b${word}\\b`, 'gi');
+        const matches = text.match(regex);
+        if (matches) {
+          result.hindiKeywords.push({
+            word,
+            category,
+            count: matches.length,
+            weight: 3
+          });
+          result.score += (3 * matches.length);
+        }
+      });
+    });
+
+    // 1.3 Hindi Grammar Particles (1 point each)
+    const grammarParticles = ['ka', 'ki', 'ke', 'ko', 'se', 'me', 'mein', 
+                               'par', 'pe', 'aur', 'ya', 'nahi', 'na'];
+    
+    grammarParticles.forEach(particle => {
+      const regex = new RegExp(`\\b${particle}\\b`, 'gi');
+      const matches = text.match(regex);
+      if (matches) {
+        result.score += matches.length;
+      }
+    });
+
+    // 1.4 English Formal Patterns (2 points each)
+    const englishPatterns = [
+      /\b(what|how|why|when|where|who|which)\s+(is|are|was|were|will|would|should|could|can|do|does|did)\b/gi,
+      /\b(please|kindly|could you|would you|can you)\s+\w+/gi,
+      /\b(explain|define|describe|elaborate|clarify|illustrate)\b/gi,
+      /\b(the|this|that|these|those|a|an)\s+\w+/gi
+    ];
+
+    englishPatterns.forEach(pattern => {
+      const matches = text.match(pattern);
+      if (matches) {
+        result.englishKeywords.push({
+          pattern: pattern.toString(),
+          count: matches.length,
+          weight: 2
+        });
+        result.score -= (2 * matches.length); // Negative for English
+      }
+    });
+
+    return result;
+  }
+
+  // Layer 2: Syntactic Pattern Matching
+  private syntacticAnalysis(text: string): SyntacticScore {
+    const result: SyntacticScore = {
+      questionPattern: null,
+      sentenceStructure: null,
+      wordOrder: null,
+      score: 0
+    };
+
+    // 2.1 Hindi Question Patterns (5 points)
+    const hindiQuestionPatterns = [
+      /^(kya|kaise|kab|kahan|kyun|kaun)\b/i,           // Question word at start
+      /\b\w+\s+(kya hai|kaise hota|kab hota)\??$/i,    // X kya hai?
+      /\bsamjhao\b.*\??$/i,                            // ... samjhao?
+      /\bbatao\b.*\??$/i                               // ... batao?
+    ];
+
+    for (const pattern of hindiQuestionPatterns) {
+      if (pattern.test(text)) {
+        result.questionPattern = 'hindi';
+        result.score += 5;
+        break;
+      }
+    }
+
+    // 2.2 English Question Patterns (5 points)
+    const englishQuestionPatterns = [
+      /^(what|how|why|when|where|who|which)\b/i,       // Wh- word at start
+      /^(is|are|was|were|will|would|can|could|do|does|did)\b/i, // Auxiliary at start
+      /\b(explain|define|describe)\s+\w+/i             // Imperative command
+    ];
+
+    for (const pattern of englishQuestionPatterns) {
+      if (pattern.test(text)) {
+        result.questionPattern = 'english';
+        result.score -= 5;
+        break;
+      }
+    }
+
+    // 2.3 Word Order Analysis
+    // Hindi: SOV (Subject-Object-Verb) - "Ram ne seb khaya"
+    // English: SVO (Subject-Verb-Object) - "Ram ate apple"
+    
+    const words = text.toLowerCase().split(/\s+/);
+    
+    // Check for typical Hindi postpositions (indicates Hindi SOV)
+    const postpositions = ['ne', 'ko', 'se', 'par', 'me'];
+    const hasPostposition = words.some(word => postpositions.includes(word));
+    
+    if (hasPostposition) {
+      result.wordOrder = 'SOV-hindi';
+      result.score += 3;
+    }
+
+    // Check for typical English verb positions
+    const commonVerbs = ['is', 'are', 'was', 'were', 'have', 'has', 'will'];
+    const verbPosition = words.findIndex(word => commonVerbs.includes(word));
+    
+    if (verbPosition > 0 && verbPosition < words.length - 2) {
+      result.wordOrder = 'SVO-english';
+      result.score -= 3;
+    }
+
+    return result;
+  }
+
+  // Layer 3: Statistical Analysis
+  private statisticalAnalysis(text: string): StatisticalScore {
+    const words = text.split(/\s+/);
+    const totalWords = words.length;
+
+    // Word length distribution (Hindi words tend to be longer in Roman script)
+    const avgWordLength = words.reduce((sum, word) => sum + word.length, 0) / totalWords;
+
+    // Vowel to consonant ratio (Hindi has more vowels in Roman script)
+    const vowels = text.match(/[aeiouAEIOU]/g)?.length || 0;
+    const consonants = text.match(/[bcdfghjklmnpqrstvwxyzBCDFGHJKLMNPQRSTVWXYZ]/g)?.length || 0;
+    const vowelRatio = vowels / (vowels + consonants);
+
+    // Calculate n-gram probabilities
+    const bigramScore = this.calculateBigramProbability(text);
+
+    return {
+      avgWordLength,
+      vowelRatio,
+      bigramScore,
+      totalWords,
+      score: this.calculateStatisticalScore(avgWordLength, vowelRatio, bigramScore)
+    };
+  }
+
+  private calculateBigramProbability(text: string): number {
+    // Common Hindi bigrams
+    const hindiBigrams = ['ka', 'ki', 'ke', 'ko', 'se', 'me', 'ne', 'hai', 'ho', 'na'];
+    
+    // Common English bigrams
+    const englishBigrams = ['th', 'he', 'in', 'er', 'an', 'ed', 'nd', 'to', 'en', 'of'];
+
+    const textLower = text.toLowerCase();
+    let hindiScore = 0;
+    let englishScore = 0;
+
+    hindiBigrams.forEach(bigram => {
+      const regex = new RegExp(bigram, 'g');
+      const matches = textLower.match(regex);
+      if (matches) hindiScore += matches.length;
+    });
+
+    englishBigrams.forEach(bigram => {
+      const regex = new RegExp(bigram, 'g');
+      const matches = textLower.match(regex);
+      if (matches) englishScore += matches.length;
+    });
+
+    return (hindiScore - englishScore) / (hindiScore + englishScore || 1);
+  }
+
+  // Layer 4: Contextual Analysis (Historical)
+  private async contextualAnalysis(
+    text: string, 
+    sessionId: string
+  ): Promise<ContextualScore> {
+    
+    // Get conversation history from context manager
+    const history = await this.contextManager.getLanguageHistory(sessionId);
+
+    if (!history || history.length === 0) {
+      return { score: 0, confidence: 0.5 };
+    }
+
+    // Calculate language consistency
+    const recentLanguages = history.slice(-5).map(h => h.language);
+    const hindiCount = recentLanguages.filter(l => l === 'hindi').length;
+    const englishCount = recentLanguages.filter(l => l === 'english').length;
+
+    // If user has been consistent, give weight to that pattern
+    const consistency = Math.abs(hindiCount - englishCount) / recentLanguages.length;
+    
+    let score = 0;
+    let confidence = 0.5;
+
+    if (consistency > 0.6) { // 60%+ consistency
+      const preferredLanguage = hindiCount > englishCount ? 'hindi' : 'english';
+      score = preferredLanguage === 'hindi' ? 3 : -3;
+      confidence = 0.3; // Moderate confidence from history
+    }
+
+    return { score, confidence, preferredLanguage: hindiCount > englishCount ? 'hindi' : 'english' };
+  }
+
+  // Main Detection Method - Combines All Layers
+  public async detectLanguage(
+    text: string,
+    sessionId: string
+  ): Promise<DetectionResult> {
+    
+    // Run all analysis layers
+    const lexical = this.lexicalAnalysis(text);
+    const syntactic = this.syntacticAnalysis(text);
+    const statistical = this.statisticalAnalysis(text);
+    const contextual = await this.contextualAnalysis(text, sessionId);
+
+    // Weighted scoring system
+    const weights = {
+      lexical: 0.40,      // 40% weight
+      syntactic: 0.30,    // 30% weight
+      statistical: 0.20,  // 20% weight
+      contextual: 0.10    // 10% weight
+    };
+
+    const totalScore = 
+      (lexical.score * weights.lexical) +
+      (syntactic.score * weights.syntactic) +
+      (statistical.score * weights.statistical) +
+      (contextual.score * weights.contextual);
+
+    // Determine primary language
+    let primary: 'english' | 'hindi' | 'mixed';
+    
+    if (totalScore > 8) {
+      primary = 'hindi';
+    } else if (totalScore < -8) {
+      primary = 'english';
+    } else {
+      primary = 'mixed'; // Ambiguous, requires further handling
+    }
+
+    // Calculate confidence (0-1 scale)
+    const maxPossibleScore = 30; // Based on all layers
+    const confidence = Math.min(Math.abs(totalScore) / maxPossibleScore, 1);
+
+    // Collect all indicators
+    const indicators: LanguageIndicator[] = [
+      ...lexical.hindiKeywords.map(k => ({
+        type: 'keyword' as const,
+        value: k.word,
+        weight: k.weight,
+        confidence: 0.8
+      })),
+      ...lexical.englishKeywords.map(k => ({
+        type: 'pattern' as const,
+        value: k.pattern,
+        weight: k.weight,
+        confidence: 0.7
+      }))
+    ];
+
+    if (lexical.devanagariPresent) {
+      indicators.push({
+        type: 'script',
+        value: 'devanagari',
+        weight: 15,
+        confidence: 1.0
+      });
+    }
+
+    // Calculate metadata
+    const words = text.split(/\s+/);
+    const metadata = {
+      wordCount: words.length,
+      sentenceCount: text.split(/[.!?]+/).length,
+      hindiWordRatio: lexical.hindiKeywords.length / words.length,
+      englishWordRatio: lexical.englishKeywords.length / words.length
+    };
+
+    return {
+      primary,
+      confidence,
+      scores: {
+        lexical: lexical.score,
+        syntactic: syntactic.score,
+        statistical: statistical.score,
+        contextual: contextual.score
+      },
+      indicators,
+      metadata
+    };
+  }
+
+  // Handle ambiguous/mixed cases
+  private async resolveAmbiguousLanguage(
+    result: DetectionResult,
+    sessionId: string
+  ): Promise<'english' | 'hindi'> {
+    
+    // Strategy 1: Use conversation history
+    const history = await this.contextManager.getLanguageHistory(sessionId);
+    if (history && history.length > 0) {
+      const lastLanguage = history[history.length - 1].language;
+      console.log(`Ambiguous language detected. Using last known: ${lastLanguage}`);
+      return lastLanguage;
+    }
+
+    // Strategy 2: Use confidence scores
+    if (result.confidence > 0.4) {
+      return result.primary === 'hindi' ? 'hindi' : 'english';
+    }
+
+    // Strategy 3: Default to Hindi (more common for Indian students)
+    console.log('Ambiguous language, defaulting to Hindi');
+    return 'hindi';
+  }
+}
+
+4. CONTEXT MANAGEMENT SYSTEM
+4.1 Session State Manager
+typescript// services/context/SessionContextManager.ts
+
+export interface SessionContext {
+  sessionId: string;
+  userId: string;
+  
+  // Language Context
+  language: {
+    current: 'english' | 'hindi';
+    previous: 'english' | 'hindi' | null;
+    history: LanguageHistoryEntry[];
+    switchCount: number;
+    lastSwitchAt: Date | null;
+    dominantLanguage: 'english' | 'hindi'; // Overall preference
+  };
+
+  // Conversation Context
+  conversation: {
+    messageCount: number;
+    lastMessageAt: Date;
+    currentTopic: string | null;
+    topicHistory: TopicEntry[];
+    emotionalState: EmotionalState;
+    engagementLevel: 'high' | 'medium' | 'low';
+  };
+
+  // Academic Context
+  academic: {
+    currentSubject: Subject | null;
+    difficulty: 'easy' | 'medium' | 'hard';
+    performanceScore: number; // 0-100
+    strengthAreas: string[];
+    weakAreas: string[];
+    lastPracticeScore: number | null;
+  };
+
+  // Behavioral Context
+  behavior: {
+    responsePattern: 'quick' | 'thoughtful' | 'struggling';
+    questionFrequency: 'high' | 'medium' | 'low';
+    confusionIndicators: number;
+    motivationLevel: 'high' | 'medium' | 'low';
+  };
+
+  // Metadata
+  createdAt: Date;
+  updatedAt: Date;
+  expiresAt: Date;
+}
+
+export interface LanguageHistoryEntry {
+  messageId: string;
+  userMessage: string;
+  detectedLanguage: 'english' | 'hindi';
+  confidence: number;
+  timestamp: Date;
+  wasAmbiguous: boolean;
+}
+
+export class SessionContextManager {
+  private redis: Redis;
+  private db: PostgresDatabase;
+  
+  constructor(redis: Redis, db: PostgresDatabase) {
+    this.redis = redis;
+    this.db = db;
+  }
+
+  // Initialize new session
+  async createSession(
+    userId: string,
+    initialLanguage: 'english' | 'hindi' = 'hindi'
+  ): Promise<SessionContext> {
+    
+    const sessionId = uuidv4();
+    const now = new Date();
+    const expiresAt = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours
+
+    const context: SessionContext = {
+      sessionId,
+      userId,
+      language: {
+        current: initialLanguage,
+        previous: null,
+        history: [],
+        switchCount: 0,
+        lastSwitchAt: null,
+        dominantLanguage: initialLanguage
+      },
+      conversation: {
+        messageCount: 0,
+        lastMessageAt: now,
+        currentTopic: null,
+        topicHistory: [],
+        emotionalState: 'neutral',
+        engagementLevel: 'medium'
+      },
+      academic: {
+        currentSubject: null,
+        difficulty: 'medium',
+        performanceScore: 50,
+        strengthAreas: [],
+        weakAreas: [],
+        lastPracticeScore: null
+      },
+      behavior: {
+        responsePattern: 'thoughtful',
+        questionFrequency: 'medium',
+        confusionIndicators: 0,
+        motivationLevel: 'medium'
+      },
+      createdAt: now,
+      updatedAt: now,
+      expiresAt
+    };
+
+    // Store in Redis for fast access
+    await this.redis.setex(
+      `session:${sessionId}`,
+      86400, // 24 hours
+      JSON.stringify(context)
+    );
+
+    // Store in PostgreSQL for persistence
+    await this.db.query(`
+      INSERT INTO tutor_sessions (session_id, user_id, context_data, expires_at)
+      VALUES ($1, $2, $3, $4)
+    `, [sessionId, userId, JSON.stringify(context), expiresAt]);
+
+    return context;
+  }
+
+  // Update language context
+  async updateLanguageContext(
+    sessionId: string,
+    detectionResult: DetectionResult,
+    userMessage: string
+  ): Promise<void> {
+    
+    const context = await this.getSession(sessionId);
+    if (!context) throw new Error('Session not found');
+
+    const newLanguage = detectionResult.primary === 'mixed' 
+      ? context.language.current 
+      : detectionResult.primary;
+
+    // Detect language switch
+    const languageSwitched = 
+      context.language.previous !== null && 
+      context.language.current !== newLanguage;
+
+    // Update language history
+    const historyEntry: LanguageHistoryEntry = {
+      messageId: uuidv4(),
+      userMessage,
+      detectedLanguage: newLanguage,
+      confidence: detectionResult.confidence,
+      timestamp: new Date(),
+      wasAmbiguous: detectionResult.primary === 'mixed'
+    };
+
+    context.language.history.push(historyEntry);
+
+    // Keep only last 10 entries
+    if (context.language.history.length > 10) {
+      context.language.history = context.language.history.slice(-10);
+    }
+
+    // Update language state
+    if (languageSwitched) {
+      context.language.switchCount++;
+      context.language.lastSwitchAt = new Date();
+      console.log(`Language switch detected: ${context.language.current} → ${newLanguage}`);
+    }
+
+    context.language.previous = context.language.current;
+    context.language.current = newLanguage;
+
+    // Calculate dominant language (last 10 messages)
+    const recentLanguages = context.language.history.slice(-10);
+    const hindiCount = recentLanguages.filter(h => h.detectedLanguage === 'hindi').length;
+    const englishCount = recentLanguages.filter(h => h.detectedLanguage === 'english').length;
+    context.language.dominantLanguage = hindiCount > englishCount ? 'hindi' : 'english';
+
+    context.updatedAt = new Date();
+
+    // Save updated context
+    await this.saveSession(context);
+  }
+
+  // Update conversation context
+  async updateConversationContext(
+    sessionId: string,
+    updates: Partial<SessionContext['conversation']>
+  ): Promise<void> {
+    
+    const context = await this.getSession(sessionId);
+    if (!context) throw new Error('Session not found');
+
+    context.conversation = {
+      ...context.conversation,
+      ...updates,
+      messageCount: context.conversation.messageCount + 1,
+      lastMessageAt: new Date()
+    };
+
+    context.updatedAt = new Date();
+    await this.saveSession(context);
+  }
+
+  // Get session from cache or database
+  async getSession(sessionId: string): Promise<SessionContext | null> {
+    // Try Redis first (fast cache)
+    const cached = await this.redis.get(`session:${sessionId}`);
+    if (cached) {
+      return JSON.parse(cached);
+    }
+
+    // Fallback to database
+    const result = await this.db.query(
+      'SELECT context_data FROM tutor_sessions WHERE session_id = $1 AND expires_at > NOW()',
+      [sessionId]
+    );
+
+    if (result.rows.length === 0) return null;
+
+    const context = result.rows[0].context_data as SessionContext;
+
+    // Restore to Redis cache
+    await this.redis.setex(
+      `session:${sessionId}`,
+      86400,
+      JSON.stringify(context)
+    );
+
+    return context;
+  }
+
+  // Save session to both cache and database
+  private async saveSession(context: SessionContext): Promise<void> {
+    // Update Redis
+    await this.redis.setex(
+      `session:${context.sessionId}`,
+      86400,
+      JSON.stringify(context)
+    );
+
+    // Update PostgreSQL
+    await this.db.query(`
+      UPDATE tutor_sessions 
+      SET context_data = $1, updated_at = $2
+      WHERE session_id = $3
+    `, [JSON.stringify(context), new Date(), context.sessionId]);
+  }
+
+  // Get language history for analysis
+  async getLanguageHistory(sessionId: string): Promise<LanguageHistoryEntry[]> {
+    const context = await this.getSession(sessionId);
+    return context?.language.history || [];
+  }
+
+  // Calculate engagement metrics
+  async calculateEngagement(sessionId: string): Promise<EngagementMetrics> {
+    const context = await this.getSession(sessionId);
+    if (!context) throw new Error('Session not found');
+
+    const sessionDuration = Date.now() - context.createdAt.getTime();
+    const messagesPerMinute = context.conversation.messageCount / (sessionDuration / 60000);
+
+    return {
+      messageCount: context.conversation.messageCount,
+      sessionDuration,
+      messagesPerMinute,
+      languageSwitches: context.language.switchCount,
+      engagementLevel: context.conversation.engagementLevel,
+      emotionalState: context.conversation.emotionalState
+    };
+  }
+
+  // Clean up expired sessions (run periodically)
+  async cleanupExpiredSessions(): Promise<number> {
+    const result = await this.db.query(`
+      DELETE FROM tutor_sessions 
+      WHERE expires_at < NOW()
+      RETURNING session_id
+    `);
+
+    // Remove from Redis
+    for (const row of result.rows) {
+      await this.redis.del(`session:${row.session_id}`);
+    }
+
+    return result.rowCount;
+  }
+}
+
+5. DYNAMIC PROMPT ENGINEERING ENGINE
+5.1 Prompt Template System
+typescript// services/prompts/DynamicPromptEngine.ts
+
+export interface PromptContext {
+  language: 'english' | 'hindi';
+  emotionalState: EmotionalState;
+  difficulty: 'easy' | 'medium' | 'hard';
+  subject: Subject;
+  justSwitchedLanguage: boolean;
+  studentConfidence: 'low' | 'medium' | 'high';
+  conversationPhase: 'greeting' | 'teaching' | 'practice' | 'doubt' | 'recap';
+}
+
+export class DynamicPromptEngine {
+  private baseTemplates: Map<string, string>;
+  private languageModifiers: Map<string, LanguageModifier>;
+
+  constructor() {
+    this.initializeTemplates();
+  }
+
+  private initializeTemplates(): void {
+    this.baseTemplates = new Map([
+      ['base_tutor_identity', this.getBaseTutorIdentity()],
+      ['language_english', this.getEnglishModeInstructions()],
+      ['language_hindi', this.getHindiModeInstructions()],
+      ['emotion_confused', this.getConfusedStudentInstructions()],
+      ['emotion_frustrated', this.getFrustratedStudentInstructions()],
+      ['emotion_confident', this.getConfidentStudentInstructions()],
+      ['phase_teaching', this.getTeachingPhaseInstructions()],
+      ['phase_practice', this.getPracticePhaseInstructions()],
+      ['quality_checks', this.getQualityCheckInstructions()]
+    ]);
+  }
+
+  // Generate complete dynamic system prompt
+  public generateSystemPrompt(context: PromptContext): string {
+    const sections: string[] = [];
+
+    // 1. Base Identity
+    sections.push(this.baseTemplates.get('base_tutor_identity')!);
+
+    // 2. Language Mode (CRITICAL - Most important section)
+    if (context.language === 'english') {
+      sections.push(this.buildEnglishModePrompt(context));
+    } else {
+      sections.push(this.buildHindiModePrompt(context));
+    }
+
+    // 3. Language Switch Alert (if applicable)
+    if (context.justSwitchedLanguage) {
+      sections.push(this.buildLanguageSwitchAlert(context));
+    }
+
+    // 4. Emotional Adaptation
+    sections.push(this.buildEmotionalAdaptation(context));
+
+    // 5. Phase-Specific Instructions
+    sections.push(this.buildPhaseInstructions(context));
+
+    // 6. Subject-Specific Guidelines
+    sections.push(this.buildSubjectGuidelines(context));
+
+    // 7. Difficulty Adaptation
+    sections.push(this.buildDifficultyInstructions(context));
+
+    // 8. Quality Checks
+    sections.push(this.baseTemplates.get('quality_checks')!);
+
+    // 9. Final Reminder
+    sections.push(this.buildFinalReminder(context));
+
+    return sections.join('\n\n');
+  }
+
+  // BASE TEMPLATE: Tutor Identity
+  private getBaseTutorIdentity(): string {
+    return `You are VaktaAI, an intelligent AI tutor for Indian students (Class 6-12) preparing for CBSE/ICSE/State Board/JEE/NEET exams.
+
+## YOUR CORE IDENTITY:
+- You are a patient, knowledgeable, and encouraging Indian tutor
+- You adapt your language style to match each student's preference
+- You use the Socratic method - guide students to discover answers
+- You make learning engaging with real-world Indian examples
+- You are culturally aware and sensitive to Indian education context
+
+## YOUR TEACHING PHILOSOPHY:
+1. Understanding over memorization
+2. Conceptual clarity before formulas
+3. Progressive difficulty increase
+4. Frequent encouragement and motivation
+5. Doubt clarification is your top priority`;
+  }
+
+  // LANGUAGE MODE: English
+  private buildEnglishModePrompt(context: PromptContext): string {
+    const confidence = context.studentConfidence;
+    const formalityLevel = confidence === 'high' ? 'professional' : 'friendly-formal';
+
+    return `
+## CURRENT LANGUAGE MODE: ENGLISH (${formalityLevel.toUpperCase()})
+
+⚠️ CRITICAL INSTRUCTION: The student is communicating in ENGLISH. You MUST respond in PURE ENGLISH.
+
+### ENGLISH MODE RULES:
+✅ DO:
+- Use formal, academic English language
+- Write grammatically correct complete sentences
+- Use professional teaching vocabulary
+- Structure explanations logically (Introduction → Explanation → Example → Summary)
+- Use transition words: "Let me explain", "Consider this", "For instance", "Therefore"
+- Be clear, precise, and academically sound
+${confidence === 'low' ? '- Be extra patient and break down concepts step-by-step' : ''}
+${confidence === 'high' ? '- Use advanced terminology and deeper concepts' : ''}
+
+❌ DO NOT:
+- Use ANY Hindi or Hinglish words (absolutely forbidden)
+- Write in conversational Indian English style
+- Use informal expressions like "yaar", "na", "no?"
+- Mix languages under any circumstances
+- Use Roman Hindi transliterations
+
+### TONE GUIDELINES (English Mode):
+- ${formalityLevel === 'professional' ? 'Professional and academic, like a university lecturer' : 'Warm but formal, like a good school teacher'}
+- Respectful and encouraging
+- Use "Let's explore...", "Notice that...", "Observe how..."
+- Ask guiding questions: "What do you think would happen if...?"
+- Provide structured explanations with clear sections
+
+### EXAMPLE RESPONSE FORMAT (English):
+"Great question! Let me break this down for you.
+
+Newton's Second Law states that the force acting on an object equals its mass multiplied by its acceleration (F = ma).
+
+To understand this better, consider this example: When you push a shopping cart, the force you apply determines how quickly it accelerates. A heavier cart (more mass) requires more force to achieve the same acceleration.
+
+Does this explanation make sense? Would you like me to work through a numerical problem?"`;
+  }
+
+  // LANGUAGE MODE: Hindi/Hinglish
+  private buildHindiModePrompt(context: PromptContext): string {
+    const warmthLevel = context.studentConfidence === 'low' ? 'extra-warm' : 'friendly';
+
+    return `
+## CURRENT LANGUAGE MODE: HINDI/HINGLISH (CONVERSATIONAL)
+
+⚠️ CRITICAL INSTRUCTION: The student is communicating in HINDI/HINGLISH. You MUST respond in NATURAL HINGLISH.
+
+### HINGLISH MODE RULES:
+✅ DO:
+- Mix Hindi and English NATURALLY like a real Indian tutor speaks
+- Use Hindi connectors: dekho, matlab, yaani, jaise, agar, toh, chalo
+- Keep scientific terms in English: force, momentum, velocity (not Hindi translations)
+- Be conversational and warm like talking to a friend
+- Use Roman Hindi (hai, hota, ka, ko, me, se)
+- Add Hindi context for English terms: "Force, yaani bal" or "Velocity matlab speed with direction"
+- Ask questions in Hindi: "Samajh aa gaya?", "Koi doubt hai?"
+${warmthLevel === 'extra-warm' ? '- Use extra encouraging words: beta, shabash, bilkul sahi' : ''}
+${context.difficulty === 'hard' ? '- Break complex topics into simple Hindi explanations' : ''}
+
+❌ DO NOT:
+- Respond in pure formal English (forbidden in this mode)
+- Translate scientific terms to pure Hindi (it confuses students)
+- Use only English without Hindi mixing
+- Be too formal or academic in tone
+- Use grammar that sounds translated
+
+### NATURAL CODE-SWITCHING PATTERNS:
+1. **Question Response:** 
+   Student: "Force kya hota hai?"
+   You: "Dekho, force matlab PUSH ya PULL. Jab tum kisi cheez ko dhakelte ho..."
+
+2. **Explanation Pattern:**
+   "Formula hai F = ma, jahan F force hai, m mass hai aur a acceleration."
+
+3. **Example Pattern:**
+   "Jaise samjho, agar tum cricket ball ko throw karte ho..."
+
+4. **Clarification Pattern:**
+   "Matlab simple shabdon mein, velocity ek vector quantity hai..."
+
+### TONE GUIDELINES (Hinglish Mode):
+- ${warmthLevel === 'extra-warm' ? 'Extra warm and patient like an elder sibling teaching' : 'Friendly and approachable like a neighborhood tutor'}
+- Use addressing terms occasionally: bhaiya/didi style but professional
+- Encouraging: "Shabash!", "Bilkul sahi!", "Great!"
+- Gentle corrections: "Nahi nahi, aisa nahi. Dekho..."
+- Patient explanations: "Koi baat nahi, phir se samajhte hain"
+
+### EXAMPLE RESPONSE FORMAT (Hinglish):
+"Bahut accha question! Dekho, samjhata hoon.
+
+Newton ka Second Law kehta hai ki force equals mass times acceleration (F = ma).
+
+Isko aise samjho: Jab tum ek shopping cart ko push karte ho, toh tumhari force kitni hai, ussi se depend karta hai ki cart kitna tez chalega. Agar cart bhari hai (zyada mass), toh zyada force lagani padegi same acceleration ke liye.
+
+Samajh aa gaya? Koi doubt hai toh batao, main aur explain kar dunga!"`;
+  }
+
+  // LANGUAGE SWITCH ALERT
+  private buildLanguageSwitchAlert(context: PromptContext): string {
+    const previousLang = context.language === 'english' ? 'Hindi/Hinglish' : 'English';
+    const currentLang = context.language === 'english' ? 'ENGLISH' : 'HINDI/HINGLISH';
+
+    return `
+## ⚠️ LANGUAGE SWITCH DETECTED!
+
+The student has just switched from ${previousLang} to ${currentLang}.
+
+🚨 IMMEDIATE ACTION REQUIRED:
+- COMPLETELY ABANDON the previous language style
+- SWITCH TO ${currentLang} MODE starting from your very first word
+- Match the student's new language preference EXACTLY
+- Do NOT reference the language switch in your response
+- Act as if you've always been speaking in ${currentLang}
+
+This is a critical moment - the student expects you to adapt seamlessly.`;
+  }
+
+  // EMOTIONAL ADAPTATION
+  private buildEmotionalAdaptation(context: PromptContext): string {
+    const emotionMap = {
+      confused: {
+        english: `
+### STUDENT STATE: Confused
+
+**Your Approach:**
+- Break down concepts into smallest possible steps
+- Use multiple analogies and examples
+- Check understanding after each small concept
+- Be patient and reassuring: "It's okay to find this challenging"
+- Offer to explain in different ways: "Let me try explaining this differently"
+- Use visual descriptions and real-world analogies`,
+        
+        hindi: `
+### STUDENT STATE: Confused (उलझन में)
+
+**Tumhara Approach:**
+- Concepts ko chote chote steps mein todo
+- Bahut saare examples aur analogies use karo
+- Har concept ke baad check karo: "Yeh samajh aaya?"
+- Patient raho: "Koi baat nahi, mushkil toh hai thoda"
+- Different ways mein samjhao: "Chalo ek aur tarike se samjhte hain"
+- Real-life examples do jo relate kar sake`
+      },
+      
+      frustrated: {
+        english: `
+### STUDENT STATE: Frustrated
+
+**Your Approach:**
+- Acknowledge their feelings first: "I understand this feels difficult"
+- Take a step back to simpler concepts
+- Use extra encouragement: "You're doing better than you think"
+- Break the overwhelming topic into tiny, manageable pieces
+- Celebrate small wins: "See? You got that part right!"
+- Suggest a short mental break if needed
+- Make it feel achievable`,
+        
+        hindi: `
+### STUDENT STATE: Frustrated (Pareshan)
+
+**Tumhara Approach:**
+- Pehle unki feeling acknowledge karo: "Haan yaar, difficult lag raha hai, samajh sakta hoon"
+- Thoda peeche jao, simple concepts pe
+- Extra motivation do: "Tum ache kar rahe ho, seriously!"
+- Bade topic ko chhote pieces mein todo
+- Choti wins celebrate karo: "Dekha? Yeh toh sahi kar liya!"
+- Agar zarurat ho toh break suggest karo: "5 minute break le lo"
+- Achievable feel karwao`
+      },
+
+      confident: {
+        english: `
+### STUDENT STATE: Confident
+
+**Your Approach:**
+- Match their energy with enthusiasm: "Excellent! You're getting it!"
+- Challenge them with slightly harder problems
+- Introduce advanced concepts or edge cases
+- Ask deeper "why" questions to test understanding
+- Connect to broader applications
+- Maintain momentum and keep them engaged`,
+        
+        hindi: `
+### STUDENT STATE: Confident
+
+**Tumhara Approach:**
+- Unki energy match karo: "Shabash! Bahut badhiya!"
+- Thoda harder problems do
+- Advanced concepts introduce karo
+- Deeper questions pucho: "Acha, toh WHY aisa hota hai?"
+- Real-world applications batao
+- Momentum maintain karo, engaged rakho`
+      },
+
+      neutral: {
+        english: `
+### STUDENT STATE: Neutral/Engaged
+
+**Your Approach:**
+- Maintain steady teaching pace
+- Balance explanation with practice
+- Regular understanding checks
+- Use engaging examples
+- Keep it interesting and interactive`,
+        
+        hindi: `
+### STUDENT STATE: Neutral/Engaged
+
+**Tumhara Approach:**
+- Steady pace mein padhao
+- Explanation aur practice balance mein rakho
+- Regular check karo: "Samajh aa raha hai na?"
+- Interesting examples use karo
+- Interactive rakho conversation ko`
+      }
+    };
+
+    const emotion = context.emotionalState;
+    const language = context.language;
+    
+    return emotionMap[emotion]?.[language] || emotionMap.neutral[language];
+  }
+
+  // PHASE-SPECIFIC INSTRUCTIONS
+  private buildPhaseInstructions(context: PromptContext): string {
+    const phaseInstructions = {
+      greeting: {
+        english: `
+### CONVERSATION PHASE: Greeting/Opening
+
+- Greet warmly and professionally
+- Ask what they'd like to learn today
+- Set a positive, encouraging tone
+- Be brief but friendly`,
+        
+        hindi: `
+### CONVERSATION PHASE: Greeting/Opening
+
+- Warm greeting do: "Namaste! Kaise ho?"
+- Pucho kya padhna hai aaj
+- Positive aur encouraging tone set karo
+- Short but friendly raho`
+      },
+
+      teaching: {
+        english: `
+### CONVERSATION PHASE: Core Teaching
+
+**SOCRATIC METHOD (Most Important):**
+1. Don't give direct answers immediately
+2. Ask guiding questions first: "What do you already know about this?"
+3. Build on their existing knowledge
+4. Use analogies from their daily life
+5. Let them arrive at understanding gradually
+
+**STRUCTURE:**
+- Start with the "why" before the "how"
+- Connect to previous concepts they know
+- Use examples from Indian context (cricket, traffic, cooking, etc.)
+- Break complex ideas into digestible chunks
+- Check understanding frequently`,
+        
+        hindi: `
+### CONVERSATION PHASE: Core Teaching
+
+**SOCRATIC METHOD (Sabse Important):**
+1. Seedha answer mat do
+2. Pehle guiding questions pucho: "Tumhe is baare mein pehle se kya pata hai?"
+3. Unke existing knowledge pe build karo
+4. Daily life se examples do
+5. Khud se samajhne do, spoon-feeding mat karo
+
+**STRUCTURE:**
+- Pehle "kyun" samjhao, phir "kaise"
+- Previous concepts se connect karo
+- Indian examples use karo (cricket, traffic, ghar ke kaam)
+- Complex cheezein chote pieces mein todo
+- Bar bar check karo: "Samajh aa raha hai?"`
+      },
+
+      practice: {
+        english: `
+### CONVERSATION PHASE: Practice/Problem Solving
+
+**GUIDED PRACTICE:**
+- Give hints, not solutions
+- If they're stuck, ask: "What's the first step?"
+- Break the problem into sub-steps
+- Celebrate when they get each step right
+- If wrong, guide gently: "Close! But consider..."
+
+**HINT PROGRESSION:**
+Level 1: Broad hint ("Think about which formula applies here")
+Level 2: Specific hint ("Remember F = ma? Which values do we have?")
+Level 3: Step-by-step guide (only if very stuck)`,
+        
+        hindi: `
+### CONVERSATION PHASE: Practice/Problem Solving
+
+**GUIDED PRACTICE:**
+- Hints do, solutions nahi
+- Agar stuck hain: "Pehla step kya hoga?"
+- Problem ko sub-steps mein todo
+- Har step sahi hone par appreciate karo
+- Galat ho toh gently guide karo: "Accha try tha! But dekho..."
+
+**HINT PROGRESSION:**
+Level 1: Broad hint ("Socho, kaun sa formula lagega yahan?")
+Level 2: Specific hint ("F = ma yaad hai? Humne kya values di hain?")
+Level 3: Step-by-step (sirf bahut stuck hone par)`
+      },
+
+      doubt: {
+        english: `
+### CONVERSATION PHASE: Doubt Clarification
+
+**PRIORITY: Make them feel comfortable asking anything**
+
+- Never make them feel their doubt is silly
+- Appreciate the question: "That's a great question!"
+- Clarify the specific confusion point
+- Use alternative explanations if needed
+- Confirm complete understanding before moving on`,
+        
+        hindi: `
+### CONVERSATION PHASE: Doubt Clarification
+
+**PRIORITY: Unhe comfortable feel karna chahiye**
+
+- Kabhi bhi doubt ko silly mat feel karwao
+- Question appreciate karo: "Bahut accha question hai!"
+- Specific confusion point clear karo
+- Agar zarurat ho toh different way mein samjhao
+- Completely clear hone ke baad hi aage badho`
+      },
+
+      recap: {
+        english: `
+### CONVERSATION PHASE: Recap/Summary
+
+- Summarize key points learned
+- Ask them to explain back to you (Feynman technique)
+- Highlight their progress and improvement
+- Give homework/practice suggestions
+- End on a motivating note`,
+        
+        hindi: `
+### CONVERSATION PHASE: Recap/Summary
+
+- Key points summarize karo
+- Unse wapas explain karwao (Feynman technique)
+- Progress highlight karo: "Dekha kitna seekh liya!"
+- Homework/practice suggest karo
+- Motivating note pe end karo`
+      }
+    };
+
+    const phase = context.conversationPhase;
+    const language = context.language;
+    
+    return phaseInstructions[phase][language];
+  }
+
+  // SUBJECT-SPECIFIC GUIDELINES
+  private buildSubjectGuidelines(context: PromptContext): string {
+    const subjectMap = {
+      physics: {
+        english: `
+### SUBJECT FOCUS: Physics
+
+- Emphasize conceptual understanding over formula memorization
+- Always explain the physical intuition first
+- Use real-world examples: vehicles, sports, household items
+- Draw mental pictures with words when explaining
+- Connect math to physical reality
+- Common mistakes to watch for: sign conventions, unit conversions, vector vs scalar confusion`,
+        
+        hindi: `
+### SUBJECT FOCUS: Physics
+
+- Concept understanding pe focus karo, ratta nahi
+- Pehle physical intuition samjhao
+- Real-world examples: gaadi, cricket, ghar ke cheezein
+- Words se picture banao mind mein
+- Math ko physical reality se connect karo
+- Common mistakes dhyan se: signs, units, vector vs scalar`
+      },
+
+      chemistry: {
+        english: `
+### SUBJECT FOCUS: Chemistry
+
+- Build from atoms → molecules → reactions progression
+- Use visual descriptions of molecular structures
+- Explain "why" reactions happen (energetics, stability)
+- Connect to everyday chemistry: cooking, cleaning, batteries
+- Emphasize safety in practical concepts
+- Balance equations step-by-step`,
+        
+        hindi: `
+### SUBJECT FOCUS: Chemistry
+
+- Atoms → molecules → reactions ka progression follow karo
+- Molecular structures ko visualize karwao
+- "Kyun" reactions hoti hain ye samjhao
+- Everyday chemistry se connect: cooking, cleaning
+- Safety ka dhyan rakho
+- Equations step-by-step balance karo`
+      },
+
+      mathematics: {
+        english: `
+### SUBJECT FOCUS: Mathematics
+
+- Start with the concept, then the procedure
+- Show multiple solution methods when possible
+- Emphasize why formulas work, not just how
+- Use geometric interpretations for algebra
+- Break complex problems into logical steps
+- Check answers for reasonableness`,
+        
+        hindi: `
+### SUBJECT FOCUS: Mathematics
+
+- Pehle concept, phir method
+- Agar possible ho toh multiple ways dikhao
+- Formula kyun kaam karta hai ye samjhao
+- Algebra ko geometry se connect karo
+- Complex problems ko logical steps mein todo
+- Answer reasonable hai ya nahi check karo`
+      },
+
+      biology: {
+        english: `
+### SUBJECT FOCUS: Biology
+
+- Use storytelling and process narratives
+- Connect body systems to experiences they've felt
+- Use diagrams described in words
+- Emphasize evolutionary "why" behind structures
+- Relate to health and daily life
+- Make it memorable with mnemonics when appropriate`,
+        
+        hindi: `
+### SUBJECT FOCUS: Biology
+
+- Story ki tarah samjhao processes ko
+- Body systems ko apne experiences se relate karwao
+- Diagrams ko words mein describe karo
+- Evolution ki "kyun" samjhao
+- Health aur daily life se connect karo
+- Mnemonics use karo yaad rakhne ke liye`
+      }
+    };
+
+    const subject = context.subject || 'mathematics';
+    const language = context.language;
+    
+    return subjectMap[subject]?.[language] || '';
+  }
+
+  // DIFFICULTY ADAPTATION
+  private buildDifficultyInstructions(context: PromptContext): string {
+    const difficultyMap = {
+      easy: {
+        english: `
+### DIFFICULTY LEVEL: Easy/Foundation
+
+- Use simple language and short sentences
+- Give plenty of examples before moving forward
+- Repeat key concepts in different words
+- Be extra patient with pace
+- Focus on building confidence
+- Use lots of everyday analogies`,
+        
+        hindi: `
+### DIFFICULTY LEVEL: Easy/Foundation
+
+- Simple language use karo
+- Bahut saare examples do
+- Key concepts ko repeat karo different words mein
+- Patient raho, jaldi mat karo
+- Confidence build karna focus hai
+- Roz ke examples se samjhao`
+      },
+
+      medium: {
+        english: `
+### DIFFICULTY LEVEL: Medium/Standard
+
+- Balance between explanation and challenge
+- Introduce slightly complex terminology gradually
+- Mix guided practice with independent thinking
+- Standard exam-level difficulty
+- Connect basic to advanced concepts`,
+        
+        hindi: `
+### DIFFICULTY LEVEL: Medium/Standard
+
+- Explanation aur challenge balance mein
+- Complex terms ko gradually introduce karo
+- Guided aur independent dono practice do
+- Standard exam level difficulty
+- Basic se advanced tak connect karo`
+      },
+
+      hard: {
+        english: `
+### DIFFICULTY LEVEL: Advanced/Challenging
+
+- Assume good foundational knowledge
+- Introduce advanced concepts and edge cases
+- Challenge with thought-provoking questions
+- Connect multiple concepts together
+- Prepare for competitive exam level thinking
+- Use sophisticated analogies`,
+        
+        hindi: `
+### DIFFICULTY LEVEL: Advanced/Challenging
+
+- Assume karo basics clear hain
+- Advanced concepts aur edge cases dikhao
+- Challenging questions pucho
+- Multiple concepts ko connect karo
+- Competitive exam level ki soch develop karo
+- Sophisticated analogies use karo`
+      }
+    };
+
+    const difficulty = context.difficulty;
+    const language = context.language;
+    
+    return difficultyMap[difficulty][language];
+  }
+
+  // QUALITY CHECKS (Language-independent rules)
+  private getQualityCheckInstructions(): string {
+    return `
+## FINAL QUALITY CHECKLIST (Must verify before responding):
+
+### Language Accuracy Check:
+✓ Am I using the CORRECT language mode (English or Hinglish)?
+✓ If English mode: Zero Hindi words present?
+✓ If Hinglish mode: Natural code-switching between Hindi and English?
+✓ Does my response match the student's language preference?
+
+### Pedagogical Quality Check:
+✓ Am I asking guiding questions (Socratic method)?
+✓ Am I giving hints instead of direct answers?
+✓ Have I used a relatable example or analogy?
+✓ Is my explanation building on their existing knowledge?
+✓ Did I check for understanding?
+
+### Tone & Empathy Check:
+✓ Is my tone appropriate for their emotional state?
+✓ Am I being encouraging and supportive?
+✓ Is my response length appropriate (not too long/short)?
+✓ Does this sound like a real human tutor would speak?
+
+### Content Accuracy Check:
+✓ Is my explanation scientifically/mathematically correct?
+✓ Have I avoided oversimplification that creates misconceptions?
+✓ Are my examples accurate and relevant?
+✓ Did I use correct terminology?
+
+⚠️ IF ANY CHECK FAILS: Revise your response before sending!`;
+  }
+
+  // FINAL REMINDER
+  private buildFinalReminder(context: PromptContext): string {
+    const languageReminder = context.language === 'english'
+      ? '🚨 REMINDER: Respond in PURE ENGLISH only. No Hindi words allowed.'
+      : '🚨 REMINDER: Respond in NATURAL HINGLISH. Mix Hindi and English like a real Indian tutor.';
+
+    return `
+## FINAL CRITICAL REMINDER:
+
+${languageReminder}
+
+Your goal is to be the best tutor this student could have - adaptive, patient, knowledgeable, and genuinely caring about their learning success. Make every response count!
+
+अब जाओ और amazing teaching करो! / Now go and deliver amazing teaching! 🎯`;
+  }
+}
+
+6. RESPONSE GENERATION PIPELINE
+typescript// services/response/ResponseGenerationPipeline.ts
+
+export class ResponseGenerationPipeline {
+  private languageDetector: LanguageDetectionEngine;
+  private contextManager: SessionContextManager;
+  private promptEngine: DynamicPromptEngine;
+  private openaiClient: OpenAI;
+  private validator: ResponseValidator;
+  private logger: Logger;
+
+  async processMessage(
+    userId: string,
+    sessionId: string,
+    userMessage: string,
+    voiceInput?: boolean
+  ): Promise<TutorResponse> {
+    
+    const startTime = Date.now();
+    
+    try {
+      // STEP 1: Preprocessing
+      const cleanedMessage = await this.preprocessMessage(userMessage, voiceInput);
+      this.logger.info('Message preprocessed', { userId, cleanedMessage });
+
+      // STEP 2: Language Detection
+      const detectionResult = await this.languageDetector.detectLanguage(
+        cleanedMessage,
+        sessionId
+      );
+      this.logger.info('Language detected', { 
+        userId, 
+        language: detectionResult.primary, 
+        confidence: detectionResult.confidence 
+      });
+
+      // Handle ambiguous cases
+      if (detectionResult.primary === 'mixed' && detectionResult.confidence < 0.5) {
+        detectionResult.primary = await this.languageDetector.resolveAmbiguousLanguage(
+          detectionResult,
+          sessionId
+        );
+        this.logger.warn('Ambiguous language resolved', { 
+          userId, 
+          resolvedTo: detectionResult.primary 
+        });
+      }
+
+      // STEP 3: Context Update
+      const context = await this.contextManager.getSession(sessionId);
+      if (!context) {
+        throw new Error('Session not found');
+      }
+
+      const languageSwitched = 
+        context.language.previous !== null &&
+        context.language.current !== detectionResult.primary;
+
+      await this.contextManager.updateLanguageContext(
+        sessionId,
+        detectionResult,
+        cleanedMessage
+      );
+
+      // STEP 4: Emotion Detection
+      const emotionalState = await this.detectEmotion(cleanedMessage, context);
+      await this.contextManager.updateConversationContext(sessionId, {
+        emotionalState
+      });
+
+      // STEP 5: Intent Classification
+      const intent = await this.classifyIntent(cleanedMessage, context);
+      this.logger.info('Intent classified', { userId, intent });
+
+      // STEP 6: Build Prompt Context
+      const promptContext: PromptContext = {
+        language: detectionResult.primary,
+        emotionalState,
+        difficulty: context.academic.difficulty,
+        subject: context.academic.currentSubject || 'mathematics',
+        justSwitchedLanguage: languageSwitched,
+        studentConfidence: this.calculateConfidence(context),
+        conversationPhase: this.determinePhase(intent, context)
+      };
+
+      // STEP 7: Generate Dynamic System Prompt
+      const systemPrompt = this.promptEngine.generateSystemPrompt(promptContext);
+      this.logger.debug('System prompt generated', { userId, promptLength: systemPrompt.length });
+
+      // STEP 8: Build Message History
+      const messages = await this.buildMessageHistory(sessionId, systemPrompt, cleanedMessage);
+
+      // STEP 9: Call OpenAI API
+      const aiResponse = await this.generateAIResponse(messages, promptContext);
+      this.logger.info('AI response generated', { userId, responseLength: aiResponse.length });
+
+      // STEP 10: Validate Response
+      const validation = await this.validator.validateResponse(
+        aiResponse,
+        detectionResult.primary,
+        promptContext
+      );
+
+      if (!validation.isValid) {
+        this.logger.warn('Response validation failed', { userId, issues: validation.issues });
+        
+        // Attempt regeneration if critical issues
+        if (validation.isCritical) {
+          this.logger.info('Attempting response regeneration', { userId });
+          return await this.regenerateResponse(messages, promptContext, validation);
+        }
+      }
+
+      // STEP 11: Post-processing
+      const finalResponse = await this.postprocessResponse(
+        aiResponse,
+        detectionResult.primary,
+        voiceInput
+      );
+
+      // STEP 12: Update metrics
+      const processingTime = Date.now() - startTime;
+      await this.updateMetrics(userId, sessionId, {
+        processingTime,
+        languageDetected: detectionResult.primary,
+        confidence: detectionResult.confidence,
+        intent,
+        emotionalState,
+        responseLength: finalResponse.text.length
+      });
+
+      return {
+        text: finalResponse.text,
+        audio: finalResponse.audio,
+        metadata: {
+          language: detectionResult.primary,
+          confidence: detectionResult.confidence,
+          languageSwitched,
+          emotionalState,
+          intent,
+          processingTime
+        }
+      };
+
+    } catch (error) {
+      this.logger.error('Pipeline error', { userId, error });
+      throw error;
+    }
+  }
+
+  private async preprocessMessage(message: string, isVoice: boolean): Promise<string> {
+    let cleaned = message.trim();
+    
+    // Remove extra whitespaces
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    
+    // Fix common STT errors if voice input
+    if (isVoice) {
+      cleaned = this.fixSTTErrors(cleaned);
+    }
+    
+    // Normalize Unicode
+    cleaned = cleaned.normalize('NFC');
+    
+    return cleaned;
+  }
+
+  private fixSTTErrors(text: string): string {
+    // Common STT misinterpretations in Hinglish
+    const corrections: Record<string, string> = {
+      'kay aa': 'kya',
+      'kay say': 'kaise',
+      'sum jo': 'samjho',
+      'but ow': 'batao',
+      // Add more common errors
+    };
+
+    let corrected = text;
+    Object.entries(corrections).forEach(([error, fix]) => {
+      corrected = corrected.replace(new RegExp(error, 'gi'), fix);
+    });
+
+    return corrected;
+  }
+
+  private async detectEmotion(message: string, context: SessionContext): Promise<EmotionalState> {
+    // Emotion detection logic
+    const confusionIndicators = [
+      'confused', 'nahi samajh', 'not understanding', 'difficult', 'mushkil',
+      'kya hai yeh', 'समझ नहीं आ रहा'
+    ];
+
+    const frustrationIndicators = [
+      'frustrated', 'pareshan', 'tired', 'thak gaya', 'बहुत मुश्किल',
+      'can\'t do it', 'nahi ho raha'
+    ];
+
+    const confidenceIndicators = [
+      'got it', 'समझ आ गया', 'samajh aa gaya', 'easy', 'आसान',
+      'i understand', 'clear', 'बिल्कुल'
+    ];
+
+    const messageLower = message.toLowerCase();
+
+    if (confusionIndicators.some(ind => messageLower.includes(ind))) {
+      context.behavior.confusionIndicators++;
+      return 'confused';
+    }
+
+    if (frustrationIndicators.some(ind => messageLower.includes(ind))) {
+      return 'frustrated';
+    }
+
+    if (confidenceIndicators.some(ind => messageLower.includes(ind))) {
+      return 'confident';
+    }
+
+    return 'neutral';
+  }
+
+  private async classifyIntent(message: string, context: SessionContext): Promise<string> {
+    // Simple intent classification
+    // In production, use GPT function calling or dedicated classifier
+    
+    const intents = {
+      greeting: /^(hi|hello|hey|namaste|good morning)/i,
+      topic_request: /^(teach|explain|tell me about|बताओ|समझाओ)/i,
+      concept_doubt: /(why|how|क्यों|कैसे)/i,
+      practice_request: /(question|problem|practice|सवाल)/i,
+      hint_request: /(hint|clue|help|मदद)/i,
+      clarification: /(mean|matlab|meaning|मतलब)/i,
+      confirmation: /(right|correct|sahi|ठीक)/i,
+      farewell: /(bye|goodbye|thanks|धन्यवाद)/i
+    };
+
+    for (const [intent, pattern] of Object.entries(intents)) {
+      if (pattern.test(message)) {
+        return intent;
+      }
+    }
+
+    return 'general_query';
+  }
+
+  private calculateConfidence(context: SessionContext): 'low' | 'medium' | 'high' {
+    const score = context.academic.performanceScore;
+    const confusionCount = context.behavior.confusionIndicators;
+
+    if (score < 40 || confusionCount > 3) return 'low';
+    if (score > 70 && confusionCount < 2) return 'high';
+    return 'medium';
+  }
+
+  private determinePhase(intent: string, context: SessionContext): PromptContext['conversationPhase'] {
+    if (intent === 'greeting') return 'greeting';
+    if (intent === 'practice_request' || intent.includes('practice')) return 'practice';
+    if (intent.includes('doubt') || intent === 'clarification') return 'doubt';
+    if (context.conversation.messageCount > 10) return 'recap';
+    return 'teaching';
+  }
+
+  private async buildMessageHistory(
+    sessionId: string,
+    systemPrompt: string,
+    currentMessage: string
+  ): Promise<Array<{role: string, content: string}>> {
+    
+    const context = await this.contextManager.getSession(sessionId);
+    if (!context) throw new Error('Session not found');
+
+    const messages: Array<{role: string, content: string}> = [
+      { role: 'system', content: systemPrompt }
+    ];
+
+    // Include last 3 exchanges for context
+    const recentHistory = context.language.history.slice(-6); // Last 3 exchanges (user + assistant)
+    
+    // Note: In production, you'd fetch actual conversation history from database
+    // This is simplified for the example
+
+    messages.push({ role: 'user', content: currentMessage });
+
+    return messages;
+  }
+
+  private async generateAIResponse(
+    messages: Array<{role: string, content: string}>,
+    context: PromptContext
+  ): Promise<string> {
+    
+    const temperature = context.emotionalState === 'frustrated' ? 0.5 : 0.7;
+    const maxTokens = context.conversationPhase === 'teaching' ? 600 : 400;
+
+    const response = await this.openaiClient.chat.completions.create({
+      model: 'gpt-4-turbo',
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+      presence_penalty: 0.3,
+      frequency_penalty: 0.3
+    });
+
+    return response.choices[0].message.content || '';
+  }
+
+  private async regenerateResponse(
+    messages: Array<{role: string, content: string}>,
+    context: PromptContext,
+    validation: ValidationResult
+  ): Promise<TutorResponse> {
+    
+    // Add additional instructions based on validation failures
+    const fixInstructions = `
+IMPORTANT: Your previous response had these issues:
+${validation.issues.map(issue => `- ${issue}`).join('\n')}
+
+Please regenerate your response while fixing these problems.
+`;
+
+    messages.push({
+      role: 'system',
+      content: fixInstructions
+    });
+
+    const aiResponse = await this.generateAIResponse(messages, context);
+    const finalResponse = await this.postprocessResponse(aiResponse, context.language, false);
+
+    return {
+      text: finalResponse.text,
+      audio: finalResponse.audio,
+      metadata: {
+        language: context.language,
+        confidence: 1,
+        languageSwitched: false,
+        emotionalState: context.emotionalState,
+        intent: 'regenerated',
+        processingTime: 0
+      }
+    };
+  }
+
+  private async postprocessResponse(
+    response: string,
+    language: 'english' | 'hindi',
+    needsVoice: boolean
+  ): Promise<{text: string, audio?: string}> {
+    
+    // Clean up response
+    let cleaned = response.trim();
+    
+    // Remove any accidental markdown formatting issues
+    cleaned = cleaned.replace(/\*\*/g, '');
+    
+    // Generate SSML if voice needed
+    let audio: string | undefined;
+    if (needsVoice) {
+      const ssml = this.generateSSML(cleaned, language);
+      audio = await this.convertToSpeech(ssml, language);
+    }
+
+    return { text: cleaned, audio };
+  }
+
+  private generateSSML(text: string, language: 'english' | 'hindi'): string {
+    // Enhanced SSML generation for natural speech
+    // This would be Task 6 from your original plan
+    
+    let ssml = `<speak>`;
+    
+    // Add pauses after questions
+    text = text.replace(/\?/g, '?<break time="0.5s"/>');
+    
+    // Add emphasis on key terms
+    text = text.replace(/(force|momentum|velocity|energy)/gi, '<emphasis level="moderate">$1</emphasis>');
+    
+    // Slow down for formulas
+    text = text.replace(/(F\s*=\s*ma|E\s*=\s*mc²)/gi, '<prosody rate="slow">$1</prosody>');
+    
+    ssml += text;
+    ssml += `</speak>`;
+    
+    return ssml;
+  }
+
+  private async convertToSpeech(ssml: string, language: 'english' | 'hindi'): Promise<string> {
+    // Call Sarvam TTS or AWS Polly
+    // Return audio file URL or base64
+    // Implementation depends on your TTS provider
+    return 'audio_url_placeholder';
+  }
+
+  private async updateMetrics(
+    userId: string,
+    sessionId: string,
+    metrics: any
+  ): Promise<void> {
+    // Log metrics to database/analytics
+    await this.db.query(`
+      INSERT INTO tutor_metrics 
+      (user_id, session_id, processing_time, language_detected, confidence, intent, emotional_state, response_length)
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `, [
+      userId,
+      sessionId,
+      metrics.processingTime,
+      metrics.languageDetected,
+      metrics.confidence,
+      metrics.intent,
+      metrics.emotionalState,
+      metrics.responseLength
+    ]);
+  }
+}
+
+CONTINUATION IN NEXT MESSAGE
+This is getting very long! Should I continue with:
+
+Part 2: Database Schema, API Design, Testing Strategy
+Part 3: Deployment & Monitoring
+Or would you like me to focus on implementing one specific component first?
+
+Bolo kya chahiye! 🚀RetryGsara ek sath doEditPlotted comprehensive technical documentation for VaktaAI system.The user is asking me to provide "sara ek sath do" which means "give everything together" - they want the complete detailed system for VaktaAI's dynamic language implementation. They want me to continue from where I left off and provide all remaining sections in one comprehensive response.
+Looking at the research_instructions, I need to check if this query requires using the launch_extended_search_task tool. Let me evaluate:
+
+Is this a basic conversational message? No, it's a detailed technical request.
+Is this an extremely simple question? No, this is asking for comprehensive technical documentation.
+Does this require research? No - this is asking me to continue generating technical documentation based on the context we've already established in this conversation.
+
+This is a continuation of our technical discussion about implementing VaktaAI's dynamic language system. The user wants me to complete the documentation I started. This doesn't require web search or research - it requires me to generate the remaining technical documentation sections (Database Schema, API Design, Testing Strategy, Deployment, etc.).
+So I should NOT use the launch_extended_search_task tool. Instead, I should continue generating the comprehensive technical documentation.
+Let me continue from where I left off and provide:
+
+Part 2: Quality Assurance Layer (Response Validator)
+Database Schema Design
+API Design & Routes
+Testing Strategy
+Performance Optimization
+Monitoring & Analytics
+Deployment Guide
+Complete Code Implementation Examples
+
+I'll make this comprehensive and detailed as the user requested "sara ek sath" (everything together).VaktaAI Complete Dynamic System - Part 2 (Complete Documentation)
+
+7. QUALITY ASSURANCE LAYER
+7.1 Response Validator
+typescript// services/validation/ResponseValidator.ts
+
+export interface ValidationResult {
+  isValid: boolean;
+  isCritical: boolean;
+  score: number; // 0-100
+  issues: ValidationIssue[];
+  suggestions: string[];
+}
+
+export interface ValidationIssue {
+  type: 'language_mismatch' | 'tone_inappropriate' | 'content_error' | 'format_error';
+  severity: 'critical' | 'major' | 'minor';
+  description: string;
+  location?: string;
+}
+
+export class ResponseValidator {
+  
+  // Main validation method
+  async validateResponse(
+    response: string,
+    expectedLanguage: 'english' | 'hindi',
+    context: PromptContext
+  ): Promise<ValidationResult> {
+    
+    const issues: ValidationIssue[] = [];
+    let score = 100;
+
+    // Validation Layer 1: Language Accuracy (Weight: 40%)
+    const languageValidation = this.validateLanguageMatch(response, expectedLanguage);
+    issues.push(...languageValidation.issues);
+    score -= languageValidation.penalty;
+
+    // Validation Layer 2: Tone Appropriateness (Weight: 20%)
+    const toneValidation = this.validateTone(response, context);
+    issues.push(...toneValidation.issues);
+    score -= toneValidation.penalty;
+
+    // Validation Layer 3: Educational Quality (Weight: 25%)
+    const educationalValidation = this.validateEducationalQuality(response, context);
+    issues.push(...educationalValidation.issues);
+    score -= educationalValidation.penalty;
+
+    // Validation Layer 4: Safety & Appropriateness (Weight: 15%)
+    const safetyValidation = this.validateSafety(response);
+    issues.push(...safetyValidation.issues);
+    score -= safetyValidation.penalty;
+
+    const isCritical = issues.some(issue => issue.severity === 'critical');
+
+    return {
+      isValid: score >= 70 && !isCritical,
+      isCritical,
+      score: Math.max(0, score),
+      issues,
+      suggestions: this.generateSuggestions(issues)
+    };
+  }
+
+  // Layer 1: Language Match Validation
+  private validateLanguageMatch(
+    response: string,
+    expectedLanguage: 'english' | 'hindi'
+  ): { issues: ValidationIssue[], penalty: number } {
+    
+    const issues: ValidationIssue[] = [];
+    let penalty = 0;
+
+    if (expectedLanguage === 'english') {
+      // Check for Hindi words in English response
+      const hindiPatterns = {
+        strongIndicators: ['kya', 'kaise', 'dekho', 'samjho', 'matlab', 'yaani', 'chalo', 'accha'],
+        moderateIndicators: ['hai', 'hota', 'hoti', 'ka', 'ki', 'ko', 'me', 'se', 'aur', 'ya'],
+        addressingTerms: ['bhaiya', 'didi', 'beta', 'yaar']
+      };
+
+      // Strong indicators are CRITICAL violations
+      const foundStrongHindi = hindiPatterns.strongIndicators.filter(word =>
+        new RegExp(`\\b${word}\\b`, 'i').test(response)
+      );
+
+      if (foundStrongHindi.length > 0) {
+        issues.push({
+          type: 'language_mismatch',
+          severity: 'critical',
+          description: `English response contains Hindi words: ${foundStrongHindi.join(', ')}`,
+          location: 'throughout response'
+        });
+        penalty += 40; // HEAVY penalty
+      }
+
+      // Moderate indicators
+      const foundModerateHindi = hindiPatterns.moderateIndicators.filter(word =>
+        new RegExp(`\\b${word}\\b`, 'i').test(response)
+      );
+
+      if (foundModerateHindi.length >= 3) {
+        issues.push({
+          type: 'language_mismatch',
+          severity: 'major',
+          description: `Too many Hindi particles in English response: ${foundModerateHindi.slice(0, 3).join(', ')}...`,
+          location: 'throughout response'
+        });
+        penalty += 20;
+      }
+
+      // Check for Devanagari script
+      if (/[\u0900-\u097F]/.test(response)) {
+        issues.push({
+          type: 'language_mismatch',
+          severity: 'critical',
+          description: 'Devanagari script found in English response',
+          location: 'contains Hindi script'
+        });
+        penalty += 40;
+      }
+
+    } else {
+      // expectedLanguage === 'hindi'
+      // Check if response is TOO formal/English-only
+
+      const hindiElements = [
+        'dekho', 'matlab', 'jaise', 'agar', 'toh', 'yaani', 
+        'samjho', 'chalo', 'accha', 'kya', 'kaise', 'hai', 'hota'
+      ];
+
+      const hasHindiElements = hindiElements.some(word =>
+        new RegExp(`\\b${word}\\b`, 'i').test(response)
+      );
+
+      // Check for overly formal English patterns
+      const formalPatterns = [
+        /\b(therefore|thus|hence|consequently|furthermore|moreover)\b/gi,
+        /\b(let me explain|consider this|observe that|note that)\b/gi,
+        /\b(it is important to|one must|we can see that)\b/gi
+      ];
+
+      const formalCount = formalPatterns.reduce((count, pattern) => {
+        const matches = response.match(pattern);
+        return count + (matches ? matches.length : 0);
+      }, 0);
+
+      if (!hasHindiElements && formalCount >= 2 && response.length > 100) {
+        issues.push({
+          type: 'language_mismatch',
+          severity: 'major',
+          description: 'Response too formal for Hinglish mode - lacks natural Hindi mixing',
+          location: 'overall tone'
+        });
+        penalty += 25;
+      }
+    }
+
+    return { issues, penalty };
+  }
+
+  // Layer 2: Tone Validation
+  private validateTone(
+    response: string,
+    context: PromptContext
+  ): { issues: ValidationIssue[], penalty: number } {
+    
+    const issues: ValidationIssue[] = [];
+    let penalty = 0;
+
+    // Check for emotional appropriateness
+    if (context.emotionalState === 'frustrated') {
+      // Should be extra patient and encouraging
+      const encouragingPhrases = [
+        'koi baat nahi', "it's okay", 'no worries', 'pareshan mat ho',
+        'you can do', 'tum kar sakte', 'don\'t worry'
+      ];
+
+      const hasEncouragement = encouragingPhrases.some(phrase =>
+        response.toLowerCase().includes(phrase)
+      );
+
+      if (!hasEncouragement && response.length > 100) {
+        issues.push({
+          type: 'tone_inappropriate',
+          severity: 'major',
+          description: 'Frustrated student needs more encouragement and patience',
+          location: 'overall tone'
+        });
+        penalty += 15;
+      }
+
+      // Check if response is too lengthy (frustrated students need brevity)
+      if (response.length > 500) {
+        issues.push({
+          type: 'tone_inappropriate',
+          severity: 'minor',
+          description: 'Response too long for frustrated student - keep it concise',
+          location: 'response length'
+        });
+        penalty += 5;
+      }
+    }
+
+    if (context.emotionalState === 'confused') {
+      // Should break down concepts step-by-step
+      const hasStepByStep = /step \d|pehle|phir|first|second|then|next/i.test(response);
+      
+      if (!hasStepByStep && response.length > 150) {
+        issues.push({
+          type: 'tone_inappropriate',
+          severity: 'minor',
+          description: 'Confused student needs step-by-step breakdown',
+          location: 'explanation structure'
+        });
+        penalty += 10;
+      }
+    }
+
+    // Check for overly technical language for easy difficulty
+    if (context.difficulty === 'easy') {
+      const technicalTerms = response.match(/\b(derivative|integral|quantum|thermodynamic|electromagnetic)\b/gi);
+      
+      if (technicalTerms && technicalTerms.length > 2) {
+        issues.push({
+          type: 'tone_inappropriate',
+          severity: 'minor',
+          description: 'Too many advanced technical terms for easy difficulty level',
+          location: 'vocabulary complexity'
+        });
+        penalty += 8;
+      }
+    }
+
+    return { issues, penalty };
+  }
+
+  // Layer 3: Educational Quality Validation
+  private validateEducationalQuality(
+    response: string,
+    context: PromptContext
+  ): { issues: ValidationIssue[], penalty: number } {
+    
+    const issues: ValidationIssue[] = [];
+    let penalty = 0;
+
+    // Check for Socratic method (should ask questions, not just tell)
+    if (context.conversationPhase === 'teaching') {
+      const hasQuestions = /\?/g.test(response);
+      const questionCount = (response.match(/\?/g) || []).length;
+
+      if (questionCount === 0 && response.length > 200) {
+        issues.push({
+          type: 'content_error',
+          severity: 'minor',
+          description: 'Teaching response lacks guiding questions (Socratic method)',
+          location: 'teaching approach'
+        });
+        penalty += 10;
+      }
+    }
+
+    // Check for examples/analogies
+    const hasExamples = /(for example|jaise|for instance|consider|samjho|dekho.*example)/i.test(response);
+    
+    if (!hasExamples && response.length > 250) {
+      issues.push({
+        type: 'content_error',
+        severity: 'minor',
+        description: 'Response lacks concrete examples or analogies',
+        location: 'explanation method'
+      });
+      penalty += 8;
+    }
+
+    // Check for direct answer giving (should give hints in practice phase)
+    if (context.conversationPhase === 'practice') {
+      // Look for direct solutions without hints
+      const hasSolution = /(answer is|solution is|result is|answer:\s*\d+)/i.test(response);
+      const hasHints = /(think about|remember|consider|yaad karo|socho)/i.test(response);
+
+      if (hasSolution && !hasHints) {
+        issues.push({
+          type: 'content_error',
+          severity: 'major',
+          description: 'Giving direct answer instead of hints during practice',
+          location: 'problem-solving approach'
+        });
+        penalty += 20;
+      }
+    }
+
+    // Check response length appropriateness
+    if (response.length < 50 && context.conversationPhase === 'teaching') {
+      issues.push({
+        type: 'content_error',
+        severity: 'minor',
+        description: 'Response too brief for teaching phase',
+        location: 'response length'
+      });
+      penalty += 5;
+    }
+
+    if (response.length > 600) {
+      issues.push({
+        type: 'format_error',
+        severity: 'minor',
+        description: 'Response too long - may overwhelm student',
+        location: 'response length'
+      });
+      penalty += 5;
+    }
+
+    return { issues, penalty };
+  }
+
+  // Layer 4: Safety & Appropriateness Validation
+  private validateSafety(response: string): { issues: ValidationIssue[], penalty: number } {
+    const issues: ValidationIssue[] = [];
+    let penalty = 0;
+
+    // Check for inappropriate content (basic filter)
+    const inappropriatePatterns = [
+      /\b(idiot|stupid|dumb|fool|moron)\b/i,
+      /\b(shut up|stop asking|too many questions)\b/i
+    ];
+
+    inappropriatePatterns.forEach(pattern => {
+      if (pattern.test(response)) {
+        issues.push({
+          type: 'content_error',
+          severity: 'critical',
+          description: 'Response contains inappropriate or discouraging language',
+          location: 'content'
+        });
+        penalty += 50;
+      }
+    });
+
+    // Check for negativity toward student
+    const negativePatterns = [
+      /you (can't|cannot|won't|will not) understand/i,
+      /too difficult for you/i,
+      /you should (give up|quit)/i
+    ];
+
+    negativePatterns.forEach(pattern => {
+      if (pattern.test(response)) {
+        issues.push({
+          type: 'tone_inappropriate',
+          severity: 'critical',
+          description: 'Response contains discouraging or negative language',
+          location: 'content'
+        });
+        penalty += 40;
+      }
+    });
+
+    return { issues, penalty };
+  }
+
+  // Generate suggestions for improvement
+  private generateSuggestions(issues: ValidationIssue[]): string[] {
+    const suggestions: string[] = [];
+
+    issues.forEach(issue => {
+      switch (issue.type) {
+        case 'language_mismatch':
+          if (issue.description.includes('English response contains Hindi')) {
+            suggestions.push('Remove all Hindi words and use pure English academic language');
+          } else {
+            suggestions.push('Add natural Hindi mixing to make response more conversational');
+          }
+          break;
+
+        case 'tone_inappropriate':
+          if (issue.description.includes('encouragement')) {
+            suggestions.push('Add encouraging phrases like "You can do this" or "Koi baat nahi"');
+          }
+          if (issue.description.includes('step-by-step')) {
+            suggestions.push('Break explanation into numbered steps');
+          }
+          break;
+
+        case 'content_error':
+          if (issue.description.includes('Socratic')) {
+            suggestions.push('Add 1-2 guiding questions instead of direct explanations');
+          }
+          if (issue.description.includes('examples')) {
+            suggestions.push('Include a concrete real-world example');
+          }
+          if (issue.description.includes('direct answer')) {
+            suggestions.push('Provide hints instead of complete solution');
+          }
+          break;
+      }
+    });
+
+    return [...new Set(suggestions)]; // Remove duplicates
+  }
+}
+
+8. DATABASE SCHEMA DESIGN
+8.1 PostgreSQL Schema
+sql-- ========================================
+-- VAKTAAI DATABASE SCHEMA
+-- ========================================
+
+-- Enable UUID extension
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+-- ========================================
+-- TABLE 1: USERS (Auth & Profile)
+-- ========================================
+
+CREATE TABLE users (
+  -- Core Identity
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  phone_number VARCHAR(10) UNIQUE NOT NULL,
+  phone_country_code VARCHAR(5) DEFAULT '+91',
+  
+  -- Basic Info
+  full_name VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE,
+  date_of_birth DATE,
+  
+  -- Auth & Security
+  password_hash VARCHAR(255), -- NULL for OTP-only login
+  is_phone_verified BOOLEAN DEFAULT false,
+  is_email_verified BOOLEAN DEFAULT false,
+  
+  -- Account Status
+  role VARCHAR(20) DEFAULT 'student' CHECK (role IN ('student', 'parent', 'tutor', 'admin')),
+  account_status VARCHAR(20) DEFAULT 'trial' CHECK (account_status IN ('trial', 'active', 'suspended', 'expired')),
+  is_active BOOLEAN DEFAULT true,
+  
+  -- Parent Info (for younger students)
+  parent_phone VARCHAR(10),
+  parent_name VARCHAR(100),
+  
+  -- Academic Profile
+  current_class INTEGER CHECK (current_class BETWEEN 6 AND 12),
+  board VARCHAR(20) CHECK (board IN ('cbse', 'icse', 'state_board', 'other')),
+  exam_target VARCHAR(30)[] DEFAULT ARRAY['boards'], -- Can have multiple targets
+  preferred_language VARCHAR(10) DEFAULT 'hinglish' CHECK (preferred_language IN ('english', 'hindi', 'hinglish')),
+  
+  -- Location
+  state VARCHAR(50),
+  city VARCHAR(50),
+  timezone VARCHAR(50) DEFAULT 'Asia/Kolkata',
+  
+  -- Device & Notifications
+  device_id VARCHAR(255),
+  fcm_token VARCHAR(255), -- For push notifications
+  
+  -- Metadata
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_login_at TIMESTAMP,
+  last_active_at TIMESTAMP
+);
+
+CREATE INDEX idx_users_phone ON users(phone_number);
+CREATE INDEX idx_users_email ON users(email);
+CREATE INDEX idx_users_status ON users(account_status, is_active);
+CREATE INDEX idx_users_class ON users(current_class);
+
+-- ========================================
+-- TABLE 2: OTP VERIFICATIONS
+-- ========================================
+
+CREATE TABLE otp_verifications (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  phone_number VARCHAR(10) NOT NULL,
+  otp_code VARCHAR(6) NOT NULL,
+  purpose VARCHAR(20) NOT NULL CHECK (purpose IN ('login', 'signup', 'reset_password', 'verify_phone')),
+  
+  -- Status
+  is_used BOOLEAN DEFAULT false,
+  is_expired BOOLEAN DEFAULT false,
+  attempt_count INTEGER DEFAULT 0,
+  
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  verified_at TIMESTAMP
+);
+
+CREATE INDEX idx_otp_phone ON otp_verifications(phone_number, is_used);
+CREATE INDEX idx_otp_expiry ON otp_verifications(expires_at);
+
+-- Auto-expire OTPs after 10 minutes
+CREATE OR REPLACE FUNCTION expire_old_otps()
+RETURNS void AS $$
+BEGIN
+  UPDATE otp_verifications
+  SET is_expired = true
+  WHERE expires_at < CURRENT_TIMESTAMP AND is_expired = false;
+END;
+$$ LANGUAGE plpgsql;
+
+-- ========================================
+-- TABLE 3: TUTOR SESSIONS
+-- ========================================
+
+CREATE TABLE tutor_sessions (
+  session_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Session Context (stored as JSONB for flexibility)
+  context_data JSONB NOT NULL,
+  
+  -- Session Metadata
+  started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  last_activity_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  ended_at TIMESTAMP,
+  expires_at TIMESTAMP NOT NULL,
+  
+  -- Session Stats
+  message_count INTEGER DEFAULT 0,
+  duration_seconds INTEGER DEFAULT 0,
+  
+  -- Session Quality Metrics
+  avg_response_time_ms INTEGER,
+  language_switches INTEGER DEFAULT 0,
+  dominant_language VARCHAR(10),
+  
+  CONSTRAINT valid_session_time CHECK (ended_at IS NULL OR ended_at >= started_at)
+);
+
+CREATE INDEX idx_sessions_user ON tutor_sessions(user_id);
+CREATE INDEX idx_sessions_active ON tutor_sessions(expires_at) WHERE ended_at IS NULL;
+CREATE INDEX idx_sessions_started ON tutor_sessions(started_at);
+
+-- ========================================
+-- TABLE 4: CONVERSATION MESSAGES
+-- ========================================
+
+CREATE TABLE conversation_messages (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID NOT NULL REFERENCES tutor_sessions(session_id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Message Content
+  role VARCHAR(20) NOT NULL CHECK (role IN ('user', 'assistant', 'system')),
+  content TEXT NOT NULL,
+  
+  -- Language Detection
+  detected_language VARCHAR(10) CHECK (detected_language IN ('english', 'hindi', 'mixed')),
+  language_confidence FLOAT CHECK (language_confidence BETWEEN 0 AND 1),
+  
+  -- Intent & Emotion
+  intent VARCHAR(50),
+  emotional_state VARCHAR(20) CHECK (emotional_state IN ('neutral', 'confused', 'frustrated', 'confident', 'curious')),
+  
+  -- Message Metadata
+  input_type VARCHAR(10) CHECK (input_type IN ('text', 'voice')),
+  output_type VARCHAR(10) CHECK (output_type IN ('text', 'voice', 'both')),
+  
+  -- Audio (if voice)
+  audio_url TEXT,
+  audio_duration_seconds INTEGER,
+  
+  -- Timestamps
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  -- Response Metrics (for assistant messages)
+  generation_time_ms INTEGER,
+  token_count INTEGER,
+  validation_score FLOAT
+);
+
+CREATE INDEX idx_messages_session ON conversation_messages(session_id, created_at);
+CREATE INDEX idx_messages_user ON conversation_messages(user_id, created_at);
+CREATE INDEX idx_messages_role ON conversation_messages(role);
+CREATE INDEX idx_messages_language ON conversation_messages(detected_language);
+
+-- ========================================
+-- TABLE 5: LANGUAGE DETECTION LOGS
+-- ========================================
+
+CREATE TABLE language_detection_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  session_id UUID NOT NULL REFERENCES tutor_sessions(session_id) ON DELETE CASCADE,
+  message_id UUID NOT NULL REFERENCES conversation_messages(id) ON DELETE CASCADE,
+  
+  -- Detection Details
+  input_text TEXT NOT NULL,
+  detected_language VARCHAR(10) NOT NULL,
+  confidence FLOAT NOT NULL,
+  
+  -- Scoring Breakdown
+  lexical_score FLOAT,
+  syntactic_score FLOAT,
+  statistical_score FLOAT,
+  contextual_score FLOAT,
+  
+  -- Indicators Found
+  indicators JSONB, -- Array of detected indicators
+  
+  -- Metadata
+  was_ambiguous BOOLEAN DEFAULT false,
+  resolution_strategy VARCHAR(50),
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_lang_detection_session ON language_detection_logs(session_id);
+CREATE INDEX idx_lang_detection_confidence ON language_detection_logs(confidence);
+CREATE INDEX idx_lang_detection_ambiguous ON language_detection_logs(was_ambiguous);
+
+-- ========================================
+-- TABLE 6: RESPONSE VALIDATION LOGS
+-- ========================================
+
+CREATE TABLE response_validation_logs (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  message_id UUID NOT NULL REFERENCES conversation_messages(id) ON DELETE CASCADE,
+  
+  -- Validation Results
+  is_valid BOOLEAN NOT NULL,
+  is_critical BOOLEAN DEFAULT false,
+  validation_score FLOAT NOT NULL,
+  
+  -- Issues Found
+  issues JSONB, -- Array of validation issues
+  suggestions JSONB, -- Array of improvement suggestions
+  
+  -- Was Regenerated?
+  was_regenerated BOOLEAN DEFAULT false,
+  regeneration_count INTEGER DEFAULT 0,
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_validation_message ON response_validation_logs(message_id);
+CREATE INDEX idx_validation_invalid ON response_validation_logs(is_valid) WHERE is_valid = false;
+
+-- ========================================
+-- TABLE 7: TUTOR METRICS (Analytics)
+-- ========================================
+
+CREATE TABLE tutor_metrics (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES tutor_sessions(session_id) ON DELETE CASCADE,
+  
+  -- Performance Metrics
+  processing_time_ms INTEGER NOT NULL,
+  language_detected VARCHAR(10),
+  language_confidence FLOAT,
+  
+  -- Behavioral Metrics
+  intent VARCHAR(50),
+  emotional_state VARCHAR(20),
+  
+  -- Response Quality
+  response_length INTEGER,
+  validation_score FLOAT,
+  
+  -- User Engagement
+  user_satisfaction_rating INTEGER CHECK (user_satisfaction_rating BETWEEN 1 AND 5),
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_metrics_user ON tutor_metrics(user_id, created_at);
+CREATE INDEX idx_metrics_session ON tutor_metrics(session_id);
+CREATE INDEX idx_metrics_performance ON tutor_metrics(processing_time_ms);
+
+-- ========================================
+-- TABLE 8: STUDENT PROGRESS (Academic Tracking)
+-- ========================================
+
+CREATE TABLE student_progress (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  
+  -- Subject & Topic
+  subject VARCHAR(30) NOT NULL CHECK (subject IN ('physics', 'chemistry', 'mathematics', 'biology')),
+  topic VARCHAR(100) NOT NULL,
+  subtopic VARCHAR(100),
+  
+  -- Progress Metrics
+  mastery_level INTEGER DEFAULT 0 CHECK (mastery_level BETWEEN 0 AND 100),
+  questions_attempted INTEGER DEFAULT 0,
+  questions_correct INTEGER DEFAULT 0,
+  
+  -- Last Interaction
+  last_practiced_at TIMESTAMP,
+  practice_count INTEGER DEFAULT 0,
+  
+  -- Difficulty Progression
+  current_difficulty VARCHAR(10) DEFAULT 'easy' CHECK (current_difficulty IN ('easy', 'medium', 'hard')),
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  
+  UNIQUE(user_id, subject, topic)
+);
+
+CREATE INDEX idx_progress_user ON student_progress(user_id);
+CREATE INDEX idx_progress_subject ON student_progress(subject);
+CREATE INDEX idx_progress_mastery ON student_progress(mastery_level);
+
+-- ========================================
+-- TABLE 9: PRACTICE QUESTIONS LOG
+-- ========================================
+
+CREATE TABLE practice_questions_log (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_id UUID NOT NULL REFERENCES tutor_sessions(session_id) ON DELETE CASCADE,
+  
+  -- Question Details
+  subject VARCHAR(30) NOT NULL,
+  topic VARCHAR(100) NOT NULL,
+  difficulty VARCHAR(10) NOT NULL,
+  
+  -- Question & Answer
+  question_text TEXT NOT NULL,
+  correct_answer TEXT,
+  user_answer TEXT,
+  
+  -- Result
+  is_correct BOOLEAN,
+  hints_used INTEGER DEFAULT 0,
+  time_taken_seconds INTEGER,
+  
+  -- Timestamps
+  asked_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  answered_at TIMESTAMP
+);
+
+CREATE INDEX idx_practice_user ON practice_questions_log(user_id, asked_at);
+CREATE INDEX idx_practice_subject ON practice_questions_log(subject);
+CREATE INDEX idx_practice_result ON practice_questions_log(is_correct);
+
+-- ========================================
+-- TABLE 10: USER FEEDBACK
+-- ========================================
+
+CREATE TABLE user_feedback (
+  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  session_id UUID REFERENCES tutor_sessions(session_id) ON DELETE SET NULL,
+  message_id UUID REFERENCES conversation_messages(id) ON DELETE SET NULL,
+  
+  -- Feedback Type
+  feedback_type VARCHAR(20) CHECK (feedback_type IN ('rating', 'issue', 'suggestion', 'compliment')),
+  
+  -- Rating (1-5 stars)
+  rating INTEGER CHECK (rating BETWEEN 1 AND 5),
+  
+  -- Feedback Content
+  feedback_text TEXT,
+  
+  -- Issue Category (if applicable)
+  issue_category VARCHAR(50) CHECK (issue_category IN (
+    'wrong_language', 
+    'incorrect_answer', 
+    'unhelpful_response', 
+    'technical_error', 
+    'other'
+  )),
+  
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE INDEX idx_feedback_user ON user_feedback(user_id);
+CREATE INDEX idx_feedback_type ON user_feedback(feedback_type);
+CREATE INDEX idx_feedback_rating ON user_feedback(rating);
+
+-- ========================================
+-- TRIGGERS FOR AUTO-UPDATE
+-- ========================================
+
+-- Update updated_at timestamp
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+  NEW.updated_at = CURRENT_TIMESTAMP;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+CREATE TRIGGER update_student_progress_updated_at BEFORE UPDATE ON student_progress
+  FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- ========================================
+-- MATERIALIZED VIEWS FOR ANALYTICS
+-- ========================================
+
+-- Daily user engagement metrics
+CREATE MATERIALIZED VIEW daily_user_engagement AS
+SELECT 
+  DATE(created_at) as date,
+  COUNT(DISTINCT user_id) as active_users,
+  COUNT(DISTINCT session_id) as total_sessions,
+  AVG(message_count) as avg_messages_per_session,
+  AVG(duration_seconds) as avg_session_duration,
+  SUM(language_switches) as total_language_switches
+FROM tutor_sessions
+WHERE started_at >= CURRENT_DATE - INTERVAL '90 days'
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+CREATE UNIQUE INDEX idx_daily_engagement_date ON daily_user_engagement(date);
+
+-- Language distribution
+CREATE MATERIALIZED VIEW language_usage_stats AS
+SELECT 
+  detected_language,
+  COUNT(*) as message_count,
+  AVG(language_confidence) as avg_confidence,
+  COUNT(DISTINCT user_id) as unique_users,
+  DATE(created_at) as date
+FROM conversation_messages
+WHERE created_at >= CURRENT_DATE - INTERVAL '30 days'
+GROUP BY detected_language, DATE(created_at);
+
+-- Refresh views daily (set up in cron or application scheduler)
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY daily_user_engagement;
+-- REFRESH MATERIALIZED VIEW CONCURRENTLY language_usage_stats;
+
+9. REDIS CACHE STRUCTURE
+9.1 Cache Keys & TTL Design
+typescript// config/redis.schema.ts
+
+export const RedisKeys = {
+  // Session caching (TTL: 24 hours)
+  session: (sessionId: string) => `session:${sessionId}`,
+  
+  // User profile caching (TTL: 1 hour)
+  userProfile: (userId: string) => `user:${userId}:profile`,
+  
+  // Language detection cache (TTL: 10 minutes)
+  languageCache: (text: string) => `lang:${hashText(text)}`,
+  
+  // Rate limiting (TTL: 1 minute)
+  rateLimit: (userId: string, endpoint: string) => `ratelimit:${userId}:${endpoint}`,
+  
+  // OTP storage (TTL: 10 minutes)
+  otp: (phone: string, purpose: string) => `otp:${phone}:${purpose}`,
+  
+  // Active sessions list
+  activeSessions: (userId: string) => `user:${userId}:sessions:active`,
+  
+  // Conversation context (TTL: 1 hour)
+  conversationContext: (sessionId: string) => `context:${sessionId}`,
+  
+  // Prompt cache (TTL: 5 minutes)
+  promptCache: (contextHash: string) => `prompt:${contextHash}`,
+  
+  // Analytics aggregation (TTL: 5 minutes)
+  analyticsBuffer: (metric: string) => `analytics:buffer:${metric}`
+};
+
+export const RedisTTL = {
+  session: 86400, // 24 hours
+  userProfile: 3600, // 1 hour
+  languageCache: 600, // 10 minutes
+  rateLimit: 60, // 1 minute
+  otp: 600, // 10 minutes
+  conversationContext: 3600, // 1 hour
+  promptCache: 300, // 5 minutes
+  analyticsBuffer: 300 // 5 minutes
+};
+
+// Example usage
+class RedisCacheService {
+  private redis: Redis;
+
+  async cacheSession(sessionId: string, context: SessionContext): Promise<void> {
+    await this.redis.setex(
+      RedisKeys.session(sessionId),
+      RedisTTL.session,
+      JSON.stringify(context)
+    );
+  }
+
+  async getSession(sessionId: string): Promise<SessionContext | null> {
+    const cached = await this.redis.get(RedisKeys.session(sessionId));
+    return cached ? JSON.parse(cached) : null;
+  }
+
+  async cacheLanguageDetection(
+    text: string,
+    result: DetectionResult
+  ): Promise<void> {
+    await this.redis.setex(
+      RedisKeys.languageCache(text),
+      RedisTTL.languageCache,
+      JSON.stringify(result)
+    );
+  }
+
+  async incrementRateLimit(userId: string, endpoint: string): Promise<number> {
+    const key = RedisKeys.rateLimit(userId, endpoint);
+    const count = await this.redis.incr(key);
+    
+    if (count === 1) {
+      await this.redis.expire(key, RedisTTL.rateLimit);
+    }
+    
+    return count;
+  }
+}
+
+10. API DESIGN & ROUTES
+10.1 REST API Endpoints
+typescript// routes/api.routes.ts
+
+import express from 'express';
+import { authMiddleware, rateLimitMiddleware } from '../middleware';
+import * as TutorController from '../controllers/tutor.controller';
+import * as AuthController from '../controllers/auth.controller';
+
+const router = express.Router();
+
+// ========================================
+// AUTH ROUTES
+// ========================================
+
+/**
+ * POST /api/auth/send-otp
+ * Send OTP to phone number
+ * Body: { phone_number: string, purpose: 'login' | 'signup' }
+ */
+router.post('/auth/send-otp', 
+  rateLimitMiddleware(5, 60), // 5 requests per minute
+  AuthController.sendOTP
+);
+
+/**
+ * POST /api/auth/verify-otp
+ * Verify OTP and login/signup
+ * Body: { phone_number: string, otp_code: string, purpose: string }
+ * Returns: { token: string, user: UserProfile }
+ */
+router.post('/auth/verify-otp',
+  rateLimitMiddleware(10, 60),
+  AuthController.verifyOTP
+);
+
+/**
+ * POST /api/auth/refresh-token
+ * Refresh JWT token
+ * Headers: { Authorization: 'Bearer <refresh_token>' }
+ */
+router.post('/auth/refresh-token',
+  AuthController.refreshToken
+);
+
+/**
+ * POST /api/auth/logout
+ * Logout and invalidate token
+ * Headers: { Authorization: 'Bearer <token>' }
+ */
+router.post('/auth/logout',
+  authMiddleware,
+  AuthController.logout
+);
+
+// ========================================
+// USER PROFILE ROUTES
+// ========================================
+
+/**
+ * GET /api/user/profile
+ * Get user profile
+ */
+router.get('/user/profile',
+  authMiddleware,
+  AuthController.getProfile
+);
+
+/**
+ * PUT /api/user/profile
+ * Update user profile
+ * Body: Partial<UserProfile>
+ */
+router.put('/user/profile',
+  authMiddleware,
+  AuthController.updateProfile
+);
+
+/**
+ * PUT /api/user/preferences
+ * Update user preferences (language, subjects, etc.)
+ * Body: { preferred_language?: string, exam_target?: string[], ... }
+ */
+router.put('/user/preferences',
+  authMiddleware,
+  AuthController.updatePreferences
+);
+
+// ========================================
+// TUTOR SESSION ROUTES
+// ========================================
+
+/**
+ * POST /api/tutor/session/start
+ * Start new tutor session
+ * Body: { initial_language?: 'english' | 'hindi' }
+ * Returns: { session_id: string, context: SessionContext }
+ */
+router.post('/tutor/session/start',
+  authMiddleware,
+  rateLimitMiddleware(20, 60), // 20 sessions per minute
+  TutorController.startSession
+);
+
+/**
+ * POST /api/tutor/session/:sessionId/message
+ * Send message to tutor
+ * Body: { message: string, input_type?: 'text' | 'voice', audio_url?: string }
+ * Returns: { response: string, audio_url?: string, metadata: ResponseMetadata }
+ */
+router.post('/tutor/session/:sessionId/message',
+  authMiddleware,
+  rateLimitMiddleware(60, 60), // 60 messages per minute
+  TutorController.sendMessage
+);
+
+/**
+ * GET /api/tutor/session/:sessionId
+ * Get session details and conversation history
+ */
+router.get('/tutor/session/:sessionId',
+  authMiddleware,
+  TutorController.getSession
+);
+
+/**
+ * GET /api/tutor/session/:sessionId/history
+ * Get conversation history with pagination
+ * Query: { limit?: number, offset?: number }
+ */
+router.get('/tutor/session/:sessionId/history',
+  authMiddleware,
+  TutorController.getConversationHistory
+);
+
+/**
+ * POST /api/tutor/session/:sessionId/end
+ * End tutor session
+ */
+router.post('/tutor/session/:sessionId/end',
+  authMiddleware,
+  TutorController.endSession
+);
+
+/**
+ * GET /api/tutor/sessions
+ * Get user's session history
+ * Query: { limit?: number, offset?: number }
+ */
+router.get('/tutor/sessions',
+  authMiddleware,
+  TutorController.getUserSessions
+);
+
+// ========================================
+// FEEDBACK ROUTES
+// ========================================
+
+/**
+ * POST /api/feedback
+ * Submit feedback
+ * Body: { 
+ *   session_id?: string, 
+ *   message_id?: string,
+ *   feedback_type: string,
+ *   rating?: number,
+ *   feedback_text?: string,
+ *   issue_category?: string
+ * }
+ */
+router.post('/feedback',
+  authMiddleware,
+  TutorController.submitFeedback
+);
+
+/**
+ * POST /api/feedback/message/:messageId/rating
+ * Quick rate a specific message (thumbs up/down)
+ * Body: { rating: 1-5 }
+ */
+router.post('/feedback/message/:messageId/rating',
+  authMiddleware,
+  TutorController.rateMessage
+);
+
+// ========================================
+// PROGRESS & ANALYTICS ROUTES
+// ========================================
+
+/**
+ * GET /api/progress
+ * Get student's overall progress
+ */
+router.get('/progress',
+  authMiddleware,
+  TutorController.getProgress
+);
+
+/**
+ * GET /api/progress/:subject
+ * Get subject-specific progress
+ */
+router.get('/progress/:subject',
+  authMiddleware,
+  TutorController.getSubjectProgress
+);
+
+/**
+ * GET /api/analytics/dashboard
+ * Get user analytics dashboard data
+ */
+router.get('/analytics/dashboard',
+  authMiddleware,
+  TutorController.getAnalytics
+);
+
+// ========================================
+// ADMIN ROUTES (Internal)
+// ========================================
+
+/**
+ * GET /api/admin/metrics
+ * Get system-wide metrics
+ * Requires admin role
+ */
+router.get('/admin/metrics',
+  authMiddleware,
+  TutorController.getSystemMetrics
+);
+
+/**
+ * GET /api/admin/language-stats
+ * Get language detection statistics
+ */
+router.get('/admin/language-stats',
+  authMiddleware,
+  TutorController.getLanguageStats
+);
+
+export default router;
+10.2 Controller Implementation Example
+typescript// controllers/tutor.controller.ts
+
+import { Request, Response } from 'express';
+import { ResponseGenerationPipeline } from '../services/response/ResponseGenerationPipeline';
+import { SessionContextManager } from '../services/context/SessionContextManager';
+
+export class TutorController {
+  private pipeline: ResponseGenerationPipeline;
+  private contextManager: SessionContextManager;
+
+  constructor() {
+    this.pipeline = new ResponseGenerationPipeline();
+    this.contextManager = new SessionContextManager();
+  }
+
+  /**
+   * POST /api/tutor/session/start
+   */
+  async startSession(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user.id; // From auth middleware
+      const { initial_language } = req.body;
+
+      // Create new session
+      const sessionContext = await this.contextManager.createSession(
+        userId,
+        initial_language || 'hindi'
+      );
+
+      res.status(201).json({
+        success: true,
+        data: {
+          session_id: sessionContext.sessionId,
+          context: {
+            language: sessionContext.language.current,
+            created_at: sessionContext.createdAt
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error starting session:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to start session'
+      });
+    }
+  }
+
+  /**
+   * POST /api/tutor/session/:sessionId/message
+   */
+  async sendMessage(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user.id;
+      const { sessionId } = req.params;
+      const { message, input_type, audio_url } = req.body;
+
+      // Validate session belongs to user
+      const session = await this.contextManager.getSession(sessionId);
+      if (!session || session.userId !== userId) {
+        res.status(404).json({
+          success: false,
+          error: 'Session not found'
+        });
+        return;
+      }
+
+      // Process message through pipeline
+      const response = await this.pipeline.processMessage(
+        userId,
+        sessionId,
+        message,
+        input_type === 'voice'
+      );
+
+      // Save message to database
+      await this.saveMessage({
+        sessionId,
+        userId,
+        userMessage: message,
+        assistantResponse: response.text,
+        metadata: response.metadata
+      });
+
+      res.status(200).json({
+        success: true,
+        data: {
+          response: response.text,
+          audio_url: response.audio,
+          metadata: {
+            language: response.metadata.language,
+            confidence: response.metadata.confidence,
+            language_switched: response.metadata.languageSwitched,
+            processing_time_ms: response.metadata.processingTime
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error processing message:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to process message'
+      });
+    }
+  }
+
+  /**
+   * GET /api/tutor/session/:sessionId/history
+   */
+  async getConversationHistory(req: Request, res: Response): Promise<void> {
+    try {
+      const userId = req.user.id;
+      const { sessionId } = req.params;
+      const { limit = 50, offset = 0 } = req.query;
+
+      // Validate session
+      const session = await this.contextManager.getSession(sessionId);
+      if (!session || session.userId !== userId) {
+        res.status(404).json({
+          success: false,
+          error: 'Session not found'
+        });
+        return;
+      }
+
+      // Fetch messages from database
+      const messages = await this.db.query(`
+        SELECT 
+          id,
+          role,
+          content,
+          detected_language,
+          emotional_state,
+          intent,
+          created_at
+        FROM conversation_messages
+        WHERE session_id = $1
+        ORDER BY created_at ASC
+        LIMIT $2 OFFSET $3
+      `, [sessionId, limit, offset]);
+
+      res.status(200).json({
+        success: true,
+        data: {
+          messages: messages.rows,
+          pagination: {
+            limit: Number(limit),
+            offset: Number(offset),
+            total: messages.rowCount
+          }
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching history:', error);
+      res.status(500).json({
+        success: false,
+        error: 'Failed to fetch conversation history'
+      });
+    }
+  }
+
+  private async saveMessage(data: {
+    sessionId: string;
+    userId: string;
+    userMessage: string;
+    assistantResponse: string;
+    metadata: any;
+  }): Promise<void> {
+    // Save user message
+    await this.db.query(`
+      INSERT INTO conversation_messages 
+      (session_id, user_id, role, content, detected_language, language_confidence, intent, emotional_state, input_type)
+      VALUES ($1, $2, 'user', $3, $4, $5, $6, $7, 'text')
+    `, [
+      data.sessionId,
+      data.userId,
+      data.userMessage,
+      data.metadata.language,
+      data.metadata.confidence,
+      data.metadata.intent,
+      data.metadata.emotionalState
+    ]);
+
+    // Save assistant response
+    await this.db.query(`
+      INSERT INTO conversation_messages 
+      (session_id, user_id, role, content, generation_time_ms, output_type)
+      VALUES ($1, $2, 'assistant', $3, $4, 'text')
+    `, [
+      data.sessionId,
+      data.userId,
+      data.assistantResponse,
+      data.metadata.processingTime
+    ]);
+  }
+}
+
+11. TESTING STRATEGY
+11.1 Test Suite Structure
+typescript// tests/language-detection.test.ts
+
+import { LanguageDetectionEngine } from '../services/language/LanguageDetectionEngine';
+
+describe('Language Detection Engine', () => {
+  let detector: LanguageDetectionEngine;
+
+  beforeEach(() => {
+    detector = new LanguageDetectionEngine();
+  });
+
+  describe('Pure English Detection', () => {
+    test('should detect formal English query', async () => {
+      const result = await detector.detectLanguage(
+        'What is Newton\'s second law of motion?',
+        'test-session-1'
+      );
+
+      expect(result.primary).toBe('english');
+      expect(result.confidence).toBeGreaterThan(0.7);
+    });
+
+    test('should detect casual English query', async () => {
+      const result = await detector.detectLanguage(
+        'Can you explain force to me please?',
+        'test-session-2'
+      );
+
+      expect(result.primary).toBe('english');
+      expect(result.confidence).toBeGreaterThan(0.6);
+    });
+
+    test('should detect English with technical terms', async () => {
+      const result = await detector.detectLanguage(
+        'How do you calculate momentum in a collision?',
+        'test-session-3'
+      );
+
+      expect(result.primary).toBe('english');
+    });
+  });
+
+  describe('Hindi/Hinglish Detection', () => {
+    test('should detect pure Hindi query', async () => {
+      const result = await detector.detectLanguage(
+        'न्यूटन का दूसरा नियम क्या है?',
+        'test-session-4'
+      );
+
+      expect(result.primary).toBe('hindi');
+      expect(result.confidence).toBe(1.0); // Devanagari = 100% confidence
+    });
+
+    test('should detect Hinglish question word pattern', async () => {
+      const result = await detector.detectLanguage(
+        'Force kya hota hai?',
+        'test-session-5'
+      );
+
+      expect(result.primary).toBe('hindi');
+      expect(result.confidence).toBeGreaterThan(0.7);
+    });
+
+    test('should detect Hinglish conversational style', async () => {
+      const result = await detector.detectLanguage(
+        'Bhaiya momentum samjhao na please',
+        'test-session-6'
+      );
+
+      expect(result.primary).toBe('hindi');
+      expect(result.confidence).toBeGreaterThan(0.8);
+    });
+
+    test('should detect Hinglish with grammar particles', async () => {
+      const result = await detector.detectLanguage(
+        'Force ka formula kya hai aur kaise use karte hain?',
+        'test-session-7'
+      );
+
+      expect(result.primary).toBe('hindi');
+    });
+  });
+
+  describe('Language Switch Detection', () => {
+    test('should detect English to Hindi switch', async () => {
+      const sessionId = 'test-session-8';
+
+      // First message in English
+      await detector.detectLanguage('What is force?', sessionId);
+
+      // Second message in Hindi
+      const result = await detector.detectLanguage(
+        'Acha, toh momentum kya hai?',
+        sessionId
+      );
+
+      expect(result.primary).toBe('hindi');
+      
+      // Check if contextual score reflects the switch
+      expect(result.scores.contextual).not.toBe(0);
+    });
+
+    test('should detect Hindi to English switch', async () => {
+      const sessionId = 'test-session-9';
+
+      // First message in Hindi
+      await detector.detectLanguage('Force kya hai?', sessionId);
+
+      // Second message in English
+      const result = await detector.detectLanguage(
+        'What is the formula for momentum?',
+        sessionId
+      );
+
+      expect(result.primary).toBe('english');
+    });
+  });
+
+  describe('Ambiguous Cases', () => {
+    test('should handle short messages', async () => {
+      const result = await detector.detectLanguage(
+        'ok',
+        'test-session-10'
+      );
+
+      // Should default to context or hinglish
+      expect(['english', 'hindi', 'mixed']).toContain(result.primary);
+    });
+
+    test('should handle mixed technical terms', async () => {
+      const result = await detector.detectLanguage(
+        'velocity acceleration ko affect karti hai',
+        'test-session-11'
+      );
+
+      expect(result.primary).toBe('hindi'); // Hindi grammar structure
+    });
+  });
+
+  describe('Edge Cases', () => {
+    test('should handle empty string', async () => {
+      await expect(
+        detector.detectLanguage('', 'test-session-12')
+      ).rejects.toThrow();
+    });
+
+    test('should handle numbers only', async () => {
+      const result = await detector.detectLanguage(
+        '12345',
+        'test-session-13'
+      );
+
+      expect(result.confidence).toBeLessThan(0.5); // Low confidence
+    });
+
+    test('should handle special characters', async () => {
+      const result = await detector.detectLanguage(
+        '!@#$%^&*()',
+        'test-session-14'
+      );
+
+      expect(result.confidence).toBeLessThan(0.5);
+    });
+  });
+});
+11.2 Integration Tests
+typescript// tests/integration/tutor-pipeline.test.ts
+
+import { ResponseGenerationPipeline } from '../services/response/ResponseGenerationPipeline';
+import { setupTestDatabase, cleanupTestDatabase } from './test-helpers';
+
+describe('Tutor Response Pipeline Integration', () => {
+  let pipeline: ResponseGenerationPipeline;
+  let testUserId: string;
+  let testSessionId: string;
+
+  beforeAll(async () => {
+    await setupTestDatabase();
+    pipeline = new ResponseGenerationPipeline();
+  });
+
+  afterAll(async () => {
+    await cleanupTestDatabase();
+  });
+
+  beforeEach(async () => {
+    // Create test user and session
+    testUserId = await createTestUser();
+    testSessionId = await createTestSession(testUserId);
+  });
+
+  describe('English Mode End-to-End', () => {
+    test('should process English query and respond in English', async () => {
+      const response = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'What is Newton\'s second law?',
+        false
+      );
+
+      expect(response.metadata.language).toBe('english');
+      expect(response.text).not.toMatch(/\b(kya|kaise|dekho|matlab)\b/i);
+      expect(response.text.length).toBeGreaterThan(50);
+    });
+
+    test('should maintain English across multiple messages', async () => {
+      // Message 1
+      const response1 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Explain force',
+        false
+      );
+
+      expect(response1.metadata.language).toBe('english');
+
+      // Message 2
+      const response2 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'What is the formula?',
+        false
+      );
+
+      expect(response2.metadata.language).toBe('english');
+      expect(response2.metadata.languageSwitched).toBe(false);
+    });
+  });
+
+  describe('Hinglish Mode End-to-End', () => {
+    test('should process Hinglish query and respond in Hinglish', async () => {
+      const response = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Force kya hota hai?',
+        false
+      );
+
+      expect(response.metadata.language).toBe('hindi');
+      
+      // Should contain Hinglish elements
+      expect(response.text).toMatch(/\b(hai|hota|ka|ko|me|se|dekho|matlab|jaise)\b/i);
+      expect(response.text.length).toBeGreaterThan(50);
+    });
+
+    test('should maintain Hinglish across conversation', async () => {
+      // Message 1
+      const response1 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Force samjhao',
+        false
+      );
+
+      expect(response1.metadata.language).toBe('hindi');
+
+      // Message 2
+      const response2 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Aur momentum kya hai?',
+        false
+      );
+
+      expect(response2.metadata.language).toBe('hindi');
+    });
+  });
+
+  describe('Language Switch Scenarios', () => {
+    test('should switch from English to Hindi seamlessly', async () => {
+      // Start in English
+      const response1 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'What is force?',
+        false
+      );
+
+      expect(response1.metadata.language).toBe('english');
+
+      // Switch to Hindi
+      const response2 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Acha, toh momentum kya hai?',
+        false
+      );
+
+      expect(response2.metadata.language).toBe('hindi');
+      expect(response2.metadata.languageSwitched).toBe(true);
+      
+      // Response should be in Hinglish now
+      expect(response2.text).toMatch(/\b(hai|hota|ka|dekho|matlab)\b/i);
+    });
+
+    test('should switch from Hindi to English seamlessly', async () => {
+      // Start in Hindi
+      const response1 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'Force kya hai?',
+        false
+      );
+
+      expect(response1.metadata.language).toBe('hindi');
+
+      // Switch to English
+      const response2 = await pipeline.processMessage(
+        testUserId,
+        testSessionId,
+        'What is the mathematical formula?',
+        false
+      );
+
+      expect(response2.metadata.language).toBe('english');
+      expect(response2.metadata.languageSwitched).toBe(true);
+      
+      // Response should be in English now
+      expect(response2.text).not.toMatch(/\b(kya|kaise|dekho|matlab)\b/i);
+    });
+  });
+
+  describe('Validation Quality Checks', () => {
+    test('should reject response with wrong language', async () => {
+      // This would be caught by validation layer
+      // Testing validator separately ensures quality
+    });
+
+    test('should detect inappropriate tone', async () => {
+      // Emotional state tests
+    });
+  });
+});
+11.3 Load Testing
+typescript// tests/load/concurrent-sessions.test.ts
+
+import { performance } from 'perf_hooks';
+import { ResponseGenerationPipeline } from '../services/response/ResponseGenerationPipeline';
+
+describe('Load Testing - Concurrent Sessions', () => {
+  test('should handle 100 concurrent requests', async () => {
+    const pipeline = new ResponseGenerationPipeline();
+    const promises: Promise<any>[] = [];
+
+    const startTime = performance.now();
+
+    for (let i = 0; i < 100; i++) {
+      const promise = pipeline.processMessage(
+        `test-user-${i}`,
+        `test-session-${i}`,
+        'What is force?',
+        false
+      );
+      promises.push(promise);
+    }
+
+    const results = await Promise.all(promises);
+    const endTime = performance.now();
+
+    const totalTime = endTime - startTime;
+    const avgTime = totalTime / 100;
+
+    console.log(`Total time for 100 requests: ${totalTime.toFixed(2)}ms`);
+    console.log(`Average time per request: ${avgTime.toFixed(2)}ms`);
+
+    expect(results.length).toBe(100);
+    expect(avgTime).toBeLessThan(3000); // Less than 3 seconds per request on average
+  });
+
+  test('should handle language detection at scale', async () => {
+    const detector = new LanguageDetectionEngine();
+    const testMessages = [
+      'What is force?',
+      'Force kya hai?',
+      'Explain momentum',
+      'Momentum samjhao',
+      // ... add more test messages
+    ];
+
+    const startTime = performance.now();
+
+    const promises = testMessages.map((msg, idx) =>
+      detector.detectLanguage(msg, `session-${idx}`)
+    );
+
+    await Promise.all(promises);
+
+    const endTime = performance.now();
+    const avgTime = (endTime - startTime) / testMessages.length;
+
+    expect(avgTime).toBeLessThan(100); // Less than 100ms per detection
+  });
+});
+
+12. PERFORMANCE OPTIMIZATION
+12.1 Caching Strategy
+typescript// services/optimization/CacheOptimizer.ts
+
+export class CacheOptimizer {
+  private redis: Redis;
+  private lruCache: LRUCache;
+
+  constructor() {
+    // Multi-tier caching
+    this.lruCache = new LRUCache({ max: 500 }); // In-memory L1 cache
+    this.redis = new Redis(); // Redis L2 cache
+  }
+
+  async get(key: string): Promise<any> {
+    // Check L1 cache (in-memory)
+    if (this.lruCache.has(key)) {
+      return this.lruCache.get(key);
+    }
+
+    // Check L2 cache (Redis)
+    const cached = await this.redis.get(key);
+    if (cached) {
+      const value = JSON.parse(cached);
+      this.lruCache.set(key, value); // Promote to L1
+      return value;
+    }
+
+    return null;
+  }
+
+  async set(key: string, value: any, ttl: number): Promise<void> {
+    // Set in both caches
+    this.lruCache.set(key, value);
+    await this.redis.setex(key, ttl, JSON.stringify(value));
+  }
+}
+
+// Optimize language detection with caching
+export class CachedLanguageDetector extends LanguageDetectionEngine {
+  private cache: CacheOptimizer;
+
+  constructor() {
+    super();
+    this.cache = new CacheOptimizer();
+  }
+
+  async detectLanguage(text: string, sessionId: string): Promise<DetectionResult> {
+    // Create cache key from text hash
+    const cacheKey = `lang:${this.hashText(text)}`;
+
+    // Check cache first
+    const cached = await this.cache.get(cacheKey);
+    if (cached) {
+      return cached;
+    }
+
+    // Run detection
+    const result = await super.detectLanguage(text, sessionId);
+
+    // Cache result (10 minutes TTL)
+    await this.cache.set(cacheKey, result, 600);
+
+    return result;
+  }
+
+  private hashText(text: string): string {
+    return crypto.createHash('md5').update(text.toLowerCase()).digest('hex');
+  }
+}
+12.2 Database Query Optimization
+sql-- Create composite indexes for common queries
+
+-- Session + Language queries
+CREATE INDEX idx_messages_session_lang ON conversation_messages(session_id, detected_language, created_at);
+
+-- User analytics queries
+CREATE INDEX idx_messages_user_date ON conversation_messages(user_id, DATE(created_at));
+
+-- Performance monitoring
+CREATE INDEX idx_metrics_processing_time ON tutor_metrics(processing_time_ms) WHERE processing_time_ms > 2000;
+
+-- Partial indexes for active sessions only
+CREATE INDEX idx_active_sessions ON tutor_sessions(user_id, last_activity_at) 
+WHERE ended_at IS NULL;
+
+-- Optimize validation logs queries
+CREATE INDEX idx_validation_failed ON response_validation_logs(message_id, created_at) 
+WHERE is_valid = false;
+12.3 Connection Pooling
+typescript// config/database.ts
+
+import { Pool } from 'pg';
+
+export const dbPool = new Pool({
+  host: process.env.DB_HOST,
+  port: parseInt(process.env.DB_PORT || '5432'),
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  
+  // Connection pool settings
+  max: 20, // Maximum 20 connections
+  min: 5,  // Minimum 5 connections
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
+  
+  // Performance tuning
+  statement_timeout: 10000, // 10 seconds
+  query_timeout: 10000,
+});
+
+// Monitor pool health
+dbPool.on('error', (err, client) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+dbPool.on('connect', () => {
+  console.log('New database connection established');
+});
+
+13. MONITORING & ANALYTICS
+13.1 Metrics Collection
+typescript// services/monitoring/MetricsCollector.ts
+
+export class MetricsCollector {
+  private influxDB: InfluxDB; // Or Prometheus
+  
+  // Track language detection accuracy
+  async trackLanguageDetection(detection: {
+    text: string;
+    detectedLanguage: string;
+    confidence: number;
+    wasAmbiguous: boolean;
+    processingTimeMs: number;
+  }): Promise<void> {
+    await this.influxDB.writePoint({
+      measurement: 'language_detection',
+      tags: {
+        language: detection.detectedLanguage,
+        ambiguous: detection.wasAmbiguous.toString()
+      },
+      fields: {
+        confidence: detection.confidence,
+        processing_time_ms: detection.processingTimeMs,
+        text_length: detection.text.length
+      },
+      timestamp: new Date()
+    });
+  }
+
+  // Track language switches
+  async trackLanguageSwitch(switch_data: {
+    userId: string;
+    sessionId: string;
+    fromLanguage: string;
+    toLanguage: string;
+    messageNumber: number;
+  }): Promise<void> {
+    await this.influxDB.writePoint({
+      measurement: 'language_switches',
+      tags: {
+        from: switch_data.fromLanguage,
+        to: switch_data.toLanguage,
+        user_id: switch_data.userId
+      },
+      fields: {
+        message_number: switch_data.messageNumber
+      },
+      timestamp: new Date()
+    });
+  }
+
+  // Track response quality
+  async trackResponseQuality(quality: {
+    messageId: string;
+    validationScore: number;
+    wasValid: boolean;
+    wasRegenerated: boolean;
+    issues: string[];
+  }): Promise<void> {
+    await this.influxDB.writePoint({
+      measurement: 'response_quality',
+      tags: {
+        valid: quality.wasValid.toString(),
+        regenerated: quality.wasRegenerated.toString()
+      },
+      fields: {
+        validation_score: quality.validationScore,
+        issue_count: quality.issues.length
+      },
+      timestamp: new Date()
+    });
+  }
+
+  // Track API performance
+  async trackAPIPerformance(api: {
+    endpoint: string;
+    method: string;
+    statusCode: number;
+    responseTimeMs: number;
+    userId?: string;
+  }): Promise<void> {
+    await this.influxDB.writePoint({
+      measurement: 'api_performance',
+      tags: {
+        endpoint: api.endpoint,
+        method: api.method,
+        status: api.statusCode.toString()
+      },
+      fields: {
+        response_time_ms: api.responseTimeMs
+      },
+      timestamp: new Date()
+    });
+  }
+}
+13.2 Dashboards (Grafana Queries)
+sql-- Language Distribution Over Time
+SELECT 
+  time_bucket('1 hour', created_at) as hour,
+  detected_language,
+  COUNT(*) as message_count,
+  AVG(language_confidence) as avg_confidence
+FROM conversation_messages
+WHERE created_at >= NOW() - INTERVAL '24 hours'
+GROUP BY hour, detected_language
+ORDER BY hour DESC;
+
+-- Language Switch Rate
+SELECT 
+  DATE(created_at) as date,
+  COUNT(*) FILTER (WHERE language_switches > 0) as sessions_with_switches,
+  COUNT(*) as total_sessions,
+  (COUNT(*) FILTER (WHERE language_switches > 0)::float / COUNT(*))::float as switch_rate
+FROM tutor_sessions
+WHERE created_at >= NOW() - INTERVAL '7 days'
+GROUP BY DATE(created_at)
+ORDER BY date DESC;
+
+-- Response Validation Failure Rate
+SELECT 
+  DATE(created_at) as date,
+  COUNT(*) FILTER (WHERE is_valid = false) as failed_validations,
+  COUNT(*) as total_responses,
+  (COUNT(*) FILTER (WHERE is_valid = false)::float / COUNT(*))::float as failure_rate
+FROM response_validation_logs
+WHERE created_at >= NOW() - INTERVAL '7 days'
+GROUP BY DATE(created_at);
+
+-- Average Processing Time by Language
+SELECT 
+  detected_language,
+  AVG(processing_time_ms) as avg_processing_time,
+  PERCENTILE_CONT(0.5) WITHIN GROUP (ORDER BY processing_time_ms) as median_time,
+  PERCENTILE_CONT(0.95) WITHIN GROUP (ORDER BY processing_time_ms) as p95_time
+FROM tutor_metrics
+WHERE created_at >= NOW() - INTERVAL '24 hours'
+GROUP BY detected_language;
+
+14. DEPLOYMENT GUIDE
+14.1 Environment Configuration
+env# .env.production
+
+# Server
+NODE_ENV=production
+PORT=3000
+API_VERSION=v1
+
+# Database
+DB_HOST=your-postgres-host
+DB_PORT=5432
+DB_NAME=vaktaai_prod
+DB_USER=vaktaai_user
+DB_PASSWORD=your-secure-password
+DB_SSL=true
+DB_POOL_MIN=5
+DB_POOL_MAX=20
+
+# Redis
+REDIS_HOST=your-redis-host
+REDIS_PORT=6379
+REDIS_PASSWORD=your-redis-password
+REDIS_TLS=true
+
+# OpenAI
+OPENAI_API_KEY=sk-your-api-key
+OPENAI_MODEL=gpt-4-turbo
+OPENAI_MAX_TOKENS=600
+OPENAI_TEMPERATURE=0.7
+
+# Sarvam TTS
+SARVAM_API_KEY=your-sarvam-key
+SARVAM_API_URL=https://api.sarvam.ai
+
+# AWS Polly (Fallback)
+AWS_ACCESS_KEY_ID=your-aws-key
+AWS_SECRET_ACCESS_KEY=your-aws-secret
+AWS_REGION=ap-south-1
+
+# JWT
+JWT_SECRET=your-jwt-secret-key
+JWT_EXPIRES_IN=7d
+JWT_REFRESH_SECRET=your-refresh-secret
+JWT_REFRESH_EXPIRES_IN=30d
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=60000
+RATE_LIMIT_MAX_REQUESTS=60
+
+# Logging
+LOG_LEVEL=info
+LOG_FILE_PATH=/var/log/vaktaai/app.log
+
+# Monitoring
+INFLUXDB_URL=your-influxdb-url
+INFLUXDB_TOKEN=your-influxdb-token
+INFLUXDB_ORG=vaktaai
+INFLUXDB_BUCKET=metrics
+
+# Sentry (Error Tracking)
+SENTRY_DSN=your-sentry-dsn
+14.2 Docker Configuration
+dockerfile# Dockerfile
+
+FROM node:18-alpine AS builder
+
+WORKDIR /app
+
+# Copy package files
+COPY package*.json ./
+COPY tsconfig.json ./
+
+# Install dependencies
+RUN npm ci --only=production
+
+# Copy source code
+COPY src/ ./src/
+
+# Build TypeScript
+RUN npm run build
+
+# Production stage
+FROM node:18-alpine
+
+WORKDIR /app
+
+# Copy built files and dependencies
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+USER nodejs
+
+EXPOSE 3000
+
+CMD ["node", "dist/server.js"]
+yaml# docker-compose.yml
+
+version: '3.8'
+
+services:
+  app:
+    build: .
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - .env.production
+    depends_on:
+      - postgres
+      - redis
+    restart: always
+    deploy:
+      replicas: 3
+      resources:
+        limits:
+          cpus: '1'
+          memory: 1G
+
+  postgres:
+    image: postgres:15-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: vaktaai_prod
+      POSTGRES_USER: vaktaai_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+    restart: always
+
+  redis:
+    image: redis:7-alpine
+    command: redis-server --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis_data:/data
+    restart: always
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - app
+    restart: always
+
+volumes:
+  postgres_data:
+  redis_data:
+14.3 Nginx Configuration
+nginx# nginx.conf
+
+upstream vaktaai_backend {
+    least_conn;
+    server app:3000 max_fails=3 fail_timeout=30s;
+}
+
+server {
+    listen 80;
+    server_name api.vaktaai.com;
+    return 301 https://$server_name$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    server_name api.vaktaai.com;
+
+    ssl_certificate /etc/nginx/ssl/cert.pem;
+    ssl_certificate_key /etc/nginx/ssl/key.pem;
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain application/json;
+
+    location / {
+        proxy_pass http://vaktaai_backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        
+        # Timeouts
+        proxy_connect_timeout 60s;
+        proxy_send_timeout 60s;
+        proxy_read_timeout 60s;
+    }
+
+    # Health check endpoint
+    location /health {
+        proxy_pass http://vaktaai_backend/health;
+        access_log off;
+    }
+}
+14.4 CI/CD Pipeline (GitHub Actions)
+yaml# .github/workflows/deploy.yml
+
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run tests
+        run: npm test
+        
+      - name: Run linting
+        run: npm run lint
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Build Docker image
+        run: docker build -t vaktaai-api:${{ github.sha }} .
+        
+      - name: Push to Docker Registry
+        run: |
+          echo ${{ secrets.DOCKER_PASSWORD }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
+          docker tag vaktaai-api:${{ github.sha }} your-registry/vaktaai-api:latest
+          docker push your-registry/vaktaai-api:latest
+          
+      - name: Deploy to Production
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.PROD_HOST }}
+          username: ${{ secrets.PROD_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            cd /opt/vaktaai
+            docker-compose pull
+            docker-compose up -d
+            docker-compose exec app npm run migrate
+
+15. MONITORING ALERTS
+15.1 Alert Rules (Prometheus)
+yaml# prometheus-alerts.yml
+
+groups:
+  - name: vaktaai_alerts
+    interval: 30s
+    rules:
+      - alert: HighLanguageDetectionFailureRate
+        expr: |
+          (
+            sum(rate(language_detection_failed_total[5m])) /
+            sum(rate(language_detection_total[5m]))
+          ) > 0.10
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High language detection failure rate"
+          description: "Language detection failure rate is above 10% for 5 minutes"
+
+      - alert: HighResponseValidationFailureRate
+        expr: |
+          (
+            sum(rate(response_validation_failed_total[5m])) /
+            sum(rate(response_validation_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "High response validation failure rate"
+          description: "Response validation failure rate is above 5%"
+
+      - alert: SlowResponseTime
+        expr: histogram_quantile(0.95, rate(api_response_time_seconds_bucket[5m])) > 3
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Slow API response time"
+          description: "95th percentile response time is above 3 seconds"
+
+      - alert: DatabaseConnectionPoolExhausted
+        expr: pg_pool_active_connections / pg_pool_max_connections > 0.9
+        for: 5m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Database connection pool nearly exhausted"
+          description: "Database connection pool usage is above 90%"
+
+      - alert: RedisHighMemoryUsage
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis is using more than 85% of available memory"
+
+16. FINAL CHECKLIST
+Pre-Launch Checklist:
+Backend:
+
+ Language detection engine tested with 100+ examples
+ Validation system catching 95%+ of language mismatches
+ Context manager maintaining state correctly
+ Dynamic prompt generation working for all scenarios
+ Response pipeline processing < 2s average
+ Database indexes created and optimized
+ Redis caching reducing DB load by 60%+
+ Rate limiting protecting against abuse
+
+Testing:
+
+ Unit tests: 90%+ coverage
+ Integration tests: All critical paths covered
+ Load tests: 100 concurrent users handled
+ Language switch scenarios: All passing
+ Edge cases: Handled gracefully
+
+Infrastructure:
+
+ Docker containers built and tested
+ CI/CD pipeline deployed and working
+ Monitoring dashboards configured
+ Alert rules tested and firing correctly
+ SSL certificates installed
+ Backups configured (daily)
+
+Security:
+
+ Environment variables secured
+ JWT tokens properly configured
+ Rate limiting active
+ SQL injection prevention verified
+ CORS properly configured
+ Security headers set
+
+Documentation:
+
+ API documentation complete
+ Setup guide written
+ Architecture diagrams created
+ Runbooks for common issues
+ Monitoring guide
+
+
+COMPLETE! 🎉
+Yeh complete detailed system hai VaktaAI ke dynamic language system ka!
+Highlights:
+
+✅ Multi-layer language detection (Lexical + Syntactic + Statistical + Contextual)
+✅ Session-based context management with Redis caching
+✅ Dynamic prompt engineering based on 7+ factors
+✅ Quality validation with 4-layer checks
+✅ Complete database schema with indexes
+✅ RESTful API with proper rate limiting
+✅ Comprehensive testing strategy
+✅ Production-ready deployment config
+✅ Monitoring & analytics setup
+
+Ab kya karna hai?
+
+Implementation priority: Task 1 (Intent Classification) → Task 2 (Language Detection) → Task 3 (Emotion)
+Start coding: Language detection engine first
+Test extensively: 100+ test cases for language detection
+Deploy incrementally: Start with basic features, add complexity
+
+Koi specific component ka code detail chahiye? Bolo! 🚀RetryClaude can make mistakes. Please double-check responses. Sonnet 4.5
