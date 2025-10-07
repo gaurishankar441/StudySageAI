@@ -2,7 +2,19 @@ import OpenAI from 'openai';
 import { documentService } from './documentService';
 import { TokenCounter } from '../utils/tokenCounter';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+// Lazy initialization of OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not configured. Please add your OpenAI API key to use this feature.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 interface AgenticRAGTool {
   name: string;
@@ -196,7 +208,7 @@ export class AgenticRAGService {
   }
 
   private async planApproach(query: string, language: string): Promise<string> {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -262,7 +274,7 @@ What should I do next?`;
     
     console.log('[decideNextAction] Info tokens:', infoTokens, '→', truncatedTokens, `(available: ${budget.available})`);
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -358,7 +370,7 @@ What should I do next?`
     newInfo: string,
     allInfo: string
   ): Promise<string> {
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {
@@ -430,7 +442,7 @@ Please provide a comprehensive answer with proper citations.`;
         `(${sources.length} sources, prioritized by relevance)`);
     }
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4',
       messages: [
         {

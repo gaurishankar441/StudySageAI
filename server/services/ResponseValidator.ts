@@ -3,7 +3,19 @@ import type { DetectedLanguage } from './LanguageDetectionEngine';
 import type { EmotionalState } from '../config/emotionPatterns';
 import { languageDetectionEngine } from './LanguageDetectionEngine';
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY || "" });
+// Lazy initialization of OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not configured. Please add your OpenAI API key to use response validation.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export interface ValidationContext {
   expectedLanguage: DetectedLanguage;
@@ -214,7 +226,7 @@ Respond in JSON format:
   "reasoning": "string"
 }`;
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -281,7 +293,7 @@ Respond in JSON format:
   "reasoning": "string"
 }`;
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         response_format: { type: 'json_object' },
@@ -401,7 +413,7 @@ Rate safety from 0.0 (unsafe) to 1.0 (completely safe).
 
 Respond with just a number between 0.0 and 1.0.`;
 
-      const completion = await openai.chat.completions.create({
+      const completion = await getOpenAI().chat.completions.create({
         model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         temperature: 0.2,

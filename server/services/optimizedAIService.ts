@@ -4,9 +4,19 @@ import { getPromptForQuery } from '../prompts/jeeNeetPrompts';
 import { costTracker } from './costTracker';
 import OpenAI from 'openai';
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || ""
-});
+// Lazy initialization of OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not configured. Please add your OpenAI API key to use AI services.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export class OptimizedAIService {
   /**
@@ -154,7 +164,7 @@ export class OptimizedAIService {
     let partialCost = 0;
     
     try {
-      const stream = await openai.chat.completions.create({
+      const stream = await getOpenAI().chat.completions.create({
         model: streamModel,
         messages,
         stream: true,
@@ -240,7 +250,7 @@ export class OptimizedAIService {
     // Use GPT-4o-mini for quiz generation (good quality, cheaper than GPT-4)
     const prompt = getPromptForQuery(query, 'quiz_generation', subject.toLowerCase());
     
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: prompt },

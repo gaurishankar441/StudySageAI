@@ -1,9 +1,19 @@
 import { CohereClientV2 } from "cohere-ai";
 import { AIProvider, Summary, Quiz, Note } from "../aiProvider";
 
-const cohere = new CohereClientV2({
-  token: process.env.COHERE_API_KEY || ""
-});
+// Lazy initialization of Cohere client
+let cohere: CohereClientV2 | null = null;
+
+function getCohere(): CohereClientV2 {
+  if (!cohere) {
+    const apiKey = process.env.COHERE_API_KEY;
+    if (!apiKey) {
+      throw new Error('COHERE_API_KEY is not configured. Please add your Cohere API key to use this feature.');
+    }
+    cohere = new CohereClientV2({ token: apiKey });
+  }
+  return cohere;
+}
 
 export class CohereProvider implements AIProvider {
   async generateSummary(content: string, options?: {
@@ -24,7 +34,7 @@ ${content}
 
 Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."]}`;
 
-    const response = await cohere.chat({
+    const response = await getCohere().chat({
       model: 'command-a-03-2025',
       messages: [
         { role: 'user', content: prompt }
@@ -59,7 +69,7 @@ Return valid JSON: {"highlights": ["highlight 1", "highlight 2", ...]}
 Content:
 ${content}`;
 
-    const response = await cohere.chat({
+    const response = await getCohere().chat({
       model: 'command-a-03-2025',
       messages: [
         { role: 'user', content: prompt }
@@ -112,7 +122,7 @@ Return valid JSON: {
   ]
 }`;
 
-    const response = await cohere.chat({
+    const response = await getCohere().chat({
       model: 'command-a-03-2025',
       messages: [
         { role: 'user', content: prompt }
@@ -147,7 +157,7 @@ Return valid JSON: {"flashcards": [{"front": "...", "back": "..."}, ...]}
 Content:
 ${content}`;
 
-    const response = await cohere.chat({
+    const response = await getCohere().chat({
       model: 'command-a-03-2025',
       messages: [
         { role: 'user', content: prompt }
@@ -192,7 +202,7 @@ Return valid JSON: {
   "flashcards": [{"front": "...", "back": "..."}, ...]
 }`;
 
-    const response = await cohere.chat({
+    const response = await getCohere().chat({
       model: 'command-a-03-2025',
       messages: [
         { role: 'user', content: prompt }
@@ -223,7 +233,7 @@ Return valid JSON: {
     const maxTokens = options?.maxTokens || 2048;
 
     if (options?.stream) {
-      const stream = await cohere.chatStream({
+      const stream = await getCohere().chatStream({
         model: 'command-a-03-2025',
         messages: messages.map(m => ({ role: m.role as any, content: m.content })),
         temperature,
@@ -244,7 +254,7 @@ Return valid JSON: {
         },
       });
     } else {
-      const response = await cohere.chat({
+      const response = await getCohere().chat({
         model: 'command-a-03-2025',
         messages: messages.map(m => ({ role: m.role as any, content: m.content })),
         temperature,

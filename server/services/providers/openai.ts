@@ -1,9 +1,19 @@
 import OpenAI from "openai";
 import { AIProvider, Summary, Quiz, Note } from "../aiProvider";
 
-const openai = new OpenAI({ 
-  apiKey: process.env.OPENAI_API_KEY || ""
-});
+// Lazy initialization of OpenAI client
+let openai: OpenAI | null = null;
+
+function getOpenAI(): OpenAI {
+  if (!openai) {
+    const apiKey = process.env.OPENAI_API_KEY;
+    if (!apiKey) {
+      throw new Error('OPENAI_API_KEY is not configured. Please add your OpenAI API key to use this feature.');
+    }
+    openai = new OpenAI({ apiKey });
+  }
+  return openai;
+}
 
 export class OpenAIProvider implements AIProvider {
   async generateSummary(content: string, options?: {
@@ -21,7 +31,7 @@ Structure:
 
 Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."]}`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
@@ -45,7 +55,7 @@ Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."
     const systemPrompt = `Extract ${count} most important highlights from the content in ${language}.
 Return valid JSON array of strings: ["highlight 1", "highlight 2", ...]`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
@@ -86,7 +96,7 @@ Return valid JSON: {
   ]
 }`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
@@ -110,7 +120,7 @@ Return valid JSON: {
     const systemPrompt = `Create ${count} flashcards from the content in ${language}.
 Return valid JSON: {"flashcards": [{"front": "...", "back": "..."}, ...]}`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
@@ -144,7 +154,7 @@ Return valid JSON: {
   "flashcards": [{"front": "...", "back": "..."}, ...]
 }`;
 
-    const response = await openai.chat.completions.create({
+    const response = await getOpenAI().chat.completions.create({
       model: "gpt-5",
       messages: [
         { role: "system", content: systemPrompt },
@@ -167,7 +177,7 @@ Return valid JSON: {
     const maxTokens = options?.maxTokens || 2048;
 
     if (options?.stream) {
-      const stream = await openai.chat.completions.create({
+      const stream = await getOpenAI().chat.completions.create({
         model: "gpt-5",
         messages: messages as any[],
         temperature,
@@ -187,7 +197,7 @@ Return valid JSON: {
         },
       });
     } else {
-      const response = await openai.chat.completions.create({
+      const response = await getOpenAI().chat.completions.create({
         model: "gpt-5",
         messages: messages as any[],
         temperature,

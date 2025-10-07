@@ -26,29 +26,55 @@ export interface ModelRouterResult {
 }
 
 export class IntelligentModelRouter {
-  private geminiFlash: ChatGoogleGenerativeAI;
-  private gpt4oMini: ChatOpenAI;
-  private claudeHaiku: Anthropic;
+  private geminiFlash: ChatGoogleGenerativeAI | null = null;
+  private gpt4oMini: ChatOpenAI | null = null;
+  private claudeHaiku: Anthropic | null = null;
   
   constructor() {
-    // Tier 1: Cheap & Fast (75% of queries) - $0.07/M tokens
-    this.geminiFlash = new ChatGoogleGenerativeAI({
-      model: "gemini-1.5-flash",
-      temperature: 0.7,
-      apiKey: process.env.GOOGLE_API_KEY,
-    });
-    
-    // Tier 2: Balanced (20% of queries) - $0.15/M tokens
-    this.gpt4oMini = new ChatOpenAI({
-      modelName: "gpt-4o-mini",
-      temperature: 0.7,
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-    
-    // Tier 3: Complex reasoning (5% of queries) - $0.25/M tokens
-    this.claudeHaiku = new Anthropic({
-      apiKey: process.env.ANTHROPIC_API_KEY,
-    });
+    // Lazy initialization - models are created when first needed
+  }
+  
+  private getGeminiFlash(): ChatGoogleGenerativeAI {
+    if (!this.geminiFlash) {
+      const apiKey = process.env.GOOGLE_API_KEY;
+      if (!apiKey) {
+        throw new Error('GOOGLE_API_KEY is not configured. Please add your Google API key to use this feature.');
+      }
+      this.geminiFlash = new ChatGoogleGenerativeAI({
+        model: "gemini-1.5-flash",
+        temperature: 0.7,
+        apiKey,
+      });
+    }
+    return this.geminiFlash;
+  }
+  
+  private getGpt4oMini(): ChatOpenAI {
+    if (!this.gpt4oMini) {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error('OPENAI_API_KEY is not configured. Please add your OpenAI API key to use this feature.');
+      }
+      this.gpt4oMini = new ChatOpenAI({
+        modelName: "gpt-4o-mini",
+        temperature: 0.7,
+        apiKey,
+      });
+    }
+    return this.gpt4oMini;
+  }
+  
+  private getClaudeHaiku(): Anthropic {
+    if (!this.claudeHaiku) {
+      const apiKey = process.env.ANTHROPIC_API_KEY;
+      if (!apiKey) {
+        throw new Error('ANTHROPIC_API_KEY is not configured. Please add your Anthropic API key to use this feature.');
+      }
+      this.claudeHaiku = new Anthropic({
+        apiKey,
+      });
+    }
+    return this.claudeHaiku;
   }
   
   // Fast intent classification (50ms)
@@ -103,7 +129,7 @@ export class IntelligentModelRouter {
       // Tier 1: Gemini Flash (75% queries) - Best for simple explanations
       console.log(`[ROUTER] ✨ Gemini Flash ($0.07/M) - ${analysis.intent} | ${analysis.subject}`);
       return {
-        model: this.geminiFlash,
+        model: this.getGeminiFlash(),
         modelName: 'gemini-1.5-flash',
         costPerMillion: 0.07,
         analysis
@@ -114,7 +140,7 @@ export class IntelligentModelRouter {
       // Tier 2: GPT-4o-mini for moderate complexity & math
       console.log(`[ROUTER] 🧮 GPT-4o-mini ($0.15/M) - ${analysis.intent} | ${analysis.subject}`);
       return {
-        model: this.gpt4oMini,
+        model: this.getGpt4oMini(),
         modelName: 'gpt-4o-mini',
         costPerMillion: 0.15,
         analysis
@@ -125,7 +151,7 @@ export class IntelligentModelRouter {
       // Tier 3: Claude Haiku for complex reasoning (derivations, proofs)
       console.log(`[ROUTER] 🎯 Claude Haiku ($0.25/M) - ${analysis.intent} | ${analysis.subject}`);
       return {
-        model: this.claudeHaiku,
+        model: this.getClaudeHaiku(),
         modelName: 'claude-haiku',
         costPerMillion: 0.25,
         analysis
