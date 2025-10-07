@@ -116,7 +116,7 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={onClose} modal={true}>
       <DialogContent 
         className="max-w-md p-8 border-2 border-cyan-400/60 !bg-white shadow-2xl shadow-cyan-500/40 dark:!bg-white dark:!text-slate-900 pointer-events-auto"
         style={{
