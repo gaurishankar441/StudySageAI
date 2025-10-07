@@ -12,6 +12,7 @@ import multer from "multer";
 import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
+import { uploadLimiter, aiLimiter } from "./middleware/security";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -27,7 +28,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Document routes
   // For files already uploaded to object storage via ObjectUploader
-  app.post('/api/documents/from-upload', isAuthenticated, async (req: any, res) => {
+  app.post('/api/documents/from-upload', isAuthenticated, uploadLimiter, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const { uploadURL, fileName, fileSize, fileType } = req.body;
@@ -84,7 +85,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // For direct file upload (legacy/alternative method)
-  app.post('/api/documents/upload', isAuthenticated, upload.single('file'), async (req: any, res) => {
+  app.post('/api/documents/upload', isAuthenticated, uploadLimiter, upload.single('file'), async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const file = req.file;
@@ -321,7 +322,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Streaming chat endpoint (GET for EventSource)
-  app.get('/api/chats/:id/stream', isAuthenticated, async (req: any, res) => {
+  app.get('/api/chats/:id/stream', isAuthenticated, aiLimiter, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const { id } = req.params;
@@ -364,7 +365,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Streaming chat endpoint (POST for regular API calls)
-  app.post('/api/chats/:id/stream', isAuthenticated, async (req: any, res) => {
+  app.post('/api/chats/:id/stream', isAuthenticated, aiLimiter, async (req: any, res) => {
     try {
       const userId = req.user?.id;
       const { id } = req.params;
@@ -403,7 +404,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Optimized Tutor routes (with intelligent routing & caching)
-  app.use('/api/tutor/optimized', isAuthenticated, optimizedTutorRouter);
+  app.use('/api/tutor/optimized', isAuthenticated, aiLimiter, optimizedTutorRouter);
   
   // Voice routes (Sarvam AI primary, AssemblyAI/Polly fallback)
   app.use('/api/voice', isAuthenticated, voiceRouter);

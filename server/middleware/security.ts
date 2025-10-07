@@ -1,44 +1,74 @@
 import rateLimit from 'express-rate-limit';
-import type { Request, Response } from 'express';
+import type { Request } from 'express';
 
-// General API rate limiter - 100 requests per 15 minutes per IP
+// Helper function to generate rate limit key (User ID if authenticated, else IP)
+const getUserKey = (req: Request): string => {
+  const user = (req as any).user;
+  return user?.id || req.ip || 'unknown';
+};
+
+// General API rate limiter - 100 requests per 15 minutes
 export const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100, // Limit each IP to 100 requests per windowMs
+  max: 100,
   message: {
-    message: 'Too many requests from this IP, please try again after 15 minutes',
+    error: 'Too many requests, please try again after 15 minutes',
+    retryAfter: '15 minutes'
   },
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  // Skip rate limiting for successful requests from authenticated users (optional)
-  skip: (req: Request) => {
-    // Don't skip - apply to everyone
-    return false;
-  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: getUserKey,
 });
 
-// Strict rate limiter for authentication endpoints - 5 requests per 15 minutes per IP
+// Strict rate limiter for authentication endpoints - 5 login attempts per 15 minutes
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5, // Limit each IP to 5 requests per windowMs
+  max: 5,
   message: {
-    message: 'Too many authentication attempts, please try again after 15 minutes',
+    error: 'Too many login attempts, please try again after 15 minutes',
+    retryAfter: '15 minutes'
   },
   standardHeaders: true,
   legacyHeaders: false,
-  // Skip successful logins from the rate limit count
-  skipSuccessfulRequests: true,
+  skipSuccessfulRequests: true, // Don't count successful logins
 });
 
-// Strict rate limiter for signup endpoint - 3 signups per hour per IP
+// Strict rate limiter for signup endpoint - 3 signups per hour
 export const signupLimiter = rateLimit({
   windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3, // Limit each IP to 3 signups per hour
+  max: 3,
   message: {
-    message: 'Too many accounts created from this IP, please try again after an hour',
+    error: 'Too many accounts created, please try again after an hour',
+    retryAfter: '1 hour'
   },
   standardHeaders: true,
   legacyHeaders: false,
+});
+
+// AI Service rate limiter - 30 AI requests per minute per user
+export const aiLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 30,
+  message: {
+    error: 'AI rate limit exceeded. Please slow down.',
+    retryAfter: '1 minute'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: getUserKey, // Rate limit by user ID if authenticated, otherwise by IP
+});
+
+// File upload rate limiter - 10 uploads per hour per user
+export const uploadLimiter = rateLimit({
+  windowMs: 60 * 60 * 1000, // 1 hour
+  max: 10,
+  message: {
+    error: 'Upload limit exceeded. You can upload 10 files per hour.',
+    retryAfter: '1 hour'
+  },
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: getUserKey,
 });
 
 // Password validation helper
