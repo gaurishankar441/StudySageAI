@@ -541,11 +541,17 @@ export default function DocChatView() {
     return (
       <div className="flex flex-col h-screen bg-white dark:bg-slate-950">
         {/* Clean Header - Shepherd Style */}
-        <div className="border-b border-slate-200 dark:border-slate-800">
+        <div className="border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950">
           <div className="max-w-7xl mx-auto px-8 py-6">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-              Upload documents and chat with them using AI
-            </h1>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+              <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+                Upload documents and chat with them using AI
+              </h1>
+            </div>
+            <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+              ✨ NEW SHEPHERD DESIGN ACTIVE
+            </p>
           </div>
         </div>
 

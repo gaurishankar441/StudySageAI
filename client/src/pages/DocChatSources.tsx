@@ -171,18 +171,38 @@ export default function DocChatSources() {
   };
 
   return (
-    <div className="h-full p-8 overflow-auto">
-      <div className="max-w-6xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
-            Document Chat
-          </h1>
-          <p className="text-muted-foreground">Upload documents and chat with them using AI</p>
+    <div className="flex flex-col h-screen bg-white dark:bg-slate-950">
+      {/* Clean Header - Shepherd Style */}
+      <div className="border-b border-slate-200 dark:border-slate-800 bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950 dark:to-indigo-950">
+        <div className="max-w-7xl mx-auto px-8 py-6">
+          <div className="flex items-center gap-3 mb-2">
+            <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse" />
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Upload documents and chat with them using AI
+            </h1>
+          </div>
+          <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+            ✨ NEW SHEPHERD DESIGN ACTIVE
+          </p>
         </div>
+      </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Add Source Section */}
-          <div className="lg:col-span-1">
+      {/* Main Content - Two Column Layout */}
+      <div className="flex-1 overflow-auto">
+        <div className="max-w-7xl mx-auto px-8 py-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            {/* Left Column - Add Source */}
+            <div className="lg:col-span-2 space-y-6">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-purple-600" />
+                  Add Source
+                </h2>
+              </div>
+
+              {/* File Upload - Clean Dropzone */}
+              <div className="lg:col-span-1">
             <div className="glass-card rounded-xl p-8">
               <h3 className="font-semibold mb-6 flex items-center gap-2">
                 <Sparkles className="w-5 h-5 text-primary" />
