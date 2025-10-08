@@ -131,6 +131,11 @@ export class DocumentService {
           url,
           duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
           segments: transcript.length,
+          transcriptSegments: transcript.map(entry => ({
+            text: entry.text,
+            startTime: Math.floor(entry.offset / 1000), // Convert ms to seconds
+            duration: Math.floor(entry.duration / 1000)
+          })),
           extractedAt: new Date().toISOString()
         }
       };

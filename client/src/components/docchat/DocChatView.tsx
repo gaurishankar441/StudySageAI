@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Upload,
@@ -940,6 +941,17 @@ export default function DocChatView() {
                     onClick={() => {
                       setMessage(question);
                       setSuggestedQuestions([]);
+                      
+                      // Track analytics
+                      fetch('/api/analytics/event', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          eventType: 'suggested_question_clicked',
+                          eventData: { question, chatId: currentChatId, position: index }
+                        })
+                      }).catch(e => console.error('Analytics failed:', e));
                     }}
                     className="flex-shrink-0 px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors whitespace-nowrap"
                     data-testid={`suggested-question-${index}`}

@@ -716,6 +716,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Analytics endpoint for tracking feature usage
+  app.post('/api/analytics/event', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { eventType, eventData } = req.body;
+      
+      // Log analytics event (in production, send to analytics service)
+      console.log(`[ANALYTICS] User: ${userId}, Event: ${eventType}`, eventData);
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error("Analytics error:", error);
+      res.status(500).json({ message: "Failed to track event" });
+    }
+  });
+
   // Quiz routes
   app.post('/api/quizzes', isAuthenticated, async (req: any, res) => {
     try {
