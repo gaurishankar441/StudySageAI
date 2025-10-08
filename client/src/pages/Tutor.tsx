@@ -15,9 +15,8 @@ export default function Tutor() {
 
   const startSessionMutation = useMutation({
     mutationFn: async (config: TutorConfig) => {
-      const personaId = ['physics', 'mathematics'].includes(config.subject) 
-        ? 'priya' 
-        : 'amit';
+      // ALWAYS use Garima Ma'am (female voice) for all subjects
+      const personaId = 'garima';
       
       const response = await apiRequest("POST", "/api/tutor/optimized/session/start", {
         subject: config.subject,
@@ -65,8 +64,8 @@ export default function Tutor() {
       
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
       
-      const personaName = data.session.personaId === 'priya' ? 'Priya' : 
-                          data.session.personaId === 'amit' ? 'Amit' : 'your tutor';
+      // Display Garima Ma'am as the tutor name
+      const personaName = data.session.personaId === 'garima' ? 'Garima Ma\'am' : 'your tutor';
       
       toast({
         title: "Session Started",

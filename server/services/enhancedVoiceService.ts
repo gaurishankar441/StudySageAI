@@ -387,7 +387,8 @@ export class EnhancedVoiceService {
     personaId: string
   ): Promise<Buffer> {
     const persona = TUTOR_PERSONAS[personaId];
-    const speaker = persona?.voiceSettings?.sarvam?.speaker || (language === 'hi' ? 'anushka' : 'abhilash');
+    // ALWAYS use anushka (female voice) as fallback - Garima Ma'am for all subjects
+    const speaker = persona?.voiceSettings?.sarvam?.speaker || 'anushka';
     
     // Sarvam API expects specific parameter ranges
     const MAX_CHARS = 500;
