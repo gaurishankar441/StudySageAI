@@ -20,7 +20,10 @@ import {
 import { Document } from "@shared/schema";
 
 export default function DocChatSources() {
-  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
+  const [youtubeUrl, setYoutubeUrl] = useState("");
+  const [websiteUrl, setWebsiteUrl] = useState("");
+  const [textContent, setTextContent] = useState("");
+  const [textTitle, setTextTitle] = useState("");
   const [uploadingFile, setUploadingFile] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -52,6 +55,51 @@ export default function DocChatSources() {
         variant: "destructive",
       });
       setUploadingFile(false);
+    },
+  });
+
+  const addUrlMutation = useMutation({
+    mutationFn: async ({ url, title }: { url: string; title: string }) => {
+      return apiRequest("POST", "/api/documents/by-url", { url, title });
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "URL added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setYoutubeUrl("");
+      setWebsiteUrl("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add URL",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const addTextMutation = useMutation({
+    mutationFn: async ({ title, content }: { title: string; content: string }) => {
+      const response = await apiRequest("POST", "/api/documents", { title, content, sourceType: 'text' });
+      return response.json();
+    },
+    onSuccess: () => {
+      toast({
+        title: "Success",
+        description: "Text document added successfully",
+      });
+      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
+      setTextTitle("");
+      setTextContent("");
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to add text document",
+        variant: "destructive",
+      });
     },
   });
 
@@ -118,97 +166,29 @@ export default function DocChatSources() {
     },
   });
 
-  const toggleDocumentSelection = (docId: string) => {
-    setSelectedDocIds(prev => 
-      prev.includes(docId) 
-        ? prev.filter(id => id !== docId)
-        : [...prev, docId]
-    );
+  const handleDocumentClick = (docId: string) => {
+    startChatMutation.mutate([docId]);
   };
-
-  const handleStartChat = () => {
-    if (selectedDocIds.length === 0) {
-      toast({
-        title: "No documents selected",
-        description: "Please select at least one document to start chatting",
-        variant: "destructive",
-      });
-      return;
-    }
-    startChatMutation.mutate(selectedDocIds);
-  };
-
-  const selectedDocs = documents.filter(doc => selectedDocIds.includes(doc.id));
 
   return (
-    <div className="h-full bg-white dark:bg-slate-950">
-      {/* Clean Header */}
-      <div className="border-b border-slate-200 dark:border-slate-800">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white">
-            Upload documents and chat with them using AI
+    <div className="h-full p-8 overflow-auto">
+      <div className="max-w-6xl mx-auto">
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-2 bg-gradient-primary bg-clip-text text-transparent">
+            Document Chat
           </h1>
+          <p className="text-muted-foreground">Upload documents and chat with them using AI</p>
         </div>
-      </div>
 
-      {/* Main 2-Column Layout */}
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          
-          {/* Left: Upload Area + Document Grid (2/3 width) */}
-          <div className="lg:col-span-2 space-y-8">
-            
-            {/* File Upload Section */}
-            <div>
-              <h2 className="text-lg font-semibold mb-4 text-slate-900 dark:text-white">Upload Document</h2>
-              <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl hover:border-purple-500 dark:hover:border-purple-500 transition-colors">
-                <ObjectUploader
-                  maxNumberOfFiles={1}
-                  maxFileSize={200 * 1024 * 1024}
-                  onGetUploadParameters={async (file) => {
-                    const response = await apiRequest("POST", "/api/objects/upload", {
-                      contentType: file.type
-                    });
-                    const { uploadURL } = await response.json();
-                    return { 
-                      method: "PUT" as const, 
-                      url: uploadURL,
-                      headers: {
-                        'Content-Type': file.type
-                      }
-                    };
-                  }}
-                  onComplete={(result) => {
-                    const uploadedFile = result.successful?.[0];
-                    const uploadURL = uploadedFile?.uploadURL;
-                    const fileName = uploadedFile?.name || 'Uploaded Document';
-                    if (uploadedFile && uploadURL && typeof uploadURL === 'string') {
-                      setUploadingFile(true);
-                      uploadDocumentMutation.mutate({
-                        uploadURL: uploadURL,
-                        fileName: fileName,
-                        fileSize: uploadedFile.size || 0,
-                        fileType: uploadedFile.type || 'application/octet-stream'
-                      });
-                    }
-                  }}
-                  buttonClassName="w-full h-40 bg-slate-50 dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-xl transition-colors"
-                >
-                  <div className="flex flex-col items-center justify-center text-center px-4">
-                    <Upload className="w-10 h-10 text-slate-400 dark:text-slate-600 mb-3" />
-                    <p className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">
-                      Drop files or click to upload
-                    </p>
-                    <p className="text-xs text-slate-500 dark:text-slate-400">
-                      PDF, DOCX, PPTX up to 200MB
-                    </p>
-                  </div>
-                </ObjectUploader>
-              </div>
-            </div>
-
-            {/* Document Grid */}
-            <div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Add Source Section */}
+          <div className="lg:col-span-1">
+            <div className="glass-card rounded-xl p-8">
+              <h3 className="font-semibold mb-6 flex items-center gap-2">
+                <Sparkles className="w-5 h-5 text-primary" />
+                Add Source
+              </h3>
+              <div className="space-y-4">
                 <ObjectUploader
                   maxNumberOfFiles={1}
                   maxFileSize={200 * 1024 * 1024}
