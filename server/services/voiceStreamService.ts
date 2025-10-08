@@ -3,6 +3,24 @@ import { sarvamVoiceService } from './sarvamVoice';
 import { AssemblyAI } from 'assemblyai';
 import { PollyClient, SynthesizeSpeechCommand } from '@aws-sdk/client-polly';
 import { ObjectStorageService } from '../objectStorage';
+import { storage } from '../storage';
+import { tutorSessionService } from './tutorSessionService';
+import { intentClassifier } from './intentClassifier';
+import { emotionDetector } from './emotionDetector';
+import { LanguageDetectionEngine, type DetectedLanguage } from './LanguageDetectionEngine';
+import { SessionContextManager } from './SessionContextManager';
+import { DynamicPromptEngine } from './DynamicPromptEngine';
+import { ResponseValidator } from './ResponseValidator';
+import { optimizedAI } from './optimizedAIService';
+import { enhancedVoiceService } from './enhancedVoiceService';
+import { performanceOptimizer, metricsTracker } from './PerformanceOptimizer';
+import { hintService } from './hintService';
+
+// Initialize AI Tutor services
+const languageDetector = new LanguageDetectionEngine();
+const sessionContextManager = new SessionContextManager();
+const dynamicPromptEngine = new DynamicPromptEngine();
+const responseValidator = new ResponseValidator();
 
 const assemblyAI = new AssemblyAI({
   apiKey: process.env.ASSEMBLYAI_API_KEY || '',
@@ -82,6 +100,18 @@ export class VoiceStreamService {
         ws.send(JSON.stringify(transcriptionMsg));
 
         console.log(`[VOICE STREAM] ✅ Transcription sent: "${transcription.text}"`);
+
+        // 🔥 AUTO-TRIGGER AI TUTOR PIPELINE after successful transcription
+        if (transcription.text && transcription.text.trim().length > 0 && ws.chatId && ws.userId) {
+          console.log(`[VOICE STREAM] → Triggering AI Tutor pipeline for transcription`);
+          await this.processTutorResponse(
+            ws,
+            transcription.text,
+            ws.chatId,
+            ws.userId,
+            transcription.language as 'hi' | 'en'
+          );
+        }
       }
     } catch (error) {
       console.error('[VOICE STREAM] Audio processing error:', error);
@@ -139,6 +169,122 @@ export class VoiceStreamService {
     } catch (error) {
       console.error('[VOICE STREAM] AssemblyAI STT error:', error);
       throw new Error('All STT providers failed');
+    }
+  }
+
+  /**
+   * Stream TTS chunks with emotion, intent, and persona support (AI Tutor pipeline)
+   * Uses EnhancedVoiceService for emotion-based prosody and math-to-speech
+   */
+  async streamTTSChunks(
+    ws: VoiceWebSocketClient,
+    text: string,
+    language: 'hi' | 'en',
+    emotion?: string,
+    intent?: string,
+    personaId?: string
+  ): Promise<void> {
+    try {
+      console.log(`[VOICE TTS] Converting with emotion: ${emotion}, intent: ${intent}, persona: ${personaId}`);
+      
+      // Use EnhancedVoiceService to apply emotion, intent, and persona
+      const voiceOptions = {
+        emotion,
+        intent,
+        personaId,
+        language,
+        enableMathSpeech: true,
+        enablePauses: true,
+        enableEmphasis: true
+      };
+      
+      // Convert to speech with enhanced prosody
+      const audioBuffer = await enhancedVoiceService.synthesize(text, voiceOptions);
+      
+      // Stream the enhanced audio chunks
+      await this.streamTTSAudioDirect(ws, audioBuffer, language);
+      
+    } catch (error) {
+      console.error('[VOICE TTS] Enhanced TTS error:', error);
+      
+      // Fallback to basic TTS without emotion/prosody
+      await this.streamTTSAudio(ws, text, language);
+    }
+  }
+
+  /**
+   * Stream pre-generated audio buffer directly to client
+   */
+  private async streamTTSAudioDirect(
+    ws: VoiceWebSocketClient,
+    audioBuffer: Buffer,
+    language: 'hi' | 'en'
+  ): Promise<void> {
+    try {
+      console.log(`[VOICE STREAM] Starting direct audio streaming: ${audioBuffer.length} bytes`);
+      
+      // Mark TTS as active
+      ws.isTTSActive = true;
+
+      // Send TTS start notification
+      const startMsg: TTSStartMessage = {
+        type: 'TTS_START',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        text: '' // Already processed
+      };
+      ws.send(JSON.stringify(startMsg));
+
+      // Split audio into chunks for streaming (10KB chunks)
+      const CHUNK_SIZE = 10 * 1024; // 10KB
+      const totalChunks = Math.ceil(audioBuffer.length / CHUNK_SIZE);
+      
+      console.log(`[VOICE STREAM] Streaming ${totalChunks} audio chunks`);
+
+      for (let i = 0; i < totalChunks; i++) {
+        // Check if interrupted
+        if (!ws.isTTSActive) {
+          console.log('[VOICE STREAM] TTS interrupted at chunk', i);
+          break;
+        }
+
+        const start = i * CHUNK_SIZE;
+        const end = Math.min(start + CHUNK_SIZE, audioBuffer.length);
+        const chunk = audioBuffer.slice(start, end);
+
+        const chunkMsg: TTSChunkMessage = {
+          type: 'TTS_CHUNK',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          data: chunk.toString('base64'),
+          chunkIndex: i,
+          totalChunks: i === totalChunks - 1 ? totalChunks : undefined
+        };
+
+        ws.send(JSON.stringify(chunkMsg));
+        
+        // Small delay between chunks for smoother streaming
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+
+      // Send TTS end notification
+      if (ws.isTTSActive) {
+        const endMsg: TTSEndMessage = {
+          type: 'TTS_END',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          totalChunks
+        };
+        ws.send(JSON.stringify(endMsg));
+        
+        console.log(`[VOICE STREAM] ✅ Direct streaming complete: ${totalChunks} chunks sent`);
+      }
+
+      ws.isTTSActive = false;
+    } catch (error) {
+      console.error('[VOICE STREAM] Direct streaming error:', error);
+      ws.isTTSActive = false;
+      throw error;
     }
   }
 
@@ -326,6 +472,258 @@ export class VoiceStreamService {
     if (ws.audioBuffer) {
       console.log(`[VOICE STREAM] Clearing audio buffer: ${ws.audioBuffer.length} chunks`);
       ws.audioBuffer = [];
+    }
+  }
+
+  /**
+   * Process transcribed text through complete AI Tutor pipeline and stream TTS response
+   * Integrates 7-phase system, emotion detection, intent classification, dynamic prompts, and voice synthesis
+   */
+  async processTutorResponse(
+    ws: VoiceWebSocketClient,
+    transcribedText: string,
+    chatId: string,
+    userId: string,
+    language: 'hi' | 'en'
+  ): Promise<void> {
+    try {
+      console.log(`[VOICE TUTOR] Processing: "${transcribedText}" for chat ${chatId}`);
+
+      // Get or create tutor session
+      const chat = await storage.getChat(chatId);
+      if (!chat) {
+        throw new Error('Chat not found');
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      const session = await tutorSessionService.getOrCreateSession(
+        chatId,
+        userId,
+        chat.subject || 'General',
+        chat.topic || 'General',
+        user
+      );
+
+      // 🔥 STEP 1: LANGUAGE DETECTION with caching
+      const startLangDetection = Date.now();
+      const cachedLangResult = await performanceOptimizer.getCachedLanguageDetection(transcribedText);
+      let langDetection = cachedLangResult;
+      
+      if (!cachedLangResult) {
+        langDetection = await languageDetector.detectLanguage(transcribedText, {
+          conversationHistory: [],
+          userPreference: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+          topic: session.topic
+        });
+        await performanceOptimizer.cacheLanguageDetection(transcribedText, langDetection);
+      }
+      
+      const langDetectionTime = Date.now() - startLangDetection;
+      const detectedLang = langDetection?.language || 'english';
+      console.log(`[VOICE TUTOR] Language: ${detectedLang} (${langDetection?.confidence.toFixed(2)}) - ${langDetectionTime}ms`);
+      
+      // 🔥 STEP 2: SESSION CONTEXT - Add language detection
+      await sessionContextManager.addLanguageDetection(
+        userId,
+        chatId,
+        detectedLang,
+        langDetection?.confidence || 0.5
+      );
+
+      // 🔥 STEP 3: INTENT CLASSIFICATION + EMOTION DETECTION (parallel)
+      const [intentResult, emotionResult] = await Promise.all([
+        intentClassifier.classify(transcribedText, {
+          currentPhase: session.currentPhase,
+          currentTopic: session.topic,
+          isInPracticeMode: session.currentPhase === 'practice'
+        }),
+        emotionDetector.detectEmotion(transcribedText, [], language)
+      ]);
+
+      console.log(`[VOICE TUTOR] Intent: ${intentResult.intent} (${(intentResult.confidence * 100).toFixed(0)}%) | Emotion: ${emotionResult.emotion}`);
+      
+      // Add emotion to session context
+      await sessionContextManager.addEmotionDetection(
+        userId,
+        chatId,
+        emotionResult.emotion,
+        emotionResult.confidence
+      );
+      
+      const sessionCtx = await sessionContextManager.getContext(userId, chatId);
+
+      // 🔥 STEP 4: HANDLE SPECIAL INTENTS (hints, phase advancement)
+      if (intentResult.intent === 'request_hint') {
+        const hintState = hintService.getHintState(await storage.getChatMessages(chatId, 50)) || 
+                         hintService.initializeHintState();
+        const advanceResult = hintService.advanceHintLevel(hintState);
+        
+        if (!advanceResult.canAdvance) {
+          // Send hint limit message as TTS
+          await this.streamTTSChunks(ws, advanceResult.message || 'No more hints available', language, emotionResult.emotion, intentResult.intent);
+          return;
+        }
+        
+        // Generate hint with AI (simplified for voice - no streaming)
+        const hintPrompt = hintService.buildHintPrompt(
+          advanceResult.nextLevel,
+          language,
+          session.topic || 'General',
+          transcribedText,
+          hintState.previousHints
+        );
+        
+        // Generate hint response
+        const hintResponse = await optimizedAI.generateResponse(transcribedText, hintPrompt, {
+          language: detectedLang === 'hinglish' ? 'hindi' : 'english',
+          useCache: true
+        });
+        
+        // Save hint message with metadata
+        await storage.addMessage({
+          chatId,
+          role: 'assistant',
+          content: hintResponse.response,
+          tool: null,
+          metadata: {
+            hintState: hintService.updateHintStateWithResponse(advanceResult.newState, hintResponse.response),
+            hintLevel: advanceResult.nextLevel,
+            model: hintResponse.model,
+            cost: hintResponse.cost
+          }
+        });
+        
+        // Stream hint as TTS
+        await this.streamTTSChunks(ws, hintResponse.response, language, emotionResult.emotion, intentResult.intent);
+        return;
+      }
+
+      // 🔥 STEP 5: ASSESSMENT PHASE - Analyze response
+      if (session.currentPhase === 'assessment') {
+        const assessmentResult = tutorSessionService.analyzeResponse(transcribedText);
+        await tutorSessionService.recordAssessment(chatId, assessmentResult);
+        console.log(`[VOICE TUTOR] Assessment: Level ${assessmentResult.level}, Score ${assessmentResult.score}`);
+      }
+
+      // 🔥 STEP 6: GENERATE DYNAMIC PROMPT with all context
+      const promptResult = dynamicPromptEngine.generateSystemPrompt({
+        detectedLanguage: detectedLang,
+        preferredLanguage: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+        languageConfidence: langDetection?.confidence || 0.5,
+        currentEmotion: emotionResult.emotion,
+        emotionConfidence: emotionResult.confidence,
+        emotionalStability: sessionCtx?.emotionalHistory && sessionCtx.emotionalHistory.length > 0 ? 
+          (sessionCtx.emotionalHistory.filter(e => e.emotion === emotionResult.emotion).length / sessionCtx.emotionalHistory.length) : 0.5,
+        subject: session.subject,
+        topic: session.topic,
+        level: session.level || 'beginner',
+        currentPhase: session.currentPhase,
+        intent: intentResult.intent,
+        misconceptions: session.adaptiveMetrics?.misconceptions || [],
+        strongConcepts: session.adaptiveMetrics?.strongConcepts || []
+      });
+      
+      const systemPrompt = promptResult.systemPrompt;
+      console.log(`[VOICE TUTOR] Dynamic prompt: ${systemPrompt.length} chars | Phase: ${session.currentPhase}`);
+
+      // 🔥 STEP 7: SAVE USER MESSAGE with full metadata
+      await storage.addMessage({
+        chatId,
+        role: 'user',
+        content: transcribedText,
+        tool: null,
+        metadata: {
+          intent: intentResult.intent,
+          intentConfidence: intentResult.confidence,
+          emotion: emotionResult.emotion,
+          emotionConfidence: emotionResult.confidence,
+          detectedLanguage: detectedLang,
+          languageConfidence: langDetection?.confidence || 0,
+          voiceInput: true
+        }
+      });
+
+      // 🔥 STEP 8: GENERATE AI RESPONSE (non-streaming for voice - need complete response for TTS)
+      const startAIGeneration = Date.now();
+      const aiResult = await optimizedAI.generateResponse(transcribedText, systemPrompt, {
+        language: detectedLang === 'hinglish' ? 'hindi' : 'english',
+        useCache: true
+      });
+      const aiGenerationTime = Date.now() - startAIGeneration;
+      console.log(`[VOICE TUTOR] AI response generated: ${aiResult.response.length} chars - ${aiGenerationTime}ms`);
+
+      // 🔥 STEP 9: VALIDATE RESPONSE QUALITY
+      const startValidation = Date.now();
+      const validation = await responseValidator.validate(aiResult.response, {
+        expectedLanguage: detectedLang,
+        userEmotion: emotionResult.emotion,
+        currentPhase: session.currentPhase,
+        subject: session.subject || 'General',
+        topic: session.topic || 'General',
+        userMessage: transcribedText
+      });
+      const validationTime = Date.now() - startValidation;
+      console.log(`[VOICE TUTOR] Validation: ${(validation.overallScore * 100).toFixed(1)}% - Valid: ${validation.isValid} (${validationTime}ms)`);
+
+      // 🔥 STEP 10: SAVE AI RESPONSE with comprehensive metadata
+      await storage.addMessage({
+        chatId,
+        role: 'assistant',
+        content: aiResult.response,
+        tool: null,
+        metadata: {
+          model: aiResult.model,
+          cost: aiResult.cost,
+          cached: aiResult.cached,
+          personaId: session.personaId,
+          emotion: emotionResult.emotion,
+          phase: session.currentPhase,
+          voiceOutput: true,
+          validation: {
+            isValid: validation.isValid,
+            overallScore: validation.overallScore,
+            languageMatchScore: validation.layers.languageMatch.score,
+            toneScore: validation.layers.toneAppropriate.score,
+            qualityScore: validation.layers.educationalQuality.score,
+            safetyScore: validation.layers.safety.score
+          },
+          timings: {
+            languageDetection: langDetectionTime,
+            aiGeneration: aiGenerationTime,
+            validation: validationTime,
+            total: langDetectionTime + aiGenerationTime + validationTime
+          }
+        }
+      });
+
+      // 🔥 STEP 11: CONVERT TO TTS AND STREAM AUDIO CHUNKS
+      await this.streamTTSChunks(
+        ws, 
+        aiResult.response, 
+        language, 
+        emotionResult.emotion, 
+        intentResult.intent,
+        session.personaId
+      );
+
+      console.log(`[VOICE TUTOR] ✅ Complete pipeline finished for session ${ws.sessionId}`);
+
+    } catch (error) {
+      console.error('[VOICE TUTOR] Pipeline error:', error);
+      
+      const errorMsg: VoiceMessage = {
+        type: 'ERROR',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        error: error instanceof Error ? error.message : 'AI Tutor pipeline failed',
+        code: 'TUTOR_PIPELINE_ERROR'
+      };
+      
+      ws.send(JSON.stringify(errorMsg));
     }
   }
 }
