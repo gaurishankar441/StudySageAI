@@ -61,10 +61,12 @@ export class AudioCompressionService {
   /**
    * Check if compression is worth it for given audio size
    * Small files (<1KB) may not benefit from compression overhead
+   * 
+   * ⚠️ TEMPORARILY DISABLED: Client doesn't have decompression logic
    */
   shouldCompress(audioSize: number): boolean {
-    const MIN_SIZE_FOR_COMPRESSION = 1024; // 1KB
-    return audioSize >= MIN_SIZE_FOR_COMPRESSION;
+    // TODO: Re-enable after adding pako decompression on client side
+    return false; // Disabled - browser can't play gzipped audio without decompress
   }
 
   /**

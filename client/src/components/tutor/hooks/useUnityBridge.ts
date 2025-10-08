@@ -80,12 +80,12 @@ export function useUnityBridge({
       handshakeTimeoutRef.current = setTimeout(() => {
         setIsHandshakeComplete((current) => {
           if (!current) {
-            console.error('[Unity Bridge] Handshake timeout');
-            onError?.('Unity failed to respond (timeout)');
+            console.error('[Unity Bridge] Handshake timeout - Unity WebGL may be loading slowly');
+            onError?.('Unity loading timeout - please wait or refresh');
           }
           return current;
         });
-      }, 15000); // 15 second timeout for 97MB WebGL load
+      }, 20000); // 20 second timeout for 97MB WebGL load
     };
 
     // Wait for iframe to load
