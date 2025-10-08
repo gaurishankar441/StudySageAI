@@ -283,16 +283,39 @@ export default function DocChatSession() {
                   />
                 </div>
               ) : currentDoc.sourceType === 'youtube' && currentDoc.metadata?.videoId ? (
-                <div className="w-full h-full flex items-center justify-center bg-black p-8">
-                  <div className="w-full max-w-4xl aspect-video">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${currentDoc.metadata.videoId}`}
-                      className="w-full h-full border-0 rounded-lg shadow-2xl"
-                      title={currentDoc.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
+                <div className="w-full h-full overflow-y-auto bg-muted/30">
+                  {/* YouTube Video */}
+                  <div className="bg-black p-8 flex items-center justify-center">
+                    <div className="w-full max-w-4xl aspect-video">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${currentDoc.metadata.videoId}`}
+                        className="w-full h-full border-0 rounded-lg shadow-2xl"
+                        title={currentDoc.title}
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen
+                      />
+                    </div>
                   </div>
+                  
+                  {/* Transcript Section */}
+                  {currentDoc.metadata?.transcriptSegments && (
+                    <div className="p-6 bg-card/50 backdrop-blur-sm">
+                      <h4 className="text-sm font-semibold mb-4 flex items-center gap-2 text-muted-foreground">
+                        <FileText className="w-4 h-4" />
+                        Video Transcript
+                      </h4>
+                      <div className="space-y-3 text-sm max-h-96 overflow-y-auto pr-2">
+                        {currentDoc.metadata.transcriptSegments.map((segment: any, idx: number) => (
+                          <div key={idx} className="flex gap-3 hover:bg-muted/50 p-2 rounded-lg transition-colors">
+                            <span className="text-xs text-muted-foreground font-mono shrink-0 mt-0.5">
+                              {Math.floor(segment.startTime / 60)}:{(segment.startTime % 60).toString().padStart(2, '0')}
+                            </span>
+                            <p className="text-foreground/90 leading-relaxed">{segment.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ) : currentDoc.status === 'processing' ? (
                 <div className="flex items-center justify-center h-full">
