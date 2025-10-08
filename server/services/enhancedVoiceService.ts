@@ -298,12 +298,21 @@ export class EnhancedVoiceService {
     // Display text (with emojis) is shown to user, but TTS speaks clean text
     // Map language properly: 'en' → 'en', 'hi' → 'hi' (NOT forcing hinglish for English)
     const sanitizerLanguage = language === 'hi' ? 'hi' : language === 'en' ? 'en' : 'hinglish';
-    processedText = TTSSanitizer.sanitizeForSpeech(processedText, {
+    const sanitizedText = TTSSanitizer.sanitizeForSpeech(processedText, {
       language: sanitizerLanguage,
       removeEmojis: true,
       removeMarkdown: true,
       addPauses: false  // We handle pauses separately in enhancedVoiceService
     });
+    
+    // Validate sanitized text has actual content (not just punctuation/whitespace)
+    const hasContent = /[a-zA-Z0-9\u0900-\u097F]/.test(sanitizedText); // Check for English/Hindi alphanumeric
+    if (!hasContent || sanitizedText.trim().length < 2) {
+      console.warn('[ENHANCED VOICE] ⚠️ Sanitized text invalid, using original text');
+      processedText = text; // Fallback to original text
+    } else {
+      processedText = sanitizedText; // Use sanitized text
+    }
     
     // Step 1: Convert math expressions to speech (Indian English patterns)
     if (enableMathSpeech) {

@@ -58,17 +58,19 @@ export class TTSSanitizer {
 
   /**
    * Remove all emojis from text
-   * Comprehensive emoji removal using Unicode ranges
+   * Conservative emoji removal to preserve alphabetic characters
    */
   private static removeEmojis(text: string): string {
-    // Remove emojis using comprehensive pattern without u flag for TS compatibility
+    // Use comprehensive emoji regex pattern that won't match regular text
+    // This pattern safely removes common emojis without affecting A-Z, a-z, 0-9
     return text
-      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // Surrogate pairs (most emojis)
-      .replace(/[\u2600-\u26FF]/g, '')   // Misc symbols
-      .replace(/[\u2700-\u27BF]/g, '')   // Dingbats
-      .replace(/[\uE000-\uF8FF]/g, '')   // Private use area
-      .replace(/[\u1F000-\u1F9FF]/g, '') // Emoticons, symbols, pictographs
-      .replace(/[\u1FA00-\u1FAFF]/g, ''); // Extended symbols
+      .replace(/[\uD800-\uDBFF][\uDC00-\uDFFF]/g, '') // Surrogate pairs (most modern emojis like 🌅, 📚, ✨)
+      .replace(/[\u2600-\u26FF]/g, '')   // Misc symbols (☀️, ⛄, ✨)
+      .replace(/[\u2700-\u27BF]/g, '')   // Dingbats (✂️, ✏️, ✔️)
+      // Removed other Unicode ranges to prevent matching regular text characters
+      // The surrogate pairs removal above catches 99% of modern emojis
+      .replace(/[\u00A0-\u00BF]/g, '')   // Remove non-breaking spaces and special chars
+      .replace(/[\u2000-\u206F]/g, '');  // General punctuation that's decorative
   }
 
   /**
