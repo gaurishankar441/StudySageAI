@@ -9,6 +9,7 @@ import { Readability } from "@mozilla/readability";
 import { JSDOM } from "jsdom";
 import { encoding_for_model } from "tiktoken";
 import { createRequire } from "module";
+import { createWorker } from "tesseract.js";
 
 const require = createRequire(import.meta.url);
 const tokenizer = encoding_for_model("gpt-3.5-turbo");
@@ -34,6 +35,8 @@ export class DocumentService {
         return this.extractFromPDF(content as Buffer);
       case 'docx':
         return this.extractFromDOCX(content as Buffer);
+      case 'image':
+        return this.extractFromImage(content as Buffer);
       case 'youtube':
         return this.extractFromYouTube(sourceUrl!);
       case 'web':
@@ -84,6 +87,35 @@ export class DocumentService {
     } catch (error) {
       console.error('DOCX extraction error:', error);
       throw new Error(`Failed to extract DOCX: ${error}`);
+    }
+  }
+
+  // Image OCR text extraction using Tesseract.js
+  private async extractFromImage(buffer: Buffer): Promise<{ text: string; metadata: any }> {
+    try {
+      console.log('[OCR] Starting text extraction from image...');
+      
+      const worker = await createWorker('eng');
+      const { data } = await worker.recognize(buffer);
+      await worker.terminate();
+      
+      if (!data.text || data.text.trim().length === 0) {
+        throw new Error('No text content extracted from image. The image might not contain readable text.');
+      }
+      
+      console.log(`[OCR] Extracted ${data.text.length} characters from image`);
+      
+      return {
+        text: data.text,
+        metadata: {
+          confidence: data.confidence,
+          language: data.text.match(/[\u0900-\u097F]/) ? 'hi' : 'en', // Detect Hindi Devanagari
+          extractedAt: new Date().toISOString()
+        }
+      };
+    } catch (error) {
+      console.error('Image OCR extraction error:', error);
+      throw new Error(`Failed to extract text from image: ${error}`);
     }
   }
 
