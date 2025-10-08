@@ -386,14 +386,26 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       const audioBlob = await response.blob();
       console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
       
-      // 🎭 AVATAR: Send audio to Unity avatar if enabled
+      // 🎭 AVATAR: Send audio to Unity avatar if enabled (EXCLUSIVE playback)
       if (avatarEnabled && unityAvatarRef.current?.isReady) {
-        console.log('[Avatar] Sending audio to Unity avatar with lip-sync');
+        console.log('[Avatar] ✅ Avatar enabled & ready - sending audio to Unity WebGL with lip-sync');
+        console.log('[Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync');
         try {
           await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+          console.log('[Avatar] ✅ Audio sent to Unity successfully');
+          // SKIP browser audio playback - Unity handles it with lip-sync
+          setPlayingAudio(null);
+          return; // Exit early - Unity plays the audio
         } catch (avatarError) {
-          console.warn('[Avatar] Failed to send audio to avatar:', avatarError);
-          // Continue with normal audio playback
+          console.error('[Avatar] ❌ Failed to send audio to avatar:', avatarError);
+          console.warn('[Avatar] ⚠️ Falling back to browser audio playback');
+          // Continue with normal audio playback on error
+        }
+      } else {
+        if (!avatarEnabled) {
+          console.log('[Avatar] Avatar is OFF - using browser audio playback');
+        } else {
+          console.log('[Avatar] Avatar not ready yet - using browser audio playback');
         }
       }
       
