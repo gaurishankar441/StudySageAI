@@ -16,6 +16,8 @@ import {
   Globe,
   Trash2,
   Sparkles,
+  CheckCircle2,
+  Circle,
 } from "lucide-react";
 import { Document } from "@shared/schema";
 
@@ -266,14 +268,23 @@ export default function DocChatSources() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {documents.map((doc) => (
-                    <div
+                  {documents.map((doc) => {
+                    const isSelected = selectedDocIds.includes(doc.id);
+                    return <div
                       key={doc.id}
                       data-testid={`document-card-${doc.id}`}
-                      className="card-interactive group relative p-5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02]"
+                      className={`card-interactive group relative p-5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02] ${isSelected ? 'ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/20' : ''}`}
                       onClick={() => toggleDocumentSelection(doc.id)}
                     >
-                      <div className="flex items-start gap-3">
+                      {/* Selection Indicator */}
+                      <div className="absolute top-3 left-3">
+                        {isSelected ? (
+                          <CheckCircle2 className="w-5 h-5 text-purple-600" data-testid={`selected-${doc.id}`} />
+                        ) : (
+                          <Circle className="w-5 h-5 text-slate-300 dark:text-slate-700 opacity-0 group-hover:opacity-100 transition-opacity" />
+                        )}
+                      </div>
+                      <div className="flex items-start gap-3 ml-6">
                         <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-md">
                           {doc.sourceType === 'youtube' ? (
                             <Youtube className="w-6 h-6 text-white" />
@@ -324,8 +335,8 @@ export default function DocChatSources() {
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
-                    </div>
-                  ))}
+                    </div>;
+                  })}
                   
                   {documents.length === 0 && (
                     <div className="col-span-2 text-center py-12">
@@ -338,6 +349,58 @@ export default function DocChatSources() {
                   )}
                 </div>
               )}
+            </div>
+          </div>
+
+          {/* Right Sidebar - Selected Documents */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-8">
+              <div className="glass-card rounded-xl p-6">
+                <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wide">
+                  Selected Documents ({selectedDocs.length})
+                </h3>
+                
+                {selectedDocs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    No documents selected
+                  </p>
+                ) : (
+                  <div className="space-y-3 mb-6">
+                    {selectedDocs.map((doc) => (
+                      <div
+                        key={doc.id}
+                        className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-900 rounded-lg"
+                        data-testid={`selected-doc-${doc.id}`}
+                      >
+                        <CheckCircle2 className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        <p className="text-sm flex-1 truncate">{doc.title}</p>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-6 w-6 p-0 hover:bg-destructive/10 hover:text-destructive"
+                          onClick={() => toggleDocumentSelection(doc.id)}
+                          data-testid={`remove-selected-${doc.id}`}
+                        >
+                          <Trash2 className="w-3 h-3" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                <Button
+                  onClick={handleStartChat}
+                  disabled={selectedDocs.length === 0 || startChatMutation.isPending}
+                  className="w-full btn-gradient"
+                  data-testid="button-start-chat"
+                >
+                  {startChatMutation.isPending ? (
+                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
+                  ) : (
+                    "Start Chat"
+                  )}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
