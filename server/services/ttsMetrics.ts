@@ -69,11 +69,17 @@ export class TTSMetricsService {
 
     const cached = this.metrics.filter(m => m.cached);
     const generated = this.metrics.filter(m => !m.cached);
-    const compressed = this.metrics.filter(m => m.compressed);
+    
+    // FIX: Only count chunks with valid compressedSize to prevent negative bandwidth savings
+    const compressed = this.metrics.filter(m => m.compressed && m.compressedSize !== undefined);
 
     const totalAudioSize = this.metrics.reduce((sum, m) => sum + m.audioSize, 0);
-    const totalCompressedSize = compressed.reduce((sum, m) => sum + (m.compressedSize || 0), 0);
-    const bandwidthSaved = totalAudioSize - totalCompressedSize;
+    
+    // FIX: Only calculate compressed size and bandwidth saved for compressed chunks with valid compressedSize
+    // For uncompressed chunks or compressed chunks without compressedSize, we don't count them in bandwidth savings
+    const totalCompressedSize = compressed.reduce((sum, m) => sum + (m.compressedSize || m.audioSize), 0);
+    const totalOriginalSizeOfCompressedChunks = compressed.reduce((sum, m) => sum + m.audioSize, 0);
+    const bandwidthSaved = Math.max(0, totalOriginalSizeOfCompressedChunks - totalCompressedSize);
 
     return {
       total: this.metrics.length,

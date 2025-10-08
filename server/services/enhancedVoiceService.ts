@@ -5,6 +5,7 @@ import { sarvamVoiceService } from './sarvamVoice';
 import { EMOTION_CONFIGS, TUTOR_PERSONAS } from '../config/tutorPersonas';
 import { INTENT_PROSODY_MAP, INTENT_PROSODY_DEFAULT } from '../config/intentProsody';
 import { TTSSanitizer } from './ttsSanitizer';
+import { enhancedVoiceCircuitBreaker } from './circuitBreaker';
 
 export interface VoiceOptions {
   emotion?: string; // excited, teaching, gentle, friendly, curious, encouraging, celebratory
@@ -420,43 +421,46 @@ export class EnhancedVoiceService {
     pace: number,
     loudness: number
   ): Promise<Buffer> {
-    const apiKey = process.env.SARVAM_API_KEY || '';
-    
-    console.log(`[SARVAM TTS] Calling Sarvam API - Speaker: ${speaker}, Model: bulbul:v2, Lang: ${language}, Text: "${text.substring(0, 50)}..."`);
-    
-    const response = await fetch('https://api.sarvam.ai/text-to-speech', {
-      method: 'POST',
-      headers: {
-        'API-Subscription-Key': apiKey,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        inputs: [text],
-        target_language_code: language === 'hi' ? 'hi-IN' : 'en-IN',
-        speaker: speaker,
-        model: 'bulbul:v2',
-        pitch: pitch, // -1.0 to 1.0
-        pace: pace, // 0.5 to 2.0
-        loudness: loudness, // 0.5 to 2.0
-        speech_sample_rate: 22050,
-      }),
+    // 🚀 PHASE 3.1: Wrap TTS calls with circuit breaker for fault tolerance
+    return await enhancedVoiceCircuitBreaker.execute(async () => {
+      const apiKey = process.env.SARVAM_API_KEY || '';
+      
+      console.log(`[SARVAM TTS] Calling Sarvam API - Speaker: ${speaker}, Model: bulbul:v2, Lang: ${language}, Text: "${text.substring(0, 50)}..."`);
+      
+      const response = await fetch('https://api.sarvam.ai/text-to-speech', {
+        method: 'POST',
+        headers: {
+          'API-Subscription-Key': apiKey,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          inputs: [text],
+          target_language_code: language === 'hi' ? 'hi-IN' : 'en-IN',
+          speaker: speaker,
+          model: 'bulbul:v2',
+          pitch: pitch, // -1.0 to 1.0
+          pace: pace, // 0.5 to 2.0
+          loudness: loudness, // 0.5 to 2.0
+          speech_sample_rate: 22050,
+        }),
+      });
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`[SARVAM TTS] ❌ API call failed - Status: ${response.status}, Error: ${errorText}`);
+        throw new Error(`Sarvam TTS failed: ${response.status}`);
+      }
+      
+      const result = await response.json();
+      
+      if (!result.audios || result.audios.length === 0) {
+        console.error('[SARVAM TTS] ❌ No audio in response');
+        throw new Error('No audio received from Sarvam TTS');
+      }
+      
+      console.log(`[SARVAM TTS] ✅ Successfully generated audio - Size: ${result.audios[0].length} bytes`);
+      return Buffer.from(result.audios[0], 'base64');
     });
-    
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error(`[SARVAM TTS] ❌ API call failed - Status: ${response.status}, Error: ${errorText}`);
-      throw new Error(`Sarvam TTS failed: ${response.status}`);
-    }
-    
-    const result = await response.json();
-    
-    if (!result.audios || result.audios.length === 0) {
-      console.error('[SARVAM TTS] ❌ No audio in response');
-      throw new Error('No audio received from Sarvam TTS');
-    }
-    
-    console.log(`[SARVAM TTS] ✅ Successfully generated audio - Size: ${result.audios[0].length} bytes`);
-    return Buffer.from(result.audios[0], 'base64');
   }
   
   /**
