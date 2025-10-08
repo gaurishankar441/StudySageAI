@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './use-toast';
+import pako from 'pako';
 
 // WebSocket message types
 type WSMessageType = 
@@ -204,23 +205,37 @@ export function useVoiceTutor({
 
         case 'TTS_CHUNK': {
           // 🚀 PHASE 1: Handle sequence-based TTS chunks (new format)
+          // 🚀 PHASE 2.2: Support compressed audio
           // Also support legacy format for backward compatibility
           let audioDataB64: string | undefined;
           let sequence: number | undefined;
           let isLast = false;
+          let compressed = false;
           
           if (message.data && typeof message.data === 'object') {
-            // New format: { type, data: { sequence, data, text, isLast } }
+            // New format: { type, data: { sequence, data, text, isLast, compressed } }
             audioDataB64 = message.data.data;
             sequence = message.data.sequence;
             isLast = message.data.isLast;
+            compressed = message.data.compressed || false;
           } else if (message.data && typeof message.data === 'string') {
             // Legacy format: { type, data: "base64..." }
             audioDataB64 = message.data;
           }
           
           if (audioDataB64) {
-            const audioData = Uint8Array.from(atob(audioDataB64), c => c.charCodeAt(0));
+            let audioData = Uint8Array.from(atob(audioDataB64), c => c.charCodeAt(0));
+            
+            // 🚀 PHASE 2.2: Decompress if needed
+            if (compressed) {
+              try {
+                audioData = pako.inflate(audioData);
+                console.log('[STREAMING TTS] 📦 Decompressed audio chunk');
+              } catch (error) {
+                console.error('[STREAMING TTS] Decompression failed:', error);
+              }
+            }
+            
             await handleTTSChunk(audioData.buffer, sequence);
             
             if (isLast) {

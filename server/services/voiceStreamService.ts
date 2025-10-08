@@ -15,6 +15,8 @@ import { optimizedAI } from './optimizedAIService';
 import { enhancedVoiceService } from './enhancedVoiceService';
 import { performanceOptimizer, metricsTracker } from './PerformanceOptimizer';
 import { hintService } from './hintService';
+import { ttsCacheService } from './ttsCacheService';
+import { audioCompression } from './audioCompression';
 
 // Initialize AI Tutor services
 const languageDetector = new LanguageDetectionEngine();
@@ -231,11 +233,39 @@ export class VoiceStreamService {
         try {
           const startTime = Date.now();
           
-          // Generate TTS audio
-          const audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+          // 🚀 PHASE 2.1: Check cache first
+          const cachedAudio = await ttsCacheService.get(sentence, language, emotion, personaId);
+          
+          let audioBuffer: Buffer;
+          let cached = false;
+          
+          if (cachedAudio) {
+            audioBuffer = cachedAudio;
+            cached = true;
+          } else {
+            // Generate TTS audio
+            audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+            
+            // 🚀 PHASE 2.1: Store in cache for future use
+            await ttsCacheService.set(sentence, language, audioBuffer, emotion, personaId);
+          }
+          
           const genTime = Date.now() - startTime;
           
-          console.log(`[STREAMING TTS] ✅ Chunk ${index + 1}/${sentences.length} generated (${genTime}ms): "${sentence.substring(0, 40)}..."`);
+          const cacheStatus = cached ? '💾 CACHED' : '🔨 GENERATED';
+          console.log(`[STREAMING TTS] ✅ Chunk ${index + 1}/${sentences.length} ${cacheStatus} (${genTime}ms): "${sentence.substring(0, 40)}..."`);
+          
+          // 🚀 PHASE 2.2: Compress audio before sending (if beneficial)
+          let finalAudioData: string;
+          let compressed = false;
+          
+          if (audioCompression.shouldCompress(audioBuffer.length)) {
+            const compressionResult = await audioCompression.compress(audioBuffer);
+            finalAudioData = compressionResult.compressed.toString('base64');
+            compressed = true;
+          } else {
+            finalAudioData = audioBuffer.toString('base64');
+          }
           
           // 🔥 FIX #1: Wrap in proper data field format
           const ttsMsg = {
@@ -244,9 +274,10 @@ export class VoiceStreamService {
             sessionId: ws.sessionId,
             data: {
               sequence: sequenceNumber,
-              data: audioBuffer.toString('base64'),
+              data: finalAudioData,
               text: sentence,
-              isLast: index === sentences.length - 1
+              isLast: index === sentences.length - 1,
+              compressed // Flag to indicate compression
             }
           };
           
