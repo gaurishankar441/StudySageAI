@@ -267,7 +267,7 @@ export default function DocChatSources() {
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   {documents.map((doc) => {
                     const isSelected = selectedDocIds.includes(doc.id);
                     return <div
@@ -339,7 +339,7 @@ export default function DocChatSources() {
                   })}
                   
                   {documents.length === 0 && (
-                    <div className="col-span-2 text-center py-12">
+                    <div className="col-span-3 text-center py-12">
                       <div className="w-16 h-16 rounded-full bg-gradient-subtle mx-auto mb-4 flex items-center justify-center">
                         <FileText className="w-8 h-8 text-muted-foreground/50" />
                       </div>
