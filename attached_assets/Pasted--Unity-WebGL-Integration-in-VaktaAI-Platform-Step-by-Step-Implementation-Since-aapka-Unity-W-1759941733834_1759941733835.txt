@@ -1,0 +1,1040 @@
+## 🚀 Unity WebGL Integration in VaktaAI Platform - Step by Step Implementation
+
+Since aapka Unity WebGL build ready hai, main aapko exact implementation steps de raha hun to integrate it in your existing VaktaAI platform:
+
+## 📁 Step 1: WebGL Files Setup
+
+### **1.1 Place Unity WebGL Build Files**
+```bash
+# Your VaktaAI project structure me WebGL files place karo
+client/
+├── public/
+│   └── unity-avatar/
+│       ├── index.html
+│       ├── Build/
+│       │   ├── UnityLoader.js
+│       │   ├── WebGL.data
+│       │   ├── WebGL.framework.js
+│       │   ├── WebGL.loader.js
+│       │   └── WebGL.wasm
+│       └── TemplateData/
+│           ├── style.css
+│           └── favicon.ico
+```
+
+### **1.2 Modify Unity index.html**
+Unity ke generated `index.html` ko modify karo for iframe compatibility:
+
+```html
+<!-- public/unity-avatar/index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>VaktaAI Avatar</title>
+    <style>
+        body { margin: 0; padding: 0; overflow: hidden; }
+        #unity-container { width: 100%; height: 100vh; }
+        #unity-canvas { width: 100%; height: 100%; display: block; }
+    </style>
+</head>
+<body>
+    <div id="unity-container">
+        <canvas id="unity-canvas"></canvas>
+    </div>
+    
+    <script src="Build/WebGL.loader.js"></script>
+    <script>
+        var unityInstance = null;
+        
+        // Unity to React communication
+        function SendMessageToReact(message) {
+            window.parent.postMessage({
+                type: 'UNITY_MESSAGE',
+                payload: message
+            }, '*');
+        }
+        
+        // Unity ready notification
+        function OnUnityReady() {
+            window.parent.postMessage({
+                type: 'UNITY_READY',
+                payload: true
+            }, '*');
+        }
+        
+        // React to Unity communication listener
+        window.addEventListener('message', function(event) {
+            if (!unityInstance) return;
+            
+            // Handle different message types
+            switch(event.data.type) {
+                case 'PLAY_TTS_AUDIO':
+                    unityInstance.SendMessage(
+                        'AvatarController',
+                        'PlayAudioFromBase64',
+                        event.data.payload.audioData
+                    );
+                    break;
+                    
+                case 'SET_EMOTION':
+                    unityInstance.SendMessage(
+                        'AvatarController',
+                        'SetEmotion',
+                        event.data.payload.emotion
+                    );
+                    break;
+                    
+                case 'TRIGGER_GESTURE':
+                    unityInstance.SendMessage(
+                        'AvatarController',
+                        'TriggerGesture',
+                        event.data.payload.gesture
+                    );
+                    break;
+                    
+                case 'CHANGE_AVATAR':
+                    unityInstance.SendMessage(
+                        'AvatarManager',
+                        'SwitchAvatar',
+                        event.data.payload.avatarName
+                    );
+                    break;
+            }
+        });
+        
+        // Initialize Unity
+        createUnityInstance(document.querySelector("#unity-canvas"), {
+            dataUrl: "Build/WebGL.data",
+            frameworkUrl: "Build/WebGL.framework.js",
+            codeUrl: "Build/WebGL.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "VaktaAI",
+            productName: "AI Tutor Avatar",
+            productVersion: "1.0",
+        }).then((instance) => {
+            unityInstance = instance;
+            // Wait a bit for Unity to fully initialize
+            setTimeout(() => OnUnityReady(), 2000);
+        }).catch((message) => {
+            console.error("Unity initialization failed:", message);
+        });
+    </script>
+</body>
+</html>
+```
+
+## 🎮 Step 2: React Component for Unity Avatar
+
+### **2.1 Create Unity Avatar Component**
+```typescript
+// client/src/components/ai-tutor/UnityAvatar.tsx
+
+import React, { useEffect, useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import { Loader2 } from 'lucide-react';
+
+export interface UnityAvatarHandle {
+  sendAudioToAvatar: (audioBase64: string, emotion?: string) => void;
+  setEmotion: (emotion: string) => void;
+  triggerGesture: (gesture: string) => void;
+  changeAvatar: (avatarName: 'priya' | 'amit') => void;
+  isReady: boolean;
+}
+
+interface UnityAvatarProps {
+  className?: string;
+  defaultAvatar?: 'priya' | 'amit';
+  onReady?: () => void;
+  onMessage?: (message: any) => void;
+}
+
+const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
+  ({ className = '', defaultAvatar = 'priya', onReady, onMessage }, ref) => {
+    const iframeRef = useRef<HTMLIFrameElement>(null);
+    const [isLoading, setIsLoading] = useState(true);
+    const [isUnityReady, setIsUnityReady] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    // Message handler from Unity
+    useEffect(() => {
+      const handleMessage = (event: MessageEvent) => {
+        // Security: Check origin if needed
+        // if (event.origin !== window.location.origin) return;
+
+        if (event.data.type === 'UNITY_READY') {
+          console.log('Unity Avatar is ready!');
+          setIsUnityReady(true);
+          setIsLoading(false);
+          onReady?.();
+        } else if (event.data.type === 'UNITY_MESSAGE') {
+          onMessage?.(event.data.payload);
+        }
+      };
+
+      window.addEventListener('message', handleMessage);
+      
+      // Timeout for Unity loading
+      const timeout = setTimeout(() => {
+        if (!isUnityReady) {
+          setError('Unity Avatar loading timeout');
+          setIsLoading(false);
+        }
+      }, 30000); // 30 seconds timeout
+
+      return () => {
+        window.removeEventListener('message', handleMessage);
+        clearTimeout(timeout);
+      };
+    }, [isUnityReady, onReady, onMessage]);
+
+    // Send message to Unity
+    const sendMessageToUnity = (type: string, payload: any) => {
+      if (iframeRef.current?.contentWindow && isUnityReady) {
+        iframeRef.current.contentWindow.postMessage(
+          { type, payload },
+          '*'
+        );
+      } else {
+        console.warn('Unity not ready or iframe not loaded');
+      }
+    };
+
+    // Expose methods to parent component
+    useImperativeHandle(ref, () => ({
+      sendAudioToAvatar: (audioBase64: string, emotion?: string) => {
+        sendMessageToUnity('PLAY_TTS_AUDIO', { audioData: audioBase64 });
+        if (emotion) {
+          sendMessageToUnity('SET_EMOTION', { emotion });
+        }
+      },
+      setEmotion: (emotion: string) => {
+        sendMessageToUnity('SET_EMOTION', { emotion });
+      },
+      triggerGesture: (gesture: string) => {
+        sendMessageToUnity('TRIGGER_GESTURE', { gesture });
+      },
+      changeAvatar: (avatarName: 'priya' | 'amit') => {
+        sendMessageToUnity('CHANGE_AVATAR', { avatarName });
+      },
+      isReady: isUnityReady
+    }));
+
+    // Handle iframe load error
+    const handleIframeError = () => {
+      setError('Failed to load Unity Avatar');
+      setIsLoading(false);
+    };
+
+    return (
+      <div className={`relative ${className}`}>
+        {/* Loading overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-10">
+            <div className="text-center">
+              <Loader2 className="w-8 h-8 animate-spin text-white mb-2 mx-auto" />
+              <p className="text-white text-sm">Loading AI Tutor Avatar...</p>
+            </div>
+          </div>
+        )}
+
+        {/* Error state */}
+        {error && (
+          <div className="absolute inset-0 bg-red-50 flex items-center justify-center z-10">
+            <div className="text-center p-4">
+              <p className="text-red-600 mb-2">{error}</p>
+              <button
+                onClick={() => window.location.reload()}
+                className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
+              >
+                Reload
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Unity iframe */}
+        <iframe
+          ref={iframeRef}
+          src="/unity-avatar/index.html"
+          className="w-full h-full border-0"
+          style={{
+            display: 'block',
+            minHeight: '400px'
+          }}
+          title="AI Tutor Avatar"
+          allow="autoplay"
+          onError={handleIframeError}
+          sandbox="allow-scripts allow-same-origin"
+        />
+      </div>
+    );
+  }
+);
+
+UnityAvatar.displayName = 'UnityAvatar';
+
+export default UnityAvatar;
+```
+
+## 💬 Step 3: Integrate with AI Tutor Chat
+
+### **3.1 Update AI Tutor Chat Component**
+```typescript
+// client/src/components/ai-tutor/AITutorChat.tsx
+
+import React, { useRef, useState, useEffect } from 'react';
+import UnityAvatar, { UnityAvatarHandle } from './UnityAvatar';
+import { useQuery, useMutation } from '@tanstack/react-query';
+import { api } from '@/lib/api';
+
+interface Message {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  emotion?: string;
+  audioUrl?: string;
+}
+
+export default function AITutorChat() {
+  const unityAvatarRef = useRef<UnityAvatarHandle>(null);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [currentPersona, setCurrentPersona] = useState<'priya' | 'amit'>('priya');
+  const [isAvatarReady, setIsAvatarReady] = useState(false);
+  const [inputMessage, setInputMessage] = useState('');
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // Get chat session
+  const { data: chatSession } = useQuery({
+    queryKey: ['tutor-session'],
+    queryFn: async () => {
+      const response = await api.post('/api/tutor/session', {
+        subject: 'Physics',
+        level: 'intermediate',
+        topic: 'Electricity',
+        language: 'en'
+      });
+      return response.data;
+    }
+  });
+
+  // TTS mutation
+  const ttsMutation = useMutation({
+    mutationFn: async ({ text, emotion }: { text: string; emotion?: string }) => {
+      const response = await fetch('/api/tutor/tts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          text,
+          language: 'en-IN',
+          emotion,
+          voice: currentPersona,
+          intent: 'teaching'
+        })
+      });
+      
+      if (!response.ok) throw new Error('TTS failed');
+      
+      const audioBlob = await response.blob();
+      return { audioBlob, emotion };
+    },
+    onSuccess: async ({ audioBlob, emotion }) => {
+      // Convert blob to base64
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Audio = reader.result?.toString().split(',')[1];
+        if (base64Audio && unityAvatarRef.current?.isReady) {
+          unityAvatarRef.current.sendAudioToAvatar(base64Audio, emotion);
+        }
+      };
+      reader.readAsDataURL(audioBlob);
+    }
+  });
+
+  // Send message and get AI response
+  const sendMessage = async () => {
+    if (!inputMessage.trim() || !chatSession) return;
+    
+    setIsProcessing(true);
+    
+    // Add user message
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: inputMessage
+    };
+    setMessages(prev => [...prev, userMessage]);
+    setInputMessage('');
+
+    try {
+      // Get AI response (streaming)
+      const response = await fetch(`/api/chats/${chatSession.chat.id}/stream?message=${encodeURIComponent(inputMessage)}`);
+      const reader = response.body?.getReader();
+      const decoder = new TextDecoder();
+      
+      let assistantMessage = '';
+      let emotion = 'neutral';
+      
+      if (reader) {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          
+          const chunk = decoder.decode(value);
+          const lines = chunk.split('\n');
+          
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                if (data.content) {
+                  assistantMessage += data.content;
+                }
+                if (data.metadata?.emotion) {
+                  emotion = data.metadata.emotion;
+                }
+              } catch (e) {
+                console.error('Parse error:', e);
+              }
+            }
+          }
+        }
+      }
+      
+      // Add assistant message
+      const aiMessage: Message = {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: assistantMessage,
+        emotion
+      };
+      setMessages(prev => [...prev, aiMessage]);
+      
+      // Generate and play TTS
+      await ttsMutation.mutateAsync({ 
+        text: assistantMessage, 
+        emotion 
+      });
+      
+    } catch (error) {
+      console.error('Error sending message:', error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  // Quick actions
+  const handleQuickAction = (action: string) => {
+    if (!unityAvatarRef.current?.isReady) return;
+    
+    switch(action) {
+      case 'wave':
+        unityAvatarRef.current.triggerGesture('wave');
+        break;
+      case 'think':
+        unityAvatarRef.current.setEmotion('thinking');
+        break;
+      case 'explain':
+        unityAvatarRef.current.triggerGesture('explaining');
+        break;
+    }
+  };
+
+  // Avatar ready handler
+  const handleAvatarReady = () => {
+    setIsAvatarReady(true);
+    console.log('Avatar is ready for interaction!');
+    
+    // Send initial greeting
+    if (unityAvatarRef.current) {
+      unityAvatarRef.current.setEmotion('happy');
+      ttsMutation.mutate({ 
+        text: `Hello! I'm ${currentPersona === 'priya' ? 'Priya' : 'Amit'}, your AI tutor. How can I help you today?`,
+        emotion: 'happy'
+      });
+    }
+  };
+
+  // Handle avatar change
+  const changeAvatar = (avatar: 'priya' | 'amit') => {
+    setCurrentPersona(avatar);
+    if (unityAvatarRef.current?.isReady) {
+      unityAvatarRef.current.changeAvatar(avatar);
+    }
+  };
+
+  return (
+    <div className="flex h-screen bg-gray-50">
+      {/* Left Panel - Unity Avatar */}
+      <div className="w-1/2 h-full relative bg-gradient-to-b from-purple-50 to-blue-50 border-r">
+        {/* Avatar Container */}
+        <div className="h-3/4">
+          <UnityAvatar
+            ref={unityAvatarRef}
+            className="w-full h-full"
+            defaultAvatar={currentPersona}
+            onReady={handleAvatarReady}
+            onMessage={(msg) => console.log('Unity message:', msg)}
+          />
+        </div>
+
+        {/* Avatar Controls */}
+        <div className="absolute bottom-0 left-0 right-0 p-4 bg-white bg-opacity-90">
+          <div className="flex gap-2 mb-3">
+            <button
+              onClick={() => changeAvatar('priya')}
+              className={`flex-1 py-2 px-4 rounded-lg transition ${
+                currentPersona === 'priya'
+                  ? 'bg-purple-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              👩‍🏫 Priya (Female)
+            </button>
+            <button
+              onClick={() => changeAvatar('amit')}
+              className={`flex-1 py-2 px-4 rounded-lg transition ${
+                currentPersona === 'amit'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-gray-200 hover:bg-gray-300'
+              }`}
+            >
+              👨‍🏫 Amit (Male)
+            </button>
+          </div>
+
+          {/* Quick Actions */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => handleQuickAction('wave')}
+              className="px-3 py-1 bg-green-500 text-white rounded text-sm hover:bg-green-600"
+              disabled={!isAvatarReady}
+            >
+              👋 Wave
+            </button>
+            <button
+              onClick={() => handleQuickAction('think')}
+              className="px-3 py-1 bg-yellow-500 text-white rounded text-sm hover:bg-yellow-600"
+              disabled={!isAvatarReady}
+            >
+              🤔 Think
+            </button>
+            <button
+              onClick={() => handleQuickAction('explain')}
+              className="px-3 py-1 bg-blue-500 text-white rounded text-sm hover:bg-blue-600"
+              disabled={!isAvatarReady}
+            >
+              💡 Explain
+            </button>
+          </div>
+
+          {/* Avatar Status */}
+          <div className="mt-2 text-sm">
+            Status: {isAvatarReady ? 
+              <span className="text-green-600">✅ Ready</span> : 
+              <span className="text-yellow-600">⏳ Loading...</span>
+            }
+          </div>
+        </div>
+      </div>
+
+      {/* Right Panel - Chat Interface */}
+      <div className="w-1/2 h-full flex flex-col">
+        {/* Chat Header */}
+        <div className="bg-white border-b p-4">
+          <h2 className="text-xl font-semibold">AI Tutor Chat</h2>
+          <p className="text-sm text-gray-600">
+            Subject: Physics | Topic: Electricity | Level: Intermediate
+          </p>
+        </div>
+
+        {/* Messages Container */}
+        <div className="flex-1 overflow-y-auto p-4 space-y-4">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.role === 'user' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-md p-3 rounded-lg ${
+                  message.role === 'user'
+                    ? 'bg-purple-600 text-white'
+                    : 'bg-white border shadow-sm'
+                }`}
+              >
+                <p className="text-sm font-medium mb-1">
+                  {message.role === 'user' ? 'You' : currentPersona === 'priya' ? 'Priya' : 'Amit'}
+                </p>
+                <p>{message.content}</p>
+                {message.emotion && (
+                  <span className="text-xs opacity-70 mt-1 block">
+                    Emotion: {message.emotion}
+                  </span>
+                )}
+              </div>
+            </div>
+          ))}
+          
+          {isProcessing && (
+            <div className="flex justify-start">
+              <div className="bg-gray-100 p-3 rounded-lg">
+                <div className="flex space-x-2">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-100"></div>
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce delay-200"></div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input Section */}
+        <div className="border-t bg-white p-4">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={inputMessage}
+              onChange={(e) => setInputMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+              placeholder="Type your question..."
+              className="flex-1 px-4 py-2 border rounded-lg focus:outline-none focus:border-purple-500"
+              disabled={!isAvatarReady || isProcessing}
+            />
+            <button
+              onClick={sendMessage}
+              disabled={!isAvatarReady || isProcessing || !inputMessage.trim()}
+              className="px-6 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              Send
+            </button>
+          </div>
+          
+          {/* Quick Tools */}
+          <div className="flex gap-2 mt-3">
+            <button className="text-sm px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">
+              💡 Hint
+            </button>
+            <button className="text-sm px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">
+              📖 Example
+            </button>
+            <button className="text-sm px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">
+              📝 Summary
+            </button>
+            <button className="text-sm px-3 py-1 bg-gray-100 rounded hover:bg-gray-200">
+              🎯 Quiz
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+```
+
+## 🔊 Step 4: Backend TTS Integration Update
+
+### **4.1 Update TTS Endpoint for Unity**
+```typescript
+// server/api/tutor/tts.ts
+
+import { Router } from 'express';
+import { requireAuth } from '../../middleware/auth';
+import { generateTTS } from '../../services/voice.service';
+
+const router = Router();
+
+router.post('/tts', requireAuth, async (req, res) => {
+  const { text, language, emotion, voice, intent } = req.body;
+
+  try {
+    // Process text for better lip-sync
+    const processedText = preprocessForLipSync(text);
+    
+    // Detect or use provided emotion
+    const finalEmotion = emotion || detectEmotion(text, intent);
+    
+    // Generate TTS based on voice selection
+    const audioBuffer = await generateTTS({
+      text: processedText,
+      voice: voice || 'priya',
+      language: language || 'en-IN',
+      emotion: finalEmotion,
+      // Adjust prosody based on emotion
+      prosody: getProsodySettings(finalEmotion)
+    });
+    
+    // Return audio as blob
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.length,
+      'X-Emotion': finalEmotion
+    });
+    
+    res.send(audioBuffer);
+    
+  } catch (error) {
+    console.error('TTS generation failed:', error);
+    res.status(500).json({ 
+      error: 'TTS generation failed',
+      message: error.message 
+    });
+  }
+});
+
+// Helper functions
+function preprocessForLipSync(text: string): string {
+  // Convert mathematical expressions to speakable format
+  text = text.replace(/(\d+)\s*\+\s*(\d+)/g, '$1 plus $2');
+  text = text.replace(/(\d+)\s*\-\s*(\d+)/g, '$1 minus $2');
+  text = text.replace(/(\d+)\s*\*\s*(\d+)/g, '$1 times $2');
+  text = text.replace(/(\d+)\s*\/\s*(\d+)/g, '$1 divided by $2');
+  text = text.replace(/V\s*=\s*IR/g, 'V equals I into R');
+  
+  // Add pauses for better comprehension
+  text = text.replace(/\./g, '. <break time="300ms"/>');
+  text = text.replace(/,/g, ', <break time="150ms"/>');
+  text = text.replace(/:/g, ': <break time="200ms"/>');
+  
+  return text;
+}
+
+function detectEmotion(text: string, intent?: string): string {
+  // Simple emotion detection based on content
+  const lowerText = text.toLowerCase();
+  
+  if (intent === 'greeting' || lowerText.includes('hello') || lowerText.includes('welcome')) {
+    return 'happy';
+  }
+  if (lowerText.includes('think') || lowerText.includes('let me') || lowerText.includes('hmm')) {
+    return 'thinking';
+  }
+  if (lowerText.includes('excellent') || lowerText.includes('great job') || lowerText.includes('correct')) {
+    return 'excited';
+  }
+  if (lowerText.includes('try again') || lowerText.includes('not quite')) {
+    return 'encouraging';
+  }
+  
+  return 'neutral';
+}
+
+function getProsodySettings(emotion: string) {
+  const settings = {
+    happy: { pitch: 1.1, rate: 1.05, volume: 1.1 },
+    sad: { pitch: 0.9, rate: 0.95, volume: 0.9 },
+    excited: { pitch: 1.2, rate: 1.1, volume: 1.2 },
+    thinking: { pitch: 1.0, rate: 0.9, volume: 1.0 },
+    encouraging: { pitch: 1.05, rate: 1.0, volume: 1.05 },
+    neutral: { pitch: 1.0, rate: 1.0, volume: 1.0 }
+  };
+  
+  return settings[emotion] || settings.neutral;
+}
+
+export default router;
+```
+
+## ⚙️ Step 5: Configuration & Optimization
+
+### **5.1 Vite Configuration for Unity Files**
+```typescript
+// client/vite.config.ts
+import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  server: {
+    port: 5173,
+    // Properly serve Unity files
+    headers: {
+      'Cross-Origin-Embedder-Policy': 'require-corp',
+      'Cross-Origin-Opener-Policy': 'same-origin',
+    }
+  },
+  build: {
+    // Exclude Unity files from Vite processing
+    assetsInlineLimit: 0,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'ai-tutor': ['./src/components/ai-tutor/AITutorChat.tsx']
+        }
+      }
+    }
+  },
+  // Handle Unity file types
+  assetsInclude: ['**/*.data', '**/*.wasm', '**/*.framework.js']
+});
+```
+
+### **5.2 Express Static File Serving**
+```typescript
+// server/index.ts
+import express from 'express';
+import compression from 'compression';
+import path from 'path';
+
+const app = express();
+
+// Compression for Unity files
+app.use(compression({
+  filter: (req, res) => {
+    // Compress Unity files
+    if (req.url.includes('/unity-avatar/')) {
+      return true;
+    }
+    return compression.filter(req, res);
+  }
+}));
+
+// Serve Unity WebGL files with proper headers
+app.use('/unity-avatar', express.static(path.join(__dirname, '../client/public/unity-avatar'), {
+  setHeaders: (res, filePath) => {
+    // Set caching for Unity files
+    if (filePath.endsWith('.data') || filePath.endsWith('.wasm')) {
+      res.set('Cache-Control', 'public, max-age=31536000'); // 1 year
+    }
+    
+    // Set CORS headers if needed
+    res.set('Access-Control-Allow-Origin', '*');
+    
+    // Content encoding for compressed Unity files
+    if (filePath.endsWith('.br')) {
+      res.set('Content-Encoding', 'br');
+    } else if (filePath.endsWith('.gz')) {
+      res.set('Content-Encoding', 'gzip');
+    }
+  }
+}));
+```
+
+## 📱 Step 6: Mobile Responsive Design
+
+### **6.1 Responsive Unity Avatar Component**
+```typescript
+// client/src/components/ai-tutor/ResponsiveUnityAvatar.tsx
+
+import React from 'react';
+import UnityAvatar from './UnityAvatar';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+
+export default function ResponsiveAITutor() {
+  const isMobile = useMediaQuery('(max-width: 768px)');
+  const isTablet = useMediaQuery('(max-width: 1024px)');
+
+  if (isMobile) {
+    // Mobile Layout - Avatar as floating widget
+    return (
+      <div className="relative h-screen">
+        {/* Chat takes full screen */}
+        <div className="h-full">
+          {/* Chat content */}
+        </div>
+        
+        {/* Floating Avatar */}
+        <div className="fixed bottom-20 right-4 w-32 h-32 rounded-full overflow-hidden shadow-lg z-50">
+          <UnityAvatar className="w-full h-full" />
+        </div>
+      </div>
+    );
+  }
+
+  if (isTablet) {
+    // Tablet Layout - Avatar on top
+    return (
+      <div className="flex flex-col h-screen">
+        <div className="h-64">
+          <UnityAvatar className="w-full h-full" />
+        </div>
+        <div className="flex-1">
+          {/* Chat content */}
+        </div>
+      </div>
+    );
+  }
+
+  // Desktop Layout - Side by side
+  return (
+    <div className="flex h-screen">
+      <div className="w-1/2">
+        <UnityAvatar className="w-full h-full" />
+      </div>
+      <div className="w-1/2">
+        {/* Chat content */}
+      </div>
+    </div>
+  );
+}
+```
+
+## 🐛 Step 7: Error Handling & Fallbacks
+
+### **7.1 WebGL Detection & Fallback**
+```typescript
+// client/src/utils/webgl-detector.ts
+
+export function isWebGLAvailable(): boolean {
+  try {
+    const canvas = document.createElement('canvas');
+    return !!(
+      window.WebGLRenderingContext &&
+      (canvas.getContext('webgl') || canvas.getContext('experimental-webgl'))
+    );
+  } catch (e) {
+    return false;
+  }
+}
+
+export function getWebGLErrorMessage(): string {
+  if (!window.WebGLRenderingContext) {
+    return 'Your browser does not support WebGL';
+  }
+  
+  const canvas = document.createElement('canvas');
+  const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+  
+  if (!gl) {
+    return 'Your browser supports WebGL but it is disabled or unavailable';
+  }
+  
+  return '';
+}
+
+// Usage in component
+if (!isWebGLAvailable()) {
+  return (
+    <div className="flex items-center justify-center h-full bg-gray-100">
+      <div className="text-center p-6">
+        <img src="/avatars/priya-static.png" alt="AI Tutor" className="w-48 h-48 mx-auto mb-4" />
+        <p className="text-gray-600">{getWebGLErrorMessage()}</p>
+        <p className="text-sm text-gray-500 mt-2">
+          The 3D avatar requires WebGL. You can still use the chat functionality.
+        </p>
+      </div>
+    </div>
+  );
+}
+```
+
+## 🚀 Step 8: Deployment Checklist
+
+### **8.1 Pre-deployment Steps**
+```bash
+# 1. Optimize Unity build
+# In Unity: File > Build Settings > Player Settings
+# - Set Compression Format: Brotli
+# - Enable Exception Support: None (smaller build)
+# - Set Memory Size: 256 MB
+
+# 2. Compress Unity files
+cd client/public/unity-avatar/Build
+brotli -q 11 WebGL.data -o WebGL.data.br
+brotli -q 11 WebGL.wasm -o WebGL.wasm.br
+brotli -q 11 WebGL.framework.js -o WebGL.framework.js.br
+
+# 3. Update index.html to use compressed files
+# Change: dataUrl: "Build/WebGL.data.br"
+# Change: frameworkUrl: "Build/WebGL.framework.js.br"
+# Change: codeUrl: "Build/WebGL.wasm.br"
+```
+
+### **8.2 Nginx Configuration**
+```nginx
+server {
+    # Serve Brotli compressed Unity files
+    location ~ \.(data|wasm|framework\.js)\.br$ {
+        gzip off;
+        add_header Content-Encoding br;
+        add_header Cache-Control "public, max-age=31536000";
+        
+        # Set correct MIME types
+        location ~ \.data\.br$ {
+            add_header Content-Type application/octet-stream;
+        }
+        location ~ \.wasm\.br$ {
+            add_header Content-Type application/wasm;
+        }
+        location ~ \.js\.br$ {
+            add_header Content-Type application/javascript;
+        }
+    }
+    
+    # Enable CORS for Unity files
+    location /unity-avatar/ {
+        add_header Access-Control-Allow-Origin *;
+        add_header Cross-Origin-Embedder-Policy require-corp;
+        add_header Cross-Origin-Opener-Policy same-origin;
+    }
+}
+```
+
+## ✅ Step 9: Testing
+
+### **9.1 Test Checklist**
+```typescript
+// client/src/tests/unity-integration.test.ts
+
+describe('Unity Avatar Integration', () => {
+  test('Unity iframe loads successfully', async () => {
+    // Check iframe loads
+  });
+  
+  test('Unity sends ready message', async () => {
+    // Wait for UNITY_READY message
+  });
+  
+  test('Audio plays with lip-sync', async () => {
+    // Send audio and verify playback
+  });
+  
+  test('Emotion changes reflect in avatar', async () => {
+    // Test emotion changes
+  });
+  
+  test('Avatar switching works', async () => {
+    // Switch between Priya and Amit
+  });
+  
+  test('Mobile responsive layout', async () => {
+    // Test on different screen sizes
+  });
+  
+  test('WebGL fallback for unsupported browsers', async () => {
+    // Test fallback mechanism
+  });
+});
+```
+
+## 📈 Performance Monitoring
+
+```typescript
+// Monitor Unity performance
+const monitorUnityPerformance = () => {
+  if (window.performance && window.performance.memory) {
+    const memoryInfo = {
+      usedJSHeapSize: (window.performance.memory.usedJSHeapSize / 1048576).toFixed(2) + ' MB',
+      totalJSHeapSize: (window.performance.memory.totalJSHeapSize / 1048576).toFixed(2) + ' MB',
+      jsHeapSizeLimit: (window.performance.memory.jsHeapSizeLimit / 1048576).toFixed(2) + ' MB'
+    };
+    
+    console.log('Unity Memory Usage:', memoryInfo);
+  }
+};
+
+// Call every 10 seconds
+setInterval(monitorUnityPerformance, 10000);
+```
+
+Ye complete step-by-step implementation follow karke aap successfully Unity WebGL avatar integrate kar sakte hain aapke VaktaAI platform me. Main points:
+
+1. ✅ Unity files proper location pe place karo
+2. ✅ PostMessage API se communication setup karo  
+3. ✅ React component properly integrate karo
+4. ✅ TTS audio pipeline connect karo
+5. ✅ Error handling aur fallbacks implement karo
+6. ✅ Mobile responsive design ensure karo
+
+Koi specific issue aaye to batana, main help karunga! 🚀
