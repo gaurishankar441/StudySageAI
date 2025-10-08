@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import {
   Upload,
@@ -60,6 +61,9 @@ export default function DocChatView() {
   const [actionContent, setActionContent] = useState("");
   const [mobileBottomSheet, setMobileBottomSheet] = useState<'sources' | 'actions' | null>(null);
   const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
+  const [citationPreview, setCitationPreview] = useState<{source: string, excerpt: string, title: string} | null>(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -83,6 +87,46 @@ export default function DocChatView() {
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Touch gesture detection for swipe to close
+  useEffect(() => {
+    if (!isMobile) return;
+
+    let touchStartX = 0;
+    let touchStartY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    };
+
+    const handleTouchEnd = (e: TouchEvent) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+
+      // Swipe threshold (50px) and ensure horizontal swipe
+      if (Math.abs(deltaX) > 50 && Math.abs(deltaX) > Math.abs(deltaY)) {
+        // Swipe left to close actions panel (from right)
+        if (deltaX < 0 && isActionsPanelOpen) {
+          setIsActionsPanelOpen(false);
+        }
+        // Swipe right to close sources sidebar (from left)
+        if (deltaX > 0 && isSidebarOpen) {
+          setIsSidebarOpen(false);
+        }
+      }
+    };
+
+    document.addEventListener('touchstart', handleTouchStart);
+    document.addEventListener('touchend', handleTouchEnd);
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, [isMobile, isSidebarOpen, isActionsPanelOpen]);
 
   // Queries
   const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
@@ -290,7 +334,108 @@ export default function DocChatView() {
     return <FileText className="w-4 h-4" />;
   };
 
+  // Parse citations and make them clickable
+  const renderMessageWithCitations = (content: string, metadata: any) => {
+    if (!metadata?.sources) return <p className="text-sm whitespace-pre-wrap">{content}</p>;
+    
+    const parts = content.split(/(\[\d+\])/g);
+    return (
+      <p className="text-sm whitespace-pre-wrap">
+        {parts.map((part, index) => {
+          const match = part.match(/\[(\d+)\]/);
+          if (match) {
+            const citationNum = parseInt(match[1]) - 1;
+            const source = metadata.sources[citationNum];
+            if (source) {
+              return (
+                <button
+                  key={index}
+                  onClick={() => setCitationPreview({
+                    source: source.source || 'Unknown',
+                    excerpt: source.content || 'No excerpt available',
+                    title: source.title || 'Document'
+                  })}
+                  className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 rounded hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors mx-0.5"
+                  data-testid={`citation-${citationNum}`}
+                >
+                  {match[1]}
+                </button>
+              );
+            }
+          }
+          return <span key={index}>{part}</span>;
+        })}
+      </p>
+    );
+  };
+
   const selectedDocsData = documents.filter(d => selectedDocuments.includes(d.id));
+
+  // Voice recording handlers
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const recorder = new MediaRecorder(stream);
+      const audioChunks: Blob[] = [];
+
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunks.push(e.data);
+      };
+
+      recorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        await transcribeAudio(audioBlob);
+        stream.getTracks().forEach(track => track.stop());
+      };
+
+      recorder.start();
+      setMediaRecorder(recorder);
+      setIsRecording(true);
+      toast({ title: "Recording...", description: "Tap mic again to stop" });
+    } catch (error) {
+      console.error('Failed to start recording:', error);
+      toast({ title: "Error", description: "Could not access microphone", variant: "destructive" });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorder && isRecording) {
+      mediaRecorder.stop();
+      setIsRecording(false);
+      setMediaRecorder(null);
+    }
+  };
+
+  const transcribeAudio = async (audioBlob: Blob) => {
+    try {
+      const formData = new FormData();
+      formData.append('audio', audioBlob, 'recording.webm');
+      formData.append('language', user?.preferredLanguage || 'en');
+
+      const response = await fetch('/api/voice/transcribe', {
+        method: 'POST',
+        credentials: 'include',
+        body: formData,
+      });
+
+      if (!response.ok) throw new Error('Transcription failed');
+
+      const data = await response.json();
+      setMessage(data.text);
+      toast({ title: "✅ Transcribed", description: data.text.substring(0, 50) + '...' });
+    } catch (error) {
+      console.error('Transcription error:', error);
+      toast({ title: "Error", description: "Failed to transcribe audio", variant: "destructive" });
+    }
+  };
+
+  const handleVoiceInput = () => {
+    if (isRecording) {
+      stopRecording();
+    } else {
+      startRecording();
+    }
+  };
 
   const handleActionSubmit = async (actionType: ActionType, formData: any) => {
     setActionProcessing(true);
@@ -732,7 +877,7 @@ export default function DocChatView() {
                   ? "bg-purple-600 text-white" 
                   : "glass-card"
               )}>
-                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                {renderMessageWithCitations(msg.content, msg.metadata)}
                 {(msg.metadata as any)?.citations && (
                   <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
                     <p className="text-xs opacity-75">📖 Page {(msg.metadata as any).citations}</p>
@@ -815,9 +960,13 @@ export default function DocChatView() {
             <Button
               variant="ghost"
               size="icon"
+              onClick={handleVoiceInput}
               disabled={isStreaming}
               data-testid="button-voice-input"
-              className="h-11 w-11 md:h-10 md:w-10"
+              className={cn(
+                "h-11 w-11 md:h-10 md:w-10 transition-colors",
+                isRecording && "bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 animate-pulse"
+              )}
             >
               <Mic className="w-5 h-5" />
             </Button>
@@ -915,20 +1064,33 @@ export default function DocChatView() {
         </div>
       </div>
 
-      {/* Toggle Actions Panel Button - Always visible outside the panel */}
-      <Button
-        variant="ghost"
-        size="icon"
-        onClick={() => setIsActionsPanelOpen(!isActionsPanelOpen)}
-        className="fixed right-4 top-20 z-50 glass-card shadow-lg"
-        data-testid="button-toggle-actions"
-      >
-        {isActionsPanelOpen ? (
-          <ChevronRight className="w-5 h-5 text-purple-600" />
-        ) : (
-          <Sparkles className="w-5 h-5 text-purple-600" />
-        )}
-      </Button>
+      {/* Toggle Actions Panel Button - Desktop only */}
+      {!isMobile && (
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => setIsActionsPanelOpen(!isActionsPanelOpen)}
+          className="fixed right-4 top-20 z-50 glass-card shadow-lg"
+          data-testid="button-toggle-actions"
+        >
+          {isActionsPanelOpen ? (
+            <ChevronRight className="w-5 h-5 text-purple-600" />
+          ) : (
+            <Sparkles className="w-5 h-5 text-purple-600" />
+          )}
+        </Button>
+      )}
+
+      {/* Mobile FAB - Floating Action Button for Quick Actions */}
+      {isMobile && (
+        <Button
+          onClick={() => setIsActionsPanelOpen(!isActionsPanelOpen)}
+          className="fixed bottom-24 right-4 z-50 w-14 h-14 rounded-full btn-gradient shadow-2xl"
+          data-testid="button-mobile-fab"
+        >
+          <Sparkles className="w-6 h-6 text-white" />
+        </Button>
+      )}
 
       {/* Action Modal */}
       <DocChatActionModal
@@ -941,6 +1103,26 @@ export default function DocChatView() {
         streamingContent={actionContent}
         userProfile={user as any}
       />
+
+      {/* Citation Preview Modal - Mobile Optimized */}
+      <Dialog open={!!citationPreview} onOpenChange={() => setCitationPreview(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-purple-600" />
+              {citationPreview?.title || 'Citation Source'}
+            </DialogTitle>
+            <DialogDescription>
+              Source: {citationPreview?.source}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="mt-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800">
+            <p className="text-sm text-slate-700 dark:text-slate-300 whitespace-pre-wrap leading-relaxed">
+              {citationPreview?.excerpt}
+            </p>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
