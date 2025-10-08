@@ -209,60 +209,67 @@ export default function DocChatSession() {
       <div className="flex-1 glass-card rounded-xl overflow-hidden flex flex-col shadow-lg">
         {currentDoc ? (
           <>
-            <div className="p-5 border-b border-border/50 flex items-center justify-between backdrop-blur-sm bg-card/50">
-              <div className="flex items-center gap-3">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  className="btn-gradient text-white border-0"
-                  data-testid="button-prev-page"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm font-medium px-3 py-1 rounded-lg bg-gradient-subtle" data-testid="text-page-info">
-                  Page {currentPage} of {currentDoc.pages || 1}
-                </span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  className="btn-gradient text-white border-0"
-                  data-testid="button-next-page"
-                >
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+            {/* Only show PDF controls for PDF documents */}
+            {currentDoc.sourceType === 'pdf' && (
+              <div className="p-5 border-b border-border/50 flex items-center justify-between backdrop-blur-sm bg-card/50">
+                <div className="flex items-center gap-3">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                    disabled={currentPage <= 1}
+                    className="btn-gradient text-white border-0"
+                    data-testid="button-prev-page"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm font-medium px-3 py-1 rounded-lg bg-gradient-subtle" data-testid="text-page-info">
+                    Page {currentPage} of {currentDoc.pages || 1}
+                  </span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setCurrentPage(Math.min(currentDoc.pages || 1, currentPage + 1))}
+                    disabled={currentPage >= (currentDoc.pages || 1)}
+                    className="btn-gradient text-white border-0"
+                    data-testid="button-next-page"
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setZoom(Math.max(50, zoom - 25))}
+                    disabled={zoom <= 50}
+                    className="transition-all duration-200 hover:scale-105"
+                    data-testid="button-zoom-out"
+                  >
+                    <ZoomOut className="w-4 h-4" />
+                  </Button>
+                  <span className="text-sm px-3 py-1 rounded-lg bg-gradient-subtle font-medium" data-testid="text-zoom-level">{zoom}%</span>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setZoom(Math.min(200, zoom + 25))}
+                    disabled={zoom >= 200}
+                    className="transition-all duration-200 hover:scale-105"
+                    data-testid="button-zoom-in"
+                  >
+                    <ZoomIn className="w-4 h-4" />
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    className="transition-all duration-200 hover:scale-105"
+                    data-testid="button-download"
+                  >
+                    <Download className="w-4 h-4" />
+                  </Button>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setZoom(Math.max(50, zoom - 25))}
-                  className="transition-all duration-200 hover:scale-105"
-                  data-testid="button-zoom-out"
-                >
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <span className="text-sm px-3 py-1 rounded-lg bg-gradient-subtle font-medium" data-testid="text-zoom-level">{zoom}%</span>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={() => setZoom(Math.min(200, zoom + 25))}
-                  className="transition-all duration-200 hover:scale-105"
-                  data-testid="button-zoom-in"
-                >
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  className="transition-all duration-200 hover:scale-105"
-                  data-testid="button-download"
-                >
-                  <Download className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
+            )}
 
             <div className="flex-1 bg-muted/50 overflow-hidden backdrop-blur-sm">
               {currentDoc.sourceType === 'pdf' && currentDoc.fileKey ? (
