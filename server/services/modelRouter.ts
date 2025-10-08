@@ -124,31 +124,60 @@ export class IntelligentModelRouter {
   async routeQuery(query: string, context?: string): Promise<ModelRouterResult> {
     const analysis = await this.classifyQuery(query);
     
-    // Routing logic - optimized for cost vs accuracy
+    // Check which API keys are available
+    const hasGemini = !!process.env.GOOGLE_API_KEY;
+    const hasOpenAI = !!process.env.OPENAI_API_KEY;
+    const hasClaude = !!process.env.ANTHROPIC_API_KEY;
+    
+    // Routing logic - optimized for cost vs accuracy with graceful fallbacks
     if (analysis.complexity <= 2 && analysis.intent !== 'numerical_solving') {
-      // Tier 1: Gemini Flash (75% queries) - Best for simple explanations
-      console.log(`[ROUTER] ✨ Gemini Flash ($0.07/M) - ${analysis.intent} | ${analysis.subject}`);
-      return {
-        model: this.getGeminiFlash(),
-        modelName: 'gemini-1.5-flash',
-        costPerMillion: 0.07,
-        analysis
-      };
+      // Tier 1: Prefer Gemini Flash - Best for simple explanations
+      if (hasGemini) {
+        console.log(`[ROUTER] ✨ Gemini Flash ($0.07/M) - ${analysis.intent} | ${analysis.subject}`);
+        return {
+          model: this.getGeminiFlash(),
+          modelName: 'gemini-1.5-flash',
+          costPerMillion: 0.07,
+          analysis
+        };
+      }
+      // Fallback to OpenAI if Gemini not available
+      if (hasOpenAI) {
+        console.log(`[ROUTER] 🧮 GPT-4o-mini ($0.15/M) [Gemini unavailable] - ${analysis.intent} | ${analysis.subject}`);
+        return {
+          model: this.getGpt4oMini(),
+          modelName: 'gpt-4o-mini',
+          costPerMillion: 0.15,
+          analysis
+        };
+      }
     }
     
-    else if (analysis.complexity === 3 || analysis.subject === 'math' || analysis.intent === 'numerical_solving') {
+    if (analysis.complexity === 3 || analysis.subject === 'math' || analysis.intent === 'numerical_solving') {
       // Tier 2: GPT-4o-mini for moderate complexity & math
-      console.log(`[ROUTER] 🧮 GPT-4o-mini ($0.15/M) - ${analysis.intent} | ${analysis.subject}`);
-      return {
-        model: this.getGpt4oMini(),
-        modelName: 'gpt-4o-mini',
-        costPerMillion: 0.15,
-        analysis
-      };
+      if (hasOpenAI) {
+        console.log(`[ROUTER] 🧮 GPT-4o-mini ($0.15/M) - ${analysis.intent} | ${analysis.subject}`);
+        return {
+          model: this.getGpt4oMini(),
+          modelName: 'gpt-4o-mini',
+          costPerMillion: 0.15,
+          analysis
+        };
+      }
+      // Fallback to Gemini if OpenAI not available
+      if (hasGemini) {
+        console.log(`[ROUTER] ✨ Gemini Flash ($0.07/M) [OpenAI unavailable] - ${analysis.intent} | ${analysis.subject}`);
+        return {
+          model: this.getGeminiFlash(),
+          modelName: 'gemini-1.5-flash',
+          costPerMillion: 0.07,
+          analysis
+        };
+      }
     }
     
-    else {
-      // Tier 3: Claude Haiku for complex reasoning (derivations, proofs)
+    // Tier 3: Claude Haiku for complex reasoning (derivations, proofs)
+    if (hasClaude) {
       console.log(`[ROUTER] 🎯 Claude Haiku ($0.25/M) - ${analysis.intent} | ${analysis.subject}`);
       return {
         model: this.getClaudeHaiku(),
@@ -157,6 +186,30 @@ export class IntelligentModelRouter {
         analysis
       };
     }
+    
+    // Final fallback: use whatever is available
+    if (hasOpenAI) {
+      console.log(`[ROUTER] 🧮 GPT-4o-mini (fallback) - ${analysis.intent} | ${analysis.subject}`);
+      return {
+        model: this.getGpt4oMini(),
+        modelName: 'gpt-4o-mini',
+        costPerMillion: 0.15,
+        analysis
+      };
+    }
+    
+    if (hasGemini) {
+      console.log(`[ROUTER] ✨ Gemini Flash (fallback) - ${analysis.intent} | ${analysis.subject}`);
+      return {
+        model: this.getGeminiFlash(),
+        modelName: 'gemini-1.5-flash',
+        costPerMillion: 0.07,
+        analysis
+      };
+    }
+    
+    // No API keys available
+    throw new Error('No AI API keys configured. Please add at least one of: OPENAI_API_KEY, GOOGLE_API_KEY, or ANTHROPIC_API_KEY');
   }
 }
 
