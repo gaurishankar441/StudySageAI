@@ -1522,44 +1522,82 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Message handler
-      ws.on('message', async (data: Buffer) => {
+      ws.on('message', async (data: Buffer | ArrayBuffer) => {
         try {
-          const message: VoiceMessage = JSON.parse(data.toString());
-          
-          // Handle different message types
-          switch (message.type) {
-            case 'AUDIO_CHUNK': {
-              const audioMsg = message as AudioChunkMessage;
-              console.log(`[WebSocket] Received audio chunk for ${ws.sessionId} (isLast: ${audioMsg.isLast})`);
+          // Check if data is binary (audio) or text (JSON)
+          if (Buffer.isBuffer(data)) {
+            // Check if it's binary audio data (not JSON text)
+            try {
+              // Try parsing as JSON first
+              const message: VoiceMessage = JSON.parse(data.toString());
               
-              // Use cached language for performance (set during connection)
+              // If parsing succeeds, handle as JSON message
+              switch (message.type) {
+                case 'AUDIO_CHUNK': {
+                  const audioMsg = message as AudioChunkMessage;
+                  console.log(`[WebSocket] Received JSON audio chunk for ${ws.sessionId} (isLast: ${audioMsg.isLast})`);
+                  
+                  const language = ws.language || 'en';
+                  await voiceStreamService.processAudioChunk(
+                    ws,
+                    audioMsg.data,
+                    audioMsg.format,
+                    audioMsg.isLast,
+                    language
+                  );
+                  break;
+                }
+                  
+                case 'INTERRUPT':
+                  console.log(`[WebSocket] TTS interruption requested for ${ws.sessionId}`);
+                  voiceStreamService.stopTTSStream(ws);
+                  break;
+                  
+                case 'PING':
+                  ws.send(JSON.stringify({ 
+                    type: 'PONG', 
+                    timestamp: new Date().toISOString() 
+                  }));
+                  break;
+                  
+                default:
+                  console.log(`[WebSocket] Unknown message type: ${message.type}`);
+              }
+              return;
+            } catch {
+              // Not JSON - treat as binary audio
+              console.log(`[WebSocket] Received binary audio chunk for ${ws.sessionId}: ${data.length} bytes`);
+              
+              const base64Audio = data.toString('base64');
               const language = ws.language || 'en';
               
-              // Process audio chunk with STT
               await voiceStreamService.processAudioChunk(
                 ws,
-                audioMsg.data,
-                audioMsg.format,
-                audioMsg.isLast,
+                base64Audio,
+                'webm',
+                true,
                 language
               );
-              break;
+              return;
             }
-              
-            case 'INTERRUPT':
-              console.log(`[WebSocket] TTS interruption requested for ${ws.sessionId}`);
-              voiceStreamService.stopTTSStream(ws);
-              break;
-              
-            case 'PING':
-              ws.send(JSON.stringify({ 
-                type: 'PONG', 
-                timestamp: new Date().toISOString() 
-              }));
-              break;
-              
-            default:
-              console.log(`[WebSocket] Unknown message type: ${message.type}`);
+          }
+          
+          if (data instanceof ArrayBuffer) {
+            // ArrayBuffer from browser
+            console.log(`[WebSocket] Received ArrayBuffer audio for ${ws.sessionId}: ${data.byteLength} bytes`);
+            
+            const buffer = Buffer.from(data);
+            const base64Audio = buffer.toString('base64');
+            const language = ws.language || 'en';
+            
+            await voiceStreamService.processAudioChunk(
+              ws,
+              base64Audio,
+              'webm',
+              true,
+              language
+            );
+            return;
           }
         } catch (error) {
           console.error('[WebSocket] Message processing error:', error);
