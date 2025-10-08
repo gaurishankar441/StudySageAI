@@ -35,6 +35,7 @@ import {
   X,
   Clock,
   ExternalLink,
+  MessageSquare,
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
 import { cn } from "@/lib/utils";
@@ -538,225 +539,227 @@ export default function DocChatView() {
   // Upload Screen
   if (activeView === 'upload') {
     return (
-      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-950">
-        {/* Header */}
-        <div className="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <h1 className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              नमस्ते {(user as any)?.name?.split(' ')[0] || 'Student'}, Upload and chat with your documents
+      <div className="flex flex-col h-screen bg-white dark:bg-slate-950">
+        {/* Clean Header - Shepherd Style */}
+        <div className="border-b border-slate-200 dark:border-slate-800">
+          <div className="max-w-7xl mx-auto px-8 py-6">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+              Upload documents and chat with them using AI
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
-              Upload lecture notes, articles, any document, and Garima Ma'am will help you understand them
-            </p>
           </div>
         </div>
 
-        {/* Main Content */}
+        {/* Main Content - Two Column Layout */}
         <div className="flex-1 overflow-auto">
-          <div className="max-w-4xl mx-auto px-6 py-8">
-            <Tabs defaultValue="upload" className="w-full">
-              <TabsList className="grid w-full grid-cols-2 glass-card">
-                <TabsTrigger value="upload" data-testid="tab-upload">Upload</TabsTrigger>
-                <TabsTrigger value="previous" data-testid="tab-previous">Previous Sources</TabsTrigger>
-              </TabsList>
+          <div className="max-w-7xl mx-auto px-8 py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              
+              {/* Left Column - Add Source */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                    <Sparkles className="w-5 h-5 text-purple-600" />
+                    Add Source
+                  </h2>
+                </div>
 
-              <TabsContent value="upload" className="mt-6 space-y-6">
-                {/* Supported Formats */}
-                <div className="text-center">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">VaktaAI now supports</p>
-                  <div className="flex justify-center gap-4 text-slate-700 dark:text-slate-300">
-                    <div className="flex flex-col items-center">
-                      <FileText className="w-8 h-8 mb-1" />
-                      <span className="text-xs">PDF</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <FileText className="w-8 h-8 mb-1" />
-                      <span className="text-xs">Docs</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <FileText className="w-8 h-8 mb-1" />
-                      <span className="text-xs">PPT</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <Video className="w-8 h-8 mb-1" />
-                      <span className="text-xs">YouTube</span>
-                    </div>
-                    <div className="flex flex-col items-center">
-                      <Globe className="w-8 h-8 mb-1" />
-                      <span className="text-xs">Web</span>
-                    </div>
+                {/* File Upload - Clean Dropzone */}
+                <div className="border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-xl p-12 text-center hover:border-purple-400 dark:hover:border-purple-600 transition-colors">
+                  <Upload className="w-12 h-12 mx-auto mb-4 text-slate-400" />
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                    Drop files or click to upload
+                  </p>
+                  <p className="text-xs text-slate-500 dark:text-slate-500 mb-4">
+                    PDF, DOCX, PPTX up to 200MB
+                  </p>
+                  <ObjectUploader
+                    maxFileSize={50 * 1024 * 1024}
+                    onGetUploadParameters={async (file) => {
+                      const response = await fetch('/api/documents/upload', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                          fileName: file.name,
+                          fileType: file.type,
+                          fileSize: file.size
+                        })
+                      });
+                      const { uploadURL } = await response.json();
+                      return { method: "PUT" as const, url: uploadURL };
+                    }}
+                    onComplete={(result) => {
+                      const file = result.meta as any;
+                      uploadDocumentMutation.mutate({ 
+                        uploadURL: result.uploadURL as string, 
+                        fileName: file.name, 
+                        fileSize: file.size, 
+                        fileType: file.type 
+                      });
+                    }}
+                  >
+                    <Button className="bg-purple-600 hover:bg-purple-700 text-white" data-testid="button-browse-files">
+                      <Upload className="w-4 h-4 mr-2" />
+                      Browse Files
+                    </Button>
+                  </ObjectUploader>
+                </div>
+
+                <div className="text-center text-slate-500 dark:text-slate-500 text-sm font-medium">OR</div>
+
+                {/* URL Inputs - Cleaner Design */}
+                <div className="space-y-3">
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="outline" 
+                      className="flex-shrink-0 border-slate-300 dark:border-slate-700"
+                      onClick={() => {
+                        const url = prompt("Paste YouTube URL:");
+                        if (url) {
+                          setYoutubeUrl(url);
+                          addUrlMutation.mutate({ url, title: 'YouTube Video' });
+                        }
+                      }}
+                      data-testid="button-add-youtube"
+                    >
+                      <Youtube className="w-4 h-4 mr-2 text-red-600" />
+                      Paste YouTube URL
+                    </Button>
+                    
+                    <Button 
+                      variant="outline"
+                      className="flex-shrink-0 border-slate-300 dark:border-slate-700"
+                      onClick={() => {
+                        const url = prompt("Paste Website URL:");
+                        if (url) {
+                          setWebsiteUrl(url);
+                          addUrlMutation.mutate({ url, title: 'Web Article' });
+                        }
+                      }}
+                      data-testid="button-add-website"
+                    >
+                      <Globe className="w-4 h-4 mr-2 text-blue-600" />
+                      Paste website URL
+                    </Button>
                   </div>
                 </div>
 
-                {/* File Upload */}
-                <Card className="p-8 glass-card border-dashed border-2 border-purple-200 dark:border-purple-800">
-                  <div className="text-center">
-                    <Upload className="w-12 h-12 mx-auto mb-4 text-purple-600" />
-                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
-                      Upload PDFs, PPTx, Docx, MP3, MP4 or Paste a URL
-                    </p>
-                    <ObjectUploader
-                      maxFileSize={50 * 1024 * 1024}
-                      onGetUploadParameters={async (file) => {
-                        const response = await fetch('/api/documents/upload', {
-                          method: 'POST',
-                          headers: { 'Content-Type': 'application/json' },
-                          credentials: 'include',
-                          body: JSON.stringify({
-                            fileName: file.name,
-                            fileType: file.type,
-                            fileSize: file.size
-                          })
-                        });
-                        const { uploadURL } = await response.json();
-                        return { method: "PUT" as const, url: uploadURL };
-                      }}
-                      onComplete={(result) => {
-                        const file = result.meta as any;
-                        uploadDocumentMutation.mutate({ 
-                          uploadURL: result.uploadURL as string, 
-                          fileName: file.name, 
-                          fileSize: file.size, 
-                          fileType: file.type 
-                        });
-                      }}
-                    >
-                      <Button variant="outline" data-testid="button-browse-files">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Browse Files
-                      </Button>
-                    </ObjectUploader>
-                  </div>
-                </Card>
-
-                {/* YouTube URL */}
-                <Card className="p-6 glass-card">
-                  <div className="flex gap-3">
-                    <Youtube className="w-5 h-5 text-red-600 mt-2" />
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Paste YouTube URL (e.g., https://youtube.com/watch?v=...)"
-                        value={youtubeUrl}
-                        onChange={(e) => setYoutubeUrl(e.target.value)}
-                        className="mb-2"
-                        data-testid="input-youtube-url"
-                      />
-                      <Button 
-                        onClick={() => addUrlMutation.mutate({ url: youtubeUrl, title: 'YouTube Video' })}
-                        disabled={!youtubeUrl || addUrlMutation.isPending}
-                        size="sm"
-                        data-testid="button-add-youtube"
-                      >
-                        {addUrlMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add YouTube Video'}
-                      </Button>
+                {/* All Documents Grid */}
+                <div className="mt-8">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center justify-between">
+                    <span>YOUR DOCUMENTS</span>
+                    <span className="text-slate-500">{documents.length} files</span>
+                  </h3>
+                  
+                  {documentsLoading ? (
+                    <div className="text-center py-12">
+                      <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
                     </div>
-                  </div>
-                </Card>
-
-                {/* Web URL */}
-                <Card className="p-6 glass-card">
-                  <div className="flex gap-3">
-                    <Globe className="w-5 h-5 text-blue-600 mt-2" />
-                    <div className="flex-1">
-                      <Input
-                        placeholder="Paste Website URL (articles, blogs, etc.)"
-                        value={websiteUrl}
-                        onChange={(e) => setWebsiteUrl(e.target.value)}
-                        className="mb-2"
-                        data-testid="input-website-url"
-                      />
-                      <Button 
-                        onClick={() => addUrlMutation.mutate({ url: websiteUrl, title: 'Web Article' })}
-                        disabled={!websiteUrl || addUrlMutation.isPending}
-                        size="sm"
-                        data-testid="button-add-website"
-                      >
-                        {addUrlMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add Website'}
-                      </Button>
+                  ) : documents.length === 0 ? (
+                    <div className="text-center py-12 text-slate-400">
+                      <FileText className="w-12 h-12 mx-auto mb-3 opacity-30" />
+                      <p className="text-sm">No documents yet. Upload some to get started!</p>
                     </div>
-                  </div>
-                </Card>
-              </TabsContent>
-
-              <TabsContent value="previous" className="mt-6">
-                {documentsLoading ? (
-                  <div className="text-center py-12">
-                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
-                  </div>
-                ) : documents.length === 0 ? (
-                  <div className="text-center py-12 text-slate-500">
-                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                    <p>No documents yet. Upload some to get started!</p>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                    {documents.map(doc => (
-                      <Card
-                        key={doc.id}
-                        className={cn(
-                          "p-4 cursor-pointer transition-all hover:scale-105 glass-card",
-                          selectedDocuments.includes(doc.id) && "ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/30"
-                        )}
-                        onClick={() => toggleDocumentSelection(doc.id)}
-                        data-testid={`card-document-${doc.id}`}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          {getDocumentIcon(doc)}
+                  ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                      {documents.map(doc => (
+                        <div
+                          key={doc.id}
+                          className={cn(
+                            "relative p-4 rounded-lg border cursor-pointer transition-all hover:shadow-md",
+                            selectedDocuments.includes(doc.id) 
+                              ? "border-purple-500 bg-purple-50 dark:bg-purple-950/30 shadow-sm" 
+                              : "border-slate-200 dark:border-slate-800 hover:border-purple-300 dark:hover:border-purple-700"
+                          )}
+                          onClick={() => toggleDocumentSelection(doc.id)}
+                          data-testid={`card-document-${doc.id}`}
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            {getDocumentIcon(doc)}
                           {selectedDocuments.includes(doc.id) && (
                             <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">
                               ✓
                             </div>
                           )}
                         </div>
-                        <p className="text-sm font-medium line-clamp-2 mb-1" title={doc.title}>
-                          {doc.title}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          {doc.sourceType === 'youtube' ? 'Video' : doc.sourceType === 'web' ? 'Article' : 'Document'}
-                        </p>
-                      </Card>
-                    ))}
-                  </div>
-                )}
-              </TabsContent>
-            </Tabs>
-          </div>
-        </div>
-
-        {/* Footer with Selected Docs */}
-        {selectedDocuments.length > 0 && (
-          <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4">
-            <div className="max-w-4xl mx-auto flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <span className="text-sm font-medium">Selected ({selectedDocuments.length}):</span>
-                <div className="flex gap-2">
-                  {selectedDocsData.slice(0, 3).map(doc => (
-                    <div key={doc.id} className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded text-xs">
-                      {getDocumentIcon(doc)}
-                      <span className="max-w-[100px] truncate">{doc.title}</span>
+                          <p className="text-sm font-medium line-clamp-2 mb-1" title={doc.title}>
+                            {doc.title}
+                          </p>
+                          <p className="text-xs text-slate-500">
+                            {doc.sourceType === 'youtube' ? 'Video' : doc.sourceType === 'web' ? 'Article' : 'Document'}
+                          </p>
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                  {selectedDocuments.length > 3 && (
-                    <span className="text-xs text-slate-500">+{selectedDocuments.length - 3} more</span>
                   )}
                 </div>
               </div>
-              <Button 
-                onClick={handleStartChat}
-                disabled={startChatMutation.isPending}
-                className="btn-gradient"
-                data-testid="button-start-chat"
-              >
-                {startChatMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                ) : (
-                  <Sparkles className="w-4 h-4 mr-2" />
-                )}
-                Start Chat with Garima
-              </Button>
+
+              {/* Right Column - Selected Documents */}
+              <div className="lg:col-span-1">
+                <div className="sticky top-8">
+                  <h3 className="text-sm font-semibold text-slate-900 dark:text-white mb-4 flex items-center gap-2">
+                    <FileText className="w-4 h-4" />
+                    Selected Documents
+                    {selectedDocuments.length > 0 && (
+                      <span className="ml-auto text-xs bg-purple-100 dark:bg-purple-900/30 text-purple-600 dark:text-purple-400 px-2 py-0.5 rounded-full">
+                        {selectedDocuments.length}
+                      </span>
+                    )}
+                  </h3>
+                  
+                  {selectedDocuments.length === 0 ? (
+                    <div className="text-center py-8 border-2 border-dashed border-slate-200 dark:border-slate-800 rounded-lg">
+                      <p className="text-sm text-slate-400">No documents selected</p>
+                    </div>
+                  ) : (
+                    <>
+                      <div className="space-y-2 mb-6">
+                        {selectedDocsData.map(doc => (
+                          <div 
+                            key={doc.id} 
+                            className="flex items-center gap-2 p-2 bg-slate-50 dark:bg-slate-900 rounded-lg border border-slate-200 dark:border-slate-800"
+                          >
+                            {getDocumentIcon(doc)}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-xs font-medium truncate">{doc.title}</p>
+                              <p className="text-xs text-slate-500">
+                                {doc.sourceType === 'youtube' ? 'Video' : doc.sourceType === 'web' ? 'Article' : 'Document'}
+                              </p>
+                            </div>
+                            <button
+                              onClick={() => toggleDocumentSelection(doc.id)}
+                              className="text-slate-400 hover:text-red-500 transition-colors"
+                              aria-label={`Remove ${doc.title}`}
+                              data-testid={`button-remove-doc-${doc.id}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      
+                      <Button 
+                        onClick={handleStartChat}
+                        disabled={startChatMutation.isPending}
+                        className="w-full bg-purple-600 hover:bg-purple-700 text-white py-6 text-base font-semibold"
+                        data-testid="button-start-chat"
+                      >
+                        {startChatMutation.isPending ? (
+                          <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                        ) : (
+                          <MessageSquare className="w-5 h-5 mr-2" />
+                        )}
+                        Start Chat
+                      </Button>
+                    </>
+                  )}
+                </div>
+              </div>
+
             </div>
           </div>
-        )}
+        </div>
       </div>
     );
   }
