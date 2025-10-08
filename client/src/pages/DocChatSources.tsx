@@ -174,7 +174,7 @@ export default function DocChatSources() {
           <p className="text-muted-foreground">Upload documents and chat with them using AI</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
           {/* Add Source Section */}
           <div className="lg:col-span-1">
             <div className="glass-card rounded-xl p-8">
