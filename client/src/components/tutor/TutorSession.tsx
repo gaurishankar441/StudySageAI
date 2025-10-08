@@ -32,6 +32,8 @@ import {
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
+import VoiceControl from "./VoiceControl";
+import { Phone, PhoneOff } from "lucide-react";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -69,6 +71,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [shouldAutoPlayTTS, setShouldAutoPlayTTS] = useState(false);
   const [lessonPlanCollapsed, setLessonPlanCollapsed] = useState(false);
   const [quickToolsCollapsed, setQuickToolsCollapsed] = useState(false);
+  const [voiceMode, setVoiceMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -898,49 +901,97 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         </div>
 
         {/* Input Area */}
-        <div className="p-6 border-t border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5">
-          <form onSubmit={handleSubmit} className="flex gap-3">
-            <Input
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              placeholder={isRecording ? "Recording..." : transcribeMutation.isPending ? "Transcribing..." : "Type your response or question..."}
-              disabled={isStreaming || isRecording || transcribeMutation.isPending}
-              className="flex-1 h-12 text-base border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
-              data-testid="input-chat-message"
+        <div className="p-6 border-t border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5 space-y-4">
+          {/* Voice Mode Toggle */}
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-muted-foreground">
+              {voiceMode ? "Voice Conversation Mode" : "Text Input Mode"}
+            </p>
+            <Button
+              type="button"
+              variant={voiceMode ? "default" : "outline"}
+              size="sm"
+              onClick={() => setVoiceMode(!voiceMode)}
+              className={voiceMode ? "btn-gradient" : ""}
+              data-testid="button-toggle-voice-mode"
+            >
+              {voiceMode ? (
+                <>
+                  <Phone className="w-4 h-4 mr-2" />
+                  Voice On
+                </>
+              ) : (
+                <>
+                  <PhoneOff className="w-4 h-4 mr-2" />
+                  Voice Off
+                </>
+              )}
+            </Button>
+          </div>
+
+          {/* Conditional Input - Voice or Text */}
+          {voiceMode ? (
+            <VoiceControl
+              chatId={chatId}
+              onTranscription={(text) => {
+                // Auto-send voice transcription as message
+                setMessage(text);
+                setTimeout(() => {
+                  const submitEvent = new Event('submit', { bubbles: true, cancelable: true });
+                  const formElement = document.querySelector('form');
+                  if (formElement && text.trim()) {
+                    formElement.dispatchEvent(submitEvent);
+                  }
+                }, 100);
+              }}
+              disabled={isStreaming}
             />
-            <Button 
-              type="submit" 
-              disabled={!message.trim() || isStreaming || isRecording}
-              className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
-              data-testid="button-send-message"
-            >
-              <Send className="w-5 h-5" />
-            </Button>
-            <Button 
-              type="button" 
-              variant={isRecording ? "destructive" : "outline"}
-              disabled={isStreaming || transcribeMutation.isPending}
-              onClick={isRecording ? stopRecording : startRecording}
-              data-testid="button-voice-input"
-              className={`h-12 px-6 transition-all duration-200 ${isRecording ? "animate-pulse shadow-lg" : "shadow-md hover:shadow-lg"}`}
-            >
-              <Mic className="w-5 h-5" />
-            </Button>
-          </form>
-          <p className="text-xs text-muted-foreground mt-3">
-            {isRecording ? (
-              <span className="text-destructive font-medium flex items-center gap-2">
-                <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
-                Recording... Click mic to stop
-              </span>
-            ) : transcribeMutation.isPending ? (
-              <span className="text-primary font-medium">
-                Transcribing your voice...
-              </span>
-            ) : (
-              "Press Enter to send • Click mic for voice input"
-            )}
-          </p>
+          ) : (
+            <>
+              <form onSubmit={handleSubmit} className="flex gap-3">
+                <Input
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  placeholder={isRecording ? "Recording..." : transcribeMutation.isPending ? "Transcribing..." : "Type your response or question..."}
+                  disabled={isStreaming || isRecording || transcribeMutation.isPending}
+                  className="flex-1 h-12 text-base border-2 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all duration-200"
+                  data-testid="input-chat-message"
+                />
+                <Button 
+                  type="submit" 
+                  disabled={!message.trim() || isStreaming || isRecording}
+                  className="h-12 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  data-testid="button-send-message"
+                >
+                  <Send className="w-5 h-5" />
+                </Button>
+                <Button 
+                  type="button" 
+                  variant={isRecording ? "destructive" : "outline"}
+                  disabled={isStreaming || transcribeMutation.isPending}
+                  onClick={isRecording ? stopRecording : startRecording}
+                  data-testid="button-voice-input"
+                  className={`h-12 px-6 transition-all duration-200 ${isRecording ? "animate-pulse shadow-lg" : "shadow-md hover:shadow-lg"}`}
+                >
+                  <Mic className="w-5 h-5" />
+                </Button>
+              </form>
+              <p className="text-xs text-muted-foreground mt-3">
+                {isRecording ? (
+                  <span className="text-destructive font-medium flex items-center gap-2">
+                    <span className="w-2 h-2 bg-destructive rounded-full animate-pulse" />
+                    Recording... Click mic to stop
+                  </span>
+                ) : transcribeMutation.isPending ? (
+                  <span className="text-primary font-medium">
+                    Transcribing your voice...
+                  </span>
+                ) : (
+                  "Press Enter to send • Click mic for voice input"
+                )}
+              </p>
+            </>
+          )}
         </div>
       </div>
 
