@@ -14,6 +14,7 @@ import { SessionContextManager } from '../services/SessionContextManager';
 import { DynamicPromptEngine } from '../services/DynamicPromptEngine';
 import { ResponseValidator } from '../services/ResponseValidator';
 import { performanceOptimizer, metricsTracker } from '../services/PerformanceOptimizer';
+import type { IntentResult } from '../types/intents';
 
 // Initialize new services
 const languageDetector = new LanguageDetectionEngine();
@@ -820,10 +821,15 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
     }
     
     // 🔥 STEP 3: INTENT CLASSIFICATION + EMOTION DETECTION
-    const intent = intentClassifier.classifyIntent(query);
-    const emotionResult = emotionDetector.detectEmotion(query, sessionCtx?.conversationHistory || []);
+    const intent = await intentClassifier.classify(query, {
+      currentPhase: session.currentPhase,
+      lastAIMessage: undefined, // TODO: Get from chat messages
+      currentTopic: session.topic,
+      isInPracticeMode: session.currentPhase === 'practice'
+    });
+    const emotionResult = await emotionDetector.detectEmotion(query, []);
     
-    console.log(`[STREAM INTENT] ${intent.type} (${(intent.confidence * 100).toFixed(0)}%) | EMOTION: ${emotionResult.emotion}`);
+    console.log(`[STREAM INTENT] ${intent.intent} (${(intent.confidence * 100).toFixed(0)}%) | EMOTION: ${emotionResult.emotion}`);
     
     // Add emotion detection to session context
     await sessionContextManager.addEmotionDetection(
@@ -843,32 +849,24 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
     }
     
     // 🔥 STEP 4: GENERATE DYNAMIC PROMPT USING MULTI-FACTOR ANALYSIS
-    const systemPrompt = await dynamicPromptEngine.generatePrompt({
-      language: detectedLang,
-      emotion: emotionResult.emotion,
-      phase: session.currentPhase,
-      intent: intent.type,
-      sessionContext: sessionCtx,
-      userProfile: {
-        firstName: session.profileSnapshot?.firstName || 'Student',
-        examTarget: session.profileSnapshot?.examTarget || 'General',
-        currentClass: session.profileSnapshot?.currentClass || 'Class 12',
-        preferredLanguage: session.profileSnapshot?.preferredLanguage || 'english'
-      },
-      tutorPersona: persona,
+    const promptResult = dynamicPromptEngine.generateSystemPrompt({
+      detectedLanguage: detectedLang,
+      preferredLanguage: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+      languageConfidence: langDetection?.confidence || 0.5,
+      currentEmotion: emotionResult.emotion,
+      emotionConfidence: emotionResult.confidence,
+      emotionalStability: sessionCtx?.emotionalHistory && sessionCtx.emotionalHistory.length > 0 ? 
+        (sessionCtx.emotionalHistory.filter(e => e.emotion === emotionResult.emotion).length / sessionCtx.emotionalHistory.length) : 0.5,
       subject: session.subject,
       topic: session.topic,
-      level: session.level,
-      progress: session.progress || 0,
-      adaptiveMetrics: session.adaptiveMetrics || {
-        diagnosticScore: 0,
-        checkpointsPassed: 0,
-        hintsUsed: 0,
-        misconceptions: [],
-        strongConcepts: []
-      }
+      level: session.level || 'beginner',
+      currentPhase: session.currentPhase,
+      intent: intent.intent,
+      misconceptions: session.adaptiveMetrics?.misconceptions || [],
+      strongConcepts: session.adaptiveMetrics?.strongConcepts || []
     });
     
+    const systemPrompt = promptResult.systemPrompt;
     console.log(`[STREAM PROMPT] Generated ${systemPrompt.length} chars for ${detectedLang} | ${emotionResult.emotion} | ${session.currentPhase}`);
     
     // Set up SSE
@@ -890,7 +888,7 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
         content: query,
         tool: null,
         metadata: {
-          intent: intent.type,
+          intent: intent.intent,
           intentConfidence: intent.confidence,
           emotion: emotionResult.emotion,
           emotionConfidence: emotionResult.confidence,
