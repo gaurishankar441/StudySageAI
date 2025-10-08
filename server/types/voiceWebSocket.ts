@@ -134,6 +134,8 @@ export interface VoiceWebSocketClient extends WebSocket {
   userId?: string;
   chatId?: string;
   sessionId?: string;
+  language?: 'hi' | 'en'; // Cached from chat for performance
+  personaId?: string; // Cached from session for persona-based TTS
   isAlive?: boolean;
   audioBuffer?: Buffer[];
   isTTSActive?: boolean;

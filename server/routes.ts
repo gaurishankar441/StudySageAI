@@ -14,9 +14,10 @@ import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
 import { uploadLimiter, aiLimiter } from "./middleware/security";
-import type { VoiceWebSocketClient, VoiceMessage } from "./types/voiceWebSocket";
+import type { VoiceWebSocketClient, VoiceMessage, AudioChunkMessage } from "./types/voiceWebSocket";
 import { parse as parseUrl } from 'url';
 import { parse as parseQuery } from 'querystring';
+import { voiceStreamService } from "./services/voiceStreamService";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1465,6 +1466,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ws.userId = authenticatedUserId;
       ws.chatId = chatId;
       ws.sessionId = `voice_${chatId}_${Date.now()}`;
+      ws.language = (chat.language === 'hi' ? 'hi' : 'en') as 'hi' | 'en'; // Cache language for performance
+      ws.personaId = 'priya'; // Default persona, will be updated based on session
       ws.isAlive = true;
       ws.audioBuffer = [];
       ws.isTTSActive = false;
@@ -1499,15 +1502,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // Handle different message types
           switch (message.type) {
-            case 'AUDIO_CHUNK':
-              // Will be implemented in voiceStreamService
-              console.log(`[WebSocket] Received audio chunk for ${ws.sessionId}`);
+            case 'AUDIO_CHUNK': {
+              const audioMsg = message as AudioChunkMessage;
+              console.log(`[WebSocket] Received audio chunk for ${ws.sessionId} (isLast: ${audioMsg.isLast})`);
+              
+              // Use cached language for performance (set during connection)
+              const language = ws.language || 'en';
+              
+              // Process audio chunk with STT
+              await voiceStreamService.processAudioChunk(
+                ws,
+                audioMsg.data,
+                audioMsg.format,
+                audioMsg.isLast,
+                language
+              );
               break;
+            }
               
             case 'INTERRUPT':
               console.log(`[WebSocket] TTS interruption requested for ${ws.sessionId}`);
-              ws.isTTSActive = false;
-              // Stop any ongoing TTS streaming
+              voiceStreamService.stopTTSStream(ws);
               break;
               
             case 'PING':
