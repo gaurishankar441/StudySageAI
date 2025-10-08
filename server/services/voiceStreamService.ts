@@ -17,6 +17,7 @@ import { performanceOptimizer, metricsTracker } from './PerformanceOptimizer';
 import { hintService } from './hintService';
 import { ttsCacheService } from './ttsCacheService';
 import { audioCompression } from './audioCompression';
+import { ttsMetrics } from './ttsMetrics';
 
 // Initialize AI Tutor services
 const languageDetector = new LanguageDetectionEngine();
@@ -258,14 +259,29 @@ export class VoiceStreamService {
           // 🚀 PHASE 2.2: Compress audio before sending (if beneficial)
           let finalAudioData: string;
           let compressed = false;
+          let compressedSize = 0;
           
           if (audioCompression.shouldCompress(audioBuffer.length)) {
             const compressionResult = await audioCompression.compress(audioBuffer);
             finalAudioData = compressionResult.compressed.toString('base64');
             compressed = true;
+            compressedSize = compressionResult.compressedSize;
           } else {
             finalAudioData = audioBuffer.toString('base64');
           }
+          
+          // 🚀 PHASE 2.4: Record metrics
+          ttsMetrics.record({
+            sentence,
+            language,
+            generationTime: genTime,
+            cached,
+            compressed,
+            audioSize: audioBuffer.length,
+            compressedSize: compressed ? compressedSize : undefined,
+            sequence: sequenceNumber,
+            sessionId: ws.sessionId,
+          });
           
           // 🔥 FIX #1: Wrap in proper data field format
           const ttsMsg = {
