@@ -610,11 +610,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // Text-to-speech endpoint (Sarvam AI primary, AWS Polly fallback)
+  // Text-to-speech endpoint (Enhanced with TTSSanitizer, emotion, prosody, Garima voice)
   app.post('/api/tutor/tts', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
-      const { text, language = 'en' } = req.body;
+      const { text, language = 'en', emotion = 'friendly', intent, personaId = 'garima' } = req.body;
 
       if (!text) {
         return res.status(400).json({ message: "No text provided" });
@@ -626,9 +626,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       console.log(`Generating speech for user ${userId}: ${text.substring(0, 50)}...`);
 
-      // Use AWS Polly TTS (reliable, regional support, neural voices)
-      const { voiceService } = await import('./services/voiceService');
-      const audioBuffer = await voiceService.synthesizeSpeech(text, language === 'hi' ? 'hi' : 'en');
+      // Use Enhanced Voice Service with all features (TTSSanitizer, math, Hinglish, prosody, Garima voice)
+      const { enhancedVoiceService } = await import('./services/enhancedVoiceService');
+      const audioBuffer = await enhancedVoiceService.synthesize(text, {
+        language: language === 'hi' ? 'hi' : 'en',
+        emotion: emotion || 'friendly',
+        intent,
+        personaId: personaId || 'garima',
+        enableMathSpeech: true,
+        enablePauses: true,
+        enableEmphasis: true
+      });
 
       // Send audio response
       res.setHeader('Content-Type', 'audio/mpeg');
