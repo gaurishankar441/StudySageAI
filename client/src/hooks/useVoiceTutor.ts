@@ -8,6 +8,7 @@ type WSMessageType =
   | 'TTS_CHUNK' 
   | 'TTS_START' 
   | 'TTS_END'
+  | 'TTS_SKIP'       // PHASE 1: Skip failed TTS chunk
   | 'INTERRUPT' 
   | 'SESSION_STATE' 
   | 'ERROR' 
@@ -60,10 +61,16 @@ export function useVoiceTutor({
   const audioContextRef = useRef<AudioContext | null>(null);
   const audioQueueRef = useRef<AudioBuffer[]>([]);
   const isPlayingRef = useRef(false);
+  const currentAudioSourceRef = useRef<AudioBufferSourceNode | null>(null); // 🔥 Track current playing source
   const reconnectTimeoutRef = useRef<NodeJS.Timeout>();
   const reconnectAttemptsRef = useRef(0);
   const shouldReconnectRef = useRef(true);
   const { toast } = useToast();
+
+  // 🚀 PHASE 1: Sequence-based TTS queue for out-of-order handling
+  const ttsSequenceQueueRef = useRef<Map<number, AudioBuffer>>(new Map());
+  const nextExpectedSequenceRef = useRef(0);
+  const skippedSequencesRef = useRef<Set<number>>(new Set());
 
   // Get WebSocket URL
   const getWsUrl = useCallback(() => {
@@ -96,8 +103,12 @@ export function useVoiceTutor({
     source.buffer = audioBuffer;
     source.connect(audioContextRef.current.destination);
     
+    // 🔥 Track current playing source for interruption/reset
+    currentAudioSourceRef.current = source;
+    
     source.onended = () => {
       isPlayingRef.current = false;
+      currentAudioSourceRef.current = null; // Clear reference when done
       
       if (audioQueueRef.current.length > 0) {
         playNextAudio();
@@ -109,20 +120,64 @@ export function useVoiceTutor({
     source.start();
   }, []);
 
-  // Handle TTS audio chunk
-  const handleTTSChunk = useCallback(async (audioData: ArrayBuffer) => {
+  // 🚀 PHASE 1: Process sequence-based TTS queue (handles out-of-order chunks)
+  const processSequenceQueue = useCallback(() => {
+    // Check if we have the next expected chunk (or it was skipped)
+    while (
+      ttsSequenceQueueRef.current.has(nextExpectedSequenceRef.current) ||
+      skippedSequencesRef.current.has(nextExpectedSequenceRef.current)
+    ) {
+      const seq = nextExpectedSequenceRef.current;
+      
+      if (skippedSequencesRef.current.has(seq)) {
+        // Skip this sequence - TTS generation failed
+        console.log(`[STREAMING TTS] ⏭️ Skipping sequence ${seq}`);
+        skippedSequencesRef.current.delete(seq);
+      } else {
+        // Play this chunk
+        const buffer = ttsSequenceQueueRef.current.get(seq)!;
+        audioQueueRef.current.push(buffer);
+        ttsSequenceQueueRef.current.delete(seq);
+        console.log(`[STREAMING TTS] ▶️ Queued sequence ${seq}`);
+      }
+      
+      nextExpectedSequenceRef.current++;
+    }
+    
+    // Start playback if not already playing
+    playNextAudio();
+  }, [playNextAudio]);
+
+  // Handle TTS audio chunk with sequence number
+  const handleTTSChunk = useCallback(async (audioData: ArrayBuffer, sequence?: number) => {
     if (!audioContextRef.current) {
       audioContextRef.current = new AudioContext();
     }
 
     try {
       const audioBuffer = await audioContextRef.current.decodeAudioData(audioData.slice(0));
-      audioQueueRef.current.push(audioBuffer);
-      playNextAudio();
+      
+      if (sequence !== undefined) {
+        // 🚀 PHASE 1: Sequence-based handling
+        console.log(`[STREAMING TTS] 📥 Received chunk with sequence ${sequence}`);
+        ttsSequenceQueueRef.current.set(sequence, audioBuffer);
+        processSequenceQueue();
+      } else {
+        // Legacy: No sequence number, play immediately
+        audioQueueRef.current.push(audioBuffer);
+        playNextAudio();
+      }
     } catch (error) {
       console.error('[VOICE] Audio decode error:', error);
     }
-  }, [playNextAudio]);
+  }, [playNextAudio, processSequenceQueue]);
+
+  // Handle TTS skip message
+  const handleTTSSkip = useCallback((sequence: number) => {
+    console.log(`[STREAMING TTS] ⏭️ Marking sequence ${sequence} as skipped`);
+    skippedSequencesRef.current.add(sequence);
+    processSequenceQueue();
+  }, [processSequenceQueue]);
 
   // Handle WebSocket messages
   const handleMessage = useCallback(async (event: MessageEvent) => {
@@ -147,9 +202,66 @@ export function useVoiceTutor({
           onTranscription?.(message.data.text);
           break;
 
+        case 'TTS_CHUNK': {
+          // 🚀 PHASE 1: Handle sequence-based TTS chunks (new format)
+          // Also support legacy format for backward compatibility
+          let audioDataB64: string | undefined;
+          let sequence: number | undefined;
+          let isLast = false;
+          
+          if (message.data && typeof message.data === 'object') {
+            // New format: { type, data: { sequence, data, text, isLast } }
+            audioDataB64 = message.data.data;
+            sequence = message.data.sequence;
+            isLast = message.data.isLast;
+          } else if (message.data && typeof message.data === 'string') {
+            // Legacy format: { type, data: "base64..." }
+            audioDataB64 = message.data;
+          }
+          
+          if (audioDataB64) {
+            const audioData = Uint8Array.from(atob(audioDataB64), c => c.charCodeAt(0));
+            await handleTTSChunk(audioData.buffer, sequence);
+            
+            if (isLast) {
+              console.log('[STREAMING TTS] ✅ Last chunk received');
+            }
+          }
+          break;
+        }
+
+        case 'TTS_SKIP': {
+          // 🚀 PHASE 1: Handle skipped TTS chunks
+          if (message.data && typeof message.data === 'object') {
+            const { sequence, reason } = message.data;
+            console.log(`[STREAMING TTS] ⏭️ Skipping sequence ${sequence}: ${reason}`);
+            handleTTSSkip(sequence);
+          }
+          break;
+        }
+
         case 'TTS_START':
           setState(prev => ({ ...prev, isSpeaking: true }));
           onTTSStart?.();
+          
+          // 🔥 CRITICAL FIX: Stop currently playing audio source to prevent overlap
+          if (currentAudioSourceRef.current) {
+            try {
+              currentAudioSourceRef.current.stop();
+              currentAudioSourceRef.current.disconnect();
+              currentAudioSourceRef.current = null;
+            } catch (e) {
+              // Source may have already ended, ignore error
+            }
+          }
+          
+          // 🔥 CRITICAL: Fully reset sequence tracking AND audio queue for new TTS session
+          // This handles fallback from realtime to legacy correctly
+          nextExpectedSequenceRef.current = 0;
+          ttsSequenceQueueRef.current.clear();
+          skippedSequencesRef.current.clear();
+          audioQueueRef.current = []; // Clear pending audio to prevent mixing old/new
+          isPlayingRef.current = false; // Reset playback state
           break;
 
         case 'TTS_END':
@@ -182,7 +294,7 @@ export function useVoiceTutor({
     } catch (error) {
       console.error('[VOICE] Message parse error:', error);
     }
-  }, [handleTTSChunk, onTranscription, onTTSStart, onTTSEnd, onError, toast]);
+  }, [handleTTSChunk, handleTTSSkip, onTranscription, onTTSStart, onTTSEnd, onError, toast]);
 
   // Connect to WebSocket
   const connect = useCallback(() => {

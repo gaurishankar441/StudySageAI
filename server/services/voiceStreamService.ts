@@ -173,6 +173,128 @@ export class VoiceStreamService {
   }
 
   /**
+   * 🚀 PHASE 1: Stream TTS chunks with REAL-TIME sentence-by-sentence generation
+   * Detects sentence boundaries and generates TTS in parallel for <1.5s latency
+   */
+  async streamTTSChunksRealtime(
+    ws: VoiceWebSocketClient,
+    text: string,
+    language: 'hi' | 'en',
+    emotion?: string,
+    intent?: string,
+    personaId?: string
+  ): Promise<void> {
+    try {
+      console.log(`[STREAMING TTS] 🚀 Real-time sentence-by-sentence TTS starting...`);
+      
+      // Sentence boundary regex (Hindi + English)
+      const sentenceBoundary = /[।.!?]\s+|[।.!?]$/;
+      
+      // Split text into sentences
+      const parts = text.split(sentenceBoundary);
+      const sentences: string[] = [];
+      for (let i = 0; i < parts.length; i++) {
+        const part = parts[i].trim();
+        if (part) {
+          sentences.push(part);
+        }
+      }
+      
+      console.log(`[STREAMING TTS] Split into ${sentences.length} sentences`);
+      
+      // 🔥 FIX #2: Send TTS_START to reset client queue state
+      const startMsg: TTSStartMessage = {
+        type: 'TTS_START',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        text: text.substring(0, 100)
+      };
+      ws.send(JSON.stringify(startMsg));
+      ws.isTTSActive = true;
+      
+      // Voice options for all chunks
+      const voiceOptions = {
+        emotion,
+        intent,
+        personaId,
+        language,
+        enableMathSpeech: true,
+        enablePauses: true,
+        enableEmphasis: true
+      };
+      
+      // 🔥 Generate TTS for all sentences IN PARALLEL (don't await!)
+      const ttsPromises = sentences.map(async (sentence, index) => {
+        // 🔥 FIX #3: Assign deterministic sequence numbers BEFORE synthesis
+        const sequenceNumber = index;
+        
+        try {
+          const startTime = Date.now();
+          
+          // Generate TTS audio
+          const audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+          const genTime = Date.now() - startTime;
+          
+          console.log(`[STREAMING TTS] ✅ Chunk ${index + 1}/${sentences.length} generated (${genTime}ms): "${sentence.substring(0, 40)}..."`);
+          
+          // 🔥 FIX #1: Wrap in proper data field format
+          const ttsMsg = {
+            type: 'TTS_CHUNK',
+            timestamp: new Date().toISOString(),
+            sessionId: ws.sessionId,
+            data: {
+              sequence: sequenceNumber,
+              data: audioBuffer.toString('base64'),
+              text: sentence,
+              isLast: index === sentences.length - 1
+            }
+          };
+          
+          ws.send(JSON.stringify(ttsMsg));
+          
+        } catch (error) {
+          console.error(`[STREAMING TTS] ❌ Failed chunk ${index + 1}: ${error}`);
+          
+          // 🔥 FIX #1: Wrap skip message in proper data field format
+          ws.send(JSON.stringify({
+            type: 'TTS_SKIP',
+            timestamp: new Date().toISOString(),
+            sessionId: ws.sessionId,
+            data: {
+              sequence: sequenceNumber,
+              reason: 'Generation failed'
+            }
+          }));
+        }
+      });
+      
+      // Don't await all - let them stream as they complete!
+      // But track completion
+      Promise.all(ttsPromises).then(() => {
+        // Send TTS end notification
+        ws.send(JSON.stringify({
+          type: 'TTS_END',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          data: {
+            totalChunks: sentences.length
+          }
+        }));
+        
+        ws.isTTSActive = false;
+        console.log(`[STREAMING TTS] ✅ All ${sentences.length} chunks sent`);
+      }).catch(error => {
+        console.error('[STREAMING TTS] Error in parallel generation:', error);
+      });
+      
+    } catch (error) {
+      console.error('[STREAMING TTS] Setup error:', error);
+      // Fallback to old method
+      await this.streamTTSChunks(ws, text, language, emotion, intent, personaId);
+    }
+  }
+
+  /**
    * Stream TTS chunks with emotion, intent, and persona support (AI Tutor pipeline)
    * Uses EnhancedVoiceService for emotion-based prosody and math-to-speech
    */
@@ -700,8 +822,8 @@ export class VoiceStreamService {
         }
       });
 
-      // 🔥 STEP 11: CONVERT TO TTS AND STREAM AUDIO CHUNKS
-      await this.streamTTSChunks(
+      // 🔥 STEP 11: CONVERT TO TTS AND STREAM AUDIO CHUNKS (REAL-TIME STREAMING)
+      await this.streamTTSChunksRealtime(
         ws, 
         aiResult.response, 
         language, 
@@ -715,12 +837,13 @@ export class VoiceStreamService {
     } catch (error) {
       console.error('[VOICE TUTOR] Pipeline error:', error);
       
-      const errorMsg: VoiceMessage = {
+      const errorMsg: ErrorMessage = {
         type: 'ERROR',
         timestamp: new Date().toISOString(),
         sessionId: ws.sessionId,
-        error: error instanceof Error ? error.message : 'AI Tutor pipeline failed',
-        code: 'TUTOR_PIPELINE_ERROR'
+        code: 'TUTOR_PIPELINE_ERROR',
+        message: error instanceof Error ? error.message : 'AI Tutor pipeline failed',
+        recoverable: true
       };
       
       ws.send(JSON.stringify(errorMsg));

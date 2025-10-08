@@ -11,6 +11,7 @@ export type VoiceMessageType =
   | 'TTS_CHUNK'            // Server → Client: Audio chunk for playback
   | 'TTS_START'            // Server → Client: TTS generation started
   | 'TTS_END'              // Server → Client: TTS generation complete
+  | 'TTS_SKIP'             // Server → Client: Skip failed TTS chunk (PHASE 1)
   | 'INTERRUPT'            // Client → Server: Stop TTS playback
   | 'PHASE_CHANGE'         // Server → Client: Tutor phase transition
   | 'EMOTION_DETECTED'     // Server → Client: Emotion detection result
@@ -139,6 +140,7 @@ export interface VoiceWebSocketClient extends WebSocket {
   isAlive?: boolean;
   audioBuffer?: Buffer[];
   isTTSActive?: boolean;
+  ttsSequence?: number; // PHASE 1: Sequence counter for streaming TTS chunks
 }
 
 // Session state for voice tutor
