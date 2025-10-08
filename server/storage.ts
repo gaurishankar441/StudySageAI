@@ -69,6 +69,7 @@ export interface IStorage {
   getChatsByUser(userId: string): Promise<Chat[]>;
   addMessage(message: InsertMessage): Promise<Message>;
   getChatMessages(chatId: string): Promise<Message[]>;
+  updateChatLanguage(chatId: string, language: 'hi' | 'en'): Promise<void>;
   
   // Notes operations
   createNote(note: InsertNote): Promise<Note>;
@@ -225,6 +226,13 @@ export class DatabaseStorage implements IStorage {
     }
     
     return await query;
+  }
+
+  async updateChatLanguage(chatId: string, language: 'hi' | 'en'): Promise<void> {
+    await db
+      .update(chats)
+      .set({ language })
+      .where(eq(chats.id, chatId));
   }
 
   // Notes operations

@@ -36,6 +36,7 @@ interface UseVoiceTutorOptions {
   onTTSStart?: () => void;
   onTTSEnd?: () => void;
   onError?: (error: string) => void;
+  onLanguageChange?: (language: 'hi' | 'en') => void;
 }
 
 export function useVoiceTutor({ 
@@ -43,7 +44,8 @@ export function useVoiceTutor({
   onTranscription,
   onTTSStart,
   onTTSEnd,
-  onError 
+  onError,
+  onLanguageChange
 }: UseVoiceTutorOptions) {
   const [state, setState] = useState<VoiceState>({
     isConnected: false,
@@ -350,6 +352,31 @@ export function useVoiceTutor({
     
     setState(prev => ({ ...prev, isSpeaking: false }));
   }, [sendMessage]);
+
+  // Auto-update chat language when detected
+  useEffect(() => {
+    const updateLanguage = async () => {
+      if (state.detectedLanguage && (state.detectedLanguage === 'hi' || state.detectedLanguage === 'en')) {
+        try {
+          const response = await fetch(`/api/chats/${chatId}/language`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ language: state.detectedLanguage })
+          });
+          
+          if (response.ok) {
+            console.log('[VOICE] Auto-updated chat language to:', state.detectedLanguage);
+            onLanguageChange?.(state.detectedLanguage as 'hi' | 'en');
+          }
+        } catch (error) {
+          console.error('[VOICE] Failed to update language:', error);
+        }
+      }
+    };
+
+    updateLanguage();
+  }, [state.detectedLanguage, chatId, onLanguageChange]);
 
   // Auto-connect on mount
   useEffect(() => {

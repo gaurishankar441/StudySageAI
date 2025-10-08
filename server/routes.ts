@@ -316,6 +316,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Update chat language (for voice tutor auto-switching)
+  app.patch('/api/chats/:id/language', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { id } = req.params;
+      const { language } = req.body;
+
+      if (!language || !['en', 'hi'].includes(language)) {
+        return res.status(400).json({ message: "Invalid language. Must be 'en' or 'hi'" });
+      }
+
+      const chat = await storage.getChat(id);
+      if (!chat || chat.userId !== userId) {
+        return res.status(404).json({ message: "Chat not found" });
+      }
+
+      // Update chat language using storage method
+      await storage.updateChatLanguage(id, language);
+      
+      res.json({ success: true, language });
+    } catch (error) {
+      console.error("Error updating chat language:", error);
+      res.status(500).json({ message: "Failed to update language" });
+    }
+  });
+
   app.get('/api/chats/:id/messages', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;

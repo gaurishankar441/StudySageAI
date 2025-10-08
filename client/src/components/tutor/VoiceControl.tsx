@@ -54,6 +54,25 @@ export default function VoiceControl({
 
   const displayLanguage = languageOverride || detectedLanguage;
 
+  // Handle manual language override
+  const handleLanguageChange = async (language: 'hi' | 'en' | null) => {
+    setLanguageOverride(language);
+    
+    if (language) {
+      try {
+        await fetch(`/api/chats/${chatId}/language`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ language })
+        });
+        console.log('[VOICE] Manually updated language to:', language);
+      } catch (error) {
+        console.error('[VOICE] Failed to update language:', error);
+      }
+    }
+  };
+
   // Visualizer animation
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -148,13 +167,13 @@ export default function VoiceControl({
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="start">
-                  <DropdownMenuItem onClick={() => setLanguageOverride(null)}>
+                  <DropdownMenuItem onClick={() => handleLanguageChange(null)}>
                     Auto-detect {detectedLanguage && `(${detectedLanguage === 'hi' ? 'Hindi' : 'English'})`}
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguageOverride('en')}>
+                  <DropdownMenuItem onClick={() => handleLanguageChange('en')}>
                     🇬🇧 English
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setLanguageOverride('hi')}>
+                  <DropdownMenuItem onClick={() => handleLanguageChange('hi')}>
                     🇮🇳 Hindi
                   </DropdownMenuItem>
                 </DropdownMenuContent>
