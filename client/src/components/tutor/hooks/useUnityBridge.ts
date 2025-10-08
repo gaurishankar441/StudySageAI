@@ -65,31 +65,39 @@ export function useUnityBridge({
   // Initialize handshake
   useEffect(() => {
     if (!iframeRef.current) return;
+    
+    let hasInitialized = false;
 
     // Start handshake after iframe loads
     const initHandshake = () => {
+      if (hasInitialized) return; // Prevent duplicate initialization
+      hasInitialized = true;
+      
       console.log('[Unity Bridge] Starting handshake...');
       sendMessageToUnity('UNITY_INIT', { timestamp: Date.now() });
 
-      // Timeout if handshake fails
+      // Timeout if handshake fails (check via ref to avoid stale closure)
       handshakeTimeoutRef.current = setTimeout(() => {
-        if (!isHandshakeComplete) {
-          console.error('[Unity Bridge] Handshake timeout');
-          onError?.('Unity failed to respond (timeout)');
-        }
-      }, 10000); // 10 second timeout
+        setIsHandshakeComplete((current) => {
+          if (!current) {
+            console.error('[Unity Bridge] Handshake timeout');
+            onError?.('Unity failed to respond (timeout)');
+          }
+          return current;
+        });
+      }, 15000); // 15 second timeout for 97MB WebGL load
     };
 
     // Wait for iframe to load
     const iframe = iframeRef.current;
     if (iframe.contentWindow) {
       // Iframe already loaded, start immediately
-      setTimeout(initHandshake, 100);
+      setTimeout(initHandshake, 500); // Give Unity more time to initialize
     } else {
       iframe.addEventListener('load', initHandshake);
       return () => iframe.removeEventListener('load', initHandshake);
     }
-  }, [iframeRef, isHandshakeComplete, onError, sendMessageToUnity]);
+  }, [iframeRef, onError, sendMessageToUnity]); // Removed isHandshakeComplete from deps
 
   // Listen for messages from Unity
   useEffect(() => {

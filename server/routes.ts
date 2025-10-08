@@ -727,7 +727,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
 
       // Send audio response
-      res.setHeader('Content-Type', compressed ? 'audio/mpeg-compressed' : 'audio/mpeg');
+      res.setHeader('Content-Type', 'audio/mpeg'); // Always use valid MIME type
       res.setHeader('Content-Length', finalBuffer.length);
       res.setHeader('Content-Disposition', 'inline; filename="speech.mp3"');
       res.setHeader('X-TTS-Cached', cached ? 'true' : 'false');

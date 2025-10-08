@@ -1138,7 +1138,7 @@ optimizedTutorRouter.post('/session/tts', async (req, res) => {
     });
     
     res.set({
-      'Content-Type': compressed ? 'audio/wav-compressed' : 'audio/wav',
+      'Content-Type': 'audio/wav', // Always use valid MIME type
       'Content-Length': finalBuffer.length,
       'X-TTS-Cached': cached ? 'true' : 'false',
       'X-TTS-Compressed': compressed ? 'true' : 'false',
