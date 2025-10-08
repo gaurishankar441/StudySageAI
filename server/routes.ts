@@ -1289,6 +1289,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🚀 PHASE 2.4: TTS Performance Metrics endpoint
+  app.get('/api/tts/metrics', isAuthenticated, async (req: any, res) => {
+    try {
+      const { ttsMetrics } = await import('./services/ttsMetrics');
+      const stats = ttsMetrics.getStats();
+      res.json(stats);
+    } catch (error) {
+      console.error("Error fetching TTS metrics:", error);
+      res.status(500).json({ message: "Failed to fetch TTS metrics" });
+    }
+  });
+
   // Admin endpoint to re-embed all documents with new embedding model
   app.post('/api/admin/reembed-all', isAuthenticated, async (req: any, res) => {
     try {
