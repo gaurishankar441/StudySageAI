@@ -38,6 +38,7 @@ export default function DocChatSession() {
   const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
   const [actionProcessing, setActionProcessing] = useState(false);
   const [actionContent, setActionContent] = useState("");
+  const [quickActionsCollapsed, setQuickActionsCollapsed] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -333,13 +334,22 @@ export default function DocChatSession() {
 
       {/* Right: Quick Actions & Chat */}
       <div className="w-96 flex flex-col gap-6">
-        {/* Quick Actions */}
-        <div className="glass-card rounded-xl p-6 shadow-lg">
-          <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
-            Quick Actions
-          </h3>
-          <div className="grid grid-cols-2 gap-3">
+        {/* Quick Actions - Collapsible */}
+        <div className="glass-card rounded-xl overflow-hidden shadow-lg transition-all duration-300">
+          <button
+            onClick={() => setQuickActionsCollapsed(!quickActionsCollapsed)}
+            className="w-full p-5 flex items-center justify-between hover:bg-muted/50 transition-colors"
+            data-testid="button-toggle-quick-actions"
+          >
+            <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-primary" />
+              Quick Actions
+            </h3>
+            <ChevronRight className={`w-5 h-5 text-muted-foreground transition-transform duration-300 ${quickActionsCollapsed ? '' : 'rotate-90'}`} />
+          </button>
+          
+          {!quickActionsCollapsed && (
+            <div className="p-5 pt-0 grid grid-cols-2 gap-3">
             <Button 
               variant="outline" 
               className="p-4 h-auto flex-col gap-2 transition-all duration-200 hover:scale-105 hover:shadow-lg border-primary/20 hover:border-primary/40"
@@ -388,7 +398,8 @@ export default function DocChatSession() {
               </div>
               <span className="text-xs font-medium">Flashcards</span>
             </Button>
-          </div>
+            </div>
+          )}
         </div>
 
         {/* Chat Panel */}

@@ -160,6 +160,7 @@ export class DocumentService {
       return {
         text,
         metadata: {
+          videoId,
           url,
           duration: `${Math.floor(duration / 60)}:${Math.floor(duration % 60).toString().padStart(2, '0')}`,
           segments: transcript.length,
