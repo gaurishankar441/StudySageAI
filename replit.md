@@ -5,6 +5,12 @@ VaktaAI is an AI-powered educational platform designed as a comprehensive study 
 
 ## Recent Changes (October 2025)
 *   **DocChat Shepherd AI-Inspired Redesign**: Implemented clean three-panel layout (Sources sidebar | Chat area | Quick Actions panel) with collapsible panels and fixed-position toggle buttons for reliable control.
+*   **Mobile-First DocChat UX**: Fully responsive mobile design with conditional positioning (fixed overlay on mobile, inline flex on desktop), hamburger menu, 44px touch targets, safe area padding, and mobile-optimized bottom-aligned input.
+*   **AI-Powered Suggested Questions**: Auto-generates 3 contextual follow-up questions after each AI response using GPT-4o-mini. Displays as horizontal scrolling chips with one-click populate. 500ms debounce prevents excessive API calls.
+*   **Citation Preview System**: Clickable citation badges [1], [2] in AI responses open mobile-optimized dialog showing full document excerpt with source info. Parses metadata.sources array for accurate attribution.
+*   **Voice Input with Sarvam STT**: Mic button records audio via MediaRecorder, transcribes using Sarvam Saarika v2 STT (/api/voice/transcribe), auto-fills message input. Red pulsing animation during recording. Supports Hindi/English based on user preference.
+*   **Touch Gestures**: Swipe left to close actions panel, swipe right to close sources sidebar. 50px threshold prevents accidental triggers. Mobile-only with proper event cleanup.
+*   **Floating Action Button (FAB)**: Mobile-exclusive FAB for Quick Actions in thumb-friendly bottom-right position. Gradient design with shadow-2xl elevation. Desktop uses sidebar toggle instead.
 *   **Quick Actions with SSE Streaming**: Integrated Summary, Highlights, Quiz, and Flashcards generation with robust SSE streaming. Fixed critical bug where split JSON events across network chunks were dropped by implementing persistent buffer that accumulates chunks and splits by `\n\n` to extract complete SSE events.
 *   **Security Hardening**: Removed critical security vulnerability (`NODE_TLS_REJECT_UNAUTHORIZED = '0'`) from database configuration that was disabling TLS certificate verification globally.
 *   **UI Bug Fixes**: Fixed nested anchor tag warnings in AppLayout by removing redundant `<a>` tags within Wouter's `<Link>` components.
