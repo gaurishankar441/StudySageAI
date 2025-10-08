@@ -23,11 +23,14 @@ export function sanitizeUser(user: User): AuthUser {
   return safeUser as AuthUser;
 }
 
+// Session store instance (exported for WebSocket authentication)
+let sessionStoreInstance: any = null;
+
 // Session configuration
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
   const pgStore = connectPg(session);
-  const sessionStore = new pgStore({
+  sessionStoreInstance = new pgStore({
     conString: process.env.DATABASE_URL,
     createTableIfMissing: false,
     ttl: sessionTtl,
@@ -36,7 +39,7 @@ export function getSession() {
   
   return session({
     secret: process.env.SESSION_SECRET!,
-    store: sessionStore,
+    store: sessionStoreInstance,
     resave: false,
     saveUninitialized: false,
     cookie: {
@@ -45,6 +48,11 @@ export function getSession() {
       maxAge: sessionTtl,
     },
   });
+}
+
+// Get session store for WebSocket authentication
+export function getSessionStore() {
+  return sessionStoreInstance;
 }
 
 // Authentication setup

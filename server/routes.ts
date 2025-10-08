@@ -1,7 +1,8 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { WebSocketServer } from 'ws';
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./auth";
+import { setupAuth, isAuthenticated, getSessionStore } from "./auth";
 import { ObjectStorageService, ObjectNotFoundError } from "./objectStorage";
 import { ObjectPermission } from "./objectAcl";
 import { documentService } from "./services/documentService";
@@ -13,6 +14,9 @@ import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
 import { uploadLimiter, aiLimiter } from "./middleware/security";
+import type { VoiceWebSocketClient, VoiceMessage } from "./types/voiceWebSocket";
+import { parse as parseUrl } from 'url';
+import { parse as parseQuery } from 'querystring';
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1341,6 +1345,216 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
+
+  // Setup WebSocket server for real-time voice tutor
+  const wss = new WebSocketServer({ 
+    server: httpServer,
+    path: '/tutor/voice'
+  });
+
+  console.log('[WebSocket] Voice Tutor WebSocket server initialized on /tutor/voice');
+
+  // Keep track of active voice sessions
+  const voiceSessions = new Map<string, VoiceWebSocketClient>();
+
+  // Heartbeat interval for keep-alive
+  const heartbeatInterval = setInterval(() => {
+    wss.clients.forEach((ws) => {
+      const client = ws as VoiceWebSocketClient;
+      
+      if (client.isAlive === false) {
+        console.log(`[WebSocket] Terminating inactive connection for user ${client.userId}`);
+        return client.terminate();
+      }
+      
+      client.isAlive = false;
+      client.ping();
+    });
+  }, 30000); // 30 seconds
+
+  wss.on('close', () => {
+    clearInterval(heartbeatInterval);
+  });
+
+  // WebSocket authentication helper
+  async function authenticateWebSocket(req: any): Promise<string | null> {
+    try {
+      // Extract session ID from cookie
+      const cookies = req.headers.cookie || '';
+      const sessionMatch = cookies.match(/connect\.sid=s%3A([^;.]+)/);
+      
+      if (!sessionMatch) {
+        console.log('[WebSocket] No session cookie found');
+        return null;
+      }
+
+      const sessionId = sessionMatch[1];
+      
+      // Get session store instance
+      const sessionStore = getSessionStore();
+
+      if (!sessionStore) {
+        console.error('[WebSocket] Session store not initialized');
+        return null;
+      }
+
+      // Get session data from PostgreSQL
+      return new Promise((resolve) => {
+        sessionStore.get(sessionId, (err: any, session: any) => {
+          if (err || !session) {
+            console.log('[WebSocket] Session not found or error:', err);
+            resolve(null);
+            return;
+          }
+          
+          const userId = session.userId;
+          if (!userId) {
+            console.log('[WebSocket] No userId in session');
+            resolve(null);
+            return;
+          }
+          
+          console.log(`[WebSocket] Authenticated user ${userId} from session`);
+          resolve(userId);
+        });
+      });
+    } catch (error) {
+      console.error('[WebSocket] Authentication error:', error);
+      return null;
+    }
+  }
+
+  // WebSocket connection handler
+  wss.on('connection', async (ws: VoiceWebSocketClient, req) => {
+    console.log('[WebSocket] New voice connection attempt');
+    
+    // Parse query parameters
+    const { query } = parseUrl(req.url || '', true);
+    const chatId = query.chatId as string;
+
+    if (!chatId) {
+      ws.close(4001, 'Missing chatId parameter');
+      return;
+    }
+
+    try {
+      // Authenticate the WebSocket connection
+      const authenticatedUserId = await authenticateWebSocket(req);
+      
+      if (!authenticatedUserId) {
+        console.log('[WebSocket] Authentication failed');
+        ws.close(4401, 'Unauthorized - Authentication required');
+        return;
+      }
+
+      // Verify chat exists
+      const chat = await storage.getChat(chatId);
+      if (!chat) {
+        ws.close(4404, 'Chat not found');
+        return;
+      }
+
+      // CRITICAL: Verify the authenticated user owns this chat
+      if (chat.userId !== authenticatedUserId) {
+        console.log(`[WebSocket] Authorization failed: User ${authenticatedUserId} attempted to access chat owned by ${chat.userId}`);
+        ws.close(4403, 'Forbidden - You do not own this chat');
+        return;
+      }
+
+      // Attach session metadata to WebSocket client
+      ws.userId = authenticatedUserId;
+      ws.chatId = chatId;
+      ws.sessionId = `voice_${chatId}_${Date.now()}`;
+      ws.isAlive = true;
+      ws.audioBuffer = [];
+      ws.isTTSActive = false;
+
+      // Store in active sessions
+      voiceSessions.set(ws.sessionId, ws);
+
+      console.log(`[WebSocket] ✅ Voice session established: ${ws.sessionId} for authenticated user ${ws.userId}`);
+
+      // Send initial session state
+      const sessionState: VoiceMessage = {
+        type: 'SESSION_STATE',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        chatId: ws.chatId,
+        currentPhase: 'greeting',
+        personaId: 'priya',
+        language: chat.language === 'hi' ? 'hi' : 'en',
+        isVoiceActive: true
+      };
+      ws.send(JSON.stringify(sessionState));
+
+      // Pong handler for keep-alive
+      ws.on('pong', () => {
+        ws.isAlive = true;
+      });
+
+      // Message handler
+      ws.on('message', async (data: Buffer) => {
+        try {
+          const message: VoiceMessage = JSON.parse(data.toString());
+          
+          // Handle different message types
+          switch (message.type) {
+            case 'AUDIO_CHUNK':
+              // Will be implemented in voiceStreamService
+              console.log(`[WebSocket] Received audio chunk for ${ws.sessionId}`);
+              break;
+              
+            case 'INTERRUPT':
+              console.log(`[WebSocket] TTS interruption requested for ${ws.sessionId}`);
+              ws.isTTSActive = false;
+              // Stop any ongoing TTS streaming
+              break;
+              
+            case 'PING':
+              ws.send(JSON.stringify({ 
+                type: 'PONG', 
+                timestamp: new Date().toISOString() 
+              }));
+              break;
+              
+            default:
+              console.log(`[WebSocket] Unknown message type: ${message.type}`);
+          }
+        } catch (error) {
+          console.error('[WebSocket] Message processing error:', error);
+          const errorMsg: VoiceMessage = {
+            type: 'ERROR',
+            timestamp: new Date().toISOString(),
+            code: 'MESSAGE_PROCESSING_ERROR',
+            message: 'Failed to process message',
+            recoverable: true
+          };
+          ws.send(JSON.stringify(errorMsg));
+        }
+      });
+
+      // Error handler
+      ws.on('error', (error) => {
+        console.error(`[WebSocket] Error for ${ws.sessionId}:`, error);
+      });
+
+      // Close handler
+      ws.on('close', (code, reason) => {
+        console.log(`[WebSocket] Connection closed for ${ws.sessionId}: ${code} ${reason}`);
+        if (ws.sessionId) {
+          voiceSessions.delete(ws.sessionId);
+        }
+      });
+
+    } catch (error) {
+      console.error('[WebSocket] Connection setup error:', error);
+      ws.close(4000, 'Internal server error');
+    }
+  });
+
+  // Expose WebSocket server for external access if needed
+  (httpServer as any).wss = wss;
+
   return httpServer;
 }
 
