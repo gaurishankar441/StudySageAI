@@ -9,7 +9,7 @@ import { emotionDetector } from '../services/emotionDetector';
 import { responseAdapter } from '../config/responseAdaptation';
 import { hintService } from '../services/hintService';
 import { storage } from '../storage';
-import { LanguageDetectionEngine } from '../services/LanguageDetectionEngine';
+import { LanguageDetectionEngine, type DetectedLanguage } from '../services/LanguageDetectionEngine';
 import { SessionContextManager } from '../services/SessionContextManager';
 import { DynamicPromptEngine } from '../services/DynamicPromptEngine';
 import { ResponseValidator } from '../services/ResponseValidator';
@@ -763,10 +763,10 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
     
     if (!cachedLangResult) {
       // No cache hit - run detection
-      langDetection = await languageDetector.detect(query, {
-        userId,
-        chatId,
-        checkHistory: true
+      langDetection = await languageDetector.detectLanguage(query, {
+        conversationHistory: [],
+        userPreference: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+        topic: session.topic
       });
       
       // Cache result

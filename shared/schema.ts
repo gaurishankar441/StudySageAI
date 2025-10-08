@@ -285,6 +285,7 @@ export const tutorSessions = pgTable("tutor_sessions", {
     examTarget?: string;
     educationBoard?: string;
     subjects?: string[];
+    preferredLanguage?: string;
   }>(),
   
   // Session data
