@@ -20,10 +20,8 @@ import {
 import { Document } from "@shared/schema";
 
 export default function DocChatSources() {
-  const [youtubeUrl, setYoutubeUrl] = useState("");
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [textContent, setTextContent] = useState("");
-  const [textTitle, setTextTitle] = useState("");
+  const [url, setUrl] = useState("");
+  const [selectedDocIds, setSelectedDocIds] = useState<string[]>([]);
   const [uploadingFile, setUploadingFile] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -68,36 +66,12 @@ export default function DocChatSources() {
         description: "URL added successfully",
       });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      setYoutubeUrl("");
-      setWebsiteUrl("");
+      setUrl("");
     },
     onError: () => {
       toast({
         title: "Error",
         description: "Failed to add URL",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addTextMutation = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
-      const response = await apiRequest("POST", "/api/documents", { title, content, sourceType: 'text' });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Text document added successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      setTextTitle("");
-      setTextContent("");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add text document",
         variant: "destructive",
       });
     },
@@ -166,9 +140,27 @@ export default function DocChatSources() {
     },
   });
 
-  const handleDocumentClick = (docId: string) => {
-    startChatMutation.mutate([docId]);
+  const toggleDocumentSelection = (docId: string) => {
+    setSelectedDocIds(prev => 
+      prev.includes(docId) 
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
+    );
   };
+
+  const handleStartChat = () => {
+    if (selectedDocIds.length === 0) {
+      toast({
+        title: "No documents selected",
+        description: "Please select at least one document",
+        variant: "destructive",
+      });
+      return;
+    }
+    startChatMutation.mutate(selectedDocIds);
+  };
+
+  const selectedDocs = documents.filter(doc => selectedDocIds.includes(doc.id));
 
   return (
     <div className="h-full p-8 overflow-auto">
@@ -239,87 +231,22 @@ export default function DocChatSources() {
                   </div>
                 </div>
 
-                <div className="space-y-3">
-                  <div className="flex gap-2">
-                    <Input
-                      value={youtubeUrl}
-                      onChange={(e) => setYoutubeUrl(e.target.value)}
-                      placeholder="Paste YouTube URL..."
-                      className="flex-1 transition-all duration-200 focus:shadow-md"
-                      data-testid="input-youtube-url"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => addUrlMutation.mutate({ url: youtubeUrl, title: "YouTube Video" })}
-                      disabled={!youtubeUrl || addUrlMutation.isPending}
-                      className="btn-gradient"
-                      data-testid="button-add-youtube"
-                    >
-                      <Youtube className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex gap-2">
-                    <Input
-                      value={websiteUrl}
-                      onChange={(e) => setWebsiteUrl(e.target.value)}
-                      placeholder="Paste website URL..."
-                      className="flex-1 transition-all duration-200 focus:shadow-md"
-                      data-testid="input-website-url"
-                    />
-                    <Button
-                      size="sm"
-                      onClick={() => addUrlMutation.mutate({ url: websiteUrl, title: "Website" })}
-                      disabled={!websiteUrl || addUrlMutation.isPending}
-                      className="btn-gradient"
-                      data-testid="button-add-website"
-                    >
-                      <Globe className="w-4 h-4" />
-                    </Button>
-                  </div>
-                </div>
-
-                <div className="relative">
-                  <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-border/50"></div>
-                  </div>
-                  <div className="relative flex justify-center text-xs">
-                    <span className="px-2 bg-card/50 text-muted-foreground backdrop-blur-sm">OR PASTE TEXT</span>
-                  </div>
-                </div>
-
-                <div className="space-y-3">
+                <div className="flex gap-2">
                   <Input
-                    value={textTitle}
-                    onChange={(e) => setTextTitle(e.target.value)}
-                    placeholder="Document title (optional)"
-                    className="w-full transition-all duration-200 focus:shadow-md"
-                    data-testid="input-text-title"
-                  />
-                  <Textarea
-                    value={textContent}
-                    onChange={(e) => setTextContent(e.target.value)}
-                    placeholder="Paste your text content here..."
-                    className="w-full min-h-[100px] transition-all duration-200 focus:shadow-md"
-                    data-testid="textarea-text-content"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="Paste YouTube or website URL..."
+                    className="flex-1 transition-all duration-200 focus:shadow-md"
+                    data-testid="input-url"
                   />
                   <Button
                     size="sm"
-                    onClick={() => addTextMutation.mutate({ 
-                      title: textTitle || 'Text Document', 
-                      content: textContent 
-                    })}
-                    disabled={!textContent || addTextMutation.isPending}
-                    className="w-full btn-gradient"
-                    data-testid="button-add-text"
+                    onClick={() => addUrlMutation.mutate({ url, title: "Document" })}
+                    disabled={!url || addUrlMutation.isPending}
+                    className="btn-gradient"
+                    data-testid="button-add-url"
                   >
-                    {addTextMutation.isPending ? (
-                      <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
-                    ) : (
-                      <>
-                        <FileText className="w-4 h-4 mr-2" />
-                        Add Text Document
-                      </>
-                    )}
+                    + Add
                   </Button>
                 </div>
               </div>
@@ -344,7 +271,7 @@ export default function DocChatSources() {
                       key={doc.id}
                       data-testid={`document-card-${doc.id}`}
                       className="card-interactive group relative p-5 rounded-xl cursor-pointer transition-all duration-200 hover:scale-[1.02]"
-                      onClick={() => handleDocumentClick(doc.id)}
+                      onClick={() => toggleDocumentSelection(doc.id)}
                     >
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-md">
@@ -421,11 +348,9 @@ export default function DocChatSources() {
         <LoadingScreen context="doc_upload" />
       )}
       
-      {/* Loading Screen for YouTube/Web URL Processing */}
+      {/* Loading Screen for URL Processing */}
       {addUrlMutation.isPending && (
-        <LoadingScreen 
-          context={youtubeUrl ? "youtube_upload" : "web_upload"} 
-        />
+        <LoadingScreen context="web_upload" />
       )}
     </div>
   );
