@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
-import { Textarea } from "@/components/ui/textarea";
+import { Card } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { ObjectUploader } from "@/components/ObjectUploader";
 import {
@@ -15,38 +15,46 @@ import {
   Send,
   Bot,
   User,
-  MoreHorizontal,
+  Mic,
+  Sparkles,
+  BookOpen,
+  Highlighter,
+  Brain,
+  Layers,
+  StickyNote,
+  Search,
   ChevronLeft,
   ChevronRight,
-  ZoomIn,
-  ZoomOut,
-  Download,
-  Highlighter,
-  Layers,
-  BookOpen,
-  Trash2,
+  Play,
+  Loader2,
+  File,
+  Video,
+  Link as LinkIcon,
+  X,
+  Clock,
+  ExternalLink,
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
-import DocChatActionModal from "./DocChatActionModal";
-
-type ActionType = 'summary' | 'highlights' | 'quiz' | 'flashcards';
+import { cn } from "@/lib/utils";
 
 export default function DocChatView() {
+  // State Management
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
   const [message, setMessage] = useState("");
   const [youtubeUrl, setYoutubeUrl] = useState("");
   const [websiteUrl, setWebsiteUrl] = useState("");
-  const [textContent, setTextContent] = useState("");
-  const [textTitle, setTextTitle] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [zoom, setZoom] = useState(100);
-  const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
-  const [actionProcessing, setActionProcessing] = useState(false);
-  const [actionContent, setActionContent] = useState("");
-  const { toast} = useToast();
+  const [isStreaming, setIsStreaming] = useState(false);
+  const [streamingMessage, setStreamingMessage] = useState("");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [isActionsPanelOpen, setIsActionsPanelOpen] = useState(true);
+  const [activeView, setActiveView] = useState<'upload' | 'chat'>('upload');
+  
+  const { toast } = useToast();
   const queryClient = useQueryClient();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
+  // Queries
   const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
     queryKey: ["/api/documents"],
   });
@@ -65,868 +73,602 @@ export default function DocChatView() {
     enabled: !!currentChatId,
   });
 
+  // Auto-scroll to bottom
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages, streamingMessage]);
+
+  // Mutations
   const uploadDocumentMutation = useMutation({
     mutationFn: async (uploadData: { uploadURL: string; fileName: string; fileSize: number; fileType: string }) => {
       const response = await apiRequest("POST", "/api/documents/from-upload", uploadData);
       return response.json();
     },
-    onSuccess: (data) => {
-      console.log('Document upload success:', data);
-      toast({
-        title: "Success",
-        description: "Document uploaded successfully",
-      });
+    onSuccess: () => {
+      toast({ title: "Success", description: "Document uploaded successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
     },
-    onError: (error) => {
-      console.error('Document upload error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to upload document",
-        variant: "destructive",
-      });
+    onError: () => {
+      toast({ title: "Error", description: "Failed to upload document", variant: "destructive" });
     },
   });
 
   const addUrlMutation = useMutation({
     mutationFn: async ({ url, title }: { url: string; title: string }) => {
-      return apiRequest("POST", "/api/documents/by-url", { url, title });
+      const response = await apiRequest("POST", "/api/documents/by-url", { url, title });
+      return response.json();
     },
     onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "URL added successfully",
-      });
+      toast({ title: "Success", description: "URL added successfully" });
       queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
       setYoutubeUrl("");
       setWebsiteUrl("");
     },
     onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add URL",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addTextMutation = useMutation({
-    mutationFn: async ({ title, content }: { title: string; content: string }) => {
-      const response = await apiRequest("POST", "/api/documents", { title, content, sourceType: 'text' });
-      return response.json();
-    },
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Text document added successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      setTextTitle("");
-      setTextContent("");
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to add text document",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const deleteDocumentMutation = useMutation({
-    mutationFn: async (docId: string) => {
-      const response = await apiRequest("DELETE", `/api/documents/${docId}`, {});
-      if (!response.ok) {
-        throw new Error("Failed to delete document");
-      }
-      return { docId };
-    },
-    onSuccess: (data) => {
-      toast({
-        title: "Success",
-        description: "Document deleted successfully",
-      });
-      queryClient.invalidateQueries({ queryKey: ["/api/documents"] });
-      setSelectedDocuments(prev => prev.filter(id => id !== data.docId));
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to delete document",
-        variant: "destructive",
-      });
+      toast({ title: "Error", description: "Failed to add URL", variant: "destructive" });
     },
   });
 
   const startChatMutation = useMutation({
     mutationFn: async (docIds: string[]) => {
-      console.log('Starting chat with docs:', docIds);
       const response = await apiRequest("POST", "/api/docchat/session", { docIds });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to start chat' }));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
-      console.log('Chat API response:', data);
-      
-      // Backend returns the chat object directly with an id field
+      if (!response.ok) throw new Error("Failed to start chat");
+      return response.json();
+    },
+    onSuccess: (data) => {
       const chatId = data.id || data.chatId;
-      if (!chatId) {
-        throw new Error('Invalid response: missing chat ID');
-      }
-      
-      return { ...data, id: chatId };
-    },
-    onSuccess: (chat: any) => {
-      console.log('Chat started successfully, ID:', chat.id);
-      setCurrentChatId(chat.id);
+      setCurrentChatId(chatId);
+      setActiveView('chat');
       queryClient.invalidateQueries({ queryKey: ["/api/chats"] });
-      toast({
-        title: "Success",
-        description: "Chat session started",
-      });
-    },
-    onError: (error: any) => {
-      console.error('Failed to start chat:', error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to start chat session",
-        variant: "destructive",
-      });
     },
   });
 
   const sendMessageMutation = useMutation({
-    mutationFn: async (messageText: string) => {
-      if (!currentChatId) throw new Error("No chat session");
-      
-      const eventSource = new EventSource(
-        `/api/chats/${currentChatId}/stream?message=${encodeURIComponent(messageText)}`,
-        { withCredentials: true }
-      );
+    mutationFn: async ({ chatId, message, tempId }: { chatId: string; message: string; tempId: string }) => {
+      setIsStreaming(true);
+      setStreamingMessage("");
 
-      return new Promise((resolve, reject) => {
-        eventSource.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          if (data.type === 'done') {
-            eventSource.close();
-            resolve(data);
-          } else if (data.type === 'error') {
-            eventSource.close();
-            reject(new Error(data.message));
-          }
-        };
-        eventSource.onerror = () => {
-          eventSource.close();
-          reject(new Error('Connection error'));
-        };
-      });
-    },
-    onSuccess: () => {
-      setMessage("");
-      queryClient.invalidateQueries({ queryKey: [`/api/chats/${currentChatId}/messages`] });
-    },
-    onError: () => {
-      toast({
-        title: "Error",
-        description: "Failed to send message",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (message.trim() && currentChatId) {
-      sendMessageMutation.mutate(message.trim());
-    }
-  };
-
-  const generateSummaryMutation = useMutation({
-    mutationFn: async (docIds: string[]) => {
-      const response = await apiRequest("POST", "/api/notes", {
-        title: `Summary - ${currentDoc?.title || 'Documents'}`,
-        sourceIds: docIds,
-        template: 'cornell',
-        language: 'en'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to generate summary' }));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: (note) => {
-      toast({
-        title: "Success",
-        description: "Summary generated successfully",
-      });
-      window.location.href = '/notes';
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate summary",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const generateQuizMutation = useMutation({
-    mutationFn: async (docId: string) => {
-      const doc = documents.find(d => d.id === docId);
-      const response = await apiRequest("POST", "/api/quizzes", {
-        title: `Quiz - ${doc?.title || 'Document'}`,
-        source: 'document',
-        sourceId: docId,
-        subject: 'General',
-        topic: doc?.title || 'Document Content',
-        difficulty: 'medium',
-        questionCount: 5,
-        questionTypes: ['mcq', 'true-false'],
-        language: 'en'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to generate quiz' }));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: (quiz) => {
-      toast({
-        title: "Success",
-        description: "Quiz generated successfully",
-      });
-      window.location.href = '/quiz';
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate quiz",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const generateFlashcardsMutation = useMutation({
-    mutationFn: async (docIds: string[]) => {
-      const response = await apiRequest("POST", "/api/notes", {
-        title: `Flashcards - ${currentDoc?.title || 'Documents'}`,
-        sourceIds: docIds,
-        template: 'outline',
-        language: 'en'
-      });
-      
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({ message: 'Failed to generate flashcards' }));
-        throw new Error(errorData.message || `HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      return response.json();
-    },
-    onSuccess: (note) => {
-      toast({
-        title: "Success",
-        description: "Flashcards generated successfully",
-      });
-      window.location.href = '/notes';
-    },
-    onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to generate flashcards",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const handleStartChat = () => {
-    if (selectedDocuments.length > 0) {
-      startChatMutation.mutate(selectedDocuments);
-    }
-  };
-
-  const handleDocChatActionSubmit = async (actionType: ActionType, formData: any) => {
-    setActionProcessing(true);
-    setActionContent("");
-
-    try {
-      const response = await fetch('/api/docchat/action', {
+      const response = await fetch(`/api/chats/${chatId}/stream`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
-        body: JSON.stringify({
-          action: actionType,
-          docIds: selectedDocuments,
-          ...formData
-        })
+        body: JSON.stringify({ message }),
       });
 
-      if (!response.ok) throw new Error('Failed to execute action');
+      if (!response.ok || !response.body) throw new Error("Stream failed");
 
-      const reader = response.body?.getReader();
+      const reader = response.body.getReader();
       const decoder = new TextDecoder();
-      if (!reader) throw new Error('No response stream');
-
-      let fullContent = '';
-      let buffer = '';
+      let fullResponse = "";
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
 
-        buffer += decoder.decode(value, { stream: true });
-        const events = buffer.split('\n\n');
-        buffer = events.pop() || '';
+        const chunk = decoder.decode(value, { stream: true });
+        const lines = chunk.split('\n');
 
-        for (const event of events) {
-          for (const line of event.split('\n')) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                if (data.type === 'chunk') {
-                  fullContent += data.content;
-                  setActionContent(fullContent);
-                } else if (data.type === 'done' || data.type === 'complete') {
-                  setActionProcessing(false);
-                  toast({ title: "Generated Successfully" });
-                  setTimeout(() => {
-                    setActiveActionModal(null);
-                    setActionContent("");
-                  }, 1500);
-                } else if (data.type === 'error') {
-                  setActionProcessing(false);
-                  toast({ 
-                    title: "Error", 
-                    description: data.message || "Failed to execute action", 
-                    variant: "destructive" 
-                  });
-                }
-              } catch (e) {
-                console.warn('Parse error:', e);
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            if (data === '[DONE]') {
+              setIsStreaming(false);
+              const aiMessage: Message = {
+                id: `msg-${Date.now()}`,
+                chatId,
+                role: 'assistant',
+                content: fullResponse,
+                tool: null,
+                metadata: {},
+                createdAt: new Date()
+              };
+              queryClient.setQueryData<Message[]>([`/api/chats/${chatId}/messages`], (old = []) => [...old, aiMessage]);
+              setStreamingMessage("");
+              queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
+              return;
+            }
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.content) {
+                fullResponse += parsed.content;
+                setStreamingMessage(fullResponse);
               }
+            } catch (e) {
+              console.error("Parse error:", e);
             }
           }
         }
       }
-    } catch (error) {
-      console.error('Action error:', error);
-      setActionProcessing(false);
-      toast({ title: "Error", description: "Failed to execute action", variant: "destructive" });
-    }
+    },
+    onError: (error, variables) => {
+      // Rollback optimistic message on error
+      const { chatId, tempId } = variables;
+      queryClient.setQueryData<Message[]>([`/api/chats/${chatId}/messages`], (old = []) => 
+        old.filter(msg => msg.id !== tempId)
+      );
+      setIsStreaming(false);
+      setStreamingMessage("");
+      toast({ title: "Error", description: "Failed to send message", variant: "destructive" });
+    },
+  });
+
+  const handleSendMessage = () => {
+    if (!message.trim() || !currentChatId || isStreaming) return;
+    
+    const tempId = `temp-${Date.now()}`;
+    const userMessage: Message = {
+      id: tempId,
+      chatId: currentChatId,
+      role: 'user',
+      content: message,
+      tool: null,
+      metadata: {},
+      createdAt: new Date()
+    };
+    
+    // Optimistic update
+    queryClient.setQueryData<Message[]>([`/api/chats/${currentChatId}/messages`], (old = []) => [...old, userMessage]);
+    
+    sendMessageMutation.mutate({ chatId: currentChatId, message, tempId });
+    setMessage("");
   };
 
-  const selectedDocs = documents.filter(doc => selectedDocuments.includes(doc.id));
-  const currentDoc = selectedDocs[0]; // Show first selected document
+  const handleStartChat = () => {
+    if (selectedDocuments.length === 0) {
+      toast({ title: "No documents selected", description: "Please select at least one document", variant: "destructive" });
+      return;
+    }
+    startChatMutation.mutate(selectedDocuments);
+  };
 
-  return (
-    <div className="h-full flex gap-6">
-      {/* Left: Sources & Upload */}
-      <div className="w-96 flex flex-col gap-4">
-        {/* Upload Section */}
-        <Card>
-          <CardContent className="p-6">
-            <h3 className="font-semibold mb-4">Add Source</h3>
-            <div className="space-y-3">
-              <ObjectUploader
-                maxNumberOfFiles={1}
-                maxFileSize={200 * 1024 * 1024} // 200MB
-                onGetUploadParameters={async (file) => {
-                  const response = await apiRequest("POST", "/api/objects/upload", {
-                    contentType: file.type
-                  });
-                  const { uploadURL } = await response.json();
-                  return { 
-                    method: "PUT" as const, 
-                    url: uploadURL,
-                    headers: {
-                      'Content-Type': file.type
-                    }
-                  };
-                }}
-                onComplete={(result) => {
-                  const uploadedFile = result.successful?.[0];
-                  const uploadURL = uploadedFile?.uploadURL;
-                  const fileName = uploadedFile?.name || 'Uploaded Document';
-                  if (uploadedFile && uploadURL && typeof uploadURL === 'string') {
-                    uploadDocumentMutation.mutate({
-                      uploadURL: uploadURL,
-                      fileName: fileName,
-                      fileSize: uploadedFile.size || 0,
-                      fileType: uploadedFile.type || 'application/octet-stream'
-                    });
-                  }
-                }}
-                buttonClassName="w-full h-24 border-2 border-dashed border-border hover:border-primary transition-colors duration-200"
-              >
-                <div className="flex flex-col items-center text-center">
-                  <Upload className="w-8 h-8 text-muted-foreground mb-2" />
-                  <p className="text-sm font-medium mb-1">Drop files here or click to upload</p>
-                  <p className="text-xs text-muted-foreground">PDF, DOCX, PPTX up to 200MB</p>
-                </div>
-              </ObjectUploader>
+  const toggleDocumentSelection = (docId: string) => {
+    setSelectedDocuments(prev => 
+      prev.includes(docId) ? prev.filter(id => id !== docId) : [...prev, docId]
+    );
+  };
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-card text-muted-foreground">OR</span>
-                </div>
-              </div>
+  const getDocumentIcon = (doc: Document) => {
+    if (doc.sourceType === 'youtube') return <Video className="w-4 h-4" />;
+    if (doc.sourceType === 'web') return <Globe className="w-4 h-4" />;
+    return <FileText className="w-4 h-4" />;
+  };
 
-              <div className="space-y-2">
-                <div className="flex gap-2">
-                  <Input
-                    value={youtubeUrl}
-                    onChange={(e) => setYoutubeUrl(e.target.value)}
-                    placeholder="Paste YouTube URL..."
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addUrlMutation.mutate({ url: youtubeUrl, title: "YouTube Video" })}
-                    disabled={!youtubeUrl || addUrlMutation.isPending}
-                  >
-                    <Youtube className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex gap-2">
-                  <Input
-                    value={websiteUrl}
-                    onChange={(e) => setWebsiteUrl(e.target.value)}
-                    placeholder="Paste website URL..."
-                    className="flex-1"
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addUrlMutation.mutate({ url: websiteUrl, title: "Website" })}
-                    disabled={!websiteUrl || addUrlMutation.isPending}
-                  >
-                    <Globe className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
+  const selectedDocsData = documents.filter(d => selectedDocuments.includes(d.id));
 
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-border"></div>
-                </div>
-                <div className="relative flex justify-center text-xs">
-                  <span className="px-2 bg-card text-muted-foreground">OR PASTE TEXT</span>
-                </div>
-              </div>
+  // Upload Screen
+  if (activeView === 'upload') {
+    return (
+      <div className="flex flex-col h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-950">
+        {/* Header */}
+        <div className="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl">
+          <div className="max-w-7xl mx-auto px-6 py-4">
+            <h1 className="text-2xl font-semibold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              नमस्ते {(user as any)?.name?.split(' ')[0] || 'Student'}, Upload and chat with your documents
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              Upload lecture notes, articles, any document, and Garima Ma'am will help you understand them
+            </p>
+          </div>
+        </div>
 
-              <div className="space-y-2">
-                <Input
-                  value={textTitle}
-                  onChange={(e) => setTextTitle(e.target.value)}
-                  placeholder="Document title (optional)"
-                  className="w-full"
-                  data-testid="input-text-title"
-                />
-                <Textarea
-                  value={textContent}
-                  onChange={(e) => setTextContent(e.target.value)}
-                  placeholder="Paste your text content here..."
-                  className="w-full min-h-[100px]"
-                  data-testid="textarea-text-content"
-                />
-                <Button
-                  size="sm"
-                  onClick={() => addTextMutation.mutate({ 
-                    title: textTitle || 'Text Document', 
-                    content: textContent 
-                  })}
-                  disabled={!textContent || addTextMutation.isPending}
-                  className="w-full"
-                  data-testid="button-add-text"
-                >
-                  {addTextMutation.isPending ? (
-                    <div className="w-4 h-4 animate-spin rounded-full border-2 border-background border-t-transparent" />
-                  ) : (
-                    <>
-                      <FileText className="w-4 h-4 mr-2" />
-                      Add Text Document
-                    </>
-                  )}
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+        {/* Main Content */}
+        <div className="flex-1 overflow-auto">
+          <div className="max-w-4xl mx-auto px-6 py-8">
+            <Tabs defaultValue="upload" className="w-full">
+              <TabsList className="grid w-full grid-cols-2 glass-card">
+                <TabsTrigger value="upload" data-testid="tab-upload">Upload</TabsTrigger>
+                <TabsTrigger value="previous" data-testid="tab-previous">Previous Sources</TabsTrigger>
+              </TabsList>
 
-        {/* Sources List */}
-        <Card className="flex-1 overflow-hidden">
-          <CardContent className="p-4 h-full flex flex-col">
-            <h3 className="font-semibold mb-4 text-sm text-muted-foreground uppercase tracking-wide">
-              Sources
-            </h3>
-            
-            {documentsLoading ? (
-              <div className="flex items-center justify-center flex-1">
-                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-              </div>
-            ) : (
-              <div className="space-y-3 overflow-y-auto flex-1">
-                {documents.map((doc) => (
-                  <div
-                    key={doc.id}
-                    data-testid={`document-${doc.id}`}
-                    className={`group p-3 rounded-lg border-2 transition-all duration-200 relative ${
-                      selectedDocuments.includes(doc.id)
-                        ? 'border-primary bg-primary/10 shadow-md'
-                        : 'border-border hover:border-primary/50 hover:shadow-sm'
-                    }`}
-                  >
-                    <div
-                      className="cursor-pointer"
-                      onClick={() => {
-                        setSelectedDocuments(prev => 
-                          prev.includes(doc.id)
-                            ? prev.filter(id => id !== doc.id)
-                            : [...prev, doc.id]
-                        );
-                      }}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="w-10 h-10 rounded bg-primary/10 flex items-center justify-center flex-shrink-0">
-                          {doc.sourceType === 'youtube' ? (
-                            <Youtube className="w-5 h-5 text-primary" />
-                          ) : doc.sourceType === 'web' ? (
-                            <Globe className="w-5 h-5 text-primary" />
-                          ) : (
-                            <FileText className="w-5 h-5 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{doc.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {doc.pages ? `${doc.pages} pages` : ''} • {doc.status}
-                          </p>
-                          {doc.status === 'ready' && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="px-2 py-0.5 text-xs rounded bg-success/10 text-success">
-                                Ready
-                              </span>
-                            </div>
-                          )}
-                          {doc.status === 'processing' && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="px-2 py-0.5 text-xs rounded bg-warning/10 text-warning animate-pulse">
-                                Processing...
-                              </span>
-                            </div>
-                          )}
-                          {doc.status === 'error' && (
-                            <div className="flex items-center gap-2 mt-2">
-                              <span className="px-2 py-0.5 text-xs rounded bg-destructive/10 text-destructive">
-                                Error
-                              </span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
+              <TabsContent value="upload" className="mt-6 space-y-6">
+                {/* Supported Formats */}
+                <div className="text-center">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">VaktaAI now supports</p>
+                  <div className="flex justify-center gap-4 text-slate-700 dark:text-slate-300">
+                    <div className="flex flex-col items-center">
+                      <FileText className="w-8 h-8 mb-1" />
+                      <span className="text-xs">PDF</span>
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="absolute top-2 right-2 h-7 w-7 p-0 opacity-0 group-hover:opacity-100 hover:bg-destructive/10 hover:text-destructive transition-opacity"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        deleteDocumentMutation.mutate(doc.id);
-                      }}
-                      data-testid={`button-delete-${doc.id}`}
-                      disabled={deleteDocumentMutation.isPending}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+                    <div className="flex flex-col items-center">
+                      <FileText className="w-8 h-8 mb-1" />
+                      <span className="text-xs">Docs</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <FileText className="w-8 h-8 mb-1" />
+                      <span className="text-xs">PPT</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <Video className="w-8 h-8 mb-1" />
+                      <span className="text-xs">YouTube</span>
+                    </div>
+                    <div className="flex flex-col items-center">
+                      <Globe className="w-8 h-8 mb-1" />
+                      <span className="text-xs">Web</span>
+                    </div>
                   </div>
-                ))}
-                
-                {documents.length === 0 && (
-                  <div className="text-center py-8">
-                    <FileText className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">No documents yet</p>
-                    <p className="text-xs text-muted-foreground mt-1">Upload a document to get started</p>
+                </div>
+
+                {/* File Upload */}
+                <Card className="p-8 glass-card border-dashed border-2 border-purple-200 dark:border-purple-800">
+                  <div className="text-center">
+                    <Upload className="w-12 h-12 mx-auto mb-4 text-purple-600" />
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      Upload PDFs, PPTx, Docx, MP3, MP4 or Paste a URL
+                    </p>
+                    <ObjectUploader
+                      maxFileSize={50 * 1024 * 1024}
+                      onGetUploadParameters={async (file) => {
+                        const response = await fetch('/api/documents/upload', {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          credentials: 'include',
+                          body: JSON.stringify({
+                            fileName: file.name,
+                            fileType: file.type,
+                            fileSize: file.size
+                          })
+                        });
+                        const { uploadURL } = await response.json();
+                        return { method: "PUT" as const, url: uploadURL };
+                      }}
+                      onComplete={(result) => {
+                        const file = result.meta as any;
+                        uploadDocumentMutation.mutate({ 
+                          uploadURL: result.uploadURL as string, 
+                          fileName: file.name, 
+                          fileSize: file.size, 
+                          fileType: file.type 
+                        });
+                      }}
+                    >
+                      <Button variant="outline" data-testid="button-browse-files">
+                        <Upload className="w-4 h-4 mr-2" />
+                        Browse Files
+                      </Button>
+                    </ObjectUploader>
+                  </div>
+                </Card>
+
+                {/* YouTube URL */}
+                <Card className="p-6 glass-card">
+                  <div className="flex gap-3">
+                    <Youtube className="w-5 h-5 text-red-600 mt-2" />
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Paste YouTube URL (e.g., https://youtube.com/watch?v=...)"
+                        value={youtubeUrl}
+                        onChange={(e) => setYoutubeUrl(e.target.value)}
+                        className="mb-2"
+                        data-testid="input-youtube-url"
+                      />
+                      <Button 
+                        onClick={() => addUrlMutation.mutate({ url: youtubeUrl, title: 'YouTube Video' })}
+                        disabled={!youtubeUrl || addUrlMutation.isPending}
+                        size="sm"
+                        data-testid="button-add-youtube"
+                      >
+                        {addUrlMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add YouTube Video'}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+
+                {/* Web URL */}
+                <Card className="p-6 glass-card">
+                  <div className="flex gap-3">
+                    <Globe className="w-5 h-5 text-blue-600 mt-2" />
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Paste Website URL (articles, blogs, etc.)"
+                        value={websiteUrl}
+                        onChange={(e) => setWebsiteUrl(e.target.value)}
+                        className="mb-2"
+                        data-testid="input-website-url"
+                      />
+                      <Button 
+                        onClick={() => addUrlMutation.mutate({ url: websiteUrl, title: 'Web Article' })}
+                        disabled={!websiteUrl || addUrlMutation.isPending}
+                        size="sm"
+                        data-testid="button-add-website"
+                      >
+                        {addUrlMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Add Website'}
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              </TabsContent>
+
+              <TabsContent value="previous" className="mt-6">
+                {documentsLoading ? (
+                  <div className="text-center py-12">
+                    <Loader2 className="w-8 h-8 animate-spin mx-auto text-purple-600" />
+                  </div>
+                ) : documents.length === 0 ? (
+                  <div className="text-center py-12 text-slate-500">
+                    <FileText className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                    <p>No documents yet. Upload some to get started!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    {documents.map(doc => (
+                      <Card
+                        key={doc.id}
+                        className={cn(
+                          "p-4 cursor-pointer transition-all hover:scale-105 glass-card",
+                          selectedDocuments.includes(doc.id) && "ring-2 ring-purple-500 bg-purple-50 dark:bg-purple-950/30"
+                        )}
+                        onClick={() => toggleDocumentSelection(doc.id)}
+                        data-testid={`card-document-${doc.id}`}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          {getDocumentIcon(doc)}
+                          {selectedDocuments.includes(doc.id) && (
+                            <div className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-xs">
+                              ✓
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-sm font-medium line-clamp-2 mb-1" title={doc.title}>
+                          {doc.title}
+                        </p>
+                        <p className="text-xs text-slate-500">
+                          {doc.sourceType === 'youtube' ? 'Video' : doc.sourceType === 'web' ? 'Article' : 'Document'}
+                        </p>
+                      </Card>
+                    ))}
                   </div>
                 )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+              </TabsContent>
+            </Tabs>
+          </div>
+        </div>
 
-      {/* Center: Document Viewer */}
-      <div className="flex-1 bg-card rounded-xl border border-border overflow-hidden flex flex-col">
-        {currentDoc ? (
-          <>
-            <div className="p-4 border-b border-border flex items-center justify-between">
+        {/* Footer with Selected Docs */}
+        {selectedDocuments.length > 0 && (
+          <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4">
+            <div className="max-w-4xl mx-auto flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <Button variant="outline" size="sm" onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}>
-                  <ChevronLeft className="w-4 h-4" />
-                </Button>
-                <span className="text-sm font-medium">
-                  Page {currentPage} of {currentDoc.pages || 1}
-                </span>
-                <Button variant="outline" size="sm" onClick={() => setCurrentPage(currentPage + 1)}>
-                  <ChevronRight className="w-4 h-4" />
-                </Button>
+                <span className="text-sm font-medium">Selected ({selectedDocuments.length}):</span>
+                <div className="flex gap-2">
+                  {selectedDocsData.slice(0, 3).map(doc => (
+                    <div key={doc.id} className="flex items-center gap-1 px-2 py-1 bg-purple-100 dark:bg-purple-900/30 rounded text-xs">
+                      {getDocumentIcon(doc)}
+                      <span className="max-w-[100px] truncate">{doc.title}</span>
+                    </div>
+                  ))}
+                  {selectedDocuments.length > 3 && (
+                    <span className="text-xs text-slate-500">+{selectedDocuments.length - 3} more</span>
+                  )}
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" onClick={() => setZoom(Math.max(50, zoom - 25))}>
-                  <ZoomOut className="w-4 h-4" />
-                </Button>
-                <span className="text-sm">{zoom}%</span>
-                <Button variant="outline" size="sm" onClick={() => setZoom(Math.min(200, zoom + 25))}>
-                  <ZoomIn className="w-4 h-4" />
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Download className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex-1 bg-muted overflow-hidden">
-              {currentDoc.sourceType === 'pdf' && currentDoc.fileKey ? (
-                <div className="w-full h-full overflow-auto bg-gray-200">
-                  <iframe
-                    src={currentDoc.fileKey}
-                    className="w-full h-full border-0"
-                    title={currentDoc.title}
-                    style={{ minHeight: '100%' }}
-                  />
-                </div>
-              ) : currentDoc.sourceType === 'youtube' && currentDoc.metadata?.videoId ? (
-                <div className="w-full h-full flex items-center justify-center bg-black p-8">
-                  <div className="w-full max-w-4xl aspect-video">
-                    <iframe
-                      src={`https://www.youtube.com/embed/${currentDoc.metadata.videoId}`}
-                      className="w-full h-full border-0 rounded-lg shadow-2xl"
-                      title={currentDoc.title}
-                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                      allowFullScreen
-                    />
-                  </div>
-                </div>
-              ) : currentDoc.status === 'processing' ? (
-                <div className="flex items-center justify-center h-full">
-                  <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                    <p className="text-sm font-medium">Processing document...</p>
-                    <p className="text-xs text-muted-foreground mt-2">This may take a few moments</p>
-                  </div>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-full p-8">
-                  <div className="text-center max-w-md">
-                    {currentDoc.sourceType === 'youtube' && <Youtube className="w-16 h-16 text-primary/50 mx-auto mb-4" />}
-                    {currentDoc.sourceType === 'web' && <Globe className="w-16 h-16 text-primary/50 mx-auto mb-4" />}
-                    {!['youtube', 'web', 'pdf'].includes(currentDoc.sourceType) && <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />}
-                    <h3 className="text-lg font-semibold mb-2">{currentDoc.title}</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      {currentDoc.sourceType === 'youtube' 
-                        ? 'YouTube video transcript is ready for chat' 
-                        : currentDoc.sourceType === 'web'
-                        ? 'Web content is ready for chat'
-                        : 'Document content is ready'}
-                    </p>
-                    <Button 
-                      onClick={handleStartChat}
-                      disabled={selectedDocuments.length === 0}
-                      className="mt-2"
-                      data-testid="button-start-chat"
-                    >
-                      Start Chat to Explore Content
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </>
-        ) : (
-          <div className="flex items-center justify-center h-full">
-            <div className="text-center">
-              <FileText className="w-16 h-16 text-muted-foreground/50 mx-auto mb-4" />
-              <h3 className="text-lg font-semibold mb-2">No document selected</h3>
-              <p className="text-sm text-muted-foreground">Select a document from the sources list to view it</p>
+              <Button 
+                onClick={handleStartChat}
+                disabled={startChatMutation.isPending}
+                className="btn-gradient"
+                data-testid="button-start-chat"
+              >
+                {startChatMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 animate-spin mr-2" />
+                ) : (
+                  <Sparkles className="w-4 h-4 mr-2" />
+                )}
+                Start Chat with Garima
+              </Button>
             </div>
           </div>
         )}
       </div>
+    );
+  }
 
-      {/* Right: Chat & Quick Actions */}
-      <div className="w-96 flex flex-col gap-4">
-        {/* Quick Actions */}
-        <Card>
-          <CardContent className="p-4">
-            <h3 className="font-semibold mb-3 text-sm text-muted-foreground uppercase tracking-wide">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('summary')}
-                disabled={selectedDocuments.length === 0}
-                data-testid="button-quick-summary"
-              >
-                <FileText className="w-4 h-4" />
-                <span className="text-xs">Summary</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('highlights')}
-                disabled={selectedDocuments.length === 0}
-                data-testid="button-quick-highlights"
-              >
-                <Highlighter className="w-4 h-4" />
-                <span className="text-xs">Highlights</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('quiz')}
-                disabled={selectedDocuments.length === 0}
-                data-testid="button-quick-quiz"
-              >
-                <BookOpen className="w-4 h-4" />
-                <span className="text-xs">Quiz</span>
-              </Button>
-              <Button 
-                variant="outline" 
-                className="p-3 h-auto flex-col gap-1"
-                onClick={() => setActiveActionModal('flashcards')}
-                disabled={selectedDocuments.length === 0}
-                data-testid="button-quick-flashcards"
-              >
-                <Layers className="w-4 h-4" />
-                <span className="text-xs">Flashcards</span>
-              </Button>
-            </div>
-            
-            {selectedDocuments.length > 0 && !currentChatId && (
-              <Button 
-                className="w-full mt-3" 
-                onClick={handleStartChat}
-                disabled={startChatMutation.isPending}
-                data-testid="button-start-chat"
-              >
-                {startChatMutation.isPending ? "Starting..." : "Start Chat with Selected Documents"}
-              </Button>
-            )}
-          </CardContent>
-        </Card>
-
-        {/* Chat Panel */}
-        <Card className="flex-1 flex flex-col overflow-hidden">
-          <div className="p-4 border-b border-border">
-            <h3 className="font-semibold">Chat with Documents</h3>
+  // Chat Screen (Three-Panel Layout)
+  return (
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-950">
+      {/* Left Sidebar - Sources */}
+      <div className={cn(
+        "transition-all duration-300 border-r border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex flex-col",
+        isSidebarOpen ? "w-64" : "w-0 overflow-hidden"
+      )}>
+        <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60">
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-sm">Sources ({selectedDocuments.length})</h3>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setActiveView('upload')}
+              data-testid="button-change-sources"
+            >
+              <ExternalLink className="w-4 h-4" />
+            </Button>
           </div>
+        </div>
+        <div className="flex-1 overflow-auto p-3 space-y-2">
+          {selectedDocsData.map(doc => (
+            <Card key={doc.id} className="p-3 glass-card hover:bg-purple-50 dark:hover:bg-purple-950/30 transition-colors" data-testid={`source-card-${doc.id}`}>
+              <div className="flex items-start gap-2">
+                {getDocumentIcon(doc)}
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium line-clamp-2">{doc.title}</p>
+                  <p className="text-xs text-slate-500 mt-1">
+                    {doc.sourceType === 'youtube' ? 'Video' : doc.sourceType === 'web' ? 'Article' : 'Document'}
+                  </p>
+                </div>
+              </div>
+            </Card>
+          ))}
+        </div>
+      </div>
 
-          {currentChatId ? (
-            <>
-              {/* Messages */}
-              <div className="flex-1 overflow-y-auto p-4 space-y-4">
-                {messages.map((msg) => (
-                  <div key={msg.id} className={`flex gap-3 ${msg.role === 'user' ? 'justify-end' : ''}`}>
-                    {msg.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
-                        <Bot className="w-4 h-4 text-primary-foreground" />
-                      </div>
-                    )}
-                    
-                    <div className={msg.role === 'user' ? 'bg-primary text-primary-foreground rounded-lg p-3 text-sm max-w-xs' : 'flex-1'}>
-                      {msg.role === 'assistant' ? (
-                        <div className="bg-muted rounded-lg p-3 text-sm">
-                          <p className="mb-2">{msg.content}</p>
-                          {msg.metadata && typeof msg.metadata === 'object' && 'sources' in msg.metadata ? (
-                            <div className="mt-2 pt-2 border-t border-border">
-                              <p className="text-xs text-muted-foreground">
-                                <BookOpen className="w-3 h-3 inline mr-1" />
-                                Sources referenced
-                              </p>
-                            </div>
-                          ) : null}
-                        </div>
-                      ) : (
-                        <p>{msg.content}</p>
-                      )}
-                    </div>
+      {/* Center - Chat Area */}
+      <div className="flex-1 flex flex-col">
+        {/* Chat Header */}
+        <div className="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-4">
+          <div className="flex items-center gap-3">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              data-testid="button-toggle-sidebar"
+            >
+              {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
+            </Button>
+            <div>
+              <h2 className="font-semibold">Doc Chat: Garima Ma'am</h2>
+              <p className="text-xs text-slate-500">{selectedDocuments.length} document{selectedDocuments.length !== 1 ? 's' : ''} selected</p>
+            </div>
+          </div>
+        </div>
 
-                    {msg.role === 'user' && (
-                      <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center flex-shrink-0">
-                        <User className="w-4 h-4" />
-                      </div>
-                    )}
-                  </div>
-                ))}
-
-                {messages.length === 0 && (
-                  <div className="text-center py-8">
-                    <Bot className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                    <p className="text-sm text-muted-foreground">Start a conversation</p>
-                    <p className="text-xs text-muted-foreground mt-1">Ask questions about your documents</p>
+        {/* Messages */}
+        <div className="flex-1 overflow-auto p-4 space-y-4">
+          {messages.map(msg => (
+            <div
+              key={msg.id}
+              className={cn(
+                "flex gap-3",
+                msg.role === 'user' ? "justify-end" : "justify-start"
+              )}
+              data-testid={`message-${msg.id}`}
+            >
+              {msg.role === 'assistant' && (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-5 h-5 text-white" />
+                </div>
+              )}
+              <div className={cn(
+                "max-w-[70%] rounded-2xl px-4 py-3",
+                msg.role === 'user' 
+                  ? "bg-purple-600 text-white" 
+                  : "glass-card"
+              )}>
+                <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
+                {(msg.metadata as any)?.citations && (
+                  <div className="mt-2 pt-2 border-t border-slate-200/50 dark:border-slate-700/50">
+                    <p className="text-xs opacity-75">📖 Page {(msg.metadata as any).citations}</p>
                   </div>
                 )}
               </div>
+              {msg.role === 'user' && (
+                <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <User className="w-5 h-5" />
+                </div>
+              )}
+            </div>
+          ))}
 
-              {/* Input */}
-              <div className="p-4 border-t border-border">
-                <form onSubmit={handleSubmit} className="flex gap-2">
-                  <Input
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    placeholder="Ask a question..."
-                    disabled={sendMessageMutation.isPending}
-                    className="flex-1"
-                    data-testid="input-chat-message"
-                  />
-                  <Button 
-                    type="submit" 
-                    disabled={!message.trim() || sendMessageMutation.isPending}
-                    size="sm"
-                    data-testid="button-send-message"
-                  >
-                    <Send className="w-4 h-4" />
-                  </Button>
-                </form>
+          {/* Streaming Message */}
+          {isStreaming && streamingMessage && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-white" />
               </div>
-            </>
-          ) : (
-            <div className="flex-1 flex items-center justify-center">
-              <div className="text-center">
-                <Bot className="w-12 h-12 text-muted-foreground/50 mx-auto mb-4" />
-                <p className="text-sm text-muted-foreground">Select documents and start chatting</p>
+              <div className="max-w-[70%] rounded-2xl px-4 py-3 glass-card">
+                <p className="text-sm whitespace-pre-wrap">{streamingMessage}</p>
+                <span className="inline-block w-2 h-4 bg-purple-600 animate-pulse ml-1"></span>
               </div>
             </div>
           )}
-        </Card>
+
+          {/* Typing Indicator */}
+          {isStreaming && !streamingMessage && (
+            <div className="flex gap-3 justify-start">
+              <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                <Bot className="w-5 h-5 text-white" />
+              </div>
+              <div className="glass-card rounded-2xl px-4 py-3">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-purple-600 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
+                </div>
+              </div>
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input Area */}
+        <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4">
+          <div className="flex gap-3">
+            <Input
+              placeholder="Ask anything... Use @ to select docs"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              disabled={isStreaming}
+              className="flex-1"
+              data-testid="input-message"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              disabled={isStreaming}
+              data-testid="button-voice-input"
+            >
+              <Mic className="w-5 h-5" />
+            </Button>
+            <Button
+              onClick={handleSendMessage}
+              disabled={!message.trim() || isStreaming}
+              className="btn-gradient"
+              data-testid="button-send-message"
+            >
+              {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
+            </Button>
+          </div>
+        </div>
       </div>
 
-      {/* DocChat Action Modal */}
-      <DocChatActionModal
-        open={activeActionModal !== null}
-        onOpenChange={(open) => {
-          if (!open) {
-            setActiveActionModal(null);
-            setActionContent("");
-          }
-        }}
-        actionType={activeActionModal}
-        selectedDocs={selectedDocs.map(d => ({ id: d.id, title: d.title }))}
-        onSubmit={handleDocChatActionSubmit}
-        isProcessing={actionProcessing}
-        streamingContent={actionContent}
-        userProfile={user}
-      />
+      {/* Right Sidebar - Quick Actions */}
+      <div className={cn(
+        "transition-all duration-300 border-l border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex flex-col",
+        isActionsPanelOpen ? "w-64" : "w-0 overflow-hidden"
+      )}>
+        <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60">
+          <h3 className="font-medium text-sm">Quick Actions</h3>
+        </div>
+        <div className="flex-1 overflow-auto p-3 space-y-2">
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-summary">
+            <FileText className="w-4 h-4" />
+            <span className="text-sm">Summary</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-highlights">
+            <Highlighter className="w-4 h-4" />
+            <span className="text-sm">Highlights</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-quiz">
+            <Brain className="w-4 h-4" />
+            <span className="text-sm">Generate Quiz</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-flashcards">
+            <Layers className="w-4 h-4" />
+            <span className="text-sm">Flashcards</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-notes">
+            <StickyNote className="w-4 h-4" />
+            <span className="text-sm">Smart Notes</span>
+          </Button>
+          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-search">
+            <Search className="w-4 h-4" />
+            <span className="text-sm">Search</span>
+          </Button>
+        </div>
+      </div>
+
+      {/* Toggle Actions Panel Button - Always visible outside the panel */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={() => setIsActionsPanelOpen(!isActionsPanelOpen)}
+        className="fixed right-4 top-20 z-50 glass-card shadow-lg"
+        data-testid="button-toggle-actions"
+      >
+        {isActionsPanelOpen ? (
+          <ChevronRight className="w-5 h-5 text-purple-600" />
+        ) : (
+          <Sparkles className="w-5 h-5 text-purple-600" />
+        )}
+      </Button>
     </div>
   );
 }
