@@ -39,6 +39,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract file extension to determine source type
       const fileExtension = fileName.split('.').pop()?.toLowerCase();
+      
+      // Check for unsupported image files
+      const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+      if (imageExtensions.includes(fileExtension || '')) {
+        return res.status(400).json({ 
+          message: "Image files are not supported. Please upload PDF, DOCX, or TXT files." 
+        });
+      }
+      
       const sourceType = fileExtension === 'pdf' ? 'pdf' : 
                         fileExtension === 'docx' ? 'docx' : 
                         fileExtension === 'txt' ? 'text' : 
@@ -113,6 +122,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       // Extract file extension to determine source type
       const fileExtension = file.originalname.split('.').pop()?.toLowerCase();
+      
+      // Check for unsupported image files
+      const imageExtensions = ['png', 'jpg', 'jpeg', 'gif', 'bmp', 'webp', 'svg', 'ico'];
+      if (imageExtensions.includes(fileExtension || '')) {
+        return res.status(400).json({ 
+          message: "Image files are not supported. Please upload PDF, DOCX, or TXT files." 
+        });
+      }
+      
       const sourceType = fileExtension === 'pdf' ? 'pdf' : 
                         fileExtension === 'docx' ? 'docx' : 
                         fileExtension === 'txt' ? 'text' : 
