@@ -36,6 +36,9 @@ import {
 } from "lucide-react";
 import { Document, Chat, Message } from "@shared/schema";
 import { cn } from "@/lib/utils";
+import DocChatActionModal from "./DocChatActionModal";
+
+type ActionType = 'summary' | 'highlights' | 'quiz' | 'flashcards';
 
 export default function DocChatView() {
   // State Management
@@ -49,6 +52,9 @@ export default function DocChatView() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
   const [isActionsPanelOpen, setIsActionsPanelOpen] = useState(true);
   const [activeView, setActiveView] = useState<'upload' | 'chat'>('upload');
+  const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
+  const [actionProcessing, setActionProcessing] = useState(false);
+  const [actionContent, setActionContent] = useState("");
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -234,6 +240,98 @@ export default function DocChatView() {
   };
 
   const selectedDocsData = documents.filter(d => selectedDocuments.includes(d.id));
+
+  const handleActionSubmit = async (actionType: ActionType, formData: any) => {
+    setActionProcessing(true);
+    setActionContent("");
+    
+    try {
+      const response = await fetch(`/api/docchat/action/${actionType}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          docIds: selectedDocuments,
+          language: formData.language || 'en',
+          level: formData.level,
+          examBoard: formData.examBoard,
+          ...formData,
+        }),
+      });
+
+      if (!response.ok || !response.body) throw new Error("Action failed");
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+      let fullContent = "";
+      let isDone = false;
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        
+        // Split by double newline to get complete SSE events
+        const events = buffer.split('\n\n');
+        
+        // Keep the last incomplete event in buffer
+        buffer = events.pop() || "";
+        
+        // Process complete events
+        for (const event of events) {
+          const lines = event.split('\n');
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              const data = line.slice(6);
+              try {
+                const parsed = JSON.parse(data);
+                if (parsed.type === 'chunk' && parsed.content) {
+                  fullContent += parsed.content;
+                  setActionContent(fullContent);
+                } else if (parsed.type === 'complete') {
+                  toast({ title: "Success", description: `${actionType.charAt(0).toUpperCase() + actionType.slice(1)} generated successfully!` });
+                } else if (parsed.type === 'done') {
+                  isDone = true;
+                } else if (parsed.type === 'error') {
+                  throw new Error(parsed.message);
+                }
+              } catch (e) {
+                console.error("SSE parse error:", e, "Data:", data);
+              }
+            }
+          }
+        }
+      }
+      
+      // Process any remaining buffered data
+      if (buffer.trim()) {
+        const lines = buffer.split('\n');
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            const data = line.slice(6);
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.type === 'done') {
+                isDone = true;
+              }
+            } catch (e) {
+              console.error("Final SSE parse error:", e);
+            }
+          }
+        }
+      }
+      
+      // Only clear processing state after confirming done
+      if (isDone) {
+        setActionProcessing(false);
+      }
+    } catch (error) {
+      setActionProcessing(false);
+      toast({ title: "Error", description: `Failed to generate ${actionType}`, variant: "destructive" });
+    }
+  };
 
   // Upload Screen
   if (activeView === 'upload') {
@@ -628,27 +726,57 @@ export default function DocChatView() {
           <h3 className="font-medium text-sm">Quick Actions</h3>
         </div>
         <div className="flex-1 overflow-auto p-3 space-y-2">
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-summary">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => setActiveActionModal('summary')}
+            data-testid="action-summary"
+          >
             <FileText className="w-4 h-4" />
             <span className="text-sm">Summary</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-highlights">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => setActiveActionModal('highlights')}
+            data-testid="action-highlights"
+          >
             <Highlighter className="w-4 h-4" />
             <span className="text-sm">Highlights</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-quiz">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => setActiveActionModal('quiz')}
+            data-testid="action-quiz"
+          >
             <Brain className="w-4 h-4" />
             <span className="text-sm">Generate Quiz</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-flashcards">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => setActiveActionModal('flashcards')}
+            data-testid="action-flashcards"
+          >
             <Layers className="w-4 h-4" />
             <span className="text-sm">Flashcards</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-notes">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => toast({ title: "Coming Soon", description: "Smart Notes feature is under development" })}
+            data-testid="action-notes"
+          >
             <StickyNote className="w-4 h-4" />
             <span className="text-sm">Smart Notes</span>
           </Button>
-          <Button variant="ghost" className="w-full justify-start gap-2" data-testid="action-search">
+          <Button 
+            variant="ghost" 
+            className="w-full justify-start gap-2" 
+            onClick={() => toast({ title: "Coming Soon", description: "Search feature is under development" })}
+            data-testid="action-search"
+          >
             <Search className="w-4 h-4" />
             <span className="text-sm">Search</span>
           </Button>
@@ -669,6 +797,18 @@ export default function DocChatView() {
           <Sparkles className="w-5 h-5 text-purple-600" />
         )}
       </Button>
+
+      {/* Action Modal */}
+      <DocChatActionModal
+        open={activeActionModal !== null}
+        onOpenChange={(open) => !open && setActiveActionModal(null)}
+        actionType={activeActionModal}
+        selectedDocs={selectedDocsData.map(d => ({ id: d.id, title: d.title }))}
+        onSubmit={handleActionSubmit}
+        isProcessing={actionProcessing}
+        streamingContent={actionContent}
+        userProfile={user as any}
+      />
     </div>
   );
 }
