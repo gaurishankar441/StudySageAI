@@ -18,7 +18,7 @@ app.use(helmet({
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Google Fonts
       objectSrc: ["'none'"],
       mediaSrc: ["'self'", "blob:"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", "https://www.youtube.com"], // Allow YouTube embeds
     },
   } : {
     directives: {
@@ -30,7 +30,7 @@ app.use(helmet({
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Google Fonts
       objectSrc: ["'none'"],
       mediaSrc: ["'self'", "blob:"],
-      frameSrc: ["'none'"],
+      frameSrc: ["'self'", "https://www.youtube.com"], // Allow YouTube embeds
     },
   },
   crossOriginEmbedderPolicy: false, // Disable for external resources
