@@ -884,7 +884,7 @@ export class VoiceStreamService {
     } catch (error) {
       console.error('[VOICE TUTOR] Pipeline error:', error);
       
-      const errorMsg: ErrorMessage = {
+      const errorMsg = {
         type: 'ERROR',
         timestamp: new Date().toISOString(),
         sessionId: ws.sessionId,
