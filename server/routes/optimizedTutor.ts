@@ -1059,6 +1059,7 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
 /**
  * POST /api/tutor/optimized/session/tts
  * Generate TTS with emotion-based prosody for tutor response
+ * 🚀 PHASE 2-3: Now with caching, compression, and metrics!
  */
 optimizedTutorRouter.post('/session/tts', async (req, res) => {
   try {
@@ -1076,22 +1077,74 @@ optimizedTutorRouter.post('/session/tts', async (req, res) => {
     
     const persona = tutorSessionService.getPersona(session);
     const language = persona.languageStyle.hindiPercentage > 50 ? 'hi' : 'en';
+    const personaId = session.personaId;
     
-    // Synthesize with emotion and persona
-    const audioBuffer = await enhancedVoiceService.synthesize(text, {
-      emotion: emotion || 'friendly',
-      personaId: session.personaId,
+    console.log(`[SESSION TTS] Generating for chatId ${chatId}: ${text.substring(0, 50)}...`);
+    
+    const startTime = Date.now();
+    
+    // 🚀 PHASE 2.1: Check cache first
+    const { ttsCacheService } = await import('../services/ttsCacheService');
+    const { audioCompression } = await import('../services/audioCompression');
+    const { ttsMetrics } = await import('../services/ttsMetrics');
+    
+    let audioBuffer = await ttsCacheService.get(text, language, emotion, personaId);
+    let cached = false;
+    
+    if (audioBuffer) {
+      cached = true;
+      console.log(`[SESSION TTS] 💾 Cache hit! (${Date.now() - startTime}ms)`);
+    } else {
+      // Cache miss - generate new audio
+      audioBuffer = await enhancedVoiceService.synthesize(text, {
+        emotion: emotion || 'friendly',
+        personaId,
+        language,
+        enableMathSpeech: true,
+        enablePauses: true
+      });
+      
+      // Store in cache
+      await ttsCacheService.set(text, language, audioBuffer, emotion, personaId);
+      console.log(`[SESSION TTS] 🔨 Generated and cached (${Date.now() - startTime}ms)`);
+    }
+    
+    const genTime = Date.now() - startTime;
+    
+    // 🚀 PHASE 2.2: Compress if beneficial
+    let finalBuffer = audioBuffer;
+    let compressed = false;
+    let compressedSize = audioBuffer.length;
+    
+    if (audioCompression.shouldCompress(audioBuffer.length)) {
+      const compressionResult = await audioCompression.compress(audioBuffer);
+      finalBuffer = compressionResult.compressed;
+      compressed = true;
+      compressedSize = compressionResult.compressedSize;
+      console.log(`[SESSION TTS] 📦 Compressed ${audioBuffer.length} → ${compressedSize} bytes (${compressionResult.compressionRatio.toFixed(1)}% saved)`);
+    }
+    
+    // 🚀 PHASE 2.4: Record metrics
+    ttsMetrics.record({
+      sentence: text,
       language,
-      enableMathSpeech: true,
-      enablePauses: true
+      generationTime: genTime,
+      cached,
+      compressed,
+      audioSize: audioBuffer.length,
+      compressedSize: compressed ? compressedSize : undefined,
+      sequence: 0,
+      sessionId: chatId,
     });
     
     res.set({
-      'Content-Type': 'audio/wav',
-      'Content-Length': audioBuffer.length,
+      'Content-Type': compressed ? 'audio/wav-compressed' : 'audio/wav',
+      'Content-Length': finalBuffer.length,
+      'X-TTS-Cached': cached ? 'true' : 'false',
+      'X-TTS-Compressed': compressed ? 'true' : 'false',
     });
     
-    res.send(audioBuffer);
+    res.send(finalBuffer);
   } catch (error) {
     console.error('[SESSION TTS] Error:', error);
     res.status(500).json({ error: 'Failed to synthesize speech' });

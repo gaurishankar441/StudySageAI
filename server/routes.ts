@@ -650,6 +650,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Text-to-speech endpoint (Enhanced with TTSSanitizer, emotion, prosody, Garima voice)
+  // 🚀 PHASE 2-3: Now with caching, compression, and metrics!
   app.post('/api/tutor/tts', isAuthenticated, async (req: any, res) => {
     try {
       const userId = req.user?.id;
@@ -663,27 +664,77 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Text too long (max 3000 characters)" });
       }
 
-      console.log(`Generating speech for user ${userId}: ${text.substring(0, 50)}...`);
+      console.log(`[TTS] Generating speech for user ${userId}: ${text.substring(0, 50)}...`);
 
-      // Use Enhanced Voice Service with all features (TTSSanitizer, math, Hinglish, prosody, Garima voice)
-      const { enhancedVoiceService } = await import('./services/enhancedVoiceService');
-      const audioBuffer = await enhancedVoiceService.synthesize(text, {
-        language: language === 'hi' ? 'hi' : 'en',
-        emotion: emotion || 'friendly',
-        intent,
-        personaId: personaId || 'garima',
-        enableMathSpeech: true,
-        enablePauses: true,
-        enableEmphasis: true
+      const startTime = Date.now();
+      const lang = language === 'hi' ? 'hi' : 'en';
+      
+      // 🚀 PHASE 2.1: Check cache first
+      const { ttsCacheService } = await import('./services/ttsCacheService');
+      const { audioCompression } = await import('./services/audioCompression');
+      const { ttsMetrics } = await import('./services/ttsMetrics');
+      
+      let audioBuffer = await ttsCacheService.get(text, lang, emotion, personaId);
+      let cached = false;
+      
+      if (audioBuffer) {
+        cached = true;
+        console.log(`[TTS] 💾 Cache hit! (${Date.now() - startTime}ms)`);
+      } else {
+        // Cache miss - generate new audio
+        const { enhancedVoiceService } = await import('./services/enhancedVoiceService');
+        audioBuffer = await enhancedVoiceService.synthesize(text, {
+          language: lang,
+          emotion: emotion || 'friendly',
+          intent,
+          personaId: personaId || 'garima',
+          enableMathSpeech: true,
+          enablePauses: true,
+          enableEmphasis: true
+        });
+        
+        // Store in cache
+        await ttsCacheService.set(text, lang, audioBuffer, emotion, personaId);
+        console.log(`[TTS] 🔨 Generated and cached (${Date.now() - startTime}ms)`);
+      }
+
+      const genTime = Date.now() - startTime;
+      
+      // 🚀 PHASE 2.2: Compress if beneficial
+      let finalBuffer = audioBuffer;
+      let compressed = false;
+      let compressedSize = audioBuffer.length;
+      
+      if (audioCompression.shouldCompress(audioBuffer.length)) {
+        const compressionResult = await audioCompression.compress(audioBuffer);
+        finalBuffer = compressionResult.compressed;
+        compressed = true;
+        compressedSize = compressionResult.compressedSize;
+        console.log(`[TTS] 📦 Compressed ${audioBuffer.length} → ${compressedSize} bytes (${compressionResult.compressionRatio.toFixed(1)}% saved)`);
+      }
+      
+      // 🚀 PHASE 2.4: Record metrics
+      ttsMetrics.record({
+        sentence: text,
+        language: lang,
+        generationTime: genTime,
+        cached,
+        compressed,
+        audioSize: audioBuffer.length,
+        compressedSize: compressed ? compressedSize : undefined,
+        sequence: 0,
+        sessionId: userId,
       });
 
       // Send audio response
-      res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader('Content-Length', audioBuffer.length);
+      res.setHeader('Content-Type', compressed ? 'audio/mpeg-compressed' : 'audio/mpeg');
+      res.setHeader('Content-Length', finalBuffer.length);
       res.setHeader('Content-Disposition', 'inline; filename="speech.mp3"');
-      res.send(audioBuffer);
+      res.setHeader('X-TTS-Cached', cached ? 'true' : 'false');
+      res.setHeader('X-TTS-Compressed', compressed ? 'true' : 'false');
+      res.send(finalBuffer);
     } catch (error) {
-      console.error("TTS error:", error);
+      console.error("[TTS] Error:", error);
       res.status(500).json({ message: "Failed to generate speech" });
     }
   });
