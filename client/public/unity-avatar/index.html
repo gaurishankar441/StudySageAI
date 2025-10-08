@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>VaktaAI Avatar - uLipSync</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      body { 
+        margin: 0; 
+        padding: 0; 
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      }
+      #unity-container { 
+        width: 100%; 
+        height: 100vh; 
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #unity-canvas { 
+        width: 100%; 
+        height: 100%; 
+        display: block;
+        background: transparent;
+      }
+      #unity-loading-bar {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        text-align: center;
+      }
+      #unity-progress-bar-empty {
+        width: 200px;
+        height: 8px;
+        background: rgba(255,255,255,0.2);
+        border-radius: 4px;
+        overflow: hidden;
+      }
+      #unity-progress-bar-full {
+        width: 0%;
+        height: 100%;
+        background: linear-gradient(90deg, #667eea, #764ba2);
+        transition: width 0.3s;
+      }
+      #unity-loading-text {
+        color: white;
+        font-family: Arial, sans-serif;
+        font-size: 14px;
+        margin-top: 10px;
+      }
+      #unity-warning {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        right: 10px;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+        <div id="unity-loading-text">Loading AI Tutor Avatar...</div>
+      </div>
+      <div id="unity-warning"></div>
+    </div>
+    
+    <script>
+      var container = document.querySelector("#unity-container");
+      var canvas = document.querySelector("#unity-canvas");
+      var loadingBar = document.querySelector("#unity-loading-bar");
+      var progressBarFull = document.querySelector("#unity-progress-bar-full");
+      var warningBanner = document.querySelector("#unity-warning");
+      
+      // 🎯 GLOBAL UNITY INSTANCE (for PostMessage communication)
+      var unityInstance = null;
+
+      // 🔒 SECURITY: Handshake-based origin validation (cross-browser compatible)
+      var trustedParentOrigin = null;
+      var isHandshakeComplete = false;
+
+      // 🚀 UNITY TO REACT COMMUNICATION (Secure with handshake)
+      function SendMessageToReact(message) {
+        try {
+          var targetOrigin = trustedParentOrigin || '*';
+          window.parent.postMessage({
+            type: 'UNITY_MESSAGE',
+            payload: message
+          }, targetOrigin);
+        } catch (e) {
+          console.error('Failed to send message to React:', e);
+        }
+      }
+
+      // ✅ NOTIFY REACT WHEN UNITY IS READY (Secure with handshake)
+      function OnUnityReady() {
+        console.log('[Unity] Avatar ready, notifying React...');
+        var targetOrigin = trustedParentOrigin || '*';
+        window.parent.postMessage({
+          type: 'UNITY_READY',
+          payload: true
+        }, targetOrigin);
+      }
+
+      // 📩 REACT TO UNITY COMMUNICATION LISTENER (Secure with handshake)
+      window.addEventListener('message', function(event) {
+        // 🔒 SECURITY: Handshake flow
+        if (event.data.type === 'UNITY_INIT' && !isHandshakeComplete) {
+          // Accept first UNITY_INIT message and capture origin
+          trustedParentOrigin = event.origin;
+          isHandshakeComplete = true;
+          console.log('[Unity] Handshake complete with origin:', trustedParentOrigin);
+          
+          // Acknowledge handshake
+          window.parent.postMessage({
+            type: 'UNITY_INIT_ACK',
+            payload: true
+          }, trustedParentOrigin);
+          return;
+        }
+
+        // 🔒 SECURITY: Validate origin after handshake
+        if (isHandshakeComplete && event.origin !== trustedParentOrigin) {
+          console.warn('[Unity] Rejected message from unauthorized origin:', event.origin);
+          return;
+        }
+
+        if (!unityInstance) {
+          console.warn('[Unity] Instance not ready yet, queueing message');
+          return;
+        }
+
+        // Handle different message types from React
+        try {
+          switch(event.data.type) {
+            case 'PLAY_TTS_AUDIO':
+              // Play audio with base64 data (uLipSync will handle lip-sync)
+              unityInstance.SendMessage(
+                'AvatarController',
+                'PlayAudioFromBase64',
+                event.data.payload.audioData || ''
+              );
+              console.log('[Unity] Playing audio with lip-sync');
+              break;
+
+            case 'SET_EMOTION':
+              // Change avatar emotion/expression
+              unityInstance.SendMessage(
+                'AvatarController',
+                'SetEmotion',
+                event.data.payload.emotion || 'neutral'
+              );
+              console.log('[Unity] Emotion set to:', event.data.payload.emotion);
+              break;
+
+            case 'TRIGGER_GESTURE':
+              // Trigger specific gesture/animation
+              unityInstance.SendMessage(
+                'AvatarController',
+                'TriggerGesture',
+                event.data.payload.gesture || 'idle'
+              );
+              console.log('[Unity] Gesture triggered:', event.data.payload.gesture);
+              break;
+
+            case 'CHANGE_AVATAR':
+              // Switch between different avatars
+              unityInstance.SendMessage(
+                'AvatarManager',
+                'SwitchAvatar',
+                event.data.payload.avatarName || 'priya'
+              );
+              console.log('[Unity] Avatar switched to:', event.data.payload.avatarName);
+              break;
+
+            case 'STOP_AUDIO':
+              // Stop current audio playback
+              unityInstance.SendMessage(
+                'AvatarController',
+                'StopAudio',
+                ''
+              );
+              console.log('[Unity] Audio stopped');
+              break;
+
+            default:
+              console.warn('[Unity] Unknown message type:', event.data.type);
+          }
+        } catch (e) {
+          console.error('[Unity] Error handling message:', e);
+        }
+      });
+
+      // Show error banner
+      function unityShowBanner(msg, type) {
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
+        }
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; color: white; padding: 10px; border-radius: 4px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; color: black; padding: 10px; border-radius: 4px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
+
+      // Unity build configuration
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/WebGL.loader.js";
+      var config = {
+        dataUrl: buildUrl + "/WebGL.data.gz",
+        frameworkUrl: buildUrl + "/WebGL.framework.js.gz",
+        codeUrl: buildUrl + "/WebGL.wasm.gz",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "VaktaAI",
+        productName: "AI Tutor Avatar",
+        productVersion: "1.0",
+        showBanner: unityShowBanner,
+      };
+
+      // Mobile optimization
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        
+        // Lower resolution on mobile for performance
+        config.devicePixelRatio = 1;
+      }
+
+      // Show loading bar
+      loadingBar.style.display = "block";
+
+      // Load Unity
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          progressBarFull.style.width = 100 * progress + "%";
+        }).then((instance) => {
+          unityInstance = instance;
+          loadingBar.style.display = "none";
+          
+          // 🔧 RELIABILITY: Use requestAnimationFrame for better timing
+          // Wait for next frame, then notify React (Unity should be ready by then)
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              OnUnityReady();
+            });
+          });
+          
+          console.log('[Unity] Instance created successfully');
+        }).catch((message) => {
+          console.error('[Unity] Failed to create instance:', message);
+          unityShowBanner('Failed to load avatar: ' + message, 'error');
+        });
+      };
+
+      script.onerror = () => {
+        console.error('[Unity] Failed to load Unity loader');
+        unityShowBanner('Failed to load Unity loader script', 'error');
+      };
+
+      document.body.appendChild(script);
+    </script>
+  </body>
+</html>
