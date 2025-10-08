@@ -1163,10 +1163,10 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 3D Avatar Panel (Slide-out) */}
+      {/* 🎭 3D Avatar Panel (Responsive: Right on desktop, Bottom on mobile) */}
       {avatarEnabled && (
         <div 
-          className="fixed top-0 right-0 h-screen w-96 bg-white dark:bg-gray-900 border-l border-border shadow-2xl z-50 animate-slide-in-right"
+          className="fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 animate-slide-up md:animate-slide-in-right"
           data-testid="avatar-panel"
         >
           <div className="h-full flex flex-col">
@@ -1184,7 +1184,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                   data-testid="button-close-avatar"
                   title="Close Avatar"
                 >
-                  <ChevronRight className="w-4 h-4" />
+                  <ChevronRight className="w-4 h-4 md:block hidden" />
+                  <ChevronLeft className="w-4 h-4 md:hidden" />
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground mt-1">

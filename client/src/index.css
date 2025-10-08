@@ -195,6 +195,17 @@ body.modal-open {
   }
 }
 
+@keyframes slideUp {
+  0% { 
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  100% { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 @keyframes scaleIn {
   0% { 
     opacity: 0;
@@ -268,6 +279,10 @@ body.modal-open {
 
 .animate-slide-in-right {
   animation: slideInRight 400ms ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 400ms ease-out;
 }
 
 .animate-scale-in {

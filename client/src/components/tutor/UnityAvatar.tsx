@@ -3,11 +3,34 @@
  * Optional avatar panel for AI Tutor - can be toggled on/off
  */
 
-import { forwardRef, useRef, useImperativeHandle, useState } from 'react';
+import { forwardRef, useRef, useImperativeHandle, useState, useEffect } from 'react';
 import { Loader2, AlertCircle, User } from 'lucide-react';
 import { useUnityBridge, UnityBridgeHandle } from './hooks/useUnityBridge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+
+// 🔍 WebGL detection utility
+function detectWebGLSupport(): { supported: boolean; message?: string } {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+    
+    if (!gl) {
+      return {
+        supported: false,
+        message: 'WebGL is not supported on this device/browser'
+      };
+    }
+
+    return { supported: true };
+  } catch (error) {
+    console.error('[WebGL] Detection failed:', error);
+    return {
+      supported: false,
+      message: 'Error detecting WebGL support'
+    };
+  }
+}
 
 export interface UnityAvatarHandle extends UnityBridgeHandle {
   // Re-export all bridge methods
@@ -26,6 +49,19 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [webGLSupported, setWebGLSupported] = useState(true);
+
+    // Check WebGL support on mount
+    useEffect(() => {
+      const detection = detectWebGLSupport();
+      setWebGLSupported(detection.supported);
+      
+      if (!detection.supported) {
+        setLoadError(detection.message || 'WebGL not supported');
+        setIsLoading(false);
+        onError?.(detection.message || 'WebGL not supported');
+      }
+    }, [onError]);
 
     // Use Unity bridge hook
     const unityBridge = useUnityBridge({
@@ -91,20 +127,27 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
             <Card className="p-6 text-center max-w-sm mx-4">
               <AlertCircle className="w-12 h-12 text-red-500 mb-3 mx-auto" />
               <h3 className="font-semibold text-gray-900 dark:text-white mb-2">
-                Avatar Load Failed
+                {webGLSupported ? 'Avatar Load Failed' : 'WebGL Not Supported'}
               </h3>
               <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
                 {loadError}
+                {!webGLSupported && (
+                  <span className="block mt-2 text-xs opacity-80">
+                    Please use a modern browser like Chrome, Firefox, or Edge to view the 3D avatar.
+                  </span>
+                )}
               </p>
               <div className="flex gap-2 justify-center">
-                <Button 
-                  onClick={handleRetry}
-                  variant="outline"
-                  size="sm"
-                  data-testid="button-retry-avatar"
-                >
-                  Retry
-                </Button>
+                {webGLSupported && (
+                  <Button 
+                    onClick={handleRetry}
+                    variant="outline"
+                    size="sm"
+                    data-testid="button-retry-avatar"
+                  >
+                    Retry
+                  </Button>
+                )}
               </div>
               <p className="text-xs text-gray-500 dark:text-gray-400 mt-3">
                 Don't worry - chat functionality still works!
