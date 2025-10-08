@@ -1,0 +1,273 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+
+// Display text vs Speech text ko handle karne wala component
+export default function TutorMessageWithVoice() {
+  const [messages, setMessages] = useState([
+    {
+      id: 1,
+      role: 'tutor',
+      displayText: 'Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning! 🌅',
+      timestamp: new Date(),
+    },
+    {
+      id: 2,
+      role: 'student',
+      displayText: 'Namaste! Haan bilkul, main tayar hoon',
+      timestamp: new Date(),
+    },
+    {
+      id: 3,
+      role: 'tutor',
+      displayText: 'Great! ✨ Aaj hum **Algorithms** ke baare mein seekhenge. Ready? 🚀',
+      timestamp: new Date(),
+    },
+  ]);
+
+  const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
+  const [loadingAudio, setLoadingAudio] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Auto-play tutor messages ka TTS
+  const [autoPlay, setAutoPlay] = useState(true);
+
+  // Play TTS for a message
+  const playTTS = async (messageId: number, displayText: string) => {
+    try {
+      setLoadingAudio(messageId);
+
+      // Call API to get sanitized TTS
+      const response = await fetch('/api/tutor/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: displayText,
+          language: 'hinglish',
+          emotion: 'encouraging',
+        }),
+      });
+
+      if (!response.ok) throw new Error('TTS generation failed');
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      // Stop previous audio if playing
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+
+      // Create and play new audio
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onplay = () => {
+        setPlayingMessageId(messageId);
+        setLoadingAudio(null);
+      };
+
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      audio.onerror = () => {
+        setPlayingMessageId(null);
+        setLoadingAudio(null);
+        console.error('Audio playback error');
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('TTS error:', error);
+      setLoadingAudio(null);
+      setPlayingMessageId(null);
+    }
+  };
+
+  // Stop TTS
+  const stopTTS = () => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setPlayingMessageId(null);
+    }
+  };
+
+  // Auto-play latest tutor message
+  useEffect(() => {
+    if (!autoPlay) return;
+
+    const latestTutorMessage = messages
+      .filter((m) => m.role === 'tutor')
+      .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())[0];
+
+    if (latestTutorMessage && !playingMessageId) {
+      // Small delay to let message render
+      setTimeout(() => {
+        playTTS(latestTutorMessage.id, latestTutorMessage.displayText);
+      }, 500);
+    }
+  }, [messages, autoPlay]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
+  return (
+    <div className="flex flex-col h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50">
+      {/* Header */}
+      <div className="bg-white/80 backdrop-blur-xl border-b border-purple-100 px-6 py-4">
+        <div className="flex items-center justify-between max-w-4xl mx-auto">
+          <div>
+            <h1 className="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              AI Tutor
+            </h1>
+            <p className="text-sm text-gray-600">Natural conversation mode</p>
+          </div>
+
+          {/* Auto-play toggle */}
+          <button
+            onClick={() => setAutoPlay(!autoPlay)}
+            className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
+              autoPlay
+                ? 'bg-purple-100 text-purple-700'
+                : 'bg-gray-100 text-gray-600'
+            }`}
+          >
+            {autoPlay ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+            <span className="text-sm font-medium">
+              {autoPlay ? 'Auto-play ON' : 'Auto-play OFF'}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto px-6 py-8">
+        <div className="max-w-4xl mx-auto space-y-6">
+          {messages.map((message) => (
+            <div
+              key={message.id}
+              className={`flex ${
+                message.role === 'student' ? 'justify-end' : 'justify-start'
+              }`}
+            >
+              <div
+                className={`max-w-[80%] ${
+                  message.role === 'tutor'
+                    ? 'bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100'
+                    : 'bg-white border border-gray-200'
+                } rounded-2xl p-4 shadow-sm`}
+              >
+                {/* Message header with voice button */}
+                <div className="flex items-center justify-between mb-2">
+                  <span
+                    className={`text-xs font-semibold ${
+                      message.role === 'tutor' ? 'text-purple-600' : 'text-gray-600'
+                    }`}
+                  >
+                    {message.role === 'tutor' ? '🎓 Tutor' : '👤 You'}
+                  </span>
+
+                  {/* Voice button for tutor messages */}
+                  {message.role === 'tutor' && (
+                    <button
+                      onClick={() => {
+                        if (playingMessageId === message.id) {
+                          stopTTS();
+                        } else {
+                          playTTS(message.id, message.displayText);
+                        }
+                      }}
+                      disabled={loadingAudio === message.id}
+                      className={`p-1.5 rounded-lg transition-all ${
+                        playingMessageId === message.id
+                          ? 'bg-purple-600 text-white scale-110'
+                          : 'bg-purple-100 text-purple-600 hover:bg-purple-200'
+                      }`}
+                    >
+                      {loadingAudio === message.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : playingMessageId === message.id ? (
+                        <VolumeX className="w-4 h-4" />
+                      ) : (
+                        <Volume2 className="w-4 h-4" />
+                      )}
+                    </button>
+                  )}
+                </div>
+
+                {/* Display text (WITH emojis and formatting) */}
+                <div className="text-gray-800 leading-relaxed">
+                  {message.displayText}
+                </div>
+
+                {/* Timestamp */}
+                <div className="mt-2 text-xs text-gray-400">
+                  {message.timestamp.toLocaleTimeString('en-IN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </div>
+
+                {/* Audio playing indicator */}
+                {playingMessageId === message.id && (
+                  <div className="mt-3 flex items-center gap-2 text-purple-600">
+                    <div className="flex gap-1">
+                      <div className="w-1 h-4 bg-purple-600 rounded-full animate-pulse" />
+                      <div
+                        className="w-1 h-4 bg-purple-600 rounded-full animate-pulse"
+                        style={{ animationDelay: '150ms' }}
+                      />
+                      <div
+                        className="w-1 h-4 bg-purple-600 rounded-full animate-pulse"
+                        style={{ animationDelay: '300ms' }}
+                      />
+                    </div>
+                    <span className="text-xs font-medium">Speaking...</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Input area */}
+      <div className="bg-white/80 backdrop-blur-xl border-t border-purple-100 px-6 py-4">
+        <div className="max-w-4xl mx-auto">
+          <div className="flex gap-3">
+            <input
+              type="text"
+              placeholder="Type your response..."
+              className="flex-1 px-4 py-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+            />
+            <button className="px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all shadow-lg">
+              Send
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Info banner */}
+      <div className="bg-purple-50 border-t border-purple-100 px-6 py-3">
+        <div className="max-w-4xl mx-auto flex items-center gap-2 text-sm text-purple-700">
+          <div className="w-2 h-2 bg-purple-500 rounded-full animate-pulse" />
+          <span>
+            <strong>Clean Speech Mode:</strong> Emojis and symbols are shown but not spoken
+            for natural conversation
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}

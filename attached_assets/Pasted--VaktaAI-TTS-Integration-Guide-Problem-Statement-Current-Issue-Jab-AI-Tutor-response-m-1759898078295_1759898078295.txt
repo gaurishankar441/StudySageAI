@@ -1,0 +1,410 @@
+# 🎙️ VaktaAI TTS Integration Guide
+
+## Problem Statement
+**Current Issue:** Jab AI Tutor response mein emojis (🌅, ✨, 🚀) aur symbols hote hain, to TTS unhe literally read karta hai jaise "sunrise emoji", "sparkles" etc. Ye natural conversation nahi lagta.
+
+**Expected Behavior:** 
+- Display mein emojis aur formatting dikhe (visual richness)
+- TTS mein sirf clean, natural text bole (human tutor jaisa)
+
+---
+
+## Solution Architecture
+
+### 1. **Text Sanitization Pipeline**
+
+```typescript
+Display Text (Original)
+    ↓
+[TTSSanitizer.sanitizeForSpeech()]
+    ↓
+├─ Remove Emojis (🌅 → "")
+├─ Remove Markdown (**bold** → "bold")
+├─ Remove Symbols (✨ → "")
+├─ Add Natural Pauses (. → <break time="500ms"/>)
+├─ Code-switching (okay → theek hai)
+    ↓
+Speech Text (Clean)
+    ↓
+[SSML Wrapper]
+    ↓
+TTS Engine (Sarvam AI)
+```
+
+### 2. **Key Components Created**
+
+#### A. `TTSSanitizer` Service
+Location: `server/services/ttsSanitizer.ts`
+
+**Features:**
+- ✅ Emoji removal (comprehensive Unicode regex)
+- ✅ Markdown cleanup (**bold**, _italic_, `code`)
+- ✅ SSML generation with pauses
+- ✅ Hinglish optimization (okay → theek hai)
+- ✅ Code-switching smoothing
+- ✅ Emotional tone markers
+
+**Usage:**
+```typescript
+const displayText = "Namaste! 🌅 Aaj hum **algorithms** seekhenge!";
+const speechText = TTSSanitizer.sanitizeForSpeech(displayText);
+// Output: "Namaste! Aaj hum algorithms seekhenge!"
+```
+
+#### B. Enhanced Tutor Voice API
+Location: `server/routes/tutorVoice.ts`
+
+**Endpoints:**
+1. `POST /api/tutor/voice` - Generate TTS
+2. `POST /api/tutor/voice/preview` - Preview sanitization
+3. `POST /api/tutor/voice/stream` - Stream long responses
+
+#### C. React Components
+1. `TutorMessageWithVoice` - Production message component
+2. `TTSPreviewTool` - Testing/debugging tool
+
+---
+
+## Implementation Steps
+
+### Step 1: Add Service Files
+
+```bash
+# 1. Create TTS Sanitizer
+touch server/services/ttsSanitizer.ts
+# Copy content from artifact "tts_sanitizer"
+
+# 2. Add Voice Route
+touch server/routes/tutorVoice.ts
+# Copy content from artifact "tutor_voice_route"
+```
+
+### Step 2: Update Main Server
+
+```typescript
+// server/index.ts
+
+import tutorVoiceRoutes from './routes/tutorVoice';
+
+// Add route
+app.use('/api/tutor', tutorVoiceRoutes);
+```
+
+### Step 3: Update Tutor Components
+
+```typescript
+// client/src/pages/TutorPage.tsx
+
+import { useState, useRef } from 'react';
+
+function TutorPage() {
+  const [playingMessageId, setPlayingMessageId] = useState<number | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Play TTS for message
+  const playTTS = async (messageId: number, displayText: string) => {
+    try {
+      const response = await fetch('/api/tutor/voice', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: displayText,
+          language: 'hinglish',
+          emotion: 'encouraging',
+        }),
+      });
+
+      const audioBlob = await response.blob();
+      const audioUrl = URL.createObjectURL(audioBlob);
+
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+
+      const audio = new Audio(audioUrl);
+      audioRef.current = audio;
+
+      audio.onplay = () => setPlayingMessageId(messageId);
+      audio.onended = () => {
+        setPlayingMessageId(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+
+      await audio.play();
+    } catch (error) {
+      console.error('TTS error:', error);
+    }
+  };
+
+  // Rest of component...
+}
+```
+
+### Step 4: Add Voice Button to Messages
+
+```tsx
+{/* In message component */}
+{message.role === 'tutor' && (
+  <button
+    onClick={() => playTTS(message.id, message.content)}
+    className="p-1.5 rounded-lg bg-purple-100 hover:bg-purple-200"
+  >
+    <Volume2 className="w-4 h-4 text-purple-600" />
+  </button>
+)}
+```
+
+---
+
+## Configuration Options
+
+### Emotion-based Speech
+
+```typescript
+// Different emotions for different phases
+const emotionMap = {
+  greeting: 'enthusiastic',    // Fast, high pitch
+  teaching: 'calm',             // Slower, medium pitch
+  practice: 'encouraging',      // Medium speed, positive tone
+  feedback: 'encouraging',      // Warm and supportive
+};
+
+await fetch('/api/tutor/voice', {
+  body: JSON.stringify({
+    text: displayText,
+    emotion: emotionMap[currentPhase],
+  }),
+});
+```
+
+### Language Preferences
+
+```typescript
+// Hindi-only
+{ text, language: 'hi' }
+
+// English-only
+{ text, language: 'en' }
+
+// Hinglish (default - RECOMMENDED)
+{ text, language: 'hinglish' }
+```
+
+---
+
+## Testing the Implementation
+
+### 1. Use TTS Preview Tool
+
+```bash
+# Access at http://localhost:5000/tts-preview
+# Test different inputs aur dekho kya difference hai
+```
+
+**Test Cases:**
+```
+Input: "Namaste! 🌅 Subah ka waqt hai - perfect for learning!"
+Expected Speech: "Namaste! Subah ka waqt hai - perfect for learning!"
+
+Input: "Great! ✨ Aapne **10 questions** sahi kiye! 🎉"
+Expected Speech: "Bahut achha! Aapne 10 questions sahi kiye!"
+
+Input: "Aaj hum `algorithms` seekhenge! 💻"
+Expected Speech: "Aaj hum algorithms seekhenge!"
+```
+
+### 2. API Testing
+
+```bash
+# Preview endpoint
+curl -X POST http://localhost:5000/api/tutor/voice/preview \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Hello! 🌅 Aaj ka din achha hai!"}'
+
+# Response:
+{
+  "original": "Hello! 🌅 Aaj ka din achha hai!",
+  "display": "Hello! 🌅 Aaj ka din achha hai!",
+  "speech": "Hello! Aaj ka din achha hai!",
+  "changes": {
+    "emojisRemoved": 1,
+    "markdownRemoved": false,
+    "length": { "original": 32, "speech": 28 }
+  }
+}
+```
+
+---
+
+## Advanced Features
+
+### 1. Auto-play Latest Messages
+
+```typescript
+useEffect(() => {
+  const latestTutorMsg = messages
+    .filter(m => m.role === 'tutor')
+    .sort((a,b) => b.timestamp - a.timestamp)[0];
+
+  if (latestTutorMsg && autoPlayEnabled) {
+    setTimeout(() => playTTS(latestTutorMsg.id, latestTutorMsg.content), 500);
+  }
+}, [messages]);
+```
+
+### 2. Streaming TTS for Long Responses
+
+```typescript
+// For responses > 100 words
+const response = await fetch('/api/tutor/voice/stream', {
+  method: 'POST',
+  body: JSON.stringify({ text: longResponse }),
+});
+
+const reader = response.body.getReader();
+// Play audio chunks as they arrive
+```
+
+### 3. SSML Customization
+
+```typescript
+// Add emphasis
+const ssml = `
+  <speak>
+    <emphasis level="strong">Bahut achha!</emphasis>
+    Aapne <prosody rate="slow">10 questions</prosody> sahi kiye!
+  </speak>
+`;
+```
+
+---
+
+## Performance Optimization
+
+### 1. Caching Strategy
+
+```typescript
+// Cache TTS responses (server-side)
+import NodeCache from 'node-cache';
+
+const ttsCache = new NodeCache({ stdTTL: 3600 }); // 1 hour
+
+router.post('/voice', async (req, res) => {
+  const { text } = req.body;
+  const cacheKey = `tts_${text}`;
+  
+  const cached = ttsCache.get(cacheKey);
+  if (cached) {
+    return res.send(cached);
+  }
+  
+  const audio = await generateTTS(text);
+  ttsCache.set(cacheKey, audio);
+  res.send(audio);
+});
+```
+
+### 2. Preload Next Message
+
+```typescript
+// Prefetch TTS for likely next responses
+useEffect(() => {
+  if (currentPhase === 'practice') {
+    // Preload common feedback responses
+    preloadTTS("Bilkul sahi! Agle question par chalte hain.");
+    preloadTTS("Thoda sochiye, aap kar sakte hain!");
+  }
+}, [currentPhase]);
+```
+
+---
+
+## Troubleshooting
+
+### Issue: Audio not playing
+```typescript
+// Solution: Check browser autoplay policy
+const playAudio = async (audio: HTMLAudioElement) => {
+  try {
+    await audio.play();
+  } catch (error) {
+    if (error.name === 'NotAllowedError') {
+      // Show "Click to play" button
+      setRequiresUserInteraction(true);
+    }
+  }
+};
+```
+
+### Issue: Emojis still being spoken
+```typescript
+// Debug: Check if sanitization is working
+const { display, speech } = TTSSanitizer.separateDisplayAndSpeech(text);
+console.log('Display:', display);
+console.log('Speech:', speech);
+console.log('Emojis removed:', display.length - speech.length);
+```
+
+### Issue: Hindi pronunciation incorrect
+```typescript
+// Solution: Use Sarvam AI's Hindi voices
+const voiceOptions = {
+  voiceId: 'bulbul_v2',  // Female Hindi voice
+  // OR
+  voiceId: 'saarika_v2', // Alternative female voice
+  language: 'hi-IN',
+};
+```
+
+---
+
+## Migration from Old System
+
+### Before (Old Code):
+```typescript
+// ❌ Sending display text directly to TTS
+const audio = await voiceService.textToSpeech(
+  "Namaste! 🌅 Aaj hum **algorithms** seekhenge!"
+);
+// Problem: TTS reads "sunrise emoji" and "asterisk asterisk algorithms"
+```
+
+### After (New Code):
+```typescript
+// ✅ Using sanitizer
+const displayText = "Namaste! 🌅 Aaj hum **algorithms** seekhenge!";
+const audio = await EnhancedTutorVoiceService.generateTutorSpeech(
+  displayText,
+  { language: 'hinglish', emotion: 'encouraging' }
+);
+// Clean: "Namaste! Aaj hum algorithms seekhenge!"
+```
+
+---
+
+## Summary
+
+### What We've Built:
+1. ✅ **Intelligent TTS Sanitizer** - Emojis, markdown, symbols remove karta hai
+2. ✅ **SSML Support** - Natural pauses aur emphasis add karta hai
+3. ✅ **Emotion Control** - Phase-based speech emotion
+4. ✅ **Code-switching** - Hinglish smooth banata hai
+5. ✅ **Testing Tool** - Preview aur debug ke liye
+
+### Key Benefits:
+- 🎯 **Natural Speech** - Human tutor jaisa bolta hai
+- 🎨 **Visual Richness** - Display mein emojis retain hote hain
+- 🚀 **Better UX** - Separate display/speech = best of both worlds
+- 🔧 **Easy Integration** - Existing code mein minimal changes
+
+### Next Steps:
+1. Install dependencies: `npm install node-cache`
+2. Add service files (ttsSanitizer.ts, tutorVoice.ts)
+3. Update TutorPage component
+4. Test with preview tool
+5. Deploy! 🚀
+
+---
+
+**Questions?** Check the testing tool at `/tts-preview` or review the artifacts above!

@@ -1,0 +1,389 @@
+// server/services/ttsSanitizer.ts
+
+/**
+ * TTS Text Sanitizer
+ * Display text aur speech text ko alag karta hai
+ * Natural human-like speech ke liye text clean karta hai
+ */
+
+interface SanitizeOptions {
+  language?: 'hi' | 'en' | 'hinglish';
+  removeEmojis?: boolean;
+  removeMarkdown?: boolean;
+  convertNumbers?: boolean;
+  addPauses?: boolean;
+}
+
+export class TTSSanitizer {
+  /**
+   * Main sanitization function
+   * Display text ko TTS-friendly text mein convert karta hai
+   */
+  static sanitizeForSpeech(
+    displayText: string,
+    options: SanitizeOptions = {}
+  ): string {
+    const {
+      language = 'hinglish',
+      removeEmojis = true,
+      removeMarkdown = true,
+      convertNumbers = false,
+      addPauses = true,
+    } = options;
+
+    let speechText = displayText;
+
+    // Step 1: Remove all emojis
+    if (removeEmojis) {
+      speechText = this.removeEmojis(speechText);
+    }
+
+    // Step 2: Remove markdown formatting
+    if (removeMarkdown) {
+      speechText = this.removeMarkdown(speechText);
+    }
+
+    // Step 3: Convert numbers to words (optional)
+    if (convertNumbers && language === 'hi') {
+      speechText = this.convertNumbersToHindi(speechText);
+    }
+
+    // Step 4: Add natural pauses
+    if (addPauses) {
+      speechText = this.addNaturalPauses(speechText);
+    }
+
+    // Step 5: Language-specific cleanup
+    speechText = this.languageSpecificCleanup(speechText, language);
+
+    // Step 6: Clean up extra spaces
+    speechText = speechText
+      .replace(/\s+/g, ' ')
+      .replace(/\s([,.!?])/g, '$1')
+      .trim();
+
+    return speechText;
+  }
+
+  /**
+   * Remove all emojis from text
+   */
+  private static removeEmojis(text: string): string {
+    // Comprehensive emoji removal regex
+    return text.replace(
+      /[\u{1F600}-\u{1F64F}]|[\u{1F300}-\u{1F5FF}]|[\u{1F680}-\u{1F6FF}]|[\u{1F1E0}-\u{1F1FF}]|[\u{2600}-\u{26FF}]|[\u{2700}-\u{27BF}]|[\u{1F900}-\u{1F9FF}]|[\u{1FA70}-\u{1FAFF}]/gu,
+      ''
+    );
+  }
+
+  /**
+   * Remove markdown formatting
+   */
+  private static removeMarkdown(text: string): string {
+    return text
+      // Remove bold **text** or __text__
+      .replace(/\*\*(.*?)\*\*/g, '$1')
+      .replace(/__(.*?)__/g, '$1')
+      // Remove italic *text* or _text_
+      .replace(/\*(.*?)\*/g, '$1')
+      .replace(/_(.*?)_/g, '$1')
+      // Remove headers
+      .replace(/^#+\s/gm, '')
+      // Remove code blocks ```code```
+      .replace(/```[\s\S]*?```/g, '')
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove links [text](url)
+      .replace(/\[([^\]]+)\]\([^\)]+\)/g, '$1')
+      // Remove images ![alt](url)
+      .replace(/!\[([^\]]*)\]\([^\)]+\)/g, '')
+      // Remove bullet points
+      .replace(/^[\*\-\+]\s/gm, '')
+      // Remove numbered lists
+      .replace(/^\d+\.\s/gm, '');
+  }
+
+  /**
+   * Convert English numbers to Hindi words
+   */
+  private static convertNumbersToHindi(text: string): string {
+    const hindiNumbers: { [key: string]: string } = {
+      '0': 'शून्य',
+      '1': 'एक',
+      '2': 'दो',
+      '3': 'तीन',
+      '4': 'चार',
+      '5': 'पांच',
+      '6': 'छह',
+      '7': 'सात',
+      '8': 'आठ',
+      '9': 'नौ',
+      '10': 'दस',
+    };
+
+    return text.replace(/\b(\d+)\b/g, (match) => {
+      if (hindiNumbers[match]) {
+        return hindiNumbers[match];
+      }
+      return match; // Keep complex numbers as is
+    });
+  }
+
+  /**
+   * Add natural pauses for better speech
+   */
+  private static addNaturalPauses(text: string): string {
+    return text
+      // Add pause after sentences
+      .replace(/([.!?])\s/g, '$1 <break time="500ms"/> ')
+      // Add pause after commas
+      .replace(/,\s/g, ', <break time="300ms"/> ')
+      // Add pause after dashes
+      .replace(/\s-\s/g, ' <break time="400ms"/> - ')
+      // Add pause after colons
+      .replace(/:\s/g, ': <break time="400ms"/> ');
+  }
+
+  /**
+   * Language-specific cleanup
+   */
+  private static languageSpecificCleanup(
+    text: string,
+    language: 'hi' | 'en' | 'hinglish'
+  ): string {
+    if (language === 'hinglish' || language === 'hi') {
+      // Remove common English fillers that don't sound natural in Hindi
+      text = text
+        .replace(/\blike\b/gi, '')
+        .replace(/\byou know\b/gi, '')
+        .replace(/\bI mean\b/gi, '');
+
+      // Replace common English words with Hindi equivalents for better flow
+      const replacements: { [key: string]: string } = {
+        'okay': 'theek hai',
+        'OK': 'theek hai',
+        'great': 'bahut achha',
+        'good': 'achha',
+        'perfect': 'bilkul sahi',
+        'excellent': 'shandar',
+        'nice': 'achha',
+        'awesome': 'zabardast',
+        'fantastic': 'lajawab',
+      };
+
+      Object.entries(replacements).forEach(([eng, hin]) => {
+        const regex = new RegExp(`\\b${eng}\\b`, 'gi');
+        text = text.replace(regex, hin);
+      });
+    }
+
+    return text;
+  }
+
+  /**
+   * Create SSML wrapper for enhanced TTS
+   */
+  static wrapInSSML(
+    text: string,
+    options: {
+      voice?: 'female' | 'male';
+      rate?: 'slow' | 'medium' | 'fast';
+      pitch?: 'low' | 'medium' | 'high';
+      emphasis?: 'strong' | 'moderate' | 'reduced';
+    } = {}
+  ): string {
+    const {
+      voice = 'female',
+      rate = 'medium',
+      pitch = 'medium',
+      emphasis = 'moderate',
+    } = options;
+
+    const rateMap = { slow: '0.85', medium: '1.0', fast: '1.15' };
+    const pitchMap = { low: '-10%', medium: '0%', high: '+10%' };
+
+    return `
+      <speak version="1.0" xmlns="http://www.w3.org/2001/10/synthesis" xml:lang="hi-IN">
+        <prosody rate="${rateMap[rate]}" pitch="${pitchMap[pitch]}">
+          ${text}
+        </prosody>
+      </speak>
+    `.trim();
+  }
+
+  /**
+   * Extract clean speech text from AI response
+   * Specifically for tutor responses with greetings, emojis, etc.
+   */
+  static extractSpeechFromTutorResponse(response: string): string {
+    // Example input: "Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning! 🌅"
+    // Expected output: "Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning!"
+
+    let speechText = response;
+
+    // Remove all emojis first
+    speechText = this.removeEmojis(speechText);
+
+    // Remove any remaining special characters that aren't punctuation
+    speechText = speechText.replace(/[^\w\s\u0900-\u097F.,!?'-]/g, '');
+
+    // Clean up spacing
+    speechText = speechText.replace(/\s+/g, ' ').trim();
+
+    return speechText;
+  }
+
+  /**
+   * Separate display text and speech text
+   * Returns both versions
+   */
+  static separateDisplayAndSpeech(text: string): {
+    display: string;
+    speech: string;
+  } {
+    return {
+      display: text, // Original with emojis and formatting
+      speech: this.sanitizeForSpeech(text), // Clean for TTS
+    };
+  }
+
+  /**
+   * Handle code-switching in Hinglish
+   * Make transitions smooth for TTS
+   */
+  static smoothCodeSwitching(text: string): string {
+    // Add slight pauses before English technical terms
+    const technicalTerms = [
+      'algorithm',
+      'function',
+      'variable',
+      'loop',
+      'array',
+      'object',
+      'class',
+      'method',
+      'parameter',
+      'return',
+    ];
+
+    technicalTerms.forEach((term) => {
+      const regex = new RegExp(`\\b${term}\\b`, 'gi');
+      text = text.replace(regex, `<break time="200ms"/> ${term}`);
+    });
+
+    return text;
+  }
+
+  /**
+   * Add emotional tone markers for better TTS
+   */
+  static addEmotionalTone(
+    text: string,
+    tone: 'enthusiastic' | 'calm' | 'encouraging' | 'neutral'
+  ): string {
+    const toneSettings = {
+      enthusiastic: { rate: '1.1', pitch: '+5%', volume: '+2dB' },
+      calm: { rate: '0.9', pitch: '-2%', volume: '-1dB' },
+      encouraging: { rate: '1.0', pitch: '+3%', volume: '+1dB' },
+      neutral: { rate: '1.0', pitch: '0%', volume: '0dB' },
+    };
+
+    const settings = toneSettings[tone];
+
+    return `<prosody rate="${settings.rate}" pitch="${settings.pitch}" volume="${settings.volume}">${text}</prosody>`;
+  }
+}
+
+// ============================================
+// Enhanced Voice Service with TTS Sanitization
+// ============================================
+
+import { voiceService } from './voiceService';
+
+export class EnhancedTutorVoiceService {
+  /**
+   * Generate TTS for tutor response
+   * Automatically sanitizes text for natural speech
+   */
+  static async generateTutorSpeech(
+    displayText: string,
+    options: {
+      language?: 'hi' | 'en' | 'hinglish';
+      emotion?: 'enthusiastic' | 'calm' | 'encouraging' | 'neutral';
+      voiceId?: string;
+    } = {}
+  ): Promise<ArrayBuffer> {
+    const { language = 'hinglish', emotion = 'encouraging', voiceId } = options;
+
+    // Separate display and speech text
+    const { speech } = TTSSanitizer.separateDisplayAndSpeech(displayText);
+
+    // Add emotional tone
+    const tonedText = TTSSanitizer.addEmotionalTone(speech, emotion);
+
+    // Smooth code-switching for Hinglish
+    const smoothText =
+      language === 'hinglish'
+        ? TTSSanitizer.smoothCodeSwitching(tonedText)
+        : tonedText;
+
+    // Wrap in SSML for better control
+    const ssml = TTSSanitizer.wrapInSSML(smoothText, {
+      rate: emotion === 'enthusiastic' ? 'fast' : 'medium',
+      pitch: emotion === 'encouraging' ? 'high' : 'medium',
+    });
+
+    // Generate audio using existing voice service
+    return await voiceService.textToSpeech(ssml, {
+      voiceId: voiceId || 'bulbul_v2', // Sarvam AI voice
+      language: language === 'hi' ? 'hi' : 'hi-IN',
+      ssml: true,
+    });
+  }
+
+  /**
+   * Stream TTS for long responses
+   */
+  static async* streamTutorSpeech(
+    displayText: string,
+    options: {
+      language?: 'hi' | 'en' | 'hinglish';
+      emotion?: 'enthusiastic' | 'calm' | 'encouraging' | 'neutral';
+    } = {}
+  ): AsyncGenerator<ArrayBuffer> {
+    // Split into sentences for streaming
+    const sentences = displayText.match(/[^.!?]+[.!?]+/g) || [displayText];
+
+    for (const sentence of sentences) {
+      const audio = await this.generateTutorSpeech(sentence.trim(), options);
+      yield audio;
+    }
+  }
+}
+
+// ============================================
+// Example Usage
+// ============================================
+
+/*
+// Basic sanitization
+const displayText = "Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning! 🌅";
+const speechText = TTSSanitizer.sanitizeForSpeech(displayText);
+console.log(speechText); 
+// Output: "Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning!"
+
+// Separate display and speech
+const { display, speech } = TTSSanitizer.separateDisplayAndSpeech(
+  "Great job! ✨ Aapne **10 questions** sahi kiye! 🎉"
+);
+console.log(display); // "Great job! ✨ Aapne **10 questions** sahi kiye! 🎉"
+console.log(speech);  // "Bahut achha! Aapne 10 questions sahi kiye!"
+
+// Generate tutor speech
+const audio = await EnhancedTutorVoiceService.generateTutorSpeech(
+  "Namaste! Aaj hum **algorithms** ke baare mein seekhenge 🚀",
+  { 
+    language: 'hinglish', 
+    emotion: 'enthusiastic' 
+  }
+);
+*/

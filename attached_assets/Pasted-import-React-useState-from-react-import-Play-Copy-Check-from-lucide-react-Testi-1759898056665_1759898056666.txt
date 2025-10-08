@@ -1,0 +1,306 @@
+import React, { useState } from 'react';
+import { Play, Copy, Check } from 'lucide-react';
+
+// Testing tool to preview what will be displayed vs what will be spoken
+export default function TTSPreviewTool() {
+  const [inputText, setInputText] = useState(
+    'Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning! 🌅'
+  );
+  const [preview, setPreview] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const testExamples = [
+    {
+      name: 'Greeting with emoji',
+      text: 'Namaste Gaurishankar! Subah ka waqt hai - perfect time for learning! 🌅',
+    },
+    {
+      name: 'Celebration with symbols',
+      text: 'Great job! ✨ Aapne **10 questions** sahi kiye! 🎉',
+    },
+    {
+      name: 'Teaching with formatting',
+      text: 'Algorithms ek **step-by-step** process hai jo kisi problem ko solve karta hai. 🤔 Ready to learn?',
+    },
+    {
+      name: 'Hinglish with code-switching',
+      text: 'Aaj hum `for loops` aur `while loops` ke differences seekhenge! 💻',
+    },
+    {
+      name: 'Multiple emojis',
+      text: 'Excellent! 🌟 Tum bahut progress kar rahe ho! 🚀 Keep it up! 💪',
+    },
+  ];
+
+  const handlePreview = async () => {
+    try {
+      setLoading(true);
+
+      const response = await fetch('/api/tutor/voice/preview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          text: inputText,
+          language: 'hinglish',
+        }),
+      });
+
+      if (!response.ok) throw new Error('Preview failed');
+
+      const data = await response.json();
+      setPreview(data);
+    } catch (error) {
+      console.error('Preview error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const copyToClipboard = async (text: string) => {
+    await navigator.clipboard.writeText(text);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-8">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent mb-2">
+            TTS Preview Tool
+          </h1>
+          <p className="text-gray-600">
+            Test karo ki display text aur speech text mein kya difference hai
+          </p>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8">
+          {/* Input Section */}
+          <div className="bg-white rounded-2xl shadow-xl p-6 border border-purple-100">
+            <h2 className="text-xl font-semibold text-gray-800 mb-4">
+              Input Text (Display Version)
+            </h2>
+
+            <textarea
+              value={inputText}
+              onChange={(e) => setInputText(e.target.value)}
+              className="w-full h-40 px-4 py-3 border border-purple-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 resize-none font-mono text-sm"
+              placeholder="Enter tutor response with emojis..."
+            />
+
+            <button
+              onClick={handlePreview}
+              disabled={loading || !inputText}
+              className="mt-4 w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-3 rounded-xl font-semibold hover:from-purple-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            >
+              {loading ? (
+                <>
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <Play className="w-5 h-5" />
+                  Preview Sanitization
+                </>
+              )}
+            </button>
+
+            {/* Quick Test Examples */}
+            <div className="mt-6">
+              <h3 className="text-sm font-semibold text-gray-700 mb-2">
+                Quick Test Examples:
+              </h3>
+              <div className="space-y-2">
+                {testExamples.map((example) => (
+                  <button
+                    key={example.name}
+                    onClick={() => setInputText(example.text)}
+                    className="w-full text-left px-3 py-2 bg-purple-50 hover:bg-purple-100 rounded-lg transition-colors text-sm"
+                  >
+                    <span className="font-medium text-purple-700">
+                      {example.name}
+                    </span>
+                    <p className="text-gray-600 text-xs mt-0.5 truncate">
+                      {example.text}
+                    </p>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Output Section */}
+          <div className="space-y-4">
+            {preview ? (
+              <>
+                {/* Display Text */}
+                <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl shadow-xl p-6 border border-purple-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-purple-900 flex items-center gap-2">
+                      👁️ Display Text
+                      <span className="text-xs bg-purple-200 text-purple-700 px-2 py-0.5 rounded-full">
+                        What user sees
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => copyToClipboard(preview.display)}
+                      className="p-2 hover:bg-purple-200 rounded-lg transition-colors"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-purple-600" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed bg-white rounded-lg p-4 border border-purple-100">
+                    {preview.display}
+                  </p>
+                </div>
+
+                {/* Speech Text */}
+                <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-xl p-6 border border-green-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-green-900 flex items-center gap-2">
+                      🔊 Speech Text
+                      <span className="text-xs bg-green-200 text-green-700 px-2 py-0.5 rounded-full">
+                        What TTS speaks
+                      </span>
+                    </h3>
+                    <button
+                      onClick={() => copyToClipboard(preview.speech)}
+                      className="p-2 hover:bg-green-200 rounded-lg transition-colors"
+                    >
+                      {copied ? (
+                        <Check className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <Copy className="w-4 h-4 text-green-600" />
+                      )}
+                    </button>
+                  </div>
+                  <p className="text-gray-800 leading-relaxed bg-white rounded-lg p-4 border border-green-100">
+                    {preview.speech}
+                  </p>
+                </div>
+
+                {/* Changes Summary */}
+                <div className="bg-white rounded-2xl shadow-xl p-6 border border-gray-200">
+                  <h3 className="font-semibold text-gray-900 mb-4">
+                    📊 Changes Applied
+                  </h3>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-orange-50 rounded-lg p-3 border border-orange-100">
+                      <div className="text-2xl font-bold text-orange-600">
+                        {preview.changes.emojisRemoved}
+                      </div>
+                      <div className="text-sm text-orange-700">
+                        Emojis Removed
+                      </div>
+                    </div>
+
+                    <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
+                      <div className="text-2xl font-bold text-blue-600">
+                        {preview.changes.markdownRemoved ? 'Yes' : 'No'}
+                      </div>
+                      <div className="text-sm text-blue-700">
+                        Markdown Cleaned
+                      </div>
+                    </div>
+
+                    <div className="bg-purple-50 rounded-lg p-3 border border-purple-100">
+                      <div className="text-2xl font-bold text-purple-600">
+                        {preview.changes.length.original}
+                      </div>
+                      <div className="text-sm text-purple-700">
+                        Original Length
+                      </div>
+                    </div>
+
+                    <div className="bg-indigo-50 rounded-lg p-3 border border-indigo-100">
+                      <div className="text-2xl font-bold text-indigo-600">
+                        {preview.changes.length.speech}
+                      </div>
+                      <div className="text-sm text-indigo-700">Speech Length</div>
+                    </div>
+                  </div>
+
+                  {/* Length Reduction */}
+                  <div className="mt-4 p-3 bg-gray-50 rounded-lg border border-gray-100">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-gray-600">Length Reduction:</span>
+                      <span className="font-semibold text-gray-900">
+                        {Math.round(
+                          ((preview.changes.length.original -
+                            preview.changes.length.speech) /
+                            preview.changes.length.original) *
+                            100
+                        )}
+                        %
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* SSML Preview */}
+                <details className="bg-gray-50 rounded-2xl shadow-xl border border-gray-200">
+                  <summary className="p-6 cursor-pointer font-semibold text-gray-900 hover:bg-gray-100 rounded-2xl transition-colors">
+                    🔧 SSML Output (Advanced)
+                  </summary>
+                  <div className="px-6 pb-6">
+                    <pre className="bg-gray-900 text-green-400 p-4 rounded-lg overflow-x-auto text-xs font-mono">
+                      {preview.ssml}
+                    </pre>
+                  </div>
+                </details>
+              </>
+            ) : (
+              <div className="bg-white rounded-2xl shadow-xl p-12 border border-gray-200 text-center">
+                <div className="text-6xl mb-4">🎤</div>
+                <p className="text-gray-600">
+                  Enter text aur "Preview Sanitization" button click karo
+                </p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Tips */}
+        <div className="mt-8 bg-gradient-to-r from-purple-100 to-indigo-100 rounded-2xl p-6 border border-purple-200">
+          <h3 className="font-semibold text-purple-900 mb-3">💡 Pro Tips:</h3>
+          <ul className="space-y-2 text-sm text-purple-800">
+            <li className="flex items-start gap-2">
+              <span className="text-purple-600">•</span>
+              <span>
+                <strong>Emojis:</strong> Display mein dikhenge but TTS mein nahi bolenge
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-purple-600">•</span>
+              <span>
+                <strong>Markdown:</strong> **bold** aur _italic_ clean ho jayega
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-purple-600">•</span>
+              <span>
+                <strong>Natural Flow:</strong> English words Hindi equivalent mein convert
+                honge (okay → theek hai)
+              </span>
+            </li>
+            <li className="flex items-start gap-2">
+              <span className="text-purple-600">•</span>
+              <span>
+                <strong>Pauses:</strong> SSML tags automatically add hote hain for natural
+                speech
+              </span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,0 +1,144 @@
+// server/routes/tutorVoice.ts
+
+import { Router } from 'express';
+import { authenticateJWT } from '../middleware/auth';
+import { TTSSanitizer, EnhancedTutorVoiceService } from '../services/ttsSanitizer';
+import { aiLimiter } from '../middleware/rateLimiter';
+
+const router = Router();
+
+/**
+ * Generate TTS for tutor response
+ * POST /api/tutor/voice
+ * 
+ * Body: {
+ *   text: string;           // Display text with emojis
+ *   language?: 'hi' | 'en' | 'hinglish';
+ *   emotion?: 'enthusiastic' | 'calm' | 'encouraging' | 'neutral';
+ *   phase?: string;         // Current tutor phase for context
+ * }
+ */
+router.post('/voice', authenticateJWT, aiLimiter, async (req, res) => {
+  try {
+    const { text, language = 'hinglish', emotion, phase } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    // Determine emotion based on phase if not provided
+    const tutorEmotion = emotion || getEmotionForPhase(phase);
+
+    // Generate clean speech audio
+    const audioBuffer = await EnhancedTutorVoiceService.generateTutorSpeech(
+      text,
+      {
+        language,
+        emotion: tutorEmotion,
+      }
+    );
+
+    // Return audio as blob
+    res.set({
+      'Content-Type': 'audio/mpeg',
+      'Content-Length': audioBuffer.byteLength,
+      'Cache-Control': 'public, max-age=3600', // Cache for 1 hour
+    });
+
+    res.send(Buffer.from(audioBuffer));
+  } catch (error) {
+    console.error('TTS generation error:', error);
+    res.status(500).json({ error: 'Failed to generate speech' });
+  }
+});
+
+/**
+ * Preview sanitized text
+ * POST /api/tutor/voice/preview
+ * 
+ * Shows what will be spoken vs what is displayed
+ */
+router.post('/voice/preview', authenticateJWT, async (req, res) => {
+  try {
+    const { text, language = 'hinglish' } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    const { display, speech } = TTSSanitizer.separateDisplayAndSpeech(text);
+
+    res.json({
+      original: text,
+      display,
+      speech,
+      ssml: TTSSanitizer.wrapInSSML(speech),
+      changes: {
+        emojisRemoved: (text.match(/[\u{1F600}-\u{1F9FF}]/gu) || []).length,
+        markdownRemoved: text.includes('**') || text.includes('_'),
+        length: {
+          original: text.length,
+          speech: speech.length,
+        },
+      },
+    });
+  } catch (error) {
+    console.error('Preview error:', error);
+    res.status(500).json({ error: 'Failed to generate preview' });
+  }
+});
+
+/**
+ * Stream TTS for long responses
+ * POST /api/tutor/voice/stream
+ */
+router.post('/voice/stream', authenticateJWT, aiLimiter, async (req, res) => {
+  try {
+    const { text, language = 'hinglish', emotion } = req.body;
+
+    if (!text) {
+      return res.status(400).json({ error: 'Text is required' });
+    }
+
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Transfer-Encoding', 'chunked');
+
+    // Stream audio chunks
+    for await (const audioChunk of EnhancedTutorVoiceService.streamTutorSpeech(
+      text,
+      { language, emotion }
+    )) {
+      res.write(Buffer.from(audioChunk));
+    }
+
+    res.end();
+  } catch (error) {
+    console.error('TTS streaming error:', error);
+    if (!res.headersSent) {
+      res.status(500).json({ error: 'Failed to stream speech' });
+    }
+  }
+});
+
+/**
+ * Helper: Determine emotion based on tutor phase
+ */
+function getEmotionForPhase(
+  phase?: string
+): 'enthusiastic' | 'calm' | 'encouraging' | 'neutral' {
+  const phaseEmotions: {
+    [key: string]: 'enthusiastic' | 'calm' | 'encouraging' | 'neutral';
+  } = {
+    greeting: 'enthusiastic',
+    rapport: 'calm',
+    assessment: 'neutral',
+    teaching: 'calm',
+    practice: 'encouraging',
+    feedback: 'encouraging',
+    closure: 'enthusiastic',
+  };
+
+  return phaseEmotions[phase || ''] || 'calm';
+}
+
+export default router;
