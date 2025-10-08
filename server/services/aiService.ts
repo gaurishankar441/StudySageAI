@@ -135,7 +135,10 @@ export class AIServiceManager {
       role: 'assistant',
       content: agenticResult.answer,
       metadata: { 
-        sources: agenticResult.sources.map(c => c.metadata),
+        sources: agenticResult.sources.map(c => ({
+          ...c.metadata,
+          content: c.text // Include chunk text for citation preview
+        })),
         steps: agenticResult.steps,
         confidence: agenticResult.confidence,
         agenticRAG: true

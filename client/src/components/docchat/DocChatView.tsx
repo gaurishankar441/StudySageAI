@@ -347,13 +347,18 @@ export default function DocChatView() {
             const citationNum = parseInt(match[1]) - 1;
             const source = metadata.sources[citationNum];
             if (source) {
+              // Backend returns: {docTitle, page, content (chunk text)}
+              const sourceDoc = `Page ${source.page || 'Unknown'}`;
+              const title = source.docTitle || 'Document';
+              const excerpt = source.content || 'No excerpt available';
+              
               return (
                 <button
                   key={index}
                   onClick={() => setCitationPreview({
-                    source: source.source || 'Unknown',
-                    excerpt: source.content || 'No excerpt available',
-                    title: source.title || 'Document'
+                    source: sourceDoc,
+                    excerpt: excerpt,
+                    title: title
                   })}
                   className="inline-flex items-center justify-center w-5 h-5 text-xs font-medium text-purple-700 dark:text-purple-300 bg-purple-100 dark:bg-purple-900/30 rounded hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors mx-0.5"
                   data-testid={`citation-${citationNum}`}
@@ -410,7 +415,7 @@ export default function DocChatView() {
     try {
       const formData = new FormData();
       formData.append('audio', audioBlob, 'recording.webm');
-      formData.append('language', user?.preferredLanguage || 'en');
+      formData.append('language', (user as any)?.preferredLanguage || 'en');
 
       const response = await fetch('/api/voice/transcribe', {
         method: 'POST',
