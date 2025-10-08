@@ -41,6 +41,9 @@ import DocChatActionModal from "./DocChatActionModal";
 type ActionType = 'summary' | 'highlights' | 'quiz' | 'flashcards';
 
 export default function DocChatView() {
+  // Mobile detection
+  const [isMobile, setIsMobile] = useState(false);
+  
   // State Management
   const [selectedDocuments, setSelectedDocuments] = useState<string[]>([]);
   const [currentChatId, setCurrentChatId] = useState<string | null>(null);
@@ -55,10 +58,30 @@ export default function DocChatView() {
   const [activeActionModal, setActiveActionModal] = useState<ActionType | null>(null);
   const [actionProcessing, setActionProcessing] = useState(false);
   const [actionContent, setActionContent] = useState("");
+  const [mobileBottomSheet, setMobileBottomSheet] = useState<'sources' | 'actions' | null>(null);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  // Mobile detection on mount and resize
+  useEffect(() => {
+    const checkMobile = () => {
+      const mobile = window.innerWidth < 768;
+      setIsMobile(mobile);
+      // Auto-close sidebars on mobile
+      if (mobile) {
+        setIsSidebarOpen(false);
+        setIsActionsPanelOpen(false);
+      } else {
+        setIsSidebarOpen(true);
+        setIsActionsPanelOpen(true);
+      }
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Queries
   const { data: documents = [], isLoading: documentsLoading } = useQuery<Document[]>({
@@ -561,23 +584,51 @@ export default function DocChatView() {
 
   // Chat Screen (Three-Panel Layout)
   return (
-    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-950">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-purple-50/30 to-slate-50 dark:from-slate-950 dark:via-purple-950/20 dark:to-slate-950 relative">
+      {/* Mobile Overlay */}
+      {isMobile && (isSidebarOpen || isActionsPanelOpen || mobileBottomSheet) && (
+        <div 
+          className="absolute inset-0 bg-black/40 backdrop-blur-sm z-40 md:hidden"
+          onClick={() => {
+            setIsSidebarOpen(false);
+            setIsActionsPanelOpen(false);
+            setMobileBottomSheet(null);
+          }}
+        />
+      )}
+
       {/* Left Sidebar - Sources */}
       <div className={cn(
         "transition-all duration-300 border-r border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex flex-col",
-        isSidebarOpen ? "w-64" : "w-0 overflow-hidden"
+        // Desktop behavior - inline flex column
+        isSidebarOpen ? "w-64" : "w-0 overflow-hidden",
+        // Mobile behavior - fixed overlay (only on mobile)
+        isMobile && "fixed inset-y-0 left-0 w-80 max-w-[85vw] z-50",
+        isMobile && !isSidebarOpen && "-translate-x-full"
       )}>
         <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60">
           <div className="flex items-center justify-between">
             <h3 className="font-medium text-sm">Sources ({selectedDocuments.length})</h3>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setActiveView('upload')}
-              data-testid="button-change-sources"
-            >
-              <ExternalLink className="w-4 h-4" />
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setActiveView('upload')}
+                data-testid="button-change-sources"
+              >
+                <ExternalLink className="w-4 h-4" />
+              </Button>
+              {isMobile && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsSidebarOpen(false)}
+                  data-testid="button-close-sidebar-mobile"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+              )}
+            </div>
           </div>
         </div>
         <div className="flex-1 overflow-auto p-3 space-y-2">
@@ -598,43 +649,57 @@ export default function DocChatView() {
       </div>
 
       {/* Center - Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Chat Header */}
-        <div className="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-4">
-          <div className="flex items-center gap-3">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
-              data-testid="button-toggle-sidebar"
-            >
-              {isSidebarOpen ? <ChevronLeft className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
-            </Button>
-            <div>
-              <h2 className="font-semibold">Doc Chat: Garima Ma'am</h2>
-              <p className="text-xs text-slate-500">{selectedDocuments.length} document{selectedDocuments.length !== 1 ? 's' : ''} selected</p>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Chat Header - Mobile Optimized */}
+        <div className="border-b border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl p-3 md:p-4">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2 md:gap-3 min-w-0">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+                data-testid="button-toggle-sidebar"
+                className="h-9 w-9 md:h-auto md:w-auto p-0 md:px-3"
+              >
+                {isSidebarOpen ? <ChevronLeft className="w-5 h-5 md:w-4 md:h-4" /> : <ChevronRight className="w-5 h-5 md:w-4 md:h-4" />}
+              </Button>
+              <div className="min-w-0">
+                <h2 className="font-semibold text-sm md:text-base truncate">Doc Chat: Garima Ma'am</h2>
+                <p className="text-xs text-slate-500 hidden md:block">{selectedDocuments.length} document{selectedDocuments.length !== 1 ? 's' : ''} selected</p>
+              </div>
             </div>
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsActionsPanelOpen(!isActionsPanelOpen)}
+                data-testid="button-toggle-actions-mobile"
+                className="h-9 w-9 p-0 md:hidden"
+              >
+                <Sparkles className="w-5 h-5" />
+              </Button>
+            )}
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-auto p-4 space-y-4">
+        {/* Messages - Mobile Optimized */}
+        <div className="flex-1 overflow-auto p-3 md:p-4 space-y-3 md:space-y-4">
           {messages.map(msg => (
             <div
               key={msg.id}
               className={cn(
-                "flex gap-3",
+                "flex gap-2 md:gap-3",
                 msg.role === 'user' ? "justify-end" : "justify-start"
               )}
               data-testid={`message-${msg.id}`}
             >
               {msg.role === 'assistant' && (
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
-                  <Bot className="w-5 h-5 text-white" />
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center flex-shrink-0">
+                  <Bot className="w-4 h-4 md:w-5 md:h-5 text-white" />
                 </div>
               )}
               <div className={cn(
-                "max-w-[70%] rounded-2xl px-4 py-3",
+                "max-w-[80%] md:max-w-[70%] rounded-2xl px-3 py-2 md:px-4 md:py-3",
                 msg.role === 'user' 
                   ? "bg-purple-600 text-white" 
                   : "glass-card"
@@ -647,8 +712,8 @@ export default function DocChatView() {
                 )}
               </div>
               {msg.role === 'user' && (
-                <div className="w-8 h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
-                  <User className="w-5 h-5" />
+                <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-slate-300 dark:bg-slate-700 flex items-center justify-center flex-shrink-0">
+                  <User className="w-4 h-4 md:w-5 md:h-5" />
                 </div>
               )}
             </div>
@@ -685,16 +750,16 @@ export default function DocChatView() {
           <div ref={messagesEndRef} />
         </div>
 
-        {/* Input Area */}
-        <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-4">
-          <div className="flex gap-3">
+        {/* Input Area - Mobile Optimized with larger touch targets */}
+        <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-3 md:p-4 pb-safe">
+          <div className="flex gap-2 md:gap-3">
             <Input
-              placeholder="Ask anything... Use @ to select docs"
+              placeholder={isMobile ? "Ask anything..." : "Ask anything... Use @ to select docs"}
               value={message}
               onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+              onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSendMessage()}
               disabled={isStreaming}
-              className="flex-1"
+              className="flex-1 h-11 md:h-10 text-base md:text-sm"
               data-testid="input-message"
             />
             <Button
@@ -702,13 +767,14 @@ export default function DocChatView() {
               size="icon"
               disabled={isStreaming}
               data-testid="button-voice-input"
+              className="h-11 w-11 md:h-10 md:w-10"
             >
               <Mic className="w-5 h-5" />
             </Button>
             <Button
               onClick={handleSendMessage}
               disabled={!message.trim() || isStreaming}
-              className="btn-gradient"
+              className="btn-gradient h-11 w-11 md:h-10 md:w-auto md:px-4"
               data-testid="button-send-message"
             >
               {isStreaming ? <Loader2 className="w-5 h-5 animate-spin" /> : <Send className="w-5 h-5" />}
@@ -717,49 +783,65 @@ export default function DocChatView() {
         </div>
       </div>
 
-      {/* Right Sidebar - Quick Actions */}
+      {/* Right Sidebar - Quick Actions - Desktop & Mobile */}
       <div className={cn(
         "transition-all duration-300 border-l border-slate-200/60 dark:border-slate-800/60 bg-white/60 dark:bg-slate-900/60 backdrop-blur-xl flex flex-col",
-        isActionsPanelOpen ? "w-64" : "w-0 overflow-hidden"
+        // Desktop behavior - inline flex column
+        isActionsPanelOpen ? "w-64" : "w-0 overflow-hidden",
+        // Mobile behavior - fixed overlay from right (only on mobile)
+        isMobile && "fixed inset-y-0 right-0 w-80 max-w-[85vw] z-50",
+        isMobile && !isActionsPanelOpen && "translate-x-full"
       )}>
         <div className="p-4 border-b border-slate-200/60 dark:border-slate-800/60">
-          <h3 className="font-medium text-sm">Quick Actions</h3>
+          <div className="flex items-center justify-between">
+            <h3 className="font-medium text-sm">Quick Actions</h3>
+            {isMobile && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsActionsPanelOpen(false)}
+                data-testid="button-close-actions-mobile"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            )}
+          </div>
         </div>
         <div className="flex-1 overflow-auto p-3 space-y-2">
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-2" 
+            className="w-full justify-start gap-3 h-12 md:h-auto" 
             onClick={() => setActiveActionModal('summary')}
             data-testid="action-summary"
           >
-            <FileText className="w-4 h-4" />
+            <FileText className="w-5 h-5 md:w-4 md:h-4" />
             <span className="text-sm">Summary</span>
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-2" 
+            className="w-full justify-start gap-3 h-12 md:h-auto" 
             onClick={() => setActiveActionModal('highlights')}
             data-testid="action-highlights"
           >
-            <Highlighter className="w-4 h-4" />
+            <Highlighter className="w-5 h-5 md:w-4 md:h-4" />
             <span className="text-sm">Highlights</span>
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-2" 
+            className="w-full justify-start gap-3 h-12 md:h-auto" 
             onClick={() => setActiveActionModal('quiz')}
             data-testid="action-quiz"
           >
-            <Brain className="w-4 h-4" />
+            <Brain className="w-5 h-5 md:w-4 md:h-4" />
             <span className="text-sm">Generate Quiz</span>
           </Button>
           <Button 
             variant="ghost" 
-            className="w-full justify-start gap-2" 
+            className="w-full justify-start gap-3 h-12 md:h-auto" 
             onClick={() => setActiveActionModal('flashcards')}
             data-testid="action-flashcards"
           >
-            <Layers className="w-4 h-4" />
+            <Layers className="w-5 h-5 md:w-4 md:h-4" />
             <span className="text-sm">Flashcards</span>
           </Button>
           <Button 
