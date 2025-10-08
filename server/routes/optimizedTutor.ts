@@ -966,34 +966,10 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
       
       console.log(`[STREAM VALIDATION] Score: ${(validation.overallScore * 100).toFixed(1)}% - Valid: ${validation.isValid} (${validationTime}ms)`);
       
-      // 💾 LOG VALIDATION RESULTS TO DATABASE
-      const aiMessageId = `msg_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      
-      await storage.logResponseValidation({
-        userId,
-        chatId,
-        messageId: aiMessageId,
-        expectedLanguage: detectedLang,
-        userEmotion: emotionResult.emotion,
-        currentPhase: session.currentPhase,
-        isValid: validation.isValid,
-        overallScore: validation.overallScore,
-        languageMatchScore: validation.layers.languageMatch.score,
-        toneScore: validation.layers.toneAppropriate.score,
-        qualityScore: validation.layers.educationalQuality.score,
-        safetyScore: validation.layers.safety.score,
-        issues: validation.issues,
-        recommendations: validation.recommendations,
-        shouldRegenerate: validation.shouldRegenerate,
-        metadata: {
-          detectedLanguage: validation.layers.languageMatch.detectedLanguage,
-          wordCount: fullResponse.split(/\s+/).length
-        }
-      });
-      
-      // Save AI response to database with validation metadata
+      // 💾 SAVE AI RESPONSE TO DATABASE FIRST (to get message ID)
+      let savedMessage = null;
       if (fullResponse.trim()) {
-        await storage.addMessage({
+        savedMessage = await storage.addMessage({
           chatId,
           role: 'assistant',
           content: fullResponse.trim(),
@@ -1027,6 +1003,31 @@ optimizedTutorRouter.post('/session/ask-stream', async (req, res) => {
             }
           }
         });
+        
+        // 💾 NOW LOG VALIDATION RESULTS WITH ACTUAL MESSAGE ID
+        if (savedMessage?.id) {
+          await storage.logResponseValidation({
+            userId,
+            chatId,
+            messageId: savedMessage.id,
+            expectedLanguage: detectedLang,
+            userEmotion: emotionResult.emotion,
+            currentPhase: session.currentPhase,
+            isValid: validation.isValid,
+            overallScore: validation.overallScore,
+            languageMatchScore: validation.layers.languageMatch.score,
+            toneScore: validation.layers.toneAppropriate.score,
+            qualityScore: validation.layers.educationalQuality.score,
+            safetyScore: validation.layers.safety.score,
+            issues: validation.issues,
+            recommendations: validation.recommendations,
+            shouldRegenerate: validation.shouldRegenerate,
+            metadata: {
+              detectedLanguage: validation.layers.languageMatch.detectedLanguage,
+              wordCount: fullResponse.split(/\s+/).length
+            }
+          });
+        }
       }
       
       // Check if should auto-advance phase

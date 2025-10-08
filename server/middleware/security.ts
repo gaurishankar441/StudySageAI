@@ -1,75 +1,17 @@
-import rateLimit from 'express-rate-limit';
-import type { Request } from 'express';
+import type { Request, Response, NextFunction } from 'express';
 
-// Helper function to generate rate limit key (User ID if authenticated, else IP)
-const getUserKey = (req: Request): string => {
-  const user = (req as any).user;
-  return user?.id || req.ip || 'unknown';
-};
+// 🔧 DEVELOPMENT MODE: Rate limiting DISABLED
+// Re-enable for production by uncommenting rate limit imports and configuration
 
-// General API rate limiter - 100 requests per 15 minutes
-export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: {
-    error: 'Too many requests, please try again after 15 minutes',
-    retryAfter: '15 minutes'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: getUserKey,
-});
+// Dummy middleware that passes through (no rate limiting)
+const noRateLimit = (req: Request, res: Response, next: NextFunction) => next();
 
-// Strict rate limiter for authentication endpoints - 5 login attempts per 15 minutes
-export const authLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
-  message: {
-    error: 'Too many login attempts, please try again after 15 minutes',
-    retryAfter: '15 minutes'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  skipSuccessfulRequests: true, // Don't count successful logins
-});
-
-// Strict rate limiter for signup endpoint - 3 signups per hour
-export const signupLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 3,
-  message: {
-    error: 'Too many accounts created, please try again after an hour',
-    retryAfter: '1 hour'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-});
-
-// AI Service rate limiter - 30 AI requests per minute per user
-export const aiLimiter = rateLimit({
-  windowMs: 60 * 1000, // 1 minute
-  max: 30,
-  message: {
-    error: 'AI rate limit exceeded. Please slow down.',
-    retryAfter: '1 minute'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: getUserKey, // Rate limit by user ID if authenticated, otherwise by IP
-});
-
-// File upload rate limiter - 10 uploads per hour per user
-export const uploadLimiter = rateLimit({
-  windowMs: 60 * 60 * 1000, // 1 hour
-  max: 10,
-  message: {
-    error: 'Upload limit exceeded. You can upload 10 files per hour.',
-    retryAfter: '1 hour'
-  },
-  standardHeaders: true,
-  legacyHeaders: false,
-  keyGenerator: getUserKey,
-});
+// All rate limiters disabled for development
+export const apiLimiter = noRateLimit;
+export const authLimiter = noRateLimit;
+export const signupLimiter = noRateLimit;
+export const aiLimiter = noRateLimit;
+export const uploadLimiter = noRateLimit;
 
 // Password validation helper
 export interface PasswordValidationResult {
