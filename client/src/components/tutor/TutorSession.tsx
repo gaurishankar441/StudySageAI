@@ -29,11 +29,14 @@ import {
   Loader2,
   ChevronLeft,
   ChevronRight,
+  UserCircle,
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
 import VoiceControl from "./VoiceControl";
 import { Phone, PhoneOff } from "lucide-react";
+import UnityAvatar from "./UnityAvatar";
+import type { UnityAvatarHandle } from "./UnityAvatar";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -72,10 +75,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [lessonPlanCollapsed, setLessonPlanCollapsed] = useState(false);
   const [quickToolsCollapsed, setQuickToolsCollapsed] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
+  const [avatarEnabled, setAvatarEnabled] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
+  const unityAvatarRef = useRef<UnityAvatarHandle>(null);
 
   const { data: chat, isLoading: chatLoading } = useQuery<Chat>({
     queryKey: [`/api/chats/${chatId}`],
@@ -380,6 +385,17 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
       const audioBlob = await response.blob();
       console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
+      
+      // 🎭 AVATAR: Send audio to Unity avatar if enabled
+      if (avatarEnabled && unityAvatarRef.current?.isReady) {
+        console.log('[Avatar] Sending audio to Unity avatar with lip-sync');
+        try {
+          await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+        } catch (avatarError) {
+          console.warn('[Avatar] Failed to send audio to avatar:', avatarError);
+          // Continue with normal audio playback
+        }
+      }
       
       const audioUrl = URL.createObjectURL(audioBlob);
       console.log('[TTS] Audio URL created:', audioUrl);
@@ -902,31 +918,45 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
         {/* Input Area */}
         <div className="p-6 border-t border-border/50 bg-gradient-to-r from-primary/5 to-purple-500/5 space-y-4">
-          {/* Voice Mode Toggle */}
+          {/* Mode Toggles: Avatar & Voice */}
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               {voiceMode ? "Voice Conversation Mode" : "Text Input Mode"}
             </p>
-            <Button
-              type="button"
-              variant={voiceMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setVoiceMode(!voiceMode)}
-              className={voiceMode ? "btn-gradient" : ""}
-              data-testid="button-toggle-voice-mode"
-            >
-              {voiceMode ? (
-                <>
-                  <Phone className="w-4 h-4 mr-2" />
-                  Voice On
-                </>
-              ) : (
-                <>
-                  <PhoneOff className="w-4 h-4 mr-2" />
-                  Voice Off
-                </>
-              )}
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant={avatarEnabled ? "default" : "outline"}
+                size="sm"
+                onClick={() => setAvatarEnabled(!avatarEnabled)}
+                className={avatarEnabled ? "btn-gradient" : ""}
+                data-testid="button-toggle-avatar"
+                title={avatarEnabled ? "Hide 3D Avatar" : "Show 3D Avatar"}
+              >
+                <UserCircle className="w-4 h-4 mr-2" />
+                {avatarEnabled ? "Avatar ON" : "Avatar OFF"}
+              </Button>
+              <Button
+                type="button"
+                variant={voiceMode ? "default" : "outline"}
+                size="sm"
+                onClick={() => setVoiceMode(!voiceMode)}
+                className={voiceMode ? "btn-gradient" : ""}
+                data-testid="button-toggle-voice-mode"
+              >
+                {voiceMode ? (
+                  <>
+                    <Phone className="w-4 h-4 mr-2" />
+                    Voice On
+                  </>
+                ) : (
+                  <>
+                    <PhoneOff className="w-4 h-4 mr-2" />
+                    Voice Off
+                  </>
+                )}
+              </Button>
+            </div>
           </div>
 
           {/* Conditional Input - Voice or Text */}
@@ -1131,6 +1161,65 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           streamingContent={toolStreamingContent}
           userProfile={user}
         />
+      )}
+
+      {/* 🎭 3D Avatar Panel (Slide-out) */}
+      {avatarEnabled && (
+        <div 
+          className="fixed top-0 right-0 h-screen w-96 bg-white dark:bg-gray-900 border-l border-border shadow-2xl z-50 animate-slide-in-right"
+          data-testid="avatar-panel"
+        >
+          <div className="h-full flex flex-col">
+            {/* Header */}
+            <div className="p-4 border-b border-border bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
+              <div className="flex items-center justify-between">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <UserCircle className="w-5 h-5 text-purple-600" />
+                  AI Tutor Avatar
+                </h3>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setAvatarEnabled(false)}
+                  data-testid="button-close-avatar"
+                  title="Close Avatar"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                {unityAvatarRef.current?.isReady ? '✅ Ready with lip-sync' : '⏳ Loading...'}
+              </p>
+            </div>
+
+            {/* Unity Avatar */}
+            <div className="flex-1">
+              <UnityAvatar
+                ref={unityAvatarRef}
+                className="w-full h-full"
+                defaultAvatar="priya"
+                onReady={() => {
+                  console.log('[Tutor] Unity avatar is ready!');
+                }}
+                onError={(error) => {
+                  console.error('[Tutor] Avatar error:', error);
+                  toast({
+                    title: "Avatar Error",
+                    description: error,
+                    variant: "destructive",
+                  });
+                }}
+              />
+            </div>
+
+            {/* Footer Info */}
+            <div className="p-3 border-t border-border bg-gray-50 dark:bg-gray-800">
+              <p className="text-xs text-muted-foreground text-center">
+                3D Avatar with real-time lip-sync powered by Unity WebGL
+              </p>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
