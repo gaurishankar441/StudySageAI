@@ -32,7 +32,7 @@ Structure:
 Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."]}`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content }
@@ -56,7 +56,7 @@ Return valid JSON: {"title": "...", "summary": "...", "keyPoints": ["...", "..."
 Return valid JSON array of strings: ["highlight 1", "highlight 2", ...]`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content }
@@ -97,7 +97,7 @@ Return valid JSON: {
 }`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content }
@@ -121,7 +121,7 @@ Return valid JSON: {
 Return valid JSON: {"flashcards": [{"front": "...", "back": "..."}, ...]}`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content }
@@ -155,7 +155,7 @@ Return valid JSON: {
 }`;
 
     const response = await getOpenAI().chat.completions.create({
-      model: "gpt-5",
+      model: "gpt-4o-mini",
       messages: [
         { role: "system", content: systemPrompt },
         { role: "user", content }
@@ -178,7 +178,7 @@ Return valid JSON: {
 
     if (options?.stream) {
       const stream = await getOpenAI().chat.completions.create({
-        model: "gpt-5",
+        model: "gpt-4o-mini",
         messages: messages as any[],
         temperature,
         max_completion_tokens: maxTokens,
@@ -198,7 +198,7 @@ Return valid JSON: {
       });
     } else {
       const response = await getOpenAI().chat.completions.create({
-        model: "gpt-5",
+        model: "gpt-4o-mini",
         messages: messages as any[],
         temperature,
         max_completion_tokens: maxTokens,
