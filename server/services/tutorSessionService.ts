@@ -137,7 +137,9 @@ export class TutorSessionService {
     
     switch (session.currentPhase) {
       case 'greeting':
-        return getGreetingTemplate(timeOfDay);
+        // Get language preference from profile (english or hinglish)
+        const language = session.profileSnapshot?.preferredLanguage || 'hinglish';
+        return getGreetingTemplate(timeOfDay, language as 'english' | 'hinglish');
       
       case 'rapport':
         const examTarget = session.profileSnapshot?.examTarget || 'JEE';

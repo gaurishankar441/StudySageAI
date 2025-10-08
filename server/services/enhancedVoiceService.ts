@@ -4,6 +4,7 @@
 import { sarvamVoiceService } from './sarvamVoice';
 import { EMOTION_CONFIGS, TUTOR_PERSONAS } from '../config/tutorPersonas';
 import { INTENT_PROSODY_MAP, INTENT_PROSODY_DEFAULT } from '../config/intentProsody';
+import { TTSSanitizer } from './ttsSanitizer';
 
 export interface VoiceOptions {
   emotion?: string; // excited, teaching, gentle, friendly, curious, encouraging, celebratory
@@ -292,6 +293,17 @@ export class EnhancedVoiceService {
     } = options;
     
     let processedText = text;
+    
+    // Step 0: SANITIZE TEXT - Remove emojis, markdown, symbols for natural speech
+    // Display text (with emojis) is shown to user, but TTS speaks clean text
+    // Map language properly: 'en' → 'en', 'hi' → 'hi' (NOT forcing hinglish for English)
+    const sanitizerLanguage = language === 'hi' ? 'hi' : language === 'en' ? 'en' : 'hinglish';
+    processedText = TTSSanitizer.sanitizeForSpeech(processedText, {
+      language: sanitizerLanguage,
+      removeEmojis: true,
+      removeMarkdown: true,
+      addPauses: false  // We handle pauses separately in enhancedVoiceService
+    });
     
     // Step 1: Convert math expressions to speech (Indian English patterns)
     if (enableMathSpeech) {

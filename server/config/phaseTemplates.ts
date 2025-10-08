@@ -10,6 +10,7 @@ export interface PhaseTemplate {
 
 export interface TemplateVariant {
   timeOfDay?: 'morning' | 'afternoon' | 'evening';
+  language?: 'english' | 'hinglish'; // Language preference
   context?: string;
   text: string;
   emotion: string;
@@ -23,9 +24,24 @@ export const GREETING_TEMPLATES: PhaseTemplate = {
   duration: '0-30 seconds',
   goal: 'Warm welcome using profile data (name, class, exam goal)',
   variants: [
+    // English Morning
     {
       timeOfDay: 'morning',
-      text: `Namaste {studentName}! Subah ka waqt hai - perfect time for learning! 🌅
+      language: 'english',
+      text: `Good morning {studentName}! Perfect time for learning! 🌅
+
+I'm {teacherName}, your {subject} teacher.
+You're in {currentClass} and preparing for {examTarget}, right?
+
+Today we'll explore {topic} together!
+Ready to start?`,
+      emotion: 'enthusiastic'
+    },
+    // Hinglish Morning
+    {
+      timeOfDay: 'morning',
+      language: 'hinglish',
+      text: `Subah ka waqt hai {studentName}! Perfect time for learning! 🌅
 
 Main {teacherName} hoon, aapki {subject} teacher.
 Aap {currentClass} mein ho aur {examTarget} ki prep kar rahe ho, right?
@@ -34,9 +50,24 @@ Aaj hum {topic} explore karenge saath mein!
 Ready to start?`,
       emotion: 'enthusiastic'
     },
+    // English Afternoon
     {
       timeOfDay: 'afternoon',
-      text: `Namaste {studentName}! Dopahar ka time hai, thodi energy boost chahiye! 💪
+      language: 'english',
+      text: `Good afternoon {studentName}! Time for some focused learning! 💪
+
+I'm {teacherName}, your {subject} guide.
+{currentClass} and {examTarget} prep - both are important!
+
+Today we'll make {topic} interesting together!
+Let's begin?`,
+      emotion: 'friendly'
+    },
+    // Hinglish Afternoon
+    {
+      timeOfDay: 'afternoon',
+      language: 'hinglish',
+      text: `Dopahar ka time hai {studentName}! Thodi energy boost chahiye! 💪
 
 Main {teacherName}, tumhara {subject} guide.
 {currentClass} aur {examTarget} prep - both important hain!
@@ -45,9 +76,24 @@ Aaj {topic} ko interesting banayenge saath mein!
 Chalo shuru karte hain?`,
       emotion: 'friendly'
     },
+    // English Evening
     {
       timeOfDay: 'evening',
-      text: `Hey {studentName}! Shaam ka study session - best time hota hai! 📚
+      language: 'english',
+      text: `Good evening {studentName}! Evening study session - the best time! 📚
+
+I'm {teacherName}. I've seen your profile - 
+{currentClass} student, {examTarget} target!
+
+Today we'll explore some cool {topic} concepts together.
+Ready?`,
+      emotion: 'excited'
+    },
+    // Hinglish Evening
+    {
+      timeOfDay: 'evening',
+      language: 'hinglish',
+      text: `Shaam ka study session {studentName}! Best time hota hai! 📚
 
 Main {teacherName} hoon. Dekha maine profile - 
 {currentClass} student, {examTarget} target!
@@ -355,8 +401,13 @@ Keep learning! 💫`,
 };
 
 // Template selection helpers
-export function getGreetingTemplate(timeOfDay: 'morning' | 'afternoon' | 'evening'): TemplateVariant {
-  const templates = GREETING_TEMPLATES.variants.filter(v => v.timeOfDay === timeOfDay);
+export function getGreetingTemplate(
+  timeOfDay: 'morning' | 'afternoon' | 'evening',
+  language: 'english' | 'hinglish' = 'hinglish'
+): TemplateVariant {
+  const templates = GREETING_TEMPLATES.variants.filter(
+    v => v.timeOfDay === timeOfDay && v.language === language
+  );
   return templates[Math.floor(Math.random() * templates.length)];
 }
 
