@@ -73,6 +73,15 @@ export class TutorSessionService {
       ? TUTOR_PERSONAS[personaId] || selectPersonaBySubject(subject)
       : selectPersonaBySubject(subject);
     
+    // Get chat to extract language preference
+    const chat = await storage.getChat(chatId);
+    const chatLanguage = chat?.language || 'en';
+    
+    // Convert chat language code to preferred language format
+    // 'en' → 'english' (pure English)
+    // 'hi' → 'hinglish' (Hindi with English mix)
+    const preferredLanguage = chatLanguage === 'hi' ? 'hinglish' : 'english';
+    
     // Create profile snapshot
     const profileSnapshot = {
       firstName: user.firstName || 'Student',
@@ -80,7 +89,8 @@ export class TutorSessionService {
       currentClass: user.currentClass || 'Class 12',
       examTarget: user.examTarget || 'JEE',
       educationBoard: user.educationBoard || 'CBSE',
-      subjects: user.subjects || [subject]
+      subjects: user.subjects || [subject],
+      preferredLanguage
     };
     
     // Create session
