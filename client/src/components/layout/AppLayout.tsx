@@ -105,28 +105,29 @@ export default function AppLayout({ children }: AppLayoutProps) {
           {navigation.map((item) => {
             const Icon = item.icon;
             return (
-              <Link key={item.name} href={item.href}>
-                <a
-                  className={`flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-smooth ${
-                    item.current
-                      ? 'bg-gradient-subtle text-foreground shadow-sm'
-                      : 'text-muted-foreground card-interactive'
-                  }`}
-                >
-                  <Icon className="w-6 h-6 flex-shrink-0" />
-                  {!sidebarCollapsed && <span>{item.name}</span>}
-                </a>
+              <Link 
+                key={item.name} 
+                href={item.href}
+                className={`flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium transition-smooth ${
+                  item.current
+                    ? 'bg-gradient-subtle text-foreground shadow-sm'
+                    : 'text-muted-foreground card-interactive'
+                }`}
+              >
+                <Icon className="w-6 h-6 flex-shrink-0" />
+                {!sidebarCollapsed && <span>{item.name}</span>}
               </Link>
             );
           })}
 
           {!sidebarCollapsed && (
             <div className="pt-4 mt-4 border-t border-border">
-              <Link href="/settings">
-                <a className="flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium text-muted-foreground card-interactive transition-smooth">
-                  <Settings className="w-6 h-6" />
-                  <span>Settings</span>
-                </a>
+              <Link 
+                href="/settings"
+                className="flex items-center gap-4 px-4 py-3.5 rounded-lg text-sm font-medium text-muted-foreground card-interactive transition-smooth"
+              >
+                <Settings className="w-6 h-6" />
+                <span>Settings</span>
               </Link>
             </div>
           )}

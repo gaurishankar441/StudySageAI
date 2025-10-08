@@ -3,6 +3,13 @@
 ## Overview
 VaktaAI is an AI-powered educational platform designed as a comprehensive study companion. It provides an AI Tutor, Document Chat, Quiz Generation, Study Plan Management, and Smart Notes. The platform supports multilingual learning (English, Hindi) and various content formats (PDFs, videos, audio, web content). A core principle is to provide grounded, citation-based AI responses to prevent hallucination. VaktaAI aims for a "fast, calm UI" with minimal navigation clicks, real-time streaming, keyboard-first interactions, and strong accessibility. The business vision is to revolutionize personalized education through adaptive AI.
 
+## Recent Changes (October 2025)
+*   **DocChat Shepherd AI-Inspired Redesign**: Implemented clean three-panel layout (Sources sidebar | Chat area | Quick Actions panel) with collapsible panels and fixed-position toggle buttons for reliable control.
+*   **Quick Actions with SSE Streaming**: Integrated Summary, Highlights, Quiz, and Flashcards generation with robust SSE streaming. Fixed critical bug where split JSON events across network chunks were dropped by implementing persistent buffer that accumulates chunks and splits by `\n\n` to extract complete SSE events.
+*   **Security Hardening**: Removed critical security vulnerability (`NODE_TLS_REJECT_UNAUTHORIZED = '0'`) from database configuration that was disabling TLS certificate verification globally.
+*   **UI Bug Fixes**: Fixed nested anchor tag warnings in AppLayout by removing redundant `<a>` tags within Wouter's `<Link>` components.
+*   **Optimistic UI**: Implemented instant user message display with error rollback using tempId-based filtering for better UX.
+
 ## User Preferences
 Preferred communication style: Simple, everyday language (Hindi/English/Hinglish mix for Indian students).
 
