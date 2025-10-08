@@ -4,6 +4,7 @@ import { documentService } from "./documentService";
 import { aiOrchestrator } from "./aiOrchestrator";
 import { AIProviderType } from "./aiProvider";
 import { agenticRAGService } from "./agenticRAG";
+import { openAIProvider } from "./providers/openai";
 
 export class AIServiceManager {
   private async getUserProvider(userId: string): Promise<AIProviderType> {
@@ -150,6 +151,79 @@ export class AIServiceManager {
     };
   }
 
+  // Generate AI-powered suggested questions for DocChat
+  async generateSuggestedQuestions(
+    chatId: string,
+    userId: string,
+    count: number = 3
+  ): Promise<string[]> {
+    const chat = await storage.getChat(chatId);
+    if (!chat || chat.userId !== userId) {
+      throw new Error('Chat not found or access denied');
+    }
+
+    // Get recent messages for context
+    const messages = await storage.getChatMessages(chatId);
+    const recentMessages = messages.slice(-4); // Last 2 exchanges
+    
+    // Build context from recent conversation
+    const conversationContext = recentMessages
+      .map(m => `${m.role === 'user' ? 'User' : 'Garima'}: ${m.content}`)
+      .join('\n');
+
+    // Get document titles for context
+    const docIds = chat.docIds 
+      ? (typeof chat.docIds === 'string' ? JSON.parse(chat.docIds) : chat.docIds)
+      : [];
+    
+    const documents = await Promise.all(
+      docIds.slice(0, 3).map((id: string) => storage.getDocument(id))
+    );
+    const docTitles = documents.filter(d => d).map(d => d!.title).join(', ');
+
+    const systemPrompt = `You are Garima Ma'am, an AI tutor helping Indian students with JEE/NEET preparation.
+Based on the recent conversation about documents: ${docTitles}, generate ${count} relevant follow-up questions that the student might want to ask next.
+
+Rules:
+- Questions should be natural, conversational, and contextually relevant
+- Mix different types: clarification, deeper understanding, application, related topics
+- Keep questions concise (max 10-12 words)
+- Use simple, student-friendly language
+- Focus on helping student learn better
+
+Recent Conversation:
+${conversationContext}
+
+Return ONLY a JSON array of ${count} question strings, nothing else:
+["question 1", "question 2", "question 3"]`;
+
+    try {
+      const response = await openAIProvider.chat(
+        [{ role: 'user', content: systemPrompt }],
+        {
+          temperature: 0.8,
+          maxTokens: 200,
+        }
+      );
+      
+      // Ensure response is a string
+      const responseText = typeof response === 'string' ? response : '';
+      
+      // Parse JSON response
+      const cleanedResponse = responseText.trim().replace(/^```json?\s*/i, '').replace(/\s*```$/i, '').trim();
+      const questions = JSON.parse(cleanedResponse);
+      
+      return Array.isArray(questions) ? questions.slice(0, count) : [];
+    } catch (error) {
+      console.error('Error generating suggested questions:', error);
+      // Return default questions as fallback
+      return [
+        "Can you explain this in simpler terms?",
+        "What's a real-world example of this?",
+        "How does this relate to my exam syllabus?"
+      ].slice(0, count);
+    }
+  }
 
   // Quiz generation and management
   async generateQuiz(

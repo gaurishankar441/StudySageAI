@@ -59,6 +59,7 @@ export default function DocChatView() {
   const [actionProcessing, setActionProcessing] = useState(false);
   const [actionContent, setActionContent] = useState("");
   const [mobileBottomSheet, setMobileBottomSheet] = useState<'sources' | 'actions' | null>(null);
+  const [suggestedQuestions, setSuggestedQuestions] = useState<string[]>([]);
   
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -106,6 +107,33 @@ export default function DocChatView() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, streamingMessage]);
+
+  // Fetch suggested questions after AI responds
+  useEffect(() => {
+    const fetchSuggestedQuestions = async () => {
+      if (!currentChatId || isStreaming || messages.length === 0) return;
+      
+      // Only fetch if last message is from assistant
+      const lastMessage = messages[messages.length - 1];
+      if (lastMessage?.role !== 'assistant') return;
+      
+      try {
+        const response = await fetch(`/api/docchat/${currentChatId}/suggested-questions?count=3`, {
+          credentials: 'include'
+        });
+        if (response.ok) {
+          const data = await response.json();
+          setSuggestedQuestions(data.questions || []);
+        }
+      } catch (error) {
+        console.error('Failed to fetch suggested questions:', error);
+      }
+    };
+    
+    // Debounce to avoid too many requests
+    const timer = setTimeout(fetchSuggestedQuestions, 500);
+    return () => clearTimeout(timer);
+  }, [messages, currentChatId, isStreaming]);
 
   // Mutations
   const uploadDocumentMutation = useMutation({
@@ -752,6 +780,28 @@ export default function DocChatView() {
 
         {/* Input Area - Mobile Optimized with larger touch targets */}
         <div className="border-t border-slate-200/60 dark:border-slate-800/60 bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl p-3 md:p-4 pb-safe">
+          {/* Suggested Questions Chips */}
+          {suggestedQuestions.length > 0 && !isStreaming && (
+            <div className="mb-3 overflow-x-auto">
+              <div className="flex gap-2 pb-1">
+                {suggestedQuestions.map((question, index) => (
+                  <button
+                    key={index}
+                    onClick={() => {
+                      setMessage(question);
+                      setSuggestedQuestions([]);
+                    }}
+                    className="flex-shrink-0 px-3 py-2 md:px-4 md:py-2 text-xs md:text-sm bg-purple-100 dark:bg-purple-900/30 text-purple-900 dark:text-purple-100 rounded-full hover:bg-purple-200 dark:hover:bg-purple-800/50 transition-colors whitespace-nowrap"
+                    data-testid={`suggested-question-${index}`}
+                  >
+                    <Sparkles className="w-3 h-3 md:w-4 md:h-4 inline mr-1.5" />
+                    {question}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           <div className="flex gap-2 md:gap-3">
             <Input
               placeholder={isMobile ? "Ask anything..." : "Ask anything... Use @ to select docs"}

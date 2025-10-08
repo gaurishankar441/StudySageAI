@@ -701,6 +701,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // DocChat Suggested Questions endpoint
+  app.get('/api/docchat/:chatId/suggested-questions', isAuthenticated, async (req: any, res) => {
+    try {
+      const userId = req.user?.id;
+      const { chatId } = req.params;
+      const count = parseInt(req.query.count || '3', 10);
+
+      const questions = await aiServiceManager.generateSuggestedQuestions(chatId, userId, count);
+      res.json({ questions });
+    } catch (error) {
+      console.error("Error generating suggested questions:", error);
+      res.status(500).json({ message: "Failed to generate suggested questions" });
+    }
+  });
+
   // Quiz routes
   app.post('/api/quizzes', isAuthenticated, async (req: any, res) => {
     try {
