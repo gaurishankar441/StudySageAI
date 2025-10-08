@@ -26,6 +26,7 @@ interface VoiceState {
   isProcessing: boolean;
   isSpeaking: boolean;
   transcription: string;
+  detectedLanguage?: 'hi' | 'en' | string;
   sessionState?: any;
 }
 
@@ -138,7 +139,8 @@ export function useVoiceTutor({
           setState(prev => ({ 
             ...prev, 
             isProcessing: false,
-            transcription: message.data.text 
+            transcription: message.data.text,
+            detectedLanguage: message.data.language || prev.detectedLanguage
           }));
           onTranscription?.(message.data.text);
           break;
@@ -369,5 +371,6 @@ export function useVoiceTutor({
     isProcessing: state.isProcessing,
     isSpeaking: state.isSpeaking,
     transcription: state.transcription,
+    detectedLanguage: state.detectedLanguage,
   };
 }

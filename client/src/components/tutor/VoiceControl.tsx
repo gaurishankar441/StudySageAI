@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { 
@@ -8,10 +8,17 @@ import {
   VolumeX, 
   Loader2,
   Phone,
-  PhoneOff 
+  PhoneOff,
+  Languages
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useVoiceTutor } from '@/hooks/useVoiceTutor';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface VoiceControlProps {
   chatId: string;
@@ -28,6 +35,7 @@ export default function VoiceControl({
 }: VoiceControlProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number>();
+  const [languageOverride, setLanguageOverride] = useState<'hi' | 'en' | null>(null);
 
   const {
     state,
@@ -38,10 +46,13 @@ export default function VoiceControl({
     isRecording,
     isProcessing,
     isSpeaking,
+    detectedLanguage,
   } = useVoiceTutor({
     chatId,
     onTranscription,
   });
+
+  const displayLanguage = languageOverride || detectedLanguage;
 
   // Visualizer animation
   useEffect(() => {
@@ -121,6 +132,34 @@ export default function VoiceControl({
             <span className="text-sm text-muted-foreground">
               {isConnected ? 'Voice Connected' : 'Connecting...'}
             </span>
+            
+            {/* Language selector with override */}
+            {displayLanguage && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="ml-2 h-6 gap-1 px-2 text-xs"
+                  >
+                    <Languages className="w-3 h-3" />
+                    {displayLanguage === 'hi' ? '🇮🇳 Hindi' : displayLanguage === 'en' ? '🇬🇧 English' : displayLanguage}
+                    {languageOverride && <span className="text-indigo-500">*</span>}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="start">
+                  <DropdownMenuItem onClick={() => setLanguageOverride(null)}>
+                    Auto-detect {detectedLanguage && `(${detectedLanguage === 'hi' ? 'Hindi' : 'English'})`}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguageOverride('en')}>
+                    🇬🇧 English
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setLanguageOverride('hi')}>
+                    🇮🇳 Hindi
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
           </div>
 
           {/* State indicator */}
