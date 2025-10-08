@@ -1301,6 +1301,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // 🚀 PHASE 3.1: Circuit Breaker Status Monitoring endpoint
+  app.get('/api/tts/circuit-breaker/status', isAuthenticated, async (req: any, res) => {
+    try {
+      const { sarvamCircuitBreaker, pollyCircuitBreaker, enhancedVoiceCircuitBreaker } = await import('./services/circuitBreaker');
+      
+      res.json({
+        providers: {
+          sarvam: sarvamCircuitBreaker.getStatus(),
+          polly: pollyCircuitBreaker.getStatus(),
+          enhancedVoice: enhancedVoiceCircuitBreaker.getStatus(),
+        },
+        summary: {
+          healthy: [
+            sarvamCircuitBreaker.getStatus().state === 'CLOSED',
+            pollyCircuitBreaker.getStatus().state === 'CLOSED',
+            enhancedVoiceCircuitBreaker.getStatus().state === 'CLOSED',
+          ].filter(Boolean).length,
+          total: 3,
+        }
+      });
+    } catch (error) {
+      console.error("Error fetching circuit breaker status:", error);
+      res.status(500).json({ message: "Failed to fetch circuit breaker status" });
+    }
+  });
+
   // Admin endpoint to re-embed all documents with new embedding model
   app.post('/api/admin/reembed-all', isAuthenticated, async (req: any, res) => {
     try {
