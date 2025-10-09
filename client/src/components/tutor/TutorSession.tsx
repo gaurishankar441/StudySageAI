@@ -36,7 +36,6 @@ import QuickToolModal from "./QuickToolModal";
 import VoiceControl from "./VoiceControl";
 import { Phone, PhoneOff } from "lucide-react";
 import { useUnityAvatar } from "@/contexts/UnityAvatarContext";
-import UnityAvatar from "./UnityAvatar";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -85,16 +84,19 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     avatarRef: unityAvatarRef, 
     isReady: avatarIsReady, 
     isLoading: avatarIsLoading,
-    setIsReady,
-    setIsLoading,
-    setError: setAvatarError
+    setIsVisible: setAvatarVisible
   } = useUnityAvatar();
 
-  // Initialize avatar loading when component mounts
+  // Show avatar when component mounts, hide when unmounts
   useEffect(() => {
-    console.log('[Tutor] Avatar panel mounted - Unity files preloaded in background');
-    setIsLoading(true);
-  }, [setIsLoading]);
+    console.log('[Tutor] Showing global avatar panel');
+    setAvatarVisible(true);
+    
+    return () => {
+      console.log('[Tutor] Hiding global avatar panel (keeping it loaded)');
+      setAvatarVisible(false);
+    };
+  }, [setAvatarVisible]);
 
   const { data: chat, isLoading: chatLoading } = useQuery<Chat>({
     queryKey: [`/api/chats/${chatId}`],
@@ -1197,70 +1199,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 3D Avatar Panel - Preloaded files, fast load! */}
-      <div 
-        className="fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 animate-slide-up md:animate-slide-in-right"
-        data-testid="avatar-panel"
-      >
-        <div className="h-full flex flex-col">
-          {/* Header */}
-          <div className="p-4 border-b border-border bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
-            <h3 className="font-semibold text-sm flex items-center gap-2">
-              <UserCircle className="w-5 h-5 text-purple-600" />
-              AI Tutor Avatar
-            </h3>
-            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-              {avatarIsReady ? (
-                <>
-                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
-                  Ready with lip-sync
-                </>
-              ) : avatarIsLoading ? (
-                <>
-                  <Loader2 className="w-3 h-3 animate-spin" />
-                  Loading avatar... (files preloaded ⚡)
-                </>
-              ) : (
-                <>
-                  <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
-                  Initializing...
-                </>
-              )}
-            </p>
-          </div>
-
-          {/* Unity Avatar - Renders with preloaded files */}
-          <div className="flex-1">
-            <UnityAvatar
-              ref={unityAvatarRef}
-              className="w-full h-full"
-              defaultAvatar="priya"
-              onReady={() => {
-                console.log('[Tutor] Unity avatar is ready!');
-                setIsReady(true);
-                setIsLoading(false);
-              }}
-              onError={(error: string) => {
-                console.error('[Tutor] Avatar error:', error);
-                setAvatarError(error);
-                setIsLoading(false);
-                toast({
-                  title: "Avatar Error",
-                  description: error,
-                  variant: "destructive",
-                });
-              }}
-            />
-          </div>
-
-          {/* Footer Info */}
-          <div className="p-3 border-t border-border bg-gray-50 dark:bg-gray-800">
-            <p className="text-xs text-muted-foreground text-center">
-              3D Avatar with real-time lip-sync powered by Unity WebGL
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* 🎭 Avatar panel rendered globally in UnityAvatarContext - visibility controlled here */}
     </div>
   );
 }
