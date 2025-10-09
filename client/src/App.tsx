@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { useAuth } from "@/hooks/useAuth";
 import AppLayout from "@/components/layout/AppLayout";
 import { OverlayProvider } from "@/lib/useOverlay";
+import { UnityAvatarProvider } from "@/contexts/UnityAvatarContext";
 
 // Pages
 import Landing from "@/pages/Landing";
@@ -42,23 +43,25 @@ function Router() {
     );
   }
 
-  // Authenticated users get the full app with layout
+  // Authenticated users get the full app with layout + Unity Avatar preload
   return (
-    <AppLayout>
-      <Switch>
-        <Route path="/" component={Dashboard} />
-        <Route path="/tutor" component={Tutor} />
-        <Route path="/docchat/:chatId" component={DocChatSession} />
-        <Route path="/docchat" component={DocChatSources} />
-        <Route path="/quiz/:id" component={QuizAttempt} />
-        <Route path="/quiz" component={Quiz} />
-        <Route path="/study-plan" component={StudyPlan} />
-        <Route path="/notes/:id" component={NoteDetail} />
-        <Route path="/notes" component={Notes} />
-        <Route path="/settings" component={Settings} />
-        <Route component={NotFound} />
-      </Switch>
-    </AppLayout>
+    <UnityAvatarProvider>
+      <AppLayout>
+        <Switch>
+          <Route path="/" component={Dashboard} />
+          <Route path="/tutor" component={Tutor} />
+          <Route path="/docchat/:chatId" component={DocChatSession} />
+          <Route path="/docchat" component={DocChatSources} />
+          <Route path="/quiz/:id" component={QuizAttempt} />
+          <Route path="/quiz" component={Quiz} />
+          <Route path="/study-plan" component={StudyPlan} />
+          <Route path="/notes/:id" component={NoteDetail} />
+          <Route path="/notes" component={Notes} />
+          <Route path="/settings" component={Settings} />
+          <Route component={NotFound} />
+        </Switch>
+      </AppLayout>
+    </UnityAvatarProvider>
   );
 }
 

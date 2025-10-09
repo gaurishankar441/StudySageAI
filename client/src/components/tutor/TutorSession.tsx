@@ -35,8 +35,8 @@ import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
 import VoiceControl from "./VoiceControl";
 import { Phone, PhoneOff } from "lucide-react";
+import { useUnityAvatar } from "@/contexts/UnityAvatarContext";
 import UnityAvatar from "./UnityAvatar";
-import type { UnityAvatarHandle } from "./UnityAvatar";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -75,12 +75,26 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [lessonPlanCollapsed, setLessonPlanCollapsed] = useState(false);
   const [quickToolsCollapsed, setQuickToolsCollapsed] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
-  const [avatarEnabled, setAvatarEnabled] = useState(true); // Default ON - Avatar loads on page load
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
-  const unityAvatarRef = useRef<UnityAvatarHandle>(null);
+  
+  // Access global Unity avatar from context
+  const { 
+    avatarRef: unityAvatarRef, 
+    isReady: avatarIsReady, 
+    isLoading: avatarIsLoading,
+    setIsReady,
+    setIsLoading,
+    setError: setAvatarError
+  } = useUnityAvatar();
+
+  // Initialize avatar loading state on mount
+  useEffect(() => {
+    console.log('[Tutor] Starting Unity avatar load...');
+    setIsLoading(true);
+  }, [setIsLoading]);
 
   const { data: chat, isLoading: chatLoading } = useQuery<Chat>({
     queryKey: [`/api/chats/${chatId}`],
@@ -386,9 +400,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       const audioBlob = await response.blob();
       console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
       
-      // 🎭 AVATAR: Send audio to Unity avatar if enabled (EXCLUSIVE playback)
-      if (avatarEnabled && unityAvatarRef.current?.isReady) {
-        console.log('[Avatar] ✅ Avatar enabled & ready - sending audio to Unity WebGL with lip-sync');
+      // 🎭 AVATAR: Send audio to Unity avatar if ready (EXCLUSIVE playback)
+      if (avatarIsReady && unityAvatarRef.current) {
+        console.log('[Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync');
         console.log('[Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync');
         try {
           await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
@@ -402,11 +416,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           // Continue with normal audio playback on error
         }
       } else {
-        if (!avatarEnabled) {
-          console.log('[Avatar] Avatar is OFF - using browser audio playback');
-        } else {
-          console.log('[Avatar] Avatar not ready yet - using browser audio playback');
-        }
+        console.log('[Avatar] Avatar not ready yet (loading:', avatarIsLoading, ') - using browser audio playback');
       }
       
       const audioUrl = URL.createObjectURL(audioBlob);
@@ -936,12 +946,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               {voiceMode ? "Voice Conversation Mode" : "Text Input Mode"}
             </p>
             <div className="flex gap-2">
-              {/* Avatar Status Indicator (Always ON) */}
+              {/* Avatar Status Indicator (Global Preloaded) */}
               <div 
                 className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-md"
                 data-testid="avatar-status"
               >
-                {unityAvatarRef.current?.isReady ? (
+                {avatarIsReady ? (
                   <>
                     <UserCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                     <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
@@ -1187,14 +1197,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 3D Avatar Panel (Responsive: Right on desktop, Bottom on mobile) 
-          PRELOAD STRATEGY: Always rendered in background, visibility controlled by avatarEnabled */}
+      {/* 🎭 3D Avatar Panel - Always Visible (Right: desktop, Bottom: mobile) */}
       <div 
-        className={`fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 transition-all duration-300 ${
-          avatarEnabled 
-            ? 'translate-y-0 md:translate-x-0 animate-slide-up md:animate-slide-in-right' 
-            : 'translate-y-full md:translate-y-0 md:translate-x-full pointer-events-none'
-        }`}
+        className="fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 animate-slide-up md:animate-slide-in-right"
         data-testid="avatar-panel"
       >
         <div className="h-full flex flex-col">
@@ -1205,21 +1210,26 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               AI Tutor Avatar
             </h3>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
-              {unityAvatarRef.current?.isReady ? (
+              {avatarIsReady ? (
                 <>
                   <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
                   Ready with lip-sync
                 </>
-              ) : (
+              ) : avatarIsLoading ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
                   Loading avatar...
+                </>
+              ) : (
+                <>
+                  <span className="w-2 h-2 bg-gray-400 rounded-full"></span>
+                  Initializing...
                 </>
               )}
             </p>
           </div>
 
-          {/* Unity Avatar - Always rendered for preloading */}
+          {/* Unity Avatar - Rendered here for visibility */}
           <div className="flex-1">
             <UnityAvatar
               ref={unityAvatarRef}
@@ -1227,17 +1237,21 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               defaultAvatar="priya"
               onReady={() => {
                 console.log('[Tutor] Unity avatar is ready!');
+                setIsReady(true);
+                setIsLoading(false);
               }}
-              onError={(error) => {
+              onError={(error: string) => {
                 console.error('[Tutor] Avatar error:', error);
+                setAvatarError(error);
+                setIsLoading(false);
                 toast({
                   title: "Avatar Error",
-                    description: error,
-                    variant: "destructive",
-                  });
-                }}
-              />
-            </div>
+                  description: error,
+                  variant: "destructive",
+                });
+              }}
+            />
+          </div>
 
           {/* Footer Info */}
           <div className="p-3 border-t border-border bg-gray-50 dark:bg-gray-800">
