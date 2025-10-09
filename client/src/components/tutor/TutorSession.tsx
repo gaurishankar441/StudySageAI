@@ -90,9 +90,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     setError: setAvatarError
   } = useUnityAvatar();
 
-  // Initialize avatar loading state on mount
+  // Initialize avatar loading when component mounts
   useEffect(() => {
-    console.log('[Tutor] Starting Unity avatar load...');
+    console.log('[Tutor] Avatar panel mounted - Unity files preloaded in background');
     setIsLoading(true);
   }, [setIsLoading]);
 
@@ -1197,7 +1197,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 3D Avatar Panel - Always Visible (Right: desktop, Bottom: mobile) */}
+      {/* 🎭 3D Avatar Panel - Preloaded files, fast load! */}
       <div 
         className="fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 animate-slide-up md:animate-slide-in-right"
         data-testid="avatar-panel"
@@ -1218,7 +1218,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               ) : avatarIsLoading ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin" />
-                  Loading avatar...
+                  Loading avatar... (files preloaded ⚡)
                 </>
               ) : (
                 <>
@@ -1229,7 +1229,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             </p>
           </div>
 
-          {/* Unity Avatar - Rendered here for visibility */}
+          {/* Unity Avatar - Renders with preloaded files */}
           <div className="flex-1">
             <UnityAvatar
               ref={unityAvatarRef}

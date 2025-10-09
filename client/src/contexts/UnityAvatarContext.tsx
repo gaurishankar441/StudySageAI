@@ -1,10 +1,9 @@
 /**
- * 🎭 Unity Avatar Context - Avatar State Management
- * Provides shared avatar state and ref across components
- * Note: Actual iframe rendering happens in TutorSession for visibility
+ * 🎭 Unity Avatar Context - Lightweight Preload Strategy
+ * Preloads Unity WebGL bundle in background using link preload
  */
 
-import { createContext, useContext, useRef, useState, ReactNode } from 'react';
+import { createContext, useContext, useRef, useState, useEffect, ReactNode } from 'react';
 import type { UnityAvatarHandle } from '@/components/tutor/UnityAvatar';
 
 interface UnityAvatarContextValue {
@@ -28,6 +27,40 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
   const [isReady, setIsReady] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Preload Unity WebGL files in background
+  useEffect(() => {
+    console.log('[Unity Context] 🚀 Preloading Unity WebGL bundle...');
+    
+    const preloadLinks = [
+      { href: '/unity-avatar/Build/unity-avatar.loader.js', as: 'script' },
+      { href: '/unity-avatar/Build/unity-avatar.framework.js.gz', as: 'fetch' },
+      { href: '/unity-avatar/Build/unity-avatar.data.gz', as: 'fetch' },
+      { href: '/unity-avatar/Build/unity-avatar.wasm.gz', as: 'fetch' },
+    ];
+
+    const linkElements: HTMLLinkElement[] = [];
+
+    preloadLinks.forEach(({ href, as }) => {
+      const link = document.createElement('link');
+      link.rel = 'preload';
+      link.href = href;
+      link.as = as;
+      link.crossOrigin = 'anonymous';
+      document.head.appendChild(link);
+      linkElements.push(link);
+      console.log(`[Unity Context] 📥 Preloading: ${href}`);
+    });
+
+    return () => {
+      // Cleanup preload links
+      linkElements.forEach(link => {
+        if (link.parentNode) {
+          link.parentNode.removeChild(link);
+        }
+      });
+    };
+  }, []);
 
   return (
     <UnityAvatarContext.Provider 
