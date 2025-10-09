@@ -8,6 +8,7 @@ import { Loader2, AlertCircle, User } from 'lucide-react';
 import { useUnityBridge, UnityBridgeHandle } from './hooks/useUnityBridge';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Progress } from '@/components/ui/progress';
 
 // 🔍 WebGL detection utility
 function detectWebGLSupport(): { supported: boolean; message?: string } {
@@ -50,6 +51,7 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [webGLSupported, setWebGLSupported] = useState(true);
+    const [loadProgress, setLoadProgress] = useState(0);
 
     // Check WebGL support on mount
     useEffect(() => {
@@ -63,10 +65,25 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
       }
     }, [onError]);
 
+    // Simulate loading progress (Unity 97MB takes ~15-20s)
+    useEffect(() => {
+      if (!isLoading) return;
+
+      const progressInterval = setInterval(() => {
+        setLoadProgress((prev) => {
+          if (prev >= 95) return prev; // Stop at 95%, wait for Unity ready
+          return prev + 5;
+        });
+      }, 750); // Update every 750ms
+
+      return () => clearInterval(progressInterval);
+    }, [isLoading]);
+
     // Use Unity bridge hook
     const unityBridge = useUnityBridge({
       iframeRef,
       onReady: () => {
+        setLoadProgress(100); // Complete progress
         setIsLoading(false);
         console.log('[Unity Avatar] Avatar ready!');
         onReady?.();
@@ -106,16 +123,30 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
         {/* Loading State */}
         {isLoading && !loadError && (
           <div className="absolute inset-0 bg-gradient-to-br from-purple-50 to-blue-50 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center z-10">
-            <Card className="p-6 text-center max-w-xs mx-4">
+            <Card className="p-6 text-center max-w-sm mx-4">
               <Loader2 
-                className="w-12 h-12 animate-spin text-purple-600 dark:text-purple-400 mb-3 mx-auto" 
+                className="w-12 h-12 animate-spin text-purple-600 dark:text-purple-400 mb-4 mx-auto" 
                 data-testid="avatar-loading-spinner"
               />
-              <p className="text-sm text-gray-600 dark:text-gray-300 font-medium">
-                Loading AI Tutor Avatar...
+              <p className="text-sm text-gray-600 dark:text-gray-300 font-medium mb-3">
+                Loading 3D Avatar...
               </p>
-              <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
-                {unityBridge.isHandshakeComplete ? 'Initializing...' : 'Connecting...'}
+              
+              {/* Progress Bar */}
+              <Progress 
+                value={loadProgress} 
+                className="w-full h-2 mb-2"
+                data-testid="avatar-progress"
+              />
+              
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                {loadProgress < 30 && 'Downloading avatar (97 MB)...'}
+                {loadProgress >= 30 && loadProgress < 60 && 'Loading Unity WebGL...'}
+                {loadProgress >= 60 && loadProgress < 90 && 'Initializing 3D models...'}
+                {loadProgress >= 90 && 'Almost ready...'}
+              </p>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mt-2">
+                {Math.round(15 - (loadProgress / 100) * 15)}s remaining
               </p>
             </Card>
           </div>

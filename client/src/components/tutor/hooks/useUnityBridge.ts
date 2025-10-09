@@ -32,6 +32,7 @@ export function useUnityBridge({
   const [isHandshakeComplete, setIsHandshakeComplete] = useState(false);
   const handshakeTimeoutRef = useRef<NodeJS.Timeout>();
   const trustedOriginRef = useRef<string | null>(null);
+  const hasInitializedRef = useRef(false); // Prevent duplicate handshakes
 
   // Send message to Unity iframe (SECURE with origin validation)
   const sendMessageToUnity = useCallback(
@@ -65,13 +66,15 @@ export function useUnityBridge({
   // Initialize handshake
   useEffect(() => {
     if (!iframeRef.current) return;
-    
-    let hasInitialized = false;
+    if (hasInitializedRef.current) {
+      console.log('[Unity Bridge] Already initialized, skipping handshake');
+      return; // Prevent duplicate handshakes
+    }
 
     // Start handshake after iframe loads
     const initHandshake = () => {
-      if (hasInitialized) return; // Prevent duplicate initialization
-      hasInitialized = true;
+      if (hasInitializedRef.current) return; // Double-check
+      hasInitializedRef.current = true;
       
       console.log('[Unity Bridge] Starting handshake...');
       sendMessageToUnity('UNITY_INIT', { timestamp: Date.now() });

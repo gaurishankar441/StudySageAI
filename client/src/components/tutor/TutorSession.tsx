@@ -943,10 +943,19 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                 onClick={() => setAvatarEnabled(!avatarEnabled)}
                 className={avatarEnabled ? "btn-gradient" : ""}
                 data-testid="button-toggle-avatar"
-                title={avatarEnabled ? "Hide 3D Avatar" : "Show 3D Avatar"}
+                title={avatarEnabled ? "Hide 3D Avatar with Lip-Sync" : "Show 3D Avatar with Lip-Sync"}
               >
                 <UserCircle className="w-4 h-4 mr-2" />
-                {avatarEnabled ? "Avatar ON" : "Avatar OFF"}
+                {avatarEnabled ? (
+                  <>
+                    Avatar ON
+                    <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-[10px]">
+                      Lip-Sync
+                    </span>
+                  </>
+                ) : (
+                  "3D Avatar"
+                )}
               </Button>
               <Button
                 type="button"
