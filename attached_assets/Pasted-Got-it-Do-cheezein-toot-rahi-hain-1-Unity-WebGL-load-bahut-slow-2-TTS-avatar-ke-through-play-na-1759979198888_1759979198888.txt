@@ -1,0 +1,252 @@
+Got it. Do cheezein toot rahi hain:
+1) Unity WebGL load bahut slow.
+2) TTS avatar ke through play nahi ho raha.
+
+Neeche “fix-first” plan hai: pehle audio/TTS ko reliably chalate hain, phir WebGL ko 40–70% tak slim karte hain. Step-by-step with copy‑paste code.
+
+Part A — TTS ko avatar ke through reliably play karna
+
+Root causes (90% cases)
+- Autoplay policy: iframe ke andar user gesture ke bina WebAudio lock hota hai → koi awaz nahi.
+- CORS/Range: S3/CDN headers theek nahi → Unity MP3 load fail.
+- AudioType mismatch: signed URL me .mp3 extension nahi dikhta → Unity wrong decoder pick karta.
+- Lip‑sync plugin mic mode me hai, AudioSource mode par nahi.
+- WebGL me AudioContext suspend → resume nahi ho raha.
+
+Step A1) Iframe ke andar “Enable Audio” button (must)
+Unity WebGL template (avatar/v1/index.html) me overlay button rakho jo iframe ke andar click ho. Yehi click AudioContext unlock karega.
+
+<script>
+  let unityInstanceRef;
+  let audioUnlocked = false;
+  let audioCtx;
+
+  function unlockAudio() {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtx) audioCtx = new Ctx();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    audioUnlocked = true;
+    document.getElementById('unlock').style.display = 'none';
+    // Notify parent (optional)
+    window.parent.postMessage({ type: "AUDIO_UNLOCKED" }, "*");
+  }
+
+  window.addEventListener("message", (e) => {
+    if (!audioUnlocked && e.data?.type === "SPEAK") {
+      // Drop until unlocked or show CTA
+      document.getElementById('unlock').style.display = 'block';
+      return;
+    }
+    // forward messages to Unity
+    if (unityInstanceRef && e.data?.type) {
+      unityInstanceRef.SendMessage("AvatarController", "OnMessage", JSON.stringify(e.data));
+    }
+  });
+</script>
+
+<body>
+  <button id="unlock" onclick="unlockAudio()" style="position:absolute;inset:auto 1rem 1rem auto;z-index:10">
+    Enable sound
+  </button>
+  <!-- Unity canvas and loader here -->
+</body>
+
+Step A2) S3/CDN CORS + correct headers
+Bucket CORS:
+
+[
+  {
+    "AllowedOrigins": ["https://app.vakta.ai"],
+    "AllowedMethods": ["GET","HEAD"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["Accept-Ranges","Content-Range","Content-Length"],
+    "MaxAgeSeconds": 86400
+  }
+]
+
+Upload ke time headers:
+- Content-Type: audio/mpeg
+- Cache-Control: public, max-age=86400
+- Accept-Ranges support (S3 default hota hai)
+
+Helmet CSP (server):
+- frameSrc: 'self' https://app.vakta.ai
+- mediaSrc: https://YOUR-CDN.example.com https://s3.YOUR-REGION.amazonaws.com
+- connectSrc: same as above
+
+Step A3) Unity me streaming MP3 load (AudioType fix)
+Signed URLs par “.mp3” query string me chhup jata hai—AudioType.UNKNOWN use karo ya Content-Type header pe rely karo. Streaming on rakho taaki clip jaldi start ho.
+
+C#
+using UnityEngine.Networking;
+
+IEnumerator LoadAndPlay(string url, string id) {
+  var dh = new DownloadHandlerAudioClip(url, AudioType.UNKNOWN);
+  dh.streamAudio = true;
+  var req = new UnityWebRequest(url, UnityWebRequest.kHttpVerbGET, dh, null);
+  req.SetRequestHeader("Range", "bytes=0-");   // better startup
+  yield return req.SendWebRequest();
+
+  if (req.result != UnityWebRequest.Result.Success) {
+    Post(new { type="AUDIO_EVENT", id, state="error", detail=req.error });
+    yield break;
+  }
+  var clip = DownloadHandlerAudioClip.GetContent(req);
+  audioSource.clip = clip;
+  audioSource.playOnAwake = false;
+  audioSource.spatialBlend = 0f;
+  audioSource.loop = false;
+  if (lipSync) lipSync.SetAudioSource(audioSource);  // ensure AudioSource mode
+  audioSource.Play();
+  Post(new { type="AUDIO_EVENT", id, state="started" });
+  while (audioSource.isPlaying) yield return null;
+  Post(new { type="AUDIO_EVENT", id, state="ended" });
+}
+
+Step A4) Lip‑sync plugin ko AudioSource input par set karo
+- Plugin setting: InputMode = AudioSource (not Microphone)
+- Voice detection threshold thoda low rakho (speech −15 to −25 dBFS range)
+- AudioSource.spatialBlend = 0 (pure 2D)
+- Project Settings > Audio: DSP Buffer Size = Best latency ya Good latency
+
+Step A5) Parent → Child message timing
+- First render par parent “UNLOCK” mat bhejo; sirf “INIT”.
+- Jab user pehli baar interact kare (send message or toggle avatar), parent koi extra click ki zarurat nahi—iframe ke andar button hi click karwana padega (browser policy).
+- TTS aate hi SPEAK bhejo, lekin agar AUDIO_UNLOCKED nahi mila hai to parent UI me tooltip “Tap Enable sound” dikhao.
+
+Part B — WebGL load time ko 40–70% reduce
+
+Quick wins (1–2 days)
+- Compression
+  - Player Settings → Publishing Settings:
+    - Compression Format: Brotli
+    - Decompression Fallback: Off (agar server “Content-Encoding: br” bhej sakta hai)
+  - Server headers:
+    - .wasm.br → Content-Type: application/wasm, Content-Encoding: br
+    - .data.br → application/octet-stream, Content-Encoding: br
+- Strip/Linker
+  - Strip Engine Code: On
+  - Managed Stripping Level: Medium/High
+  - Remove unused assemblies (Analytics, XR, etc.)
+- WebGL 2 only; Multithreading Off (COOP/COEP se bachoge)
+- Texture budgets
+  - Albedo 1K–2K max, normal 1K; crunch compression on.
+  - Mobile/Unlit or URP Simple Lit; unnecessary shader variants strip.
+- Mesh/Anim
+  - LODs add (LOD0/LOD1)
+  - Animation compression: Keyframe Reduction
+  - Bone count reduce, blendshape count < 12 visemes
+- Addressables
+  - Base build me sirf core scene + base avatar; hair/clothes/emotes ko Addressables se lazy‑load karo READY ke baad.
+- Minimal template
+  - Unity’s Minimal WebGL template use karo; custom loader images heavy mat rakho.
+
+CDN/Cache
+- CDN with HTTP/2 or HTTP/3
+- Cache-Control: immutable, max-age=31536000 for Build/* files
+- Data Caching (Player Settings) On → first load heavy hoga, next loads fast.
+
+Part C — “Better approach” for stubborn TTS issues
+
+Option 1: HTML5 Audio fallback inside iframe + amplitude-driven lips (fastest)
+- Agar Unity clip load kabhi kabhi fail kare, same page me hidden <audio> element se audio play karao, WebAudio AnalyserNode se amplitude nikaal ke Unity ko mouth‑open signal bhejo. 80% lip realism, 100% reliability.
+
+index.html (child)
+<script>
+  const audioEl = new Audio();
+  audioEl.crossOrigin = "anonymous";
+  let analyser, dataArr, raf;
+  function playHtmlAudio(url, id) {
+    const Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!audioCtx) audioCtx = new Ctx();
+    const src = (audioCtx.createMediaElementSource ? audioCtx.createMediaElementSource(audioEl) : null);
+    if (src && !analyser) {
+      analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      dataArr = new Uint8Array(analyser.frequencyBinCount);
+      src.connect(analyser);
+      analyser.connect(audioCtx.destination);
+    }
+    audioEl.src = url;
+    audioEl.onplay = () => meterLoop(id);
+    audioEl.onended = () => window.parent.postMessage({ type:"AUDIO_EVENT", id, state:"ended" }, "*");
+    audioEl.play().catch(()=>{ /* show unlock */ });
+  }
+
+  function meterLoop(id) {
+    if (!analyser) return;
+    analyser.getByteTimeDomainData(dataArr);
+    // RMS amplitude
+    let sum = 0;
+    for (let i=0; i<dataArr.length; i++){ const v=(dataArr[i]-128)/128; sum += v*v;}
+    const rms = Math.sqrt(sum / dataArr.length); // 0..1
+    const open = Math.min(1, rms * 6); // scale
+    if (unityInstanceRef) {
+      unityInstanceRef.SendMessage("AvatarController", "OnExternalAmplitude", open);
+    }
+    raf = requestAnimationFrame(()=>meterLoop(id));
+  }
+
+  // In message handler, if “useHtmlAudio” flag true:
+  // playHtmlAudio(msg.audio.url, msg.id);
+</script>
+
+C# (Unity) — amplitude receiver
+public void OnExternalAmplitude(string v) {
+  float open = Mathf.Clamp01(float.Parse(v));
+  skinnedMeshRenderer.SetBlendShapeWeight(mouthOpenIndex, open * 100f);
+}
+
+Option 2: Viseme timings (best lip‑sync)
+- TTS provider se phoneme/viseme timestamps (e.g., AWS Polly SpeechMarks) nikaalo.
+- Audio child JS se play karo; same timestamps Unity ko bhejo: SendMessage("AvatarController","ApplyViseme","{time:.., viseme:'AA'}").
+- Unity side ek scheduler rakho jo blendshapes crossfade kare. Isme setup thoda zyada hai, par accuracy sabse best.
+
+Part D — Parent (React) changes
+
+- Iframe mount pe “INIT” bhejo; pehle SPEAK send na karo jab tak child se READY + AUDIO_UNLOCKED na mile.
+- TTS response agar 200–800 ms late aata ho, sentence‑wise pipeline rakho (pehle sentence ke liye immediately SPEAK).
+- Interrupt par:
+  - AbortController se /tts cancel
+  - iframe ko { type:"STOP" }
+  - Unity queue clear
+
+Minimal parent flow
+- On READY: show “Enable sound” hint
+- On AUDIO_UNLOCKED: start queuing SPEAK
+- On AUDIO_EVENT: UI mouth icon animate
+
+Part E — Quick diagnostic checklist
+
+- Console (iframe): “The AudioContext was not allowed to start” → button inside iframe missing. Fix Step A1.
+- Network tab: MP3 206 Partial Content? Good. 200 with huge size but stutters? Add Range header and CORS ExposeHeaders.
+- Unity error: “Unsupported audio format” → AudioType.UNKNOWN try karo; ensure Content-Type audio/mpeg.
+- No lips moving: plugin mic mode me hai; AudioSource par switch; ya fallback amplitude route enable.
+- Safari only silent: inside iframe additional click required. Ensure button inside iframe actually receives the tap.
+
+Suggested sequencing (3 days)
+Day 1
+- Add iframe unlock button + AudioContext resume
+- Unity AudioType.UNKNOWN streaming + Range header
+- S3 CORS and Helmet CSP tighten
+- Verify plugin AudioSource mode
+
+Day 2
+- Parent gating: wait for READY + AUDIO_UNLOCKED
+- Sentence‑wise TTS queue + STOP handling
+- HTML5 Audio fallback with amplitude driving
+
+Day 3
+- WebGL slimming: Brotli + no fallback, strip, textures, LOD, Addressables
+- CDN caching, long cache headers
+- Test matrix (Android low‑RAM, iOS Safari, 3G throttle)
+
+If you share:
+- Your iframe origin and S3/CDN domain → main exact CSP + CORS JSON bana dunga.
+- A Unity console log/screenshot → quickly spot kar lenge kis step pe fail ho raha.
+
+Chaho to main aapke child template (index.html) ka ready version aur AvatarController.cs ka patched file bhej sakta hun jisme:
+- streaming MP3 + STOP
+- amplitude fallback hook
+- external viseme hook stubs
+bas copy/paste karke try kar lo.
