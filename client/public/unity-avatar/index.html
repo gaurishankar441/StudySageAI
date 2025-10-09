@@ -343,8 +343,11 @@
           return;
         }
 
+        // 🐛 DEBUG: Log all incoming messages after handshake
+        console.log('[Unity] 📩 Message received:', event.data.type, '| unityInstance ready:', !!unityInstance, '| audioUnlocked:', audioUnlocked);
+
         if (!unityInstance) {
-          console.warn('[Unity] Instance not ready yet, queueing message');
+          console.warn('[Unity] ❌ Instance not ready yet, cannot process:', event.data.type);
           return;
         }
 
