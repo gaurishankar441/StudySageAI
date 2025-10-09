@@ -1,0 +1,1108 @@
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=WUZWgtCe3Xx-' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)Understand this error
+chunk-RPCDYKBN.js?v=0a97da63:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+api/auth/user:1  Failed to load resource: the server responded with a status of 401 (Unauthorized)Understand this error
+@radix-ui_react-dialog.js?v=0a97da63:340 Warning: Missing `Description` or `aria-describedby={undefined}` for {DialogContent}.
+(anonymous) @ @radix-ui_react-dialog.js?v=0a97da63:340Understand this warning
+index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.Understand this warning
+2useUnityBridge.ts:80 [Unity Bridge] Starting handshake...
+VM2678 injected.js:27 [Unity] Handshake complete with origin: https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev
+VM2678 injected.js:27 [Unity] Console forwarding enabled ✅
+3useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:148Understand this warning
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: UNITY_LOG
+handleMessage @ useUnityBridge.ts:148Understand this warning
+useUnityBridge.ts:137 [Unity Bridge] Trusted origin established: https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev
+useUnityBridge.ts:138 [Unity Bridge] Handshake complete ✅
+2useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+VM2678 injected.js:27 navigator.mediaDevices support available
+useUnityBridge.ts:181 [Unity] navigator.mediaDevices support available
+10useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:118 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:118Understand this warning
+7useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+VM2678 injected.js:27 [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+VM2678 injected.js:27     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+VM2678 injected.js:27     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+VM2678 injected.js:27     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+VM2678 injected.js:27     "memorysetup-temp-allocator-size-background-worker=32768"
+
+VM2678 injected.js:27     "memorysetup-bucket-allocator-granularity=16"
+
+VM2678 injected.js:27     "memorysetup-bucket-allocator-bucket-count=8"
+
+VM2678 injected.js:27     "memorysetup-bucket-allocator-block-size=4194304"
+
+VM2678 injected.js:27     "memorysetup-bucket-allocator-block-count=1"
+
+VM2678 injected.js:27     "memorysetup-main-allocator-block-size=16777216"
+
+VM2678 injected.js:27     "memorysetup-thread-allocator-block-size=16777216"
+
+VM2678 injected.js:27     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+VM2678 injected.js:27     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+VM2678 injected.js:27     "memorysetup-cache-allocator-block-size=4194304"
+
+VM2678 injected.js:27     "memorysetup-typetree-allocator-block-size=2097152"
+
+VM2678 injected.js:27     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+VM2678 injected.js:27     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+VM2678 injected.js:27     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+VM2678 injected.js:27     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+VM2678 injected.js:27     "memorysetup-profiler-allocator-block-size=16777216"
+
+VM2678 injected.js:27     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+VM2678 injected.js:27     "memorysetup-temp-allocator-size-main=4194304"
+
+VM2678 injected.js:27     "memorysetup-job-temp-allocator-block-size=2097152"
+
+VM2678 injected.js:27     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+VM2678 injected.js:27     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+VM2678 injected.js:27 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+VM2678 injected.js:27 Loading player data from data.unity3d
+
+VM2678 injected.js:27 Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+VM2678 injected.js:27 Creating WebGL 2.0 context.
+VM2678 injected.js:27 Renderer: WebKit WebGL
+
+VM2678 injected.js:27 Vendor:   WebKit
+
+VM2678 injected.js:27 Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+VM2678 injected.js:27 GLES:     3
+
+VM2678 injected.js:27  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+VM2678 injected.js:27 depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+12WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformatUnderstand this warning
+VM2678 injected.js:27 OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+VM2678 injected.js:27 Input Manager initialize...
+
+VM2678 injected.js:27 PlatformGetStacktrace
+
+VM2678 injected.js:27 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ VM2678 injected.js:27Understand this warning
+VM2678 injected.js:27 PlatformGetStacktrace
+
+VM2678 injected.js:27 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ VM2678 injected.js:27Understand this warning
+VM2678 injected.js:27 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+VM2678 injected.js:27 UnloadTime: 2.800001 ms
+
+VM2678 injected.js:27 [Unity] Instance created successfully
+VM2678 injected.js:27 [Unity] ⏰ Calling OnUnityReady directly...
+VM2678 injected.js:27 [Unity] Avatar instance ready
+VM2678 injected.js:27 [Unity] 🔓 Attempting audio unlock for phoneme lip-sync...
+VM2678 injected.js:27 [Unity] 🔍 AudioContext state: running
+VM2678 injected.js:27 [Unity] ✅ AudioContext already running - audio unlocked!
+VM2678 injected.js:27 [Unity] Handshake complete, notifying React...
+useUnityBridge.ts:181 [Unity] [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-background-worker=32768"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-granularity=16"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-bucket-count=8"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-block-count=1"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-main-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-thread-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-cache-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-typetree-allocator-block-size=2097152"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-main=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-block-size=2097152"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+useUnityBridge.ts:181 [Unity] [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+useUnityBridge.ts:181 [Unity] Loading player data from data.unity3d
+
+useUnityBridge.ts:181 [Unity] Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+useUnityBridge.ts:181 [Unity] Creating WebGL 2.0 context.
+useUnityBridge.ts:181 [Unity] Renderer: WebKit WebGL
+
+useUnityBridge.ts:181 [Unity] Vendor:   WebKit
+
+useUnityBridge.ts:181 [Unity] Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+useUnityBridge.ts:181 [Unity] GLES:     3
+
+useUnityBridge.ts:181 [Unity]  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+useUnityBridge.ts:181 [Unity] depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+useUnityBridge.ts:181 [Unity] OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+useUnityBridge.ts:181 [Unity] Input Manager initialize...
+
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+handleMessage @ useUnityBridge.ts:182Understand this warning
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+handleMessage @ useUnityBridge.ts:182Understand this warning
+useUnityBridge.ts:181 [Unity] [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+useUnityBridge.ts:181 [Unity] UnloadTime: 2.800001 ms
+
+useUnityBridge.ts:181 [Unity] [Unity] Instance created successfully
+useUnityBridge.ts:181 [Unity] [Unity] ⏰ Calling OnUnityReady directly...
+useUnityBridge.ts:181 [Unity] [Unity] Avatar instance ready
+useUnityBridge.ts:181 [Unity] [Unity] 🔓 Attempting audio unlock for phoneme lip-sync...
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 AudioContext state: running
+useUnityBridge.ts:181 [Unity] [Unity] ✅ AudioContext already running - audio unlocked!
+useUnityBridge.ts:169 [Unity Bridge] Audio unlocked successfully ✅
+useUnityBridge.ts:181 [Unity] [Unity] Handshake complete, notifying React...
+useUnityBridge.ts:162 [Unity Bridge] Unity is ready!
+UnityAvatar.tsx:89 [Unity Avatar] Avatar ready!
+UnityAvatarContext.tsx:34 [Unity Context] ✅ Avatar ready globally!
+UnityAvatar.tsx:110 [Unity Avatar] Audio unlocked detected, notifying parent
+UnityAvatarContext.tsx:74 [Unity Context] 🔊 Audio unlocked!
+UnityAvatar.tsx:110 [Unity Avatar] Audio unlocked detected, notifying parent
+UnityAvatarContext.tsx:74 [Unity Context] 🔊 Audio unlocked!
+VM2678 injected.js:27 [UnityCache] 'https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+useUnityBridge.ts:181 [Unity] [UnityCache] 'https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+2useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+VM2678 injected.js:27 PlatformGetStacktrace
+
+VM2678 injected.js:27 -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+(anonymous) @ VM2678 injected.js:27Understand this warning
+VM2678 injected.js:27 Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+handleMessage @ useUnityBridge.ts:182Understand this warning
+useUnityBridge.ts:181 [Unity] Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+useUnityBridge.ts:118 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:118Understand this warning
+AvatarContainer.tsx:62 [Avatar Container] 🔍 viewState changed to: minimized
+TutorSession.tsx:640 [TTS] Auto-playing new assistant message: greeting-1760016426634
+TutorSession.tsx:641 [TTS] Chat mode: tutor - Will use PHONEME TTS
+TutorSession.tsx:341 [TTS] playAudio called for message: greeting-1760016426634
+TutorSession.tsx:363 [TTS] Setting playing audio to: greeting-1760016426634
+TutorSession.tsx:366 [TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FINAL 🚀
+TutorSession.tsx:367 [TTS] Fetching emotion-based TTS for text: Good afternoon Gaurishankar! Time for some focused...
+TutorSession.tsx:372 [TTS] tutorSession exists: true chat.mode: tutor isOptimizedSession: true
+TutorSession.tsx:379 [TTS] Endpoint: /api/tutor/optimized/session/tts-with-phonemes
+AvatarContainer.tsx:68 [Avatar Container] Global Unity element: FOUND ✅
+AvatarContainer.tsx:90 [Avatar Container] Target container (#): NOT FOUND ❌
+TutorSession.tsx:394 [TTS] Response status: 200
+TutorSession.tsx:406 [TTS] Phoneme data received - Phonemes: 158 Audio base64 length: 137568
+TutorSession.tsx:413 [TTS] Converted to blob, size: 103175
+TutorSession.tsx:424 [Avatar] Status check - Ready: true Loading: false
+TutorSession.tsx:479 [Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync
+TutorSession.tsx:480 [Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync
+TutorSession.tsx:483 🔍 DEBUG: Phonemes count: 158 usePhonemeTTS: true
+TutorSession.tsx:488 [Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes: 158
+TutorSession.tsx:489 🔍 DEBUG: About to send 158 phonemes to Unity
+TutorSession.tsx:498 🔍 DEBUG: Base64 audio length: 137568
+TutorSession.tsx:499 🔍 DEBUG: Calling sendAudioWithPhonemesToAvatar...
+useUnityBridge.ts:304 [Unity Bridge] 🎵 Sending audio + phonemes to Unity - Phonemes: 158
+useUnityBridge.ts:313 [Unity Bridge] ✅ Audio + phonemes sent to Unity iframe
+TutorSession.tsx:503 🔍 DEBUG: ✅ sendAudioWithPhonemesToAvatar called successfully!
+TutorSession.tsx:509 [Avatar] ✅ Audio sent to Unity successfully
+VM2678 injected.js:27 [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+VM2678 injected.js:27 [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 158 Audio unlocked: true
+VM2678 injected.js:27 [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":143,"blendshape":"W_OO","weight":1},{"time":243,"blendshape":"T_L_D_N","weight":1}]
+VM2678 injected.js:27 [Unity] ✅ Playing audio + sending phonemes to Unity...
+VM2678 injected.js:27 [Unity] 🔍 DEBUG - Unity instance exists: true
+VM2678 injected.js:27 [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+VM2678 injected.js:27 [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 158
+VM2678 injected.js:27 [Unity] 📦 Phoneme JSON length: 7212 chars
+VM2678 injected.js:27 [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+VM2678 injected.js:27 [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":143,"blendshape":"W_OO","weight":1},{"time":243,"blendshape":"T_L_D_N","weight":1},{"time":313,"blendshape":"Ah","weight":1},{"time":433,"blendshape":"F_V","weight":1},{"time":523,"blendshape":"T_L_D_N","weight":1},{"time":584,"blendshape":"Er","weight":1},{"time":610,"blendshape":"T_L_D_N","weight":1},{"time":671,"blendshape":"W_OO","weight":1},{"time":761,"blendshape":"T_L_D_N","weight":1},{"time":843,"blendshape":"K_G_H_NG","weight":1},{"time":910,"blendshape":"sil","weight":0},{"time":1059,"blendshape":"T_L_D_N","weight":1},{"time":1122,"blendshape":"IH","weight":1},{"time":1241,"blendshape":"Ch_J","weight":1},{"time":1390,"blendshape":"Er","weight":1},{"time":1443,"blendshape":"K_G_H_NG","weight":1},{"time":1542,"blendshape":"K_G_H_NG","weight":1},{"time":1633,"blendshape":"Er","weight":1},{"time":1738,"blendshape":"T_L_D_N","weight":1},{"time":1882,"blendshape":"sil","weight":0},{"time":2276,"blendshape":"T_L_D_N","weight":1},{"time":2364,"blendshape":"Ah","weight":1},{"time":2552,"blendshape":"B_M_P","weight":1},{"time":2640,"blendshape":"F_V","weight":1},{"time":2765,"blendshape":"Er","weight":1},{"time":2812,"blendshape":"R","weight":1},{"time":2852,"blendshape":"S_Z","weight":1},{"time":3005,"blendshape":"AE","weight":1},{"time":3060,"blendshape":"B_M_P","weight":1},{"time":3134,"blendshape":"F_V","weight":1},{"time":3267,"blendshape":"Er","weight":1},{"time":3354,"blendshape":"K_G_H_NG","weight":1},{"time":3455,"blendshape":"Er","weight":1},{"time":3507,"blendshape":"S_Z","weight":1},{"time":3595,"blendshape":"T_L_D_N","weight":1},{"time":3679,"blendshape":"T_L_D_N","weight":1},{"time":3788,"blendshape":"AE","weight":1},{"time":3898,"blendshape":"T_L_D_N","weight":1},{"time":3984,"blendshape":"IH","weight":1},{"time":4085,"blendshape":"K_G_H_NG","weight":1},{"time":4283,"blendshape":"sil","weight":0},{"time":4477,"blendshape":"F_V","weight":1},{"time":4632,"blendshape":"T_L_D_N","weight":1},{"time":4672,"blendshape":"AE","weight":1},{"time":4743,"blendshape":"K_G_H_NG","weight":1},{"time":4819,"blendshape":"S_Z","weight":1},{"time":4901,"blendshape":"T_L_D_N","weight":1},{"time":4959,"blendshape":"B_M_P","weight":1},{"time":5030,"blendshape":"Ah","weight":1},{"time":5214,"blendshape":"S_Z","weight":1},{"time":5324,"blendshape":"AE","weight":1},{"time":5425,"blendshape":"B_M_P","weight":1},{"time":5521,"blendshape":"S_Z","weight":1},{"time":5634,"blendshape":"IH","weight":1},{"time":5669,"blendshape":"B_M_P","weight":1},{"time":5757,"blendshape":"Er","weight":1},{"time":5895,"blendshape":"Ch_J","weight":1},{"time":6035,"blendshape":"IH","weight":1},{"time":6285,"blendshape":"sil","weight":0},{"time":6935,"blendshape":"Ah","weight":1},{"time":7119,"blendshape":"B_M_P","weight":1},{"time":7207,"blendshape":"K_G_H_NG","weight":1},{"time":7263,"blendshape":"Er","weight":1},{"time":7317,"blendshape":"T_L_D_N","weight":1},{"time":7374,"blendshape":"IH","weight":1},{"time":7432,"blendshape":"B_M_P","weight":1},{"time":7520,"blendshape":"Ah","weight":1},{"time":7739,"blendshape":"sil","weight":0},{"time":7933,"blendshape":"IH","weight":1},{"time":8119,"blendshape":"sil","weight":0},{"time":8169,"blendshape":"R","weight":1},{"time":8205,"blendshape":"S_Z","weight":1},{"time":8345,"blendshape":"Ah","weight":1},{"time":8526,"blendshape":"Er","weight":1},{"time":8557,"blendshape":"T_L_D_N","weight":1},{"time":8625,"blendshape":"S_Z","weight":1},{"time":8724,"blendshape":"K_G_H_NG","weight":1},{"time":8805,"blendshape":"Ah","weight":1},{"time":9098,"blendshape":"T_L_D_N","weight":1},{"time":9257,"blendshape":"sil","weight":0},{"time":9650,"blendshape":"K_G_H_NG","weight":1},{"time":9696,"blendshape":"T_L_D_N","weight":1},{"time":9762,"blendshape":"Ah","weight":1},{"time":9902,"blendshape":"S_Z","weight":1},{"time":10010,"blendshape":"T_L_D_N","weight":1},{"time":10079,"blendshape":"W_OO","weight":1},{"time":10133,"blendshape":"AE","weight":1},{"time":10232,"blendshape":"T_L_D_N","weight":1},{"time":10311,"blendshape":"F_V","weight":1},{"time":10392,"blendshape":"Er","weight":1},{"time":10471,"blendshape":"T_L_D_N","weight":1},{"time":10556,"blendshape":"T_L_D_N","weight":1},{"time":10594,"blendshape":"Ch_J","weight":1},{"time":10728,"blendshape":"IH","weight":1},{"time":10813,"blendshape":"B_M_P","weight":1},{"time":10936,"blendshape":"R","weight":1},{"time":10985,"blendshape":"AE","weight":1},{"time":11154,"blendshape":"B_M_P","weight":1},{"time":11318,"blendshape":"sil","weight":0},{"time":11518,"blendshape":"B_M_P","weight":1},{"time":11627,"blendshape":"Er","weight":1},{"time":11767,"blendshape":"TH","weight":1},{"time":11854,"blendshape":"Ah","weight":1},{"time":11950,"blendshape":"R","weight":1},{"time":12006,"blendshape":"IH","weight":1},{"time":12035,"blendshape":"B_M_P","weight":1},{"time":12138,"blendshape":"B_M_P","weight":1},{"time":12218,"blendshape":"sil","weight":0},{"time":12337,"blendshape":"T_L_D_N","weight":1},{"time":12426,"blendshape":"T_L_D_N","weight":1},{"time":12623,"blendshape":"T_L_D_N","weight":1},{"time":12781,"blendshape":"sil","weight":0},{"time":13174,"blendshape":"T_L_D_N","weight":1},{"time":13245,"blendshape":"Er","weight":1},{"time":13286,"blendshape":"T_L_D_N","weight":1},{"time":13343,"blendshape":"EE","weight":1},{"time":13488,"blendshape":"W_OO","weight":1},{"time":13577,"blendshape":"IH","weight":1},{"time":13678,"blendshape":"T_L_D_N","weight":1},{"time":13742,"blendshape":"B_M_P","weight":1},{"time":13839,"blendshape":"EE","weight":1},{"time":13958,"blendshape":"K_G_H_NG","weight":1},{"time":14022,"blendshape":"Ch_J","weight":1},{"time":14129,"blendshape":"Er","weight":1},{"time":14171,"blendshape":"T_L_D_N","weight":1},{"time":14253,"blendshape":"AE","weight":1},{"time":14346,"blendshape":"T_L_D_N","weight":1},{"time":14431,"blendshape":"IH","weight":1},{"time":14470,"blendshape":"K_G_H_NG","weight":1},{"time":14545,"blendshape":"S_Z","weight":1},{"time":14666,"blendshape":"IH","weight":1},{"time":14741,"blendshape":"T_L_D_N","weight":1},{"time":14812,"blendshape":"T_L_D_N","weight":1},{"time":14907,"blendshape":"R","weight":1},{"time":14949,"blendshape":"Er","weight":1},{"time":14997,"blendshape":"S_Z","weight":1},{"time":15090,"blendshape":"T_L_D_N","weight":1},{"time":15154,"blendshape":"IH","weight":1},{"time":15186,"blendshape":"K_G_H_NG","weight":1},{"time":15270,"blendshape":"T_L_D_N","weight":1},{"time":15348,"blendshape":"Er","weight":1},{"time":15377,"blendshape":"K_G_H_NG","weight":1},{"time":15468,"blendshape":"AE","weight":1},{"time":15576,"blendshape":"TH","weight":1},{"time":15655,"blendshape":"Er","weight":1},{"time":15733,"blendshape":"R","weight":1},{"time":15880,"blendshape":"sil","weight":0},{"time":16273,"blendshape":"T_L_D_N","weight":1},{"time":16373,"blendshape":"AE","weight":1},{"time":16461,"blendshape":"T_L_D_N","weight":1},{"time":16540,"blendshape":"S_Z","weight":1},{"time":16630,"blendshape":"B_M_P","weight":1},{"time":16700,"blendshape":"IH","weight":1},{"time":16762,"blendshape":"K_G_H_NG","weight":1},{"time":16850,"blendshape":"IH","weight":1},{"time":16944,"blendshape":"T_L_D_N","weight":1},{"time":17127,"blendshape":"sil","weight":0}]}
+
+VM2678 injected.js:27 [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+useUnityBridge.ts:181 [Unity] [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+useUnityBridge.ts:181 [Unity] [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 158 Audio unlocked: true
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":143,"blendshape":"W_OO","weight":1},{"time":243,"blendshape":"T_L_D_N","weight":1}]
+useUnityBridge.ts:181 [Unity] [Unity] ✅ Playing audio + sending phonemes to Unity...
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 DEBUG - Unity instance exists: true
+useUnityBridge.ts:181 [Unity] [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+VM2678 injected.js:27 [Unity] HTML5 Audio playing, starting amplitude meter
+useUnityBridge.ts:181 [Unity] [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 158
+useUnityBridge.ts:181 [Unity] [Unity] 📦 Phoneme JSON length: 7212 chars
+useUnityBridge.ts:181 [Unity] [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+useUnityBridge.ts:181 [Unity] [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":143,"blendshape":"W_OO","weight":1},{"time":243,"blendshape":"T_L_D_N","weight":1},{"time":313,"blendshape":"Ah","weight":1},{"time":433,"blendshape":"F_V","weight":1},{"time":523,"blendshape":"T_L_D_N","weight":1},{"time":584,"blendshape":"Er","weight":1},{"time":610,"blendshape":"T_L_D_N","weight":1},{"time":671,"blendshape":"W_OO","weight":1},{"time":761,"blendshape":"T_L_D_N","weight":1},{"time":843,"blendshape":"K_G_H_NG","weight":1},{"time":910,"blendshape":"sil","weight":0},{"time":1059,"blendshape":"T_L_D_N","weight":1},{"time":1122,"blendshape":"IH","weight":1},{"time":1241,"blendshape":"Ch_J","weight":1},{"time":1390,"blendshape":"Er","weight":1},{"time":1443,"blendshape":"K_G_H_NG","weight":1},{"time":1542,"blendshape":"K_G_H_NG","weight":1},{"time":1633,"blendshape":"Er","weight":1},{"time":1738,"blendshape":"T_L_D_N","weight":1},{"time":1882,"blendshape":"sil","weight":0},{"time":2276,"blendshape":"T_L_D_N","weight":1},{"time":2364,"blendshape":"Ah","weight":1},{"time":2552,"blendshape":"B_M_P","weight":1},{"time":2640,"blendshape":"F_V","weight":1},{"time":2765,"blendshape":"Er","weight":1},{"time":2812,"blendshape":"R","weight":1},{"time":2852,"blendshape":"S_Z","weight":1},{"time":3005,"blendshape":"AE","weight":1},{"time":3060,"blendshape":"B_M_P","weight":1},{"time":3134,"blendshape":"F_V","weight":1},{"time":3267,"blendshape":"Er","weight":1},{"time":3354,"blendshape":"K_G_H_NG","weight":1},{"time":3455,"blendshape":"Er","weight":1},{"time":3507,"blendshape":"S_Z","weight":1},{"time":3595,"blendshape":"T_L_D_N","weight":1},{"time":3679,"blendshape":"T_L_D_N","weight":1},{"time":3788,"blendshape":"AE","weight":1},{"time":3898,"blendshape":"T_L_D_N","weight":1},{"time":3984,"blendshape":"IH","weight":1},{"time":4085,"blendshape":"K_G_H_NG","weight":1},{"time":4283,"blendshape":"sil","weight":0},{"time":4477,"blendshape":"F_V","weight":1},{"time":4632,"blendshape":"T_L_D_N","weight":1},{"time":4672,"blendshape":"AE","weight":1},{"time":4743,"blendshape":"K_G_H_NG","weight":1},{"time":4819,"blendshape":"S_Z","weight":1},{"time":4901,"blendshape":"T_L_D_N","weight":1},{"time":4959,"blendshape":"B_M_P","weight":1},{"time":5030,"blendshape":"Ah","weight":1},{"time":5214,"blendshape":"S_Z","weight":1},{"time":5324,"blendshape":"AE","weight":1},{"time":5425,"blendshape":"B_M_P","weight":1},{"time":5521,"blendshape":"S_Z","weight":1},{"time":5634,"blendshape":"IH","weight":1},{"time":5669,"blendshape":"B_M_P","weight":1},{"time":5757,"blendshape":"Er","weight":1},{"time":5895,"blendshape":"Ch_J","weight":1},{"time":6035,"blendshape":"IH","weight":1},{"time":6285,"blendshape":"sil","weight":0},{"time":6935,"blendshape":"Ah","weight":1},{"time":7119,"blendshape":"B_M_P","weight":1},{"time":7207,"blendshape":"K_G_H_NG","weight":1},{"time":7263,"blendshape":"Er","weight":1},{"time":7317,"blendshape":"T_L_D_N","weight":1},{"time":7374,"blendshape":"IH","weight":1},{"time":7432,"blendshape":"B_M_P","weight":1},{"time":7520,"blendshape":"Ah","weight":1},{"time":7739,"blendshape":"sil","weight":0},{"time":7933,"blendshape":"IH","weight":1},{"time":8119,"blendshape":"sil","weight":0},{"time":8169,"blendshape":"R","weight":1},{"time":8205,"blendshape":"S_Z","weight":1},{"time":8345,"blendshape":"Ah","weight":1},{"time":8526,"blendshape":"Er","weight":1},{"time":8557,"blendshape":"T_L_D_N","weight":1},{"time":8625,"blendshape":"S_Z","weight":1},{"time":8724,"blendshape":"K_G_H_NG","weight":1},{"time":8805,"blendshape":"Ah","weight":1},{"time":9098,"blendshape":"T_L_D_N","weight":1},{"time":9257,"blendshape":"sil","weight":0},{"time":9650,"blendshape":"K_G_H_NG","weight":1},{"time":9696,"blendshape":"T_L_D_N","weight":1},{"time":9762,"blendshape":"Ah","weight":1},{"time":9902,"blendshape":"S_Z","weight":1},{"time":10010,"blendshape":"T_L_D_N","weight":1},{"time":10079,"blendshape":"W_OO","weight":1},{"time":10133,"blendshape":"AE","weight":1},{"time":10232,"blendshape":"T_L_D_N","weight":1},{"time":10311,"blendshape":"F_V","weight":1},{"time":10392,"blendshape":"Er","weight":1},{"time":10471,"blendshape":"T_L_D_N","weight":1},{"time":10556,"blendshape":"T_L_D_N","weight":1},{"time":10594,"blendshape":"Ch_J","weight":1},{"time":10728,"blendshape":"IH","weight":1},{"time":10813,"blendshape":"B_M_P","weight":1},{"time":10936,"blendshape":"R","weight":1},{"time":10985,"blendshape":"AE","weight":1},{"time":11154,"blendshape":"B_M_P","weight":1},{"time":11318,"blendshape":"sil","weight":0},{"time":11518,"blendshape":"B_M_P","weight":1},{"time":11627,"blendshape":"Er","weight":1},{"time":11767,"blendshape":"TH","weight":1},{"time":11854,"blendshape":"Ah","weight":1},{"time":11950,"blendshape":"R","weight":1},{"time":12006,"blendshape":"IH","weight":1},{"time":12035,"blendshape":"B_M_P","weight":1},{"time":12138,"blendshape":"B_M_P","weight":1},{"time":12218,"blendshape":"sil","weight":0},{"time":12337,"blendshape":"T_L_D_N","weight":1},{"time":12426,"blendshape":"T_L_D_N","weight":1},{"time":12623,"blendshape":"T_L_D_N","weight":1},{"time":12781,"blendshape":"sil","weight":0},{"time":13174,"blendshape":"T_L_D_N","weight":1},{"time":13245,"blendshape":"Er","weight":1},{"time":13286,"blendshape":"T_L_D_N","weight":1},{"time":13343,"blendshape":"EE","weight":1},{"time":13488,"blendshape":"W_OO","weight":1},{"time":13577,"blendshape":"IH","weight":1},{"time":13678,"blendshape":"T_L_D_N","weight":1},{"time":13742,"blendshape":"B_M_P","weight":1},{"time":13839,"blendshape":"EE","weight":1},{"time":13958,"blendshape":"K_G_H_NG","weight":1},{"time":14022,"blendshape":"Ch_J","weight":1},{"time":14129,"blendshape":"Er","weight":1},{"time":14171,"blendshape":"T_L_D_N","weight":1},{"time":14253,"blendshape":"AE","weight":1},{"time":14346,"blendshape":"T_L_D_N","weight":1},{"time":14431,"blendshape":"IH","weight":1},{"time":14470,"blendshape":"K_G_H_NG","weight":1},{"time":14545,"blendshape":"S_Z","weight":1},{"time":14666,"blendshape":"IH","weight":1},{"time":14741,"blendshape":"T_L_D_N","weight":1},{"time":14812,"blendshape":"T_L_D_N","weight":1},{"time":14907,"blendshape":"R","weight":1},{"time":14949,"blendshape":"Er","weight":1},{"time":14997,"blendshape":"S_Z","weight":1},{"time":15090,"blendshape":"T_L_D_N","weight":1},{"time":15154,"blendshape":"IH","weight":1},{"time":15186,"blendshape":"K_G_H_NG","weight":1},{"time":15270,"blendshape":"T_L_D_N","weight":1},{"time":15348,"blendshape":"Er","weight":1},{"time":15377,"blendshape":"K_G_H_NG","weight":1},{"time":15468,"blendshape":"AE","weight":1},{"time":15576,"blendshape":"TH","weight":1},{"time":15655,"blendshape":"Er","weight":1},{"time":15733,"blendshape":"R","weight":1},{"time":15880,"blendshape":"sil","weight":0},{"time":16273,"blendshape":"T_L_D_N","weight":1},{"time":16373,"blendshape":"AE","weight":1},{"time":16461,"blendshape":"T_L_D_N","weight":1},{"time":16540,"blendshape":"S_Z","weight":1},{"time":16630,"blendshape":"B_M_P","weight":1},{"time":16700,"blendshape":"IH","weight":1},{"time":16762,"blendshape":"K_G_H_NG","weight":1},{"time":16850,"blendshape":"IH","weight":1},{"time":16944,"blendshape":"T_L_D_N","weight":1},{"time":17127,"blendshape":"sil","weight":0}]}
+
+useUnityBridge.ts:181 [Unity] [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+useUnityBridge.ts:193 [Unity Bridge] ✅ Audio playback started: greeting-1760016426634
+useUnityBridge.ts:181 [Unity] [Unity] HTML5 Audio playing, starting amplitude meter
+VM2678 injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+AvatarContainer.tsx:128 [Avatar Container] 🔘 Bubble clicked! Expanding to half...
+AvatarContainer.tsx:62 [Avatar Container] 🔍 viewState changed to: half
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+AvatarContainer.tsx:68 [Avatar Container] Global Unity element: FOUND ✅
+AvatarContainer.tsx:90 [Avatar Container] Target container (#half-panel-unity-target): NOT FOUND ❌
+AvatarContainer.tsx:113 [Avatar] ⚠️ No valid target container for viewState: half
+(anonymous) @ AvatarContainer.tsx:113Understand this warning
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] EE → -6° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] EE → -6° rotation
+
+VM2678 injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] EE → -6° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] EE → -6° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+VM2678 injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+VM2678 injected.js:27 [Unity] HTML5 Audio ended
+useUnityBridge.ts:181 [Unity] [Unity] HTML5 Audio ended
+AvatarContainer.tsx:62 [Avatar Container] 🔍 viewState changed to: fullscreen
+AvatarContainer.tsx:68 [Avatar Container] Global Unity element: FOUND ✅
+AvatarContainer.tsx:90 [Avatar Container] Target container (#fullscreen-unity-target): FOUND ✅
+AvatarContainer.tsx:99 [Avatar] ✅ Unity moved to fullscreen container (#fullscreen-unity-target)
+unity-avatar/index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.Understand this warning
+VM2722 injected.js:27 navigator.mediaDevices support available
+VM2722 injected.js:27 [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+VM2722 injected.js:27     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+VM2722 injected.js:27     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+VM2722 injected.js:27     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+VM2722 injected.js:27     "memorysetup-temp-allocator-size-background-worker=32768"
+
+VM2722 injected.js:27     "memorysetup-bucket-allocator-granularity=16"
+
+VM2722 injected.js:27     "memorysetup-bucket-allocator-bucket-count=8"
+
+VM2722 injected.js:27     "memorysetup-bucket-allocator-block-size=4194304"
+
+VM2722 injected.js:27     "memorysetup-bucket-allocator-block-count=1"
+
+VM2722 injected.js:27     "memorysetup-main-allocator-block-size=16777216"
+
+VM2722 injected.js:27     "memorysetup-thread-allocator-block-size=16777216"
+
+VM2722 injected.js:27     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+VM2722 injected.js:27     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+VM2722 injected.js:27     "memorysetup-cache-allocator-block-size=4194304"
+
+VM2722 injected.js:27     "memorysetup-typetree-allocator-block-size=2097152"
+
+VM2722 injected.js:27     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+VM2722 injected.js:27     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+VM2722 injected.js:27     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+VM2722 injected.js:27     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+VM2722 injected.js:27     "memorysetup-profiler-allocator-block-size=16777216"
+
+VM2722 injected.js:27     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+VM2722 injected.js:27     "memorysetup-temp-allocator-size-main=4194304"
+
+VM2722 injected.js:27     "memorysetup-job-temp-allocator-block-size=2097152"
+
+VM2722 injected.js:27     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+VM2722 injected.js:27     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+VM2722 injected.js:27 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+VM2722 injected.js:27 Loading player data from data.unity3d
+
+VM2722 injected.js:27 Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+VM2722 injected.js:27 Creating WebGL 2.0 context.
+VM2722 injected.js:27 Renderer: WebKit WebGL
+
+VM2722 injected.js:27 Vendor:   WebKit
+
+VM2722 injected.js:27 Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+VM2722 injected.js:27 GLES:     3
+
+VM2722 injected.js:27  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+VM2722 injected.js:27 depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+VM2722 injected.js:27 OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+VM2722 injected.js:27 Input Manager initialize...
+
+VM2722 injected.js:27 PlatformGetStacktrace
+
+VM2722 injected.js:27 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ VM2722 injected.js:27
+_JS_Log_Dump @ VM2725 Build.framework.js.gz:10
+$func55271 @ VM2726 Build.wasm.gz:1
+$func55274 @ VM2726 Build.wasm.gz:1
+$func55286 @ VM2726 Build.wasm.gz:1
+$func55284 @ VM2726 Build.wasm.gz:1
+$func55282 @ VM2726 Build.wasm.gz:1
+$func39272 @ VM2726 Build.wasm.gz:1
+$func50628 @ VM2726 Build.wasm.gz:1
+$func50624 @ VM2726 Build.wasm.gz:1
+$func49265 @ VM2726 Build.wasm.gz:1
+$func49266 @ VM2726 Build.wasm.gz:1
+$func52116 @ VM2726 Build.wasm.gz:1
+$func52164 @ VM2726 Build.wasm.gz:1
+$func48740 @ VM2726 Build.wasm.gz:1
+$func48751 @ VM2726 Build.wasm.gz:1
+$func48763 @ VM2726 Build.wasm.gz:1
+$func48764 @ VM2726 Build.wasm.gz:1
+$func55404 @ VM2726 Build.wasm.gz:1
+$main @ VM2726 Build.wasm.gz:1
+Module._main @ VM2725 Build.framework.js.gz:10
+callMain @ VM2725 Build.framework.js.gz:10
+doRun @ VM2725 Build.framework.js.gz:10
+run @ VM2725 Build.framework.js.gz:10
+runCaller @ VM2725 Build.framework.js.gz:10
+removeRunDependency @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2724 Build.loader.js:1
+Promise.then
+(anonymous) @ VM2724 Build.loader.js:1
+callRuntimeCallbacks @ VM2725 Build.framework.js.gz:10
+preRun @ VM2725 Build.framework.js.gz:10
+run @ VM2725 Build.framework.js.gz:10
+runCaller @ VM2725 Build.framework.js.gz:10
+removeRunDependency @ VM2725 Build.framework.js.gz:10
+receiveInstance @ VM2725 Build.framework.js.gz:10
+receiveInstantiationResult @ VM2725 Build.framework.js.gz:10
+Promise.then
+(anonymous) @ VM2725 Build.framework.js.gz:10
+Promise.then
+instantiateAsync @ VM2725 Build.framework.js.gz:10
+createWasm @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2724 Build.loader.js:1
+Promise.then
+T @ VM2724 Build.loader.js:1
+(anonymous) @ VM2724 Build.loader.js:1
+createUnityInstance @ VM2724 Build.loader.js:1
+script.onload @ VM2723 index.html:647
+script
+(anonymous) @ VM2723 index.html:644Understand this warning
+VM2722 injected.js:27 PlatformGetStacktrace
+
+VM2722 injected.js:27 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ VM2722 injected.js:27
+_JS_Log_Dump @ VM2725 Build.framework.js.gz:10
+$func55271 @ VM2726 Build.wasm.gz:1
+$func55274 @ VM2726 Build.wasm.gz:1
+$func55286 @ VM2726 Build.wasm.gz:1
+$func55284 @ VM2726 Build.wasm.gz:1
+$func55282 @ VM2726 Build.wasm.gz:1
+$func39272 @ VM2726 Build.wasm.gz:1
+$func50628 @ VM2726 Build.wasm.gz:1
+$func50624 @ VM2726 Build.wasm.gz:1
+$func49265 @ VM2726 Build.wasm.gz:1
+$func49266 @ VM2726 Build.wasm.gz:1
+$func52116 @ VM2726 Build.wasm.gz:1
+$func52164 @ VM2726 Build.wasm.gz:1
+$func48740 @ VM2726 Build.wasm.gz:1
+$func48751 @ VM2726 Build.wasm.gz:1
+$func48763 @ VM2726 Build.wasm.gz:1
+$func48764 @ VM2726 Build.wasm.gz:1
+$func55404 @ VM2726 Build.wasm.gz:1
+$main @ VM2726 Build.wasm.gz:1
+Module._main @ VM2725 Build.framework.js.gz:10
+callMain @ VM2725 Build.framework.js.gz:10
+doRun @ VM2725 Build.framework.js.gz:10
+run @ VM2725 Build.framework.js.gz:10
+runCaller @ VM2725 Build.framework.js.gz:10
+removeRunDependency @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2724 Build.loader.js:1
+Promise.then
+(anonymous) @ VM2724 Build.loader.js:1
+callRuntimeCallbacks @ VM2725 Build.framework.js.gz:10
+preRun @ VM2725 Build.framework.js.gz:10
+run @ VM2725 Build.framework.js.gz:10
+runCaller @ VM2725 Build.framework.js.gz:10
+removeRunDependency @ VM2725 Build.framework.js.gz:10
+receiveInstance @ VM2725 Build.framework.js.gz:10
+receiveInstantiationResult @ VM2725 Build.framework.js.gz:10
+Promise.then
+(anonymous) @ VM2725 Build.framework.js.gz:10
+Promise.then
+instantiateAsync @ VM2725 Build.framework.js.gz:10
+createWasm @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2725 Build.framework.js.gz:10
+(anonymous) @ VM2724 Build.loader.js:1
+Promise.then
+T @ VM2724 Build.loader.js:1
+(anonymous) @ VM2724 Build.loader.js:1
+createUnityInstance @ VM2724 Build.loader.js:1
+script.onload @ VM2723 index.html:647
+script
+(anonymous) @ VM2723 index.html:644Understand this warning
+VM2722 injected.js:27 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+VM2722 injected.js:27 UnloadTime: 3.800001 ms
+
+VM2722 injected.js:27 [Unity] Instance created successfully
+VM2722 injected.js:27 [Unity] ⏰ Calling OnUnityReady directly...
+VM2722 injected.js:27 [Unity] Avatar instance ready
+VM2722 injected.js:27 [Unity] ⏳ Waiting for handshake before audio unlock...
+VM2722 injected.js:27 [UnityCache] 'https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+VM2722 injected.js:27 PlatformGetStacktrace
+
+VM2722 injected.js:27 -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://4945f361-01c6-43cc-9fb9-4e2a0f07c7b5-00-13t1ldn5vcnc0.spock.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+(anonymous) @ VM2722 injected.js:27
+_JS_Log_Dump @ VM2725 Build.framework.js.gz:10
+$func55271 @ VM2726 Build.wasm.gz:1
+$func55274 @ VM2726 Build.wasm.gz:1
+$func55286 @ VM2726 Build.wasm.gz:1
+$func55284 @ VM2726 Build.wasm.gz:1
+$func55282 @ VM2726 Build.wasm.gz:1
+$func51315 @ VM2726 Build.wasm.gz:1
+$func51358 @ VM2726 Build.wasm.gz:1
+$func51614 @ VM2726 Build.wasm.gz:1
+$func41076 @ VM2726 Build.wasm.gz:1
+$func50687 @ VM2726 Build.wasm.gz:1
+$func41057 @ VM2726 Build.wasm.gz:1
+$func49396 @ VM2726 Build.wasm.gz:1
+$func41119 @ VM2726 Build.wasm.gz:1
+$func41137 @ VM2726 Build.wasm.gz:1
+$func51710 @ VM2726 Build.wasm.gz:1
+$func41138 @ VM2726 Build.wasm.gz:1
+$func49180 @ VM2726 Build.wasm.gz:1
+$func49087 @ VM2726 Build.wasm.gz:1
+$func50075 @ VM2726 Build.wasm.gz:1
+$func50032 @ VM2726 Build.wasm.gz:1
+$func50032 @ VM2726 Build.wasm.gz:1
+$func55402 @ VM2726 Build.wasm.gz:1
+$dynCall_v @ VM2726 Build.wasm.gz:1
+browserIterationFunc @ VM2725 Build.framework.js.gz:10
+callUserCallback @ VM2725 Build.framework.js.gz:10
+runIter @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ VM2725 Build.framework.js.gz:10
+Browser_mainLoop_runner @ VM2725 Build.framework.js.gz:10Understand this warning
+VM2722 injected.js:27 Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+AvatarContainer.tsx:62 [Avatar Container] 🔍 viewState changed to: half
+AvatarContainer.tsx:68 [Avatar Container] Global Unity element: NOT FOUND ❌
+AvatarContainer.tsx:71 [Avatar] ❌ Global Unity instance not found!
+(anonymous) @ AvatarContainer.tsx:71
+setTimeout
+(anonymous) @ AvatarContainer.tsx:65
+commitHookEffectListMount @ chunk-RPCDYKBN.js?v=0a97da63:16915
+commitPassiveMountOnFiber @ chunk-RPCDYKBN.js?v=0a97da63:18156
+commitPassiveMountEffects_complete @ chunk-RPCDYKBN.js?v=0a97da63:18129
+commitPassiveMountEffects_begin @ chunk-RPCDYKBN.js?v=0a97da63:18119
+commitPassiveMountEffects @ chunk-RPCDYKBN.js?v=0a97da63:18109
+flushPassiveEffectsImpl @ chunk-RPCDYKBN.js?v=0a97da63:19490
+flushPassiveEffects @ chunk-RPCDYKBN.js?v=0a97da63:19447
+commitRootImpl @ chunk-RPCDYKBN.js?v=0a97da63:19416
+commitRoot @ chunk-RPCDYKBN.js?v=0a97da63:19277
+performSyncWorkOnRoot @ chunk-RPCDYKBN.js?v=0a97da63:18895
+flushSyncCallbacks @ chunk-RPCDYKBN.js?v=0a97da63:9119
+(anonymous) @ chunk-RPCDYKBN.js?v=0a97da63:18627Understand this error
