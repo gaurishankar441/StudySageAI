@@ -216,10 +216,14 @@ export function useUnityBridge({
         reader.readAsDataURL(audioBlob);
         const base64Audio = await base64Promise;
 
+        console.log('[Unity Bridge] 🎵 Converted audio to base64 - Length:', base64Audio?.length || 0, 'Blob size:', audioBlob.size);
+        
         // Send to Unity
         sendMessageToUnity('PLAY_TTS_AUDIO', {
           audioData: base64Audio,
         });
+        
+        console.log('[Unity Bridge] ✅ Audio sent to Unity iframe');
 
         // Set emotion if provided
         if (emotion) {

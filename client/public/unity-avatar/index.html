@@ -357,14 +357,17 @@
               var audioData = event.data.payload.audioData || '';
               var audioId = event.data.payload.id || 'tts-' + Date.now();
               
+              console.log('[Unity] 🎵 PLAY_TTS_AUDIO received - audioUnlocked:', audioUnlocked, 'audioData length:', audioData ? audioData.length : 0);
+              
               if (audioUnlocked && audioData) {
+                console.log('[Unity] ✅ Playing audio via HTML5 fallback...');
                 playHtmlAudioFallback(audioData, audioId);
               } else if (!audioUnlocked) {
-                console.warn('[Unity] Audio not unlocked yet - showing unlock button');
+                console.warn('[Unity] ❌ Audio not unlocked yet - showing unlock button');
                 if (unlockBtn) unlockBtn.style.display = 'block';
+              } else if (!audioData) {
+                console.error('[Unity] ❌ No audio data received!');
               }
-              
-              console.log('[Unity] TTS audio playback initiated (HTML5 fallback mode)');
               break;
 
             case 'SET_EMOTION':
