@@ -378,11 +378,11 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       
       const useOptimizedTTS = tutorSession?.session && tutorSession?.canResume;
       
-      // 🎯 NEW: Use phoneme-based TTS for Unity lip-sync
-      const usePhonemeTTS = useOptimizedTTS && unityAvatarRef.current?.isReady;
+      // 🎯 ALWAYS use phoneme endpoint for optimized sessions (Unity will handle gracefully if not ready)
+      const usePhonemeTTS = useOptimizedTTS;
       const ttsEndpoint = usePhonemeTTS
         ? '/api/tutor/optimized/session/tts-with-phonemes'
-        : (useOptimizedTTS ? '/api/tutor/optimized/session/tts' : '/api/tutor/tts');
+        : '/api/tutor/tts';
       
       const requestBody = useOptimizedTTS
         ? { chatId, text }
