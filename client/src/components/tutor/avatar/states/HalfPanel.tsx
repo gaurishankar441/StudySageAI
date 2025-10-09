@@ -77,15 +77,13 @@ export function HalfPanel({
           />
         </div>
 
-        {/* Unity Iframe */}
-        <iframe
-          ref={iframeRef}
-          src={unityIframeUrl}
-          className="absolute inset-0 w-full h-full border-0 rounded-2xl"
-          allow="microphone; camera; autoplay"
-          title="VaktaAI Unity Avatar"
-          data-testid="unity-avatar-iframe"
-        />
+        {/* Global Unity Instance (Reused) */}
+        <div 
+          className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden"
+          data-testid="unity-avatar-container"
+        >
+          {/* Unity will be shown here via global instance */}
+        </div>
 
         {/* Bottom Overlay */}
         <BottomOverlay
