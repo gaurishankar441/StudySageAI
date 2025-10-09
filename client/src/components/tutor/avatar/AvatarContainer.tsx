@@ -74,7 +74,7 @@ export function AvatarContainer({
             key="half"
             onClose={minimizeToBubble}
             onExpand={expandToFull}
-            onChatClick={expandToFull}
+            onChatClick={openChat}
             onMicClick={onMicClick}
             onReload={handleReload}
             isMicActive={isMicActive}

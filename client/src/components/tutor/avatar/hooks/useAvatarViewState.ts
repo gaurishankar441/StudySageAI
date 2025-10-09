@@ -15,7 +15,6 @@ interface AvatarViewStateReturn {
   closeChat: () => void;
   minimizeToHalf: () => void;
   minimizeToBubble: () => void;
-  toggleChat: () => void;
 }
 
 const TRANSITION_DURATION = 300; // ms
@@ -56,14 +55,6 @@ export function useAvatarViewState(initialState: AvatarViewState = 'minimized'):
     transition('minimized');
   }, [transition]);
 
-  const toggleChat = useCallback(() => {
-    if (viewState === 'fullscreen-chat') {
-      closeChat();
-    } else if (viewState === 'fullscreen') {
-      openChat();
-    }
-  }, [viewState, openChat, closeChat]);
-
   return {
     viewState,
     isTransitioning,
@@ -73,6 +64,5 @@ export function useAvatarViewState(initialState: AvatarViewState = 'minimized'):
     closeChat,
     minimizeToHalf,
     minimizeToBubble,
-    toggleChat,
   };
 }
