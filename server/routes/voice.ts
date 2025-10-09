@@ -150,10 +150,16 @@ voiceRouter.post('/synthesize', async (req, res) => {
       audioBuffer = await voiceService.synthesizeSpeech(text, language as 'hi' | 'en');
     }
     
-    // Send audio file
+    // Send audio file with caching headers
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', audioBuffer.length);
     res.setHeader('Content-Disposition', 'inline; filename="speech.mp3"');
+    
+    // Cache TTS audio for 24 hours (same text will return cached version)
+    // This works with our server-side TTS cache (Redis/memory)
+    res.setHeader('Cache-Control', 'public, max-age=86400, immutable');
+    res.setHeader('Vary', 'Accept-Encoding'); // Vary by compression
+    
     res.send(audioBuffer);
   } catch (error) {
     console.error('[VOICE API] TTS error:', error);

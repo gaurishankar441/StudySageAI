@@ -13,6 +13,7 @@ export interface UnityBridgeHandle {
   stopAudio: () => void;
   isReady: boolean;
   isHandshakeComplete: boolean;
+  isAudioUnlocked: boolean;
 }
 
 interface UseUnityBridgeOptions {
@@ -30,6 +31,7 @@ export function useUnityBridge({
 }: UseUnityBridgeOptions): UnityBridgeHandle {
   const [isReady, setIsReady] = useState(false);
   const [isHandshakeComplete, setIsHandshakeComplete] = useState(false);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
   const handshakeTimeoutRef = useRef<NodeJS.Timeout>();
   const trustedOriginRef = useRef<string | null>(null);
   const hasInitializedRef = useRef(false); // Prevent duplicate handshakes
@@ -164,7 +166,7 @@ export function useUnityBridge({
         case 'AUDIO_UNLOCKED':
           // Audio context unlocked in iframe
           console.log('[Unity Bridge] Audio unlocked successfully ✅');
-          // Could emit event or update state if needed
+          setIsAudioUnlocked(true);
           break;
 
         case 'UNITY_MESSAGE':
@@ -272,5 +274,6 @@ export function useUnityBridge({
     stopAudio,
     isReady,
     isHandshakeComplete,
+    isAudioUnlocked,
   };
 }

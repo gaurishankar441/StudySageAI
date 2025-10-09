@@ -43,10 +43,11 @@ interface UnityAvatarProps {
   onReady?: () => void;
   onMessage?: (message: any) => void;
   onError?: (error: string) => void;
+  onAudioUnlocked?: () => void;
 }
 
 const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
-  ({ className = '', defaultAvatar = 'priya', onReady, onMessage, onError }, ref) => {
+  ({ className = '', defaultAvatar = 'priya', onReady, onMessage, onError, onAudioUnlocked }, ref) => {
     const iframeRef = useRef<HTMLIFrameElement>(null);
     const [loadError, setLoadError] = useState<string | null>(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -102,6 +103,14 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
 
     // Expose methods to parent via ref
     useImperativeHandle(ref, () => unityBridge, [unityBridge]);
+
+    // Track audio unlock status and notify parent
+    useEffect(() => {
+      if (unityBridge.isAudioUnlocked) {
+        console.log('[Unity Avatar] Audio unlocked detected, notifying parent');
+        onAudioUnlocked?.();
+      }
+    }, [unityBridge.isAudioUnlocked, onAudioUnlocked]);
 
     // Handle iframe error
     const handleIframeError = () => {

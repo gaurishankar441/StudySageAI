@@ -12,6 +12,7 @@ interface UnityAvatarContextValue {
   isLoading: boolean;
   error: string | null;
   isVisible: boolean;
+  isAudioUnlocked: boolean;
   setIsVisible: (visible: boolean) => void;
 }
 
@@ -27,6 +28,7 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isVisible, setIsVisible] = useState(false);
+  const [isAudioUnlocked, setIsAudioUnlocked] = useState(false);
 
   const handleReady = () => {
     console.log('[Unity Context] ✅ Avatar ready globally!');
@@ -48,6 +50,7 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
         isLoading, 
         error, 
         isVisible, 
+        isAudioUnlocked,
         setIsVisible 
       }}
     >
@@ -95,6 +98,10 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
               defaultAvatar="priya"
               onReady={handleReady}
               onError={handleError}
+              onAudioUnlocked={() => {
+                console.log('[Unity Context] 🔊 Audio unlocked!');
+                setIsAudioUnlocked(true);
+              }}
             />
           </div>
 

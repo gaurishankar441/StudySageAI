@@ -124,6 +124,113 @@
       var audioCtx = null;
       var audioUnlocked = false;
       var unlockBtn = document.getElementById('audio-unlock-btn');
+      
+      // 🎵 HTML5 AUDIO FALLBACK: For reliable playback with amplitude-driven lips
+      var audioElement = new Audio();
+      audioElement.crossOrigin = 'anonymous';
+      var analyser = null;
+      var dataArray = null;
+      var animationFrameId = null;
+
+      // 🎵 HTML5 AUDIO FALLBACK: Play audio with amplitude analysis
+      function playHtmlAudioFallback(base64Audio, audioId) {
+        console.log('[Unity] Using HTML5 Audio fallback with amplitude lip-sync');
+        
+        // Convert base64 to blob URL
+        var audioBlob = base64ToBlob(base64Audio, 'audio/mpeg');
+        var audioUrl = URL.createObjectURL(audioBlob);
+        
+        // Setup Web Audio API for amplitude analysis
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!audioCtx) audioCtx = new AudioContext();
+        
+        // Create analyser if not exists
+        if (!analyser) {
+          var source = audioCtx.createMediaElementSource(audioElement);
+          analyser = audioCtx.createAnalyser();
+          analyser.fftSize = 1024;
+          dataArray = new Uint8Array(analyser.frequencyBinCount);
+          source.connect(analyser);
+          analyser.connect(audioCtx.destination);
+        }
+        
+        // Play audio
+        audioElement.src = audioUrl;
+        audioElement.onplay = function() {
+          console.log('[Unity] HTML5 Audio playing, starting amplitude meter');
+          startAmplitudeMeter(audioId);
+        };
+        audioElement.onended = function() {
+          console.log('[Unity] HTML5 Audio ended');
+          stopAmplitudeMeter();
+          URL.revokeObjectURL(audioUrl);
+          if (trustedParentOrigin) {
+            window.parent.postMessage({
+              type: 'AUDIO_EVENT',
+              payload: { id: audioId, state: 'ended' }
+            }, trustedParentOrigin);
+          }
+        };
+        audioElement.play().catch(function(err) {
+          console.error('[Unity] HTML5 Audio play failed:', err);
+          stopAmplitudeMeter();
+        });
+      }
+      
+      // 📊 AMPLITUDE METER: Drive mouth blendshape from audio amplitude
+      function startAmplitudeMeter(audioId) {
+        function meterLoop() {
+          if (!analyser || !dataArray) return;
+          
+          // Get amplitude data
+          analyser.getByteTimeDomainData(dataArray);
+          
+          // Calculate RMS (Root Mean Square) amplitude
+          var sum = 0;
+          for (var i = 0; i < dataArray.length; i++) {
+            var normalized = (dataArray[i] - 128) / 128;
+            sum += normalized * normalized;
+          }
+          var rms = Math.sqrt(sum / dataArray.length);
+          
+          // Scale to 0-1 range (boost for visibility)
+          var mouthOpen = Math.min(1, rms * 6);
+          
+          // Send to Unity for blendshape control
+          if (unityInstance) {
+            unityInstance.SendMessage(
+              'AvatarController',
+              'OnExternalAmplitude',
+              mouthOpen.toFixed(3)
+            );
+          }
+          
+          animationFrameId = requestAnimationFrame(meterLoop);
+        }
+        meterLoop();
+      }
+      
+      function stopAmplitudeMeter() {
+        if (animationFrameId) {
+          cancelAnimationFrame(animationFrameId);
+          animationFrameId = null;
+        }
+        // Reset mouth to neutral
+        if (unityInstance) {
+          unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
+        }
+      }
+      
+      // 🔄 HELPER: Convert base64 to Blob
+      function base64ToBlob(base64, mimeType) {
+        var byteCharacters = atob(base64);
+        var byteNumbers = new Array(byteCharacters.length);
+        for (var i = 0; i < byteCharacters.length; i++) {
+          byteNumbers[i] = byteCharacters.charCodeAt(i);
+        }
+        var byteArray = new Uint8Array(byteNumbers);
+        return new Blob([byteArray], { type: mimeType });
+      }
 
       // 🚀 UNITY TO REACT COMMUNICATION (Secure with handshake)
       function SendMessageToReact(message) {
@@ -245,13 +352,19 @@
         try {
           switch(event.data.type) {
             case 'PLAY_TTS_AUDIO':
-              // Play audio with base64 data (uLipSync will handle lip-sync)
-              unityInstance.SendMessage(
-                'AvatarController',
-                'PlayAudioFromBase64',
-                event.data.payload.audioData || ''
-              );
-              console.log('[Unity] Playing audio with lip-sync');
+              // Use HTML5 Audio fallback with amplitude-driven lip-sync (reliable!)
+              // This works even if Unity audio fails or isn't configured
+              var audioData = event.data.payload.audioData || '';
+              var audioId = event.data.payload.id || 'tts-' + Date.now();
+              
+              if (audioUnlocked && audioData) {
+                playHtmlAudioFallback(audioData, audioId);
+              } else if (!audioUnlocked) {
+                console.warn('[Unity] Audio not unlocked yet - showing unlock button');
+                if (unlockBtn) unlockBtn.style.display = 'block';
+              }
+              
+              console.log('[Unity] TTS audio playback initiated (HTML5 fallback mode)');
               break;
 
             case 'SET_EMOTION':
@@ -285,13 +398,18 @@
               break;
 
             case 'STOP_AUDIO':
-              // Stop current audio playback
-              unityInstance.SendMessage(
-                'AvatarController',
-                'StopAudio',
-                ''
-              );
-              console.log('[Unity] Audio stopped');
+              // Stop HTML5 audio playback
+              if (audioElement && !audioElement.paused) {
+                audioElement.pause();
+                audioElement.currentTime = 0;
+              }
+              stopAmplitudeMeter();
+              
+              // Also stop Unity audio (if applicable)
+              if (unityInstance) {
+                unityInstance.SendMessage('AvatarController', 'StopAudio', '');
+              }
+              console.log('[Unity] Audio stopped (HTML5 + Unity)');
               break;
 
             default:

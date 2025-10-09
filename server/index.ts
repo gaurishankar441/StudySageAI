@@ -1,10 +1,39 @@
 import express, { type Request, Response, NextFunction } from "express";
 import helmet from "helmet";
+import compression from "compression";
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { apiLimiter } from "./middleware/security";
 
 const app = express();
+
+// Enable gzip/deflate compression for all responses
+// CRITICAL: Override filter to compress audio/mpeg (TTS files)
+// By default, Express compression skips audio - we override this!
+app.use(compression({
+  // Compress all responses above 1KB
+  threshold: 1024,
+  // Compression level (1-9, higher = better compression but slower)
+  level: 6,
+  // OVERRIDE filter to compress audio/mpeg explicitly
+  filter: (req, res) => {
+    // Don't compress if client doesn't support it
+    if (req.headers['x-no-compression']) {
+      return false;
+    }
+    
+    // Get content type
+    const contentType = res.getHeader('Content-Type');
+    
+    // Explicitly compress audio/mpeg (TTS responses)
+    if (typeof contentType === 'string' && contentType.startsWith('audio/')) {
+      return true; // Force compression for audio
+    }
+    
+    // Use default filter for other types (text, JSON, etc.)
+    return compression.filter(req, res);
+  }
+}));
 
 // Security headers with Helmet.js
 app.use(helmet({
