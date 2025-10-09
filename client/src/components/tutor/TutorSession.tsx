@@ -377,9 +377,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
       
       const useOptimizedTTS = tutorSession?.session && tutorSession?.canResume;
-      const ttsEndpoint = useOptimizedTTS
-        ? '/api/tutor/optimized/session/tts'
-        : '/api/tutor/tts';
+      
+      // 🎯 NEW: Use phoneme-based TTS for Unity lip-sync
+      const usePhonemeTTS = useOptimizedTTS && unityAvatarRef.current?.isReady;
+      const ttsEndpoint = usePhonemeTTS
+        ? '/api/tutor/optimized/session/tts-with-phonemes'
+        : (useOptimizedTTS ? '/api/tutor/optimized/session/tts' : '/api/tutor/tts');
       
       const requestBody = useOptimizedTTS
         ? { chatId, text }
@@ -399,8 +402,26 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         throw new Error(`Failed to generate speech: ${response.status}`);
       }
 
-      const audioBlob = await response.blob();
-      console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
+      // 🎯 Handle phoneme-based response (JSON) vs regular audio (blob)
+      let audioBlob: Blob;
+      let phonemes: Array<{time: number; blendshape: string; weight: number}> = [];
+      
+      if (usePhonemeTTS) {
+        // Phoneme-based TTS returns JSON
+        const ttsData = await response.json();
+        console.log('[TTS] Phoneme data received - Phonemes:', ttsData.phonemes?.length || 0, 'Audio base64 length:', ttsData.audio?.length || 0);
+        
+        // Convert base64 audio to blob (🎯 FIX: Polly returns MP3, not WAV)
+        const audioBuffer = Uint8Array.from(atob(ttsData.audio), c => c.charCodeAt(0));
+        audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' }); // Correct MIME type for Polly MP3
+        phonemes = ttsData.phonemes || [];
+        
+        console.log('[TTS] Converted to blob, size:', audioBlob.size);
+      } else {
+        // Regular TTS returns audio blob
+        audioBlob = await response.blob();
+        console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
+      }
       
       // 🎭 AVATAR: Check if Unity is ready OR loading (wait if loading)
       const currentAvatarReady = unityAvatarRef.current?.isReady || false;
@@ -435,7 +456,20 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         if (unityBecameReady && unityAvatarRef.current) {
           console.log('[Avatar] ✅ Unity ready - sending audio with lip-sync');
           try {
-            await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+            // 🎯 Use phoneme-based method if phonemes available
+            if (phonemes.length > 0 && usePhonemeTTS) {
+              console.log('[Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes:', phonemes.length);
+              // Convert blob to base64 for phoneme method
+              const audioBase64 = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.readAsDataURL(audioBlob);
+              });
+              unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audioBase64, phonemes, messageId);
+            } else {
+              console.log('[Avatar] 🔊 Sending amplitude-based lip-sync (no phonemes)');
+              await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+            }
             console.log('[Avatar] ✅ Audio sent to Unity successfully');
             setPlayingAudio(null);
             return; // Exit early - Unity plays the audio
@@ -451,7 +485,20 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         console.log('[Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync');
         console.log('[Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync');
         try {
-          await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+          // 🎯 Use phoneme-based method if phonemes available
+          if (phonemes.length > 0 && usePhonemeTTS) {
+            console.log('[Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes:', phonemes.length);
+            // Convert blob to base64 for phoneme method
+            const audioBase64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
+              reader.readAsDataURL(audioBlob);
+            });
+            unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audioBase64, phonemes, messageId);
+          } else {
+            console.log('[Avatar] 🔊 Sending amplitude-based lip-sync (no phonemes)');
+            await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+          }
           console.log('[Avatar] ✅ Audio sent to Unity successfully');
           setPlayingAudio(null);
           return; // Exit early - Unity plays the audio

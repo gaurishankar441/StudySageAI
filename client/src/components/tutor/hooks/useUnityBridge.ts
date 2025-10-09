@@ -7,6 +7,7 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 
 export interface UnityBridgeHandle {
   sendAudioToAvatar: (audioBlob: Blob, emotion?: string) => Promise<void>;
+  sendAudioWithPhonemesToAvatar: (audioBase64: string, phonemes: Array<{time: number; blendshape: string; weight: number}>, messageId?: string) => void;
   setEmotion: (emotion: string) => void;
   triggerGesture: (gesture: string) => void;
   changeAvatar: (avatarName: 'priya' | 'amit') => void;
@@ -292,8 +293,31 @@ export function useUnityBridge({
     sendMessageToUnity('STOP_AUDIO', {});
   }, [isReady, sendMessageToUnity]);
 
+  // 🎯 NEW: Send audio with phoneme sequence for Unity lip-sync
+  const sendAudioWithPhonemesToAvatar = useCallback(
+    (audioBase64: string, phonemes: Array<{time: number; blendshape: string; weight: number}>, messageId?: string) => {
+      if (!isReady) {
+        console.warn('[Unity Bridge] Unity not ready for phoneme playback');
+        return;
+      }
+
+      console.log('[Unity Bridge] 🎵 Sending audio + phonemes to Unity - Phonemes:', phonemes.length);
+      
+      // Send PLAY_TTS_WITH_PHONEMES message
+      sendMessageToUnity('PLAY_TTS_WITH_PHONEMES', {
+        audioData: audioBase64,
+        phonemes,
+        id: messageId || `tts-phoneme-${Date.now()}`,
+      });
+      
+      console.log('[Unity Bridge] ✅ Audio + phonemes sent to Unity iframe');
+    },
+    [isReady, sendMessageToUnity]
+  );
+
   return {
     sendAudioToAvatar,
+    sendAudioWithPhonemesToAvatar,
     setEmotion,
     triggerGesture,
     changeAvatar,

@@ -1152,6 +1152,108 @@ optimizedTutorRouter.post('/session/tts', async (req, res) => {
 });
 
 /**
+ * POST /api/tutor/optimized/session/tts-with-phonemes
+ * Generate TTS with phoneme data for Unity lip-sync
+ * Returns: { audio: base64, phonemes: [{time, blendshape, weight}] }
+ */
+optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => {
+  try {
+    const { chatId, text, emotion } = req.body;
+    
+    if (!chatId || !text) {
+      return res.status(400).json({ error: 'chatId and text required' });
+    }
+    
+    // Get session to determine persona and language
+    const session = await storage.getTutorSession(chatId);
+    if (!session) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    
+    const persona = tutorSessionService.getPersona(session);
+    const language = persona.languageStyle.hindiPercentage > 50 ? 'hi' : 'en';
+    const personaId = session.personaId;
+    
+    console.log(`[TTS+PHONEMES] Generating for chatId ${chatId}: ${text.substring(0, 50)}...`);
+    
+    const startTime = Date.now();
+    
+    // Import services
+    const { ttsCacheService } = await import('../services/ttsCacheService');
+    const { voiceService } = await import('../services/voiceService');
+    const { mapPollyVisemesToUnityPhonemes } = await import('../utils/visemeMapping');
+    
+    // 🎯 FIX: Use Polly for BOTH audio and visemes to ensure timing alignment
+    // Critical: enhancedVoiceService may use Sarvam/other voices, causing timing mismatch
+    
+    let audioBuffer: Buffer;
+    let phonemes: Array<{time: number; blendshape: string; weight: number}> = [];
+    let cached = false;
+    
+    // 1. Check cache for audio
+    const cachedAudio = await ttsCacheService.get(text, language, emotion, personaId);
+    
+    if (cachedAudio) {
+      cached = true;
+      audioBuffer = cachedAudio;
+      console.log(`[TTS+PHONEMES] 💾 Audio cache hit! (${Date.now() - startTime}ms)`);
+      
+      // Still need to fetch visemes (not cached)
+      try {
+        const pollyVisemes = await voiceService.getVisemeData(text, language);
+        if (pollyVisemes.length > 0) {
+          phonemes = mapPollyVisemesToUnityPhonemes(pollyVisemes);
+          console.log(`[TTS+PHONEMES] ✅ Mapped ${phonemes.length} phonemes for Unity (cached audio)`);
+        }
+      } catch (visemeError) {
+        console.warn('[TTS+PHONEMES] Viseme fetch failed (cached path):', visemeError);
+      }
+    } else {
+      // 2. Generate NEW audio + visemes from SAME Polly voice (critical for timing)
+      try {
+        const result = await voiceService.synthesizeWithVisemes(text, language);
+        audioBuffer = result.audio;
+        
+        if (result.visemes.length > 0) {
+          phonemes = mapPollyVisemesToUnityPhonemes(result.visemes);
+          console.log(`[TTS+PHONEMES] ✅ Generated ${phonemes.length} phonemes from Polly`);
+        } else {
+          console.warn('[TTS+PHONEMES] No visemes from Polly, falling back to amplitude-based');
+        }
+        
+        // Store in cache
+        await ttsCacheService.set(text, language, audioBuffer, emotion, personaId);
+        console.log(`[TTS+PHONEMES] 🔨 Generated and cached audio (${Date.now() - startTime}ms)`);
+      } catch (synthError) {
+        console.error('[TTS+PHONEMES] Polly synthesis failed:', synthError);
+        throw new Error('Failed to generate TTS with phonemes');
+      }
+    }
+    
+    // 3. Convert audio to base64
+    const audioBase64 = audioBuffer.toString('base64');
+    
+    const genTime = Date.now() - startTime;
+    console.log(`[TTS+PHONEMES] ✅ Complete in ${genTime}ms - Audio: ${audioBuffer.length} bytes, Phonemes: ${phonemes.length}`);
+    
+    // Return JSON with audio and phonemes
+    res.json({
+      audio: audioBase64,
+      phonemes,
+      metadata: {
+        cached,
+        generationTime: genTime,
+        audioSize: audioBuffer.length,
+        phonemeCount: phonemes.length,
+      }
+    });
+  } catch (error) {
+    console.error('[TTS+PHONEMES] Error:', error);
+    res.status(500).json({ error: 'Failed to generate TTS with phonemes' });
+  }
+});
+
+/**
  * GET /api/tutor/optimized/session/:chatId
  * Get session status and resume context
  */

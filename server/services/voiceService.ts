@@ -1,5 +1,5 @@
 import { AssemblyAI } from 'assemblyai';
-import { PollyClient, SynthesizeSpeechCommand } from '@aws-sdk/client-polly';
+import { PollyClient, SynthesizeSpeechCommand, SpeechMarkType } from '@aws-sdk/client-polly';
 import { Readable } from 'stream';
 import { sarvamVoiceService } from './sarvamVoice';
 
@@ -138,6 +138,143 @@ export class VoiceService {
       console.error('[VOICE] TTS error:', error);
       throw new Error('Failed to synthesize speech');
     }
+  }
+  
+  /**
+   * Get Speech Marks (viseme timing data) from AWS Polly
+   * Used for phoneme-based lip sync
+   */
+  async getVisemeData(
+    text: string,
+    language: 'hi' | 'en' = 'en'
+  ): Promise<Array<{time: number; type: string; value: string}>> {
+    try {
+      console.log(`[VOICE] Fetching viseme data from AWS Polly for ${language}...`);
+      
+      // Voice selection (same as TTS)
+      const voiceId = language === 'hi' ? 'Aditi' : 'Aditi'; // Using Aditi for Indian English
+      
+      const command = new SynthesizeSpeechCommand({
+        Text: text,
+        OutputFormat: 'json', // JSON format for speech marks
+        VoiceId: voiceId,
+        Engine: 'standard', // Speech marks only work with standard engine
+        LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN',
+        SpeechMarkTypes: ['viseme'], // Request viseme timing data
+      });
+      
+      const response = await polly.send(command);
+      
+      if (!response.AudioStream) {
+        throw new Error('No speech marks received from Polly');
+      }
+      
+      // Convert stream to string (JSON lines)
+      const speechMarksText = await this.streamToString(response.AudioStream as any);
+      
+      // Parse speech marks (each line is a JSON object)
+      const visemes: Array<{time: number; type: string; value: string}> = [];
+      const lines = speechMarksText.trim().split('\n');
+      
+      for (const line of lines) {
+        if (line.trim()) {
+          const mark = JSON.parse(line);
+          if (mark.type === 'viseme') {
+            visemes.push({
+              time: mark.time,
+              type: 'viseme',
+              value: mark.value,
+            });
+          }
+        }
+      }
+      
+      console.log(`[VOICE] ✅ Fetched ${visemes.length} visemes from Polly`);
+      
+      return visemes;
+    } catch (error) {
+      console.error('[VOICE] Viseme fetch error:', error);
+      // Return empty array as fallback (amplitude-based lip sync will be used)
+      return [];
+    }
+  }
+
+  /**
+   * 🎯 NEW: Synthesize speech with Polly AND get viseme data (for phoneme-based lip-sync)
+   * Critical: Both audio and visemes come from the SAME Polly voice to ensure timing alignment
+   * Returns: { audio: Buffer, visemes: Array<{time, type, value}> }
+   */
+  async synthesizeWithVisemes(
+    text: string,
+    language: 'hi' | 'en' = 'en'
+  ): Promise<{ audio: Buffer; visemes: Array<{time: number; type: string; value: string}> }> {
+    try {
+      const voiceId = language === 'hi' ? 'Aditi' : 'Aditi'; // Indian English
+      
+      console.log(`[VOICE+VISEMES] Synthesizing audio + visemes with Polly ${voiceId}...`);
+      
+      // 1. Get audio (MP3)
+      const audioCommand = new SynthesizeSpeechCommand({
+        Text: text,
+        OutputFormat: 'mp3',
+        VoiceId: voiceId,
+        Engine: 'standard', // Must match viseme engine
+        LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN',
+      });
+      
+      const audioResponse = await polly.send(audioCommand);
+      const audioBuffer = await this.streamToBuffer(audioResponse.AudioStream as any);
+      
+      // 2. Get visemes (Speech Marks)
+      const visemeCommand = new SynthesizeSpeechCommand({
+        Text: text,
+        OutputFormat: 'json',
+        VoiceId: voiceId,
+        Engine: 'standard', // Same engine as audio
+        LanguageCode: language === 'hi' ? 'hi-IN' : 'en-IN',
+        SpeechMarkTypes: ['viseme'],
+      });
+      
+      const visemeResponse = await polly.send(visemeCommand);
+      const speechMarksText = await this.streamToString(visemeResponse.AudioStream as any);
+      
+      // Parse visemes
+      const visemes: Array<{time: number; type: string; value: string}> = [];
+      const lines = speechMarksText.trim().split('\n');
+      
+      for (const line of lines) {
+        if (line.trim()) {
+          const mark = JSON.parse(line);
+          if (mark.type === 'viseme') {
+            visemes.push({
+              time: mark.time,
+              type: 'viseme',
+              value: mark.value,
+            });
+          }
+        }
+      }
+      
+      console.log(`[VOICE+VISEMES] ✅ Generated ${audioBuffer.length} bytes audio + ${visemes.length} visemes`);
+      
+      return { audio: audioBuffer, visemes };
+    } catch (error) {
+      console.error('[VOICE+VISEMES] Error:', error);
+      throw error;
+    }
+  }
+  
+  /**
+   * Convert Readable stream to string
+   */
+  private async streamToString(stream: Readable): Promise<string> {
+    const chunks: Uint8Array[] = [];
+    
+    return new Promise((resolve, reject) => {
+      stream.on('data', (chunk) => chunks.push(chunk));
+      stream.on('error', reject);
+      stream.on('end', () => resolve(Buffer.concat(chunks).toString('utf-8')));
+    });
   }
   
   /**
