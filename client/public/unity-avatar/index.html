@@ -86,6 +86,7 @@
       // 🔒 SECURITY: Handshake-based origin validation (cross-browser compatible)
       var trustedParentOrigin = null;
       var isHandshakeComplete = false;
+      var isUnityInstanceReady = false; // Track Unity instance readiness
 
       // 🚀 UNITY TO REACT COMMUNICATION (Secure with handshake)
       function SendMessageToReact(message) {
@@ -100,14 +101,21 @@
         }
       }
 
-      // ✅ NOTIFY REACT WHEN UNITY IS READY (Secure with handshake)
+      // ✅ NOTIFY REACT WHEN UNITY IS READY (Only after handshake)
       function OnUnityReady() {
-        console.log('[Unity] Avatar ready, notifying React...');
-        var targetOrigin = trustedParentOrigin || '*';
-        window.parent.postMessage({
-          type: 'UNITY_READY',
-          payload: true
-        }, targetOrigin);
+        console.log('[Unity] Avatar instance ready');
+        isUnityInstanceReady = true;
+        
+        // Only send UNITY_READY if handshake is complete
+        if (isHandshakeComplete) {
+          console.log('[Unity] Handshake complete, notifying React...');
+          window.parent.postMessage({
+            type: 'UNITY_READY',
+            payload: true
+          }, trustedParentOrigin);
+        } else {
+          console.log('[Unity] Waiting for handshake before notifying React...');
+        }
       }
 
       // 📩 REACT TO UNITY COMMUNICATION LISTENER (Secure with handshake)
@@ -124,6 +132,15 @@
             type: 'UNITY_INIT_ACK',
             payload: true
           }, trustedParentOrigin);
+          
+          // If Unity instance is already ready, send UNITY_READY now
+          if (isUnityInstanceReady) {
+            console.log('[Unity] Instance already ready, notifying React now...');
+            window.parent.postMessage({
+              type: 'UNITY_READY',
+              payload: true
+            }, trustedParentOrigin);
+          }
           return;
         }
 
