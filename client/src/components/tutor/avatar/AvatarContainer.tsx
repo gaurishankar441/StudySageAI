@@ -90,13 +90,20 @@ export function AvatarContainer({
       console.log(`[Avatar Container] Target container (#${targetId}):`, targetContainer ? 'FOUND ✅' : 'NOT FOUND ❌');
 
       if (targetContainer && !targetContainer.contains(globalUnity)) {
+        // Remove hidden class and make Unity visible
+        globalUnity.classList.remove('hidden');
+        globalUnity.classList.add('block', 'w-full', 'h-full');
+        
         // Move Unity into the target container
         targetContainer.appendChild(globalUnity);
         console.log(`[Avatar] ✅ Unity moved to ${viewState} container (#${targetId})`);
       } else if (targetContainer && targetContainer.contains(globalUnity)) {
         console.log(`[Avatar] ⚡ Unity already in ${viewState} container`);
       } else if (viewState === 'minimized') {
-        // Move Unity back to global hidden container
+        // Hide Unity and move back to global container
+        globalUnity.classList.add('hidden');
+        globalUnity.classList.remove('block', 'w-full', 'h-full');
+        
         const globalContainer = document.getElementById('global-unity-container');
         if (globalContainer && !globalContainer.contains(globalUnity)) {
           globalContainer.appendChild(globalUnity);
