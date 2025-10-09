@@ -638,7 +638,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const lastPlayedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (messages.length > 0) {
+    // 🎯 CRITICAL: Wait for chat to load before auto-playing (needed for mode detection)
+    if (messages.length > 0 && chat) {
       const lastMessage = messages[messages.length - 1];
       
       if (
@@ -647,6 +648,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         !isStreaming
       ) {
         console.log('[TTS] Auto-playing new assistant message:', lastMessage.id);
+        console.log('[TTS] Chat mode:', chat.mode, '- Will use', chat.mode === 'tutor' ? 'PHONEME' : 'REGULAR', 'TTS');
         lastPlayedRef.current = lastMessage.id;
         
         playAudio(lastMessage.id, lastMessage.content).catch((err) => {
@@ -654,7 +656,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         });
       }
     }
-  }, [messages, isStreaming]);
+  }, [messages, isStreaming, chat]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
