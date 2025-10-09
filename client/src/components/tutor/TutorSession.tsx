@@ -376,15 +376,18 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
       console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
       
-      const useOptimizedTTS = tutorSession?.session && tutorSession?.canResume;
+      // 🎯 Use chat.mode to detect optimized sessions (tutorSession query might not be loaded yet!)
+      const isOptimizedSession = chat?.mode === 'tutor';
+      console.log('[TTS] chat.mode:', chat?.mode, 'isOptimizedSession:', isOptimizedSession);
       
-      // 🎯 ALWAYS use phoneme endpoint for optimized sessions (Unity will handle gracefully if not ready)
-      const usePhonemeTTS = useOptimizedTTS;
+      // 🎯 ALWAYS use phoneme endpoint for tutor mode (Unity will handle gracefully if not ready)
+      const usePhonemeTTS = isOptimizedSession;
       const ttsEndpoint = usePhonemeTTS
         ? '/api/tutor/optimized/session/tts-with-phonemes'
         : '/api/tutor/tts';
+      console.log('[TTS] Endpoint:', ttsEndpoint);
       
-      const requestBody = useOptimizedTTS
+      const requestBody = isOptimizedSession
         ? { chatId, text }
         : { text: text, voice: 'nova' };
 
