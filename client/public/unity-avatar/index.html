@@ -757,15 +757,20 @@
           unityInstance = instance;
           loadingBar.style.display = "none";
           
-          // 🔧 RELIABILITY: Use requestAnimationFrame for better timing
-          // Wait for next frame, then notify React (Unity should be ready by then)
-          requestAnimationFrame(() => {
-            requestAnimationFrame(() => {
-              OnUnityReady();
-            });
-          });
-          
           console.log('[Unity] Instance created successfully');
+          
+          // 🔧 CRITICAL FIX: Call OnUnityReady with error handling
+          try {
+            // Use requestAnimationFrame for better timing (2 frames wait)
+            requestAnimationFrame(() => {
+              requestAnimationFrame(() => {
+                console.log('[Unity] ⏰ RAF callback executing, calling OnUnityReady...');
+                OnUnityReady();
+              });
+            });
+          } catch (err) {
+            console.error('[Unity] ❌ RAF/OnUnityReady error:', err);
+          }
         }).catch((message) => {
           console.error('[Unity] Failed to create instance:', message);
           unityShowBanner('Failed to load avatar: ' + message, 'error');
