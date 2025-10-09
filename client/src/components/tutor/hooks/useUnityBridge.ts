@@ -174,6 +174,28 @@ export function useUnityBridge({
           console.log('[Unity Bridge] Message from Unity:', payload);
           onMessage?.(payload);
           break;
+        
+        case 'UNITY_LOG':
+          // Forward Unity iframe console logs to parent console
+          if (payload?.level === 'log') console.log('[Unity]', ...payload.args);
+          else if (payload?.level === 'warn') console.warn('[Unity]', ...payload.args);
+          else if (payload?.level === 'error') console.error('[Unity]', ...payload.args);
+          break;
+        
+        case 'AUDIO_UNLOCK_REQUEST':
+          // Unity requests audio unlock
+          console.log('[Unity Bridge] ⚠️ Audio unlock requested by Unity');
+          break;
+        
+        case 'AUDIO_STARTED':
+          // Audio playback started in Unity
+          console.log('[Unity Bridge] ✅ Audio playback started:', payload?.id);
+          break;
+        
+        case 'AUDIO_FAILED':
+          // Audio playback failed in Unity
+          console.error('[Unity Bridge] ❌ Audio playback failed:', payload?.error);
+          break;
 
         default:
           // Unknown message type (silently ignore)

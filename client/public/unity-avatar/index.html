@@ -297,6 +297,15 @@
         if (!audioUnlocked && unlockBtn) {
           unlockBtn.style.display = 'block';
           console.log('[Unity] Audio unlock required - showing button');
+          
+          // Notify React that unlock is needed
+          if (isHandshakeComplete && trustedParentOrigin) {
+            console.log('[Unity] Requesting audio unlock from React...');
+            window.parent.postMessage({
+              type: 'AUDIO_UNLOCK_REQUEST',
+              payload: true
+            }, trustedParentOrigin);
+          }
         }
         
         // Only send UNITY_READY if handshake is complete
@@ -319,6 +328,43 @@
           trustedParentOrigin = event.origin;
           isHandshakeComplete = true;
           console.log('[Unity] Handshake complete with origin:', trustedParentOrigin);
+          
+          // 🐛 CONSOLE FORWARDING: Hook console methods AFTER handshake
+          var originalLog = console.log;
+          var originalWarn = console.warn;
+          var originalError = console.error;
+          
+          console.log = function() {
+            originalLog.apply(console, arguments);
+            try {
+              window.parent.postMessage({
+                type: 'UNITY_LOG',
+                payload: { level: 'log', args: Array.from(arguments) }
+              }, trustedParentOrigin);
+            } catch (e) {}
+          };
+          
+          console.warn = function() {
+            originalWarn.apply(console, arguments);
+            try {
+              window.parent.postMessage({
+                type: 'UNITY_LOG',
+                payload: { level: 'warn', args: Array.from(arguments) }
+              }, trustedParentOrigin);
+            } catch (e) {}
+          };
+          
+          console.error = function() {
+            originalError.apply(console, arguments);
+            try {
+              window.parent.postMessage({
+                type: 'UNITY_LOG',
+                payload: { level: 'error', args: Array.from(arguments) }
+              }, trustedParentOrigin);
+            } catch (e) {}
+          };
+          
+          console.log('[Unity] Console forwarding enabled ✅');
           
           // Acknowledge handshake
           window.parent.postMessage({
@@ -364,12 +410,39 @@
               
               if (audioUnlocked && audioData) {
                 console.log('[Unity] ✅ Playing audio via HTML5 fallback...');
-                playHtmlAudioFallback(audioData, audioId);
+                try {
+                  playHtmlAudioFallback(audioData, audioId);
+                  // Notify React that audio started successfully
+                  window.parent.postMessage({
+                    type: 'AUDIO_STARTED',
+                    payload: { id: audioId }
+                  }, trustedParentOrigin);
+                } catch (err) {
+                  console.error('[Unity] ❌ Audio playback failed:', err);
+                  window.parent.postMessage({
+                    type: 'AUDIO_FAILED',
+                    payload: { id: audioId, error: err.message }
+                  }, trustedParentOrigin);
+                }
               } else if (!audioUnlocked) {
-                console.warn('[Unity] ❌ Audio not unlocked yet - showing unlock button');
+                console.warn('[Unity] ❌ Audio not unlocked yet - requesting unlock');
                 if (unlockBtn) unlockBtn.style.display = 'block';
+                // Request unlock from React
+                window.parent.postMessage({
+                  type: 'AUDIO_UNLOCK_REQUEST',
+                  payload: true
+                }, trustedParentOrigin);
+                // Notify playback failed due to unlock
+                window.parent.postMessage({
+                  type: 'AUDIO_FAILED',
+                  payload: { id: audioId, error: 'Audio not unlocked' }
+                }, trustedParentOrigin);
               } else if (!audioData) {
                 console.error('[Unity] ❌ No audio data received!');
+                window.parent.postMessage({
+                  type: 'AUDIO_FAILED',
+                  payload: { id: audioId, error: 'No audio data' }
+                }, trustedParentOrigin);
               }
               break;
 
