@@ -75,7 +75,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [lessonPlanCollapsed, setLessonPlanCollapsed] = useState(false);
   const [quickToolsCollapsed, setQuickToolsCollapsed] = useState(false);
   const [voiceMode, setVoiceMode] = useState(false);
-  const [avatarEnabled, setAvatarEnabled] = useState(false);
+  const [avatarEnabled, setAvatarEnabled] = useState(true); // Default ON - Avatar loads on page load
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -936,49 +936,30 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               {voiceMode ? "Voice Conversation Mode" : "Text Input Mode"}
             </p>
             <div className="flex gap-2">
-              <Button
-                type="button"
-                variant={avatarEnabled ? "default" : "outline"}
-                size="sm"
-                onClick={() => setAvatarEnabled(!avatarEnabled)}
-                className={avatarEnabled ? "btn-gradient" : ""}
-                data-testid="button-toggle-avatar"
-                title={
-                  avatarEnabled 
-                    ? "Hide 3D Avatar" 
-                    : unityAvatarRef.current?.isReady 
-                      ? "Show 3D Avatar - Ready!" 
-                      : "Show 3D Avatar - Loading in background..."
-                }
+              {/* Avatar Status Indicator (Always ON) */}
+              <div 
+                className="flex items-center gap-2 px-3 py-1.5 bg-gradient-to-r from-purple-500/10 to-blue-500/10 border border-purple-500/20 rounded-md"
+                data-testid="avatar-status"
               >
                 {unityAvatarRef.current?.isReady ? (
-                  <UserCircle className="w-4 h-4 mr-2" />
-                ) : (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                )}
-                {avatarEnabled ? (
                   <>
-                    Avatar ON
-                    <span className="ml-2 px-1.5 py-0.5 bg-white/20 rounded text-[10px]">
-                      Lip-Sync
+                    <UserCircle className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                    <span className="text-xs font-medium text-purple-600 dark:text-purple-400">
+                      3D Avatar Active
                     </span>
-                  </>
-                ) : unityAvatarRef.current?.isReady ? (
-                  <>
-                    3D Avatar
-                    <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-600 dark:text-green-400 rounded text-[10px]">
-                      Ready
+                    <span className="px-1.5 py-0.5 bg-green-500/20 text-green-600 dark:text-green-400 rounded text-[10px] font-semibold">
+                      Lip-Sync ON
                     </span>
                   </>
                 ) : (
                   <>
-                    3D Avatar
-                    <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded text-[10px]">
-                      Loading
+                    <Loader2 className="w-4 h-4 text-amber-600 dark:text-amber-400 animate-spin" />
+                    <span className="text-xs font-medium text-amber-600 dark:text-amber-400">
+                      Loading Avatar...
                     </span>
                   </>
                 )}
-              </Button>
+              </div>
               <Button
                 type="button"
                 variant={voiceMode ? "default" : "outline"}
@@ -1219,24 +1200,22 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         <div className="h-full flex flex-col">
           {/* Header */}
           <div className="p-4 border-b border-border bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
-            <div className="flex items-center justify-between">
-              <h3 className="font-semibold text-sm flex items-center gap-2">
-                <UserCircle className="w-5 h-5 text-purple-600" />
-                AI Tutor Avatar
-              </h3>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setAvatarEnabled(false)}
-                data-testid="button-close-avatar"
-                title="Close Avatar"
-              >
-                <ChevronRight className="w-4 h-4 md:block hidden" />
-                <ChevronLeft className="w-4 h-4 md:hidden" />
-              </Button>
-            </div>
-            <p className="text-xs text-muted-foreground mt-1">
-              {unityAvatarRef.current?.isReady ? '✅ Ready with lip-sync' : '⏳ Loading...'}
+            <h3 className="font-semibold text-sm flex items-center gap-2">
+              <UserCircle className="w-5 h-5 text-purple-600" />
+              AI Tutor Avatar
+            </h3>
+            <p className="text-xs text-muted-foreground mt-1 flex items-center gap-2">
+              {unityAvatarRef.current?.isReady ? (
+                <>
+                  <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></span>
+                  Ready with lip-sync
+                </>
+              ) : (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin" />
+                  Loading avatar...
+                </>
+              )}
             </p>
           </div>
 
