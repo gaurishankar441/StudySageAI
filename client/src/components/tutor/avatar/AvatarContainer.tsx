@@ -68,7 +68,8 @@ export function AvatarContainer({
     
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
-      const globalUnity = document.getElementById('global-unity-instance');
+      // Use querySelector to find Unity element anywhere in DOM (more reliable than getElementById)
+      const globalUnity = document.querySelector('#global-unity-instance') as HTMLElement;
       
       console.log('[Avatar Container] Global Unity element:', globalUnity ? 'FOUND ✅' : 'NOT FOUND ❌');
       
