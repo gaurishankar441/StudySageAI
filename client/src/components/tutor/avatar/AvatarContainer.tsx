@@ -44,6 +44,11 @@ export function AvatarContainer({
     minimizeToBubble,
   } = useAvatarViewState('minimized');
 
+  // Debug: Log when component mounts
+  useEffect(() => {
+    console.log('[Avatar Container] 🎭 Component mounted! Initial viewState:', viewState);
+  }, []);
+
   // Unity iframe URL
   const unityIframeUrl = '/unity-avatar/index.html';
 

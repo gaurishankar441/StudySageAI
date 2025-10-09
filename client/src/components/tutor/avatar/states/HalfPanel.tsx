@@ -34,6 +34,11 @@ export function HalfPanel({
   const iframeRef = useRef<HTMLIFrameElement>(null);
   const { isLoading, isReady, error } = useUnityAvatar();
 
+  // Debug: Log Unity avatar state
+  useEffect(() => {
+    console.log('[Half Panel] Unity state:', { isLoading, isReady, error });
+  }, [isLoading, isReady, error]);
+
   // Focus iframe when panel opens
   useEffect(() => {
     if (iframeRef.current) {
