@@ -36,6 +36,7 @@ import QuickToolModal from "./QuickToolModal";
 import VoiceControl from "./VoiceControl";
 import { Phone, PhoneOff } from "lucide-react";
 import { useUnityAvatar } from "@/contexts/UnityAvatarContext";
+import { AvatarContainer } from "./avatar/AvatarContainer";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -79,24 +80,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
-  // Access global Unity avatar from context
+  // Access global Unity avatar from context (for compatibility)
   const { 
     avatarRef: unityAvatarRef, 
     isReady: avatarIsReady, 
-    isLoading: avatarIsLoading,
-    setIsVisible: setAvatarVisible
+    isLoading: avatarIsLoading
   } = useUnityAvatar();
-
-  // Show avatar when component mounts, hide when unmounts
-  useEffect(() => {
-    console.log('[Tutor] Showing global avatar panel');
-    setAvatarVisible(true);
-    
-    return () => {
-      console.log('[Tutor] Hiding global avatar panel (keeping it loaded)');
-      setAvatarVisible(false);
-    };
-  }, [setAvatarVisible]);
 
   const { data: chat, isLoading: chatLoading } = useQuery<Chat>({
     queryKey: [`/api/chats/${chatId}`],
@@ -1309,7 +1298,34 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 Avatar panel rendered globally in UnityAvatarContext - visibility controlled here */}
+      {/* 🎭 New D-iD Style Avatar Interface */}
+      <AvatarContainer
+        messages={messages.map(msg => ({
+          id: msg.id,
+          role: msg.role as 'user' | 'assistant' | 'system',
+          content: msg.content,
+          timestamp: msg.createdAt ? new Date(msg.createdAt) : undefined,
+        }))}
+        onSendMessage={(text) => {
+          if (text.trim() && !isStreaming) {
+            sendMessageMutation.mutate(text.trim());
+          }
+        }}
+        onMicClick={() => {
+          if (isRecording) {
+            stopRecording();
+          } else {
+            startRecording();
+          }
+        }}
+        isMicActive={isRecording}
+        currentLanguage={(chat?.language as 'en' | 'hi') || 'en'}
+        onLanguageToggle={() => {
+          // Language toggle logic can be added here
+          console.log('[Avatar] Language toggle clicked');
+        }}
+        isSpeaking={playingAudio !== null}
+      />
     </div>
   );
 }
