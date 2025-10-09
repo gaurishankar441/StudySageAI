@@ -90,8 +90,8 @@ export function HalfPanel({
           className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden"
           data-testid="unity-avatar-container"
         >
-          {/* Loading Screen */}
-          {isLoading && (
+          {/* Loading Screen - Only show if Unity NOT ready */}
+          {!isReady && !error && (
             <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 to-blue-900/90 flex flex-col items-center justify-center z-20">
               <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
               <p className="text-white text-lg font-medium mb-2">Loading 3D Avatar...</p>
