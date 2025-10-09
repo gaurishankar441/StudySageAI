@@ -402,27 +402,65 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       const audioBlob = await response.blob();
       console.log('[TTS] Audio blob received, size:', audioBlob.size, 'type:', audioBlob.type);
       
-      // 🎭 AVATAR: Check latest avatar state (not captured closure value!)
-      // Re-check avatar readiness AFTER async fetch completes
+      // 🎭 AVATAR: Check if Unity is ready OR loading (wait if loading)
       const currentAvatarReady = unityAvatarRef.current?.isReady || false;
+      const isAvatarStillLoading = avatarIsLoading && !currentAvatarReady;
       
-      // 🎭 AVATAR: Send audio to Unity avatar if ready (EXCLUSIVE playback)
+      console.log('[Avatar] Status check - Ready:', currentAvatarReady, 'Loading:', isAvatarStillLoading);
+      
+      // 🎭 AVATAR: If Unity is loading, wait up to 5 seconds for it to be ready
+      if (isAvatarStillLoading && unityAvatarRef.current) {
+        console.log('[Avatar] ⏳ Unity loading... waiting for it to be ready (max 5s)');
+        
+        const waitForUnity = new Promise<boolean>((resolve) => {
+          const startTime = Date.now();
+          const checkInterval = setInterval(() => {
+            const isNowReady = unityAvatarRef.current?.isReady || false;
+            const elapsed = Date.now() - startTime;
+            
+            if (isNowReady) {
+              clearInterval(checkInterval);
+              console.log('[Avatar] ✅ Unity ready after', elapsed, 'ms');
+              resolve(true);
+            } else if (elapsed > 5000) {
+              clearInterval(checkInterval);
+              console.log('[Avatar] ⏱️ Timeout waiting for Unity (5s) - using browser fallback');
+              resolve(false);
+            }
+          }, 100); // Check every 100ms
+        });
+        
+        const unityBecameReady = await waitForUnity;
+        
+        if (unityBecameReady && unityAvatarRef.current) {
+          console.log('[Avatar] ✅ Unity ready - sending audio with lip-sync');
+          try {
+            await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+            console.log('[Avatar] ✅ Audio sent to Unity successfully');
+            setPlayingAudio(null);
+            return; // Exit early - Unity plays the audio
+          } catch (avatarError) {
+            console.error('[Avatar] ❌ Failed to send audio:', avatarError);
+            console.warn('[Avatar] ⚠️ Falling back to browser audio');
+          }
+        }
+      }
+      
+      // 🎭 AVATAR: If Unity is already ready, send immediately
       if (currentAvatarReady && unityAvatarRef.current) {
         console.log('[Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync');
         console.log('[Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync');
         try {
           await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
           console.log('[Avatar] ✅ Audio sent to Unity successfully');
-          // SKIP browser audio playback - Unity handles it with lip-sync
           setPlayingAudio(null);
           return; // Exit early - Unity plays the audio
         } catch (avatarError) {
           console.error('[Avatar] ❌ Failed to send audio to avatar:', avatarError);
           console.warn('[Avatar] ⚠️ Falling back to browser audio playback');
-          // Continue with normal audio playback on error
         }
       } else {
-        console.log('[Avatar] Avatar not ready (currentReady:', currentAvatarReady, ') - using browser audio playback');
+        console.log('[Avatar] Avatar not ready - using browser audio playback');
       }
       
       const audioUrl = URL.createObjectURL(audioBlob);
