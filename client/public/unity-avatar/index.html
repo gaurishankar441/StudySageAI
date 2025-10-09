@@ -351,6 +351,13 @@
         console.log('[Unity] Avatar instance ready');
         isUnityInstanceReady = true;
         
+        // 🎯 CRITICAL: Only proceed if handshake is complete!
+        if (!isHandshakeComplete) {
+          console.log('[Unity] ⏳ Waiting for handshake before audio unlock...');
+          // Handshake completion handler will call this again via line 505-512
+          return;
+        }
+        
         // 🎵 RELIABLE AUTO-UNLOCK: Try to unlock audio (with proper state checking!)
         if (!audioUnlocked) {
           console.log('[Unity] 🔓 Attempting audio unlock for phoneme lip-sync...');
@@ -502,13 +509,11 @@
             payload: true
           }, trustedParentOrigin);
           
-          // If Unity instance is already ready, send UNITY_READY now
+          // If Unity instance is already ready, call OnUnityReady NOW (handshake complete!)
           if (isUnityInstanceReady) {
-            console.log('[Unity] Instance already ready, notifying React now...');
-            window.parent.postMessage({
-              type: 'UNITY_READY',
-              payload: true
-            }, trustedParentOrigin);
+            console.log('[Unity] Instance already ready, calling OnUnityReady (handshake done!)...');
+            // Call OnUnityReady again - now handshake is complete so audio unlock will work!
+            OnUnityReady();
           }
           return;
         }
