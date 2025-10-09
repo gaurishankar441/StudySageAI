@@ -601,13 +601,13 @@
                   
                   // 2. Send phoneme sequence to Unity for blendshape animation
                   var phonemeJson = JSON.stringify({ phonemes: phonemes });
-                  console.log('[Unity] 📤 Sending phonemes to AvatarController - Count:', phonemes.length);
+                  console.log('[Unity] 📤 Sending phonemes to AvatarControllerScript - Count:', phonemes.length);
                   console.log('[Unity] 📦 Phoneme JSON length:', phonemeJson.length, 'chars');
                   
                   try {
                     console.log('[Unity] 🚀 CALLING PlayPhonemeSequence NOW...');
                     unityInstance.SendMessage(
-                      'AvatarController',
+                      'AvatarControllerScript',
                       'PlayPhonemeSequence',
                       phonemeJson
                     );
