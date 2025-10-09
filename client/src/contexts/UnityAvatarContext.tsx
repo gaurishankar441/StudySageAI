@@ -54,15 +54,15 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
         setIsVisible 
       }}
     >
-      {/* 🎭 Global Unity Avatar - Always renders, visibility controlled by AvatarContainer */}
+      {/* 🎭 Global Unity Avatar - Hidden container, will be moved to active state */}
       <div 
         id="global-unity-container" 
-        className="fixed inset-0 pointer-events-none z-[10001]"
+        className="hidden"
         data-testid="global-avatar-unity-container"
       >
         <div 
           id="global-unity-instance"
-          className="w-full h-full opacity-0 pointer-events-none transition-opacity duration-300"
+          className="w-full h-full"
         >
           <UnityAvatar
             ref={avatarRef}

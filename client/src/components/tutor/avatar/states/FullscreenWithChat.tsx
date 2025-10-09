@@ -96,7 +96,7 @@ export function FullscreenWithChat({
           />
         </div>
 
-        {/* Global Unity Instance (Reused) */}
+        {/* Unity Avatar Render Area */}
         <div 
           className="absolute inset-0 w-full h-full"
           data-testid="unity-avatar-container"
@@ -128,7 +128,12 @@ export function FullscreenWithChat({
             </div>
           )}
 
-          {/* Unity will be shown here via global instance */}
+          {/* Unity Target Container */}
+          <div 
+            id="fullscreen-chat-unity-target" 
+            className="absolute inset-0 w-full h-full"
+            style={{ zIndex: 1 }}
+          />
         </div>
 
         {/* Bottom Overlay (Mic only, no chat button) */}

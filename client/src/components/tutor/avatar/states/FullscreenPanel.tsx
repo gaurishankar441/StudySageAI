@@ -80,7 +80,7 @@ export function FullscreenPanel({
         />
       </div>
 
-      {/* Global Unity Instance (Reused) */}
+      {/* Unity Avatar Render Area */}
       <div 
         className="absolute inset-0 w-full h-full"
         data-testid="unity-avatar-container"
@@ -112,7 +112,12 @@ export function FullscreenPanel({
           </div>
         )}
 
-        {/* Unity will be shown here via global instance */}
+        {/* Unity Target Container */}
+        <div 
+          id="fullscreen-unity-target" 
+          className="absolute inset-0 w-full h-full"
+          style={{ zIndex: 1 }}
+        />
       </div>
 
       {/* Bottom Overlay */}
