@@ -199,13 +199,17 @@
           // Scale to 0-1 range (boost for visibility)
           var mouthOpen = Math.min(1, rms * 6);
           
-          // Send to Unity for blendshape control
+          // Send to Unity for blendshape control (safe call)
           if (unityInstance) {
-            unityInstance.SendMessage(
-              'AvatarController',
-              'OnExternalAmplitude',
-              mouthOpen.toFixed(3)
-            );
+            try {
+              unityInstance.SendMessage(
+                'AvatarController',
+                'OnExternalAmplitude',
+                mouthOpen.toFixed(3)
+              );
+            } catch (e) {
+              // Silently ignore if AvatarController doesn't exist
+            }
           }
           
           animationFrameId = requestAnimationFrame(meterLoop);
@@ -218,9 +222,13 @@
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
         }
-        // Reset mouth to neutral
+        // Reset mouth to neutral (safe call)
         if (unityInstance) {
-          unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
+          try {
+            unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
+          } catch (e) {
+            // Silently ignore if AvatarController doesn't exist
+          }
         }
       }
       
@@ -318,18 +326,39 @@
         console.log('[Unity] Avatar instance ready');
         isUnityInstanceReady = true;
         
-        // Show audio unlock button if not already unlocked
-        if (!audioUnlocked && unlockBtn) {
-          unlockBtn.style.display = 'block';
-          console.log('[Unity] Audio unlock required - showing button');
+        // 🎵 AUTO-UNLOCK: Automatically unlock audio on load (user-friendly!)
+        if (!audioUnlocked) {
+          console.log('[Unity] 🔓 Auto-unlocking audio for seamless experience...');
           
-          // Notify React that unlock is needed
-          if (isHandshakeComplete && trustedParentOrigin) {
-            console.log('[Unity] Requesting audio unlock from React...');
-            window.parent.postMessage({
-              type: 'AUDIO_UNLOCK_REQUEST',
-              payload: true
-            }, trustedParentOrigin);
+          // Try to unlock immediately (works if user has interacted with page)
+          var AudioContext = window.AudioContext || window.webkitAudioContext;
+          if (!audioCtx) audioCtx = new AudioContext();
+          
+          if (audioCtx.state === 'suspended') {
+            // Can't unlock without user gesture, show button
+            if (unlockBtn) {
+              unlockBtn.style.display = 'block';
+              console.log('[Unity] Audio unlock requires user gesture - showing button');
+            }
+            
+            // Notify React that unlock is needed
+            if (isHandshakeComplete && trustedParentOrigin) {
+              window.parent.postMessage({
+                type: 'AUDIO_UNLOCK_REQUEST',
+                payload: true
+              }, trustedParentOrigin);
+            }
+          } else {
+            // Context not suspended, can unlock now!
+            audioUnlocked = true;
+            console.log('[Unity] ✅ Audio auto-unlocked successfully!');
+            
+            if (isHandshakeComplete && trustedParentOrigin) {
+              window.parent.postMessage({
+                type: 'AUDIO_UNLOCKED',
+                payload: true
+              }, trustedParentOrigin);
+            }
           }
         }
         
