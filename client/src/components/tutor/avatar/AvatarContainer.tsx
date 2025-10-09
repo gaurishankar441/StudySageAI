@@ -118,7 +118,7 @@ export function AvatarContainer({
       } else {
         console.warn(`[Avatar] ⚠️ No valid target container for viewState: ${viewState}`);
       }
-    }, 150); // Small delay for AnimatePresence
+    }, 500); // Longer delay for AnimatePresence animation (300ms) + buffer
 
     return () => clearTimeout(timer);
   }, [viewState]);
