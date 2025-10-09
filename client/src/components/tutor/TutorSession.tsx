@@ -488,19 +488,32 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       if (currentAvatarReady && unityAvatarRef.current) {
         console.log('[Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync');
         console.log('[Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync');
+        
+        // 🔍 DEBUG: Force visible alert to verify execution
+        console.log('🔍 DEBUG: Phonemes count:', phonemes.length, 'usePhonemeTTS:', usePhonemeTTS);
+        
         try {
           // 🎯 Use phoneme-based method if phonemes available
           if (phonemes.length > 0 && usePhonemeTTS) {
             console.log('[Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes:', phonemes.length);
+            console.log('🔍 DEBUG: About to send', phonemes.length, 'phonemes to Unity');
+            
             // Convert blob to base64 for phoneme method
             const audioBase64 = await new Promise<string>((resolve) => {
               const reader = new FileReader();
               reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
               reader.readAsDataURL(audioBlob);
             });
+            
+            console.log('🔍 DEBUG: Base64 audio length:', audioBase64.length);
+            console.log('🔍 DEBUG: Calling sendAudioWithPhonemesToAvatar...');
+            
             unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audioBase64, phonemes, messageId);
+            
+            console.log('🔍 DEBUG: ✅ sendAudioWithPhonemesToAvatar called successfully!');
           } else {
             console.log('[Avatar] 🔊 Sending amplitude-based lip-sync (no phonemes)');
+            console.log('🔍 DEBUG: No phonemes, using amplitude method');
             await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
           }
           console.log('[Avatar] ✅ Audio sent to Unity successfully');
@@ -512,6 +525,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         }
       } else {
         console.log('[Avatar] Avatar not ready - using browser audio playback');
+        console.log('🔍 DEBUG: currentAvatarReady:', currentAvatarReady, 'unityAvatarRef exists:', !!unityAvatarRef.current);
       }
       
       const audioUrl = URL.createObjectURL(audioBlob);
