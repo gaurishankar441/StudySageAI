@@ -283,6 +283,18 @@
             if (pendingAudio) {
               console.log('[Unity] ✅ Playing queued audio after unlock');
               playHtmlAudioFallback(pendingAudio.audioData, pendingAudio.audioId);
+              
+              // If queued audio has phonemes, send to Unity
+              if (pendingAudio.phonemes && pendingAudio.phonemes.length > 0 && unityInstance) {
+                console.log('[Unity] ✅ Sending queued phonemes to Unity:', pendingAudio.phonemes.length);
+                try {
+                  var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
+                  unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
+                } catch (e) {
+                  console.error('[Unity] ❌ Failed to send queued phonemes:', e);
+                }
+              }
+              
               window.parent.postMessage({
                 type: 'AUDIO_STARTED',
                 payload: { id: pendingAudio.audioId }
@@ -307,6 +319,18 @@
           if (pendingAudio) {
             console.log('[Unity] ✅ Playing queued audio after unlock');
             playHtmlAudioFallback(pendingAudio.audioData, pendingAudio.audioId);
+            
+            // If queued audio has phonemes, send to Unity
+            if (pendingAudio.phonemes && pendingAudio.phonemes.length > 0 && unityInstance) {
+              console.log('[Unity] ✅ Sending queued phonemes to Unity:', pendingAudio.phonemes.length);
+              try {
+                var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
+                unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
+              } catch (e) {
+                console.error('[Unity] ❌ Failed to send queued phonemes:', e);
+              }
+            }
+            
             window.parent.postMessage({
               type: 'AUDIO_STARTED',
               payload: { id: pendingAudio.audioId }
@@ -502,6 +526,65 @@
               }
               break;
 
+            case 'PLAY_TTS_WITH_PHONEMES':
+              // 🎯 NEW: Phoneme-based lip sync with audio
+              var audioData = event.data.payload.audioData || '';
+              var phonemes = event.data.payload.phonemes || [];
+              var audioId = event.data.payload.id || 'tts-phoneme-' + Date.now();
+              
+              console.log('[Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes:', phonemes.length, 'Audio unlocked:', audioUnlocked);
+              
+              if (audioUnlocked && audioData && phonemes.length > 0) {
+                console.log('[Unity] ✅ Playing audio + sending phonemes to Unity...');
+                try {
+                  // 1. Play audio via HTML5
+                  playHtmlAudioFallback(audioData, audioId);
+                  
+                  // 2. Send phoneme sequence to Unity for blendshape animation
+                  var phonemeJson = JSON.stringify({ phonemes: phonemes });
+                  console.log('[Unity] Sending phonemes to AvatarController:', phonemeJson);
+                  
+                  try {
+                    unityInstance.SendMessage(
+                      'AvatarController',
+                      'PlayPhonemeSequence',
+                      phonemeJson
+                    );
+                    console.log('[Unity] ✅ Phonemes sent to Unity successfully');
+                  } catch (e) {
+                    console.error('[Unity] ❌ Failed to send phonemes to Unity:', e);
+                  }
+                  
+                  // Notify React that audio+phonemes started
+                  window.parent.postMessage({
+                    type: 'AUDIO_STARTED',
+                    payload: { id: audioId }
+                  }, trustedParentOrigin);
+                } catch (err) {
+                  console.error('[Unity] ❌ Phoneme playback failed:', err);
+                  window.parent.postMessage({
+                    type: 'AUDIO_FAILED',
+                    payload: { id: audioId, error: err.message }
+                  }, trustedParentOrigin);
+                }
+              } else if (!audioUnlocked) {
+                console.warn('[Unity] ❌ Audio not unlocked - queuing phoneme audio');
+                
+                // Queue audio with phonemes
+                pendingAudio = { audioData: audioData, audioId: audioId, phonemes: phonemes };
+                console.log('[Unity] 📦 Audio+phonemes queued for playback after unlock');
+                
+                if (unlockBtn) unlockBtn.style.display = 'block';
+                
+                window.parent.postMessage({
+                  type: 'AUDIO_UNLOCK_REQUEST',
+                  payload: true
+                }, trustedParentOrigin);
+              } else {
+                console.error('[Unity] ❌ Missing data - Audio:', !!audioData, 'Phonemes:', phonemes.length);
+              }
+              break;
+
             case 'SET_EMOTION':
               // Change avatar emotion/expression
               unityInstance.SendMessage(
@@ -576,11 +659,11 @@
 
       // Unity build configuration
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/WebGL.loader.js";
+      var loaderUrl = buildUrl + "/Build.loader.js";
       var config = {
-        dataUrl: buildUrl + "/WebGL.data.gz",
-        frameworkUrl: buildUrl + "/WebGL.framework.js.gz",
-        codeUrl: buildUrl + "/WebGL.wasm.gz",
+        dataUrl: buildUrl + "/Build.data.gz",
+        frameworkUrl: buildUrl + "/Build.framework.js.gz",
+        codeUrl: buildUrl + "/Build.wasm.gz",
         streamingAssetsUrl: "StreamingAssets",
         companyName: "VaktaAI",
         productName: "AI Tutor Avatar",
