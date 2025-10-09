@@ -3,6 +3,8 @@ import { halfPanelVariants, halfPanelMobileVariants, backdropVariants } from '..
 import { AvatarControls } from '../controls/AvatarControls';
 import { BottomOverlay } from '../controls/BottomOverlay';
 import { useEffect, useRef } from 'react';
+import { useUnityAvatar } from '@/contexts/UnityAvatarContext';
+import { Loader2 } from 'lucide-react';
 
 interface HalfPanelProps {
   onClose: () => void;
@@ -30,6 +32,7 @@ export function HalfPanel({
   className = '',
 }: HalfPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { isLoading, isReady, error } = useUnityAvatar();
 
   // Focus iframe when panel opens
   useEffect(() => {
@@ -82,6 +85,33 @@ export function HalfPanel({
           className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden"
           data-testid="unity-avatar-container"
         >
+          {/* Loading Screen */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 to-blue-900/90 flex flex-col items-center justify-center z-20">
+              <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
+              <p className="text-white text-lg font-medium mb-2">Loading 3D Avatar...</p>
+              <p className="text-white/70 text-sm">This may take a few seconds (~28s)</p>
+              <div className="mt-4 w-48 h-2 bg-white/20 rounded-full overflow-hidden">
+                <div className="h-full bg-gradient-to-r from-purple-400 to-blue-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+              </div>
+            </div>
+          )}
+
+          {/* Error Screen */}
+          {error && (
+            <div className="absolute inset-0 bg-red-900/90 flex flex-col items-center justify-center z-20 p-6">
+              <div className="text-6xl mb-4">⚠️</div>
+              <p className="text-white text-lg font-medium mb-2">Avatar Loading Failed</p>
+              <p className="text-white/80 text-sm text-center max-w-md">{error}</p>
+              <button
+                onClick={onReload}
+                className="mt-4 px-6 py-2 bg-white text-red-900 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+              >
+                Reload Avatar
+              </button>
+            </div>
+          )}
+
           {/* Unity will be shown here via global instance */}
         </div>
 

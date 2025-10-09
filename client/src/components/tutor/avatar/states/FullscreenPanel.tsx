@@ -3,6 +3,8 @@ import { fullscreenVariants } from '../animations/variants';
 import { AvatarControls } from '../controls/AvatarControls';
 import { BottomOverlay } from '../controls/BottomOverlay';
 import { useEffect, useRef } from 'react';
+import { useUnityAvatar } from '@/contexts/UnityAvatarContext';
+import { Loader2 } from 'lucide-react';
 
 interface FullscreenPanelProps {
   onClose: () => void;
@@ -30,6 +32,7 @@ export function FullscreenPanel({
   className = '',
 }: FullscreenPanelProps) {
   const iframeRef = useRef<HTMLIFrameElement>(null);
+  const { isLoading, isReady, error } = useUnityAvatar();
 
   // Focus iframe when panel opens
   useEffect(() => {
@@ -82,6 +85,33 @@ export function FullscreenPanel({
         className="absolute inset-0 w-full h-full"
         data-testid="unity-avatar-container"
       >
+        {/* Loading Screen */}
+        {isLoading && (
+          <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 to-blue-900/90 flex flex-col items-center justify-center z-20">
+            <Loader2 className="w-20 h-20 text-white animate-spin mb-4" />
+            <p className="text-white text-2xl font-medium mb-2">Loading 3D Avatar...</p>
+            <p className="text-white/70 text-base">This may take a few seconds (~28s)</p>
+            <div className="mt-6 w-64 h-3 bg-white/20 rounded-full overflow-hidden">
+              <div className="h-full bg-gradient-to-r from-purple-400 to-blue-400 rounded-full animate-pulse" style={{ width: '60%' }} />
+            </div>
+          </div>
+        )}
+
+        {/* Error Screen */}
+        {error && (
+          <div className="absolute inset-0 bg-red-900/90 flex flex-col items-center justify-center z-20 p-6">
+            <div className="text-8xl mb-6">⚠️</div>
+            <p className="text-white text-2xl font-medium mb-3">Avatar Loading Failed</p>
+            <p className="text-white/80 text-base text-center max-w-lg">{error}</p>
+            <button
+              onClick={onReload}
+              className="mt-6 px-8 py-3 bg-white text-red-900 rounded-lg font-medium hover:bg-gray-100 transition-colors"
+            >
+              Reload Avatar
+            </button>
+          </div>
+        )}
+
         {/* Unity will be shown here via global instance */}
       </div>
 
