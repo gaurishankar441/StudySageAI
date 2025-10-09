@@ -226,7 +226,7 @@
         // 🎯 DISABLED: No need to reset - phonemes handle lip-sync
         // if (unityInstance) {
         //   try {
-        //     unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
+        //     unityInstance.SendMessage('AvatarControllerScript', 'OnExternalAmplitude', '0');
         //   } catch (e) {
         //     // Silently ignore if AvatarController doesn't exist
         //   }
@@ -290,7 +290,7 @@
                 console.log('[Unity] ✅ Sending queued phonemes to Unity:', pendingAudio.phonemes.length);
                 try {
                   var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
-                  unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
+                  unityInstance.SendMessage('AvatarControllerScript', 'PlayPhonemeSequence', phonemeJson);
                 } catch (e) {
                   console.error('[Unity] ❌ Failed to send queued phonemes:', e);
                 }
@@ -407,7 +407,7 @@
                   
                   if (pendingAudio.phonemes && pendingAudio.phonemes.length > 0 && unityInstance) {
                     var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
-                    unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
+                    unityInstance.SendMessage('AvatarControllerScript', 'PlayPhonemeSequence', phonemeJson);
                   }
                   
                   window.parent.postMessage({
@@ -687,7 +687,7 @@
               
               // Also stop Unity audio (if applicable)
               if (unityInstance) {
-                unityInstance.SendMessage('AvatarController', 'StopAudio', '');
+                unityInstance.SendMessage('AvatarControllerScript', 'StopAudio', '');
               }
               console.log('[Unity] Audio stopped (HTML5 + Unity)');
               break;
