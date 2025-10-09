@@ -57,47 +57,65 @@ export function AvatarContainer({
     minimizeToBubble();
   };
 
-  // Position global Unity instance based on view state
+  // Position global Unity to match current view state
   useEffect(() => {
     const globalUnity = document.getElementById('global-unity-instance');
-    const containerClass = 'unity-avatar-container';
+    const globalContainer = document.getElementById('global-unity-container');
     
-    if (!globalUnity) {
-      console.warn('[Avatar] Global Unity instance not found!');
+    if (!globalUnity || !globalContainer) {
+      console.warn('[Avatar] Global Unity not found!');
       return;
     }
 
-    // Find the active container
-    const activeContainer = document.querySelector(`.${viewState} [data-testid="unity-avatar-container"]`);
+    const isMobile = window.innerWidth < 768;
     
-    if (activeContainer && viewState !== 'minimized') {
-      // Show Unity and move it to active container
-      globalUnity.style.opacity = '1';
-      globalUnity.style.pointerEvents = 'auto';
-      activeContainer.appendChild(globalUnity);
-      console.log(`[Avatar] Unity moved to ${viewState} state`);
-    } else {
-      // Hide Unity when minimized
-      globalUnity.style.opacity = '0';
-      globalUnity.style.pointerEvents = 'none';
-      // Move back to global container
-      const globalContainer = document.getElementById('global-unity-instance')?.parentElement;
-      if (globalContainer && !globalContainer.contains(globalUnity)) {
-        globalContainer.appendChild(globalUnity);
+    if (viewState === 'minimized') {
+      // Hide Unity
+      (globalUnity as HTMLElement).style.opacity = '0';
+      (globalUnity as HTMLElement).style.pointerEvents = 'none';
+      (globalContainer as HTMLElement).style.pointerEvents = 'none';
+      console.log('[Avatar] 👻 Unity hidden (minimized)');
+      
+    } else if (viewState === 'half') {
+      // Position for Half Panel
+      (globalUnity as HTMLElement).style.opacity = '1';
+      (globalUnity as HTMLElement).style.pointerEvents = 'auto';
+      (globalContainer as HTMLElement).style.pointerEvents = 'auto';
+      
+      if (isMobile) {
+        // Mobile: Bottom 60vh
+        (globalContainer as HTMLElement).style.top = 'auto';
+        (globalContainer as HTMLElement).style.bottom = '0';
+        (globalContainer as HTMLElement).style.left = '0';
+        (globalContainer as HTMLElement).style.right = '0';
+        (globalContainer as HTMLElement).style.height = '60vh';
+        (globalContainer as HTMLElement).style.width = '100%';
+      } else {
+        // Desktop: Right panel 480px wide
+        (globalContainer as HTMLElement).style.top = '0';
+        (globalContainer as HTMLElement).style.bottom = '0';
+        (globalContainer as HTMLElement).style.right = '0';
+        (globalContainer as HTMLElement).style.left = 'auto';
+        (globalContainer as HTMLElement).style.width = '480px';
+        (globalContainer as HTMLElement).style.height = '100%';
       }
+      console.log('[Avatar] ✅ Unity positioned for Half Panel');
+      
+    } else if (viewState === 'fullscreen' || viewState === 'fullscreen-chat') {
+      // Position for Fullscreen
+      (globalUnity as HTMLElement).style.opacity = '1';
+      (globalUnity as HTMLElement).style.pointerEvents = 'auto';
+      (globalContainer as HTMLElement).style.pointerEvents = 'auto';
+      
+      (globalContainer as HTMLElement).style.top = '0';
+      (globalContainer as HTMLElement).style.bottom = '0';
+      (globalContainer as HTMLElement).style.left = '0';
+      (globalContainer as HTMLElement).style.right = '0';
+      (globalContainer as HTMLElement).style.width = '100%';
+      (globalContainer as HTMLElement).style.height = '100%';
+      
+      console.log(`[Avatar] ✅ Unity positioned for ${viewState}`);
     }
-
-    return () => {
-      // Cleanup on unmount - move Unity back to global container
-      if (globalUnity) {
-        globalUnity.style.opacity = '0';
-        globalUnity.style.pointerEvents = 'none';
-        const globalContainer = document.getElementById('global-unity-instance')?.parentElement;
-        if (globalContainer && !globalContainer.contains(globalUnity)) {
-          globalContainer.appendChild(globalUnity);
-        }
-      }
-    };
   }, [viewState]);
 
   return (
