@@ -59,30 +59,42 @@ export function AvatarContainer({
 
   // Move global Unity instance into active state container
   useEffect(() => {
+    console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
+    
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
       const globalUnity = document.getElementById('global-unity-instance');
       
+      console.log('[Avatar Container] Global Unity element:', globalUnity ? 'FOUND ✅' : 'NOT FOUND ❌');
+      
       if (!globalUnity) {
-        console.warn('[Avatar] Global Unity instance not found!');
+        console.error('[Avatar] ❌ Global Unity instance not found!');
         return;
       }
 
       // Find target container based on viewState
       let targetContainer: HTMLElement | null = null;
+      let targetId = '';
       
       if (viewState === 'half') {
-        targetContainer = document.getElementById('half-panel-unity-target');
+        targetId = 'half-panel-unity-target';
+        targetContainer = document.getElementById(targetId);
       } else if (viewState === 'fullscreen') {
-        targetContainer = document.getElementById('fullscreen-unity-target');
+        targetId = 'fullscreen-unity-target';
+        targetContainer = document.getElementById(targetId);
       } else if (viewState === 'fullscreen-chat') {
-        targetContainer = document.getElementById('fullscreen-chat-unity-target');
+        targetId = 'fullscreen-chat-unity-target';
+        targetContainer = document.getElementById(targetId);
       }
+
+      console.log(`[Avatar Container] Target container (#${targetId}):`, targetContainer ? 'FOUND ✅' : 'NOT FOUND ❌');
 
       if (targetContainer && !targetContainer.contains(globalUnity)) {
         // Move Unity into the target container
         targetContainer.appendChild(globalUnity);
-        console.log(`[Avatar] ✅ Unity moved to ${viewState} container`);
+        console.log(`[Avatar] ✅ Unity moved to ${viewState} container (#${targetId})`);
+      } else if (targetContainer && targetContainer.contains(globalUnity)) {
+        console.log(`[Avatar] ⚡ Unity already in ${viewState} container`);
       } else if (viewState === 'minimized') {
         // Move Unity back to global hidden container
         const globalContainer = document.getElementById('global-unity-container');
@@ -90,6 +102,8 @@ export function AvatarContainer({
           globalContainer.appendChild(globalUnity);
           console.log('[Avatar] 👻 Unity moved to hidden container (minimized)');
         }
+      } else {
+        console.warn(`[Avatar] ⚠️ No valid target container for viewState: ${viewState}`);
       }
     }, 150); // Small delay for AnimatePresence
 
