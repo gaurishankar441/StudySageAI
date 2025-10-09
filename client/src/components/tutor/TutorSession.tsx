@@ -374,6 +374,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       console.log('[TTS] Setting playing audio to:', messageId);
       setPlayingAudio(messageId);
 
+      console.log('[TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FIX-v3 🚀');
       console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
       
       // 🎯 Use chat.mode to detect optimized sessions (tutorSession query might not be loaded yet!)
