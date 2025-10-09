@@ -125,6 +125,9 @@
       var audioUnlocked = false;
       var unlockBtn = document.getElementById('audio-unlock-btn');
       
+      // 🎵 AUDIO QUEUE: Store audio that arrives before unlock
+      var pendingAudio = null;
+      
       // 🎵 HTML5 AUDIO FALLBACK: For reliable playback with amplitude-driven lips
       var audioElement = new Audio();
       audioElement.crossOrigin = 'anonymous';
@@ -267,6 +270,17 @@
                 payload: true
               }, trustedParentOrigin);
             }
+            
+            // 🎵 Play queued audio if any
+            if (pendingAudio) {
+              console.log('[Unity] ✅ Playing queued audio after unlock');
+              playHtmlAudioFallback(pendingAudio.audioData, pendingAudio.audioId);
+              window.parent.postMessage({
+                type: 'AUDIO_STARTED',
+                payload: { id: pendingAudio.audioId }
+              }, trustedParentOrigin);
+              pendingAudio = null; // Clear queue
+            }
           }).catch(function(err) {
             console.error('[Unity] Failed to resume AudioContext:', err);
           });
@@ -279,6 +293,17 @@
               type: 'AUDIO_UNLOCKED',
               payload: true
             }, trustedParentOrigin);
+          }
+          
+          // 🎵 Play queued audio if any
+          if (pendingAudio) {
+            console.log('[Unity] ✅ Playing queued audio after unlock');
+            playHtmlAudioFallback(pendingAudio.audioData, pendingAudio.audioId);
+            window.parent.postMessage({
+              type: 'AUDIO_STARTED',
+              payload: { id: pendingAudio.audioId }
+            }, trustedParentOrigin);
+            pendingAudio = null; // Clear queue
           }
         }
       }
@@ -425,17 +450,19 @@
                   }, trustedParentOrigin);
                 }
               } else if (!audioUnlocked) {
-                console.warn('[Unity] ❌ Audio not unlocked yet - requesting unlock');
+                console.warn('[Unity] ❌ Audio not unlocked yet - queuing for later');
+                
+                // 🎵 QUEUE AUDIO: Store for playback after unlock
+                pendingAudio = { audioData: audioData, audioId: audioId };
+                console.log('[Unity] 📦 Audio queued - will play after unlock');
+                
+                // Show unlock button
                 if (unlockBtn) unlockBtn.style.display = 'block';
+                
                 // Request unlock from React
                 window.parent.postMessage({
                   type: 'AUDIO_UNLOCK_REQUEST',
                   payload: true
-                }, trustedParentOrigin);
-                // Notify playback failed due to unlock
-                window.parent.postMessage({
-                  type: 'AUDIO_FAILED',
-                  payload: { id: audioId, error: 'Audio not unlocked' }
                 }, trustedParentOrigin);
               } else if (!audioData) {
                 console.error('[Unity] ❌ No audio data received!');
