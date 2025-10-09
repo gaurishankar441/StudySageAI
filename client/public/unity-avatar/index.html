@@ -350,32 +350,21 @@
         console.log('[Unity] Avatar instance ready');
         isUnityInstanceReady = true;
         
-        // 🎵 AUTO-UNLOCK: Automatically unlock audio on load (user-friendly!)
+        // 🎵 RELIABLE AUTO-UNLOCK: Try to unlock audio (with proper state checking!)
         if (!audioUnlocked) {
-          console.log('[Unity] 🔓 Auto-unlocking audio for seamless experience...');
+          console.log('[Unity] 🔓 Attempting audio unlock for phoneme lip-sync...');
           
-          // Try to unlock immediately (works if user has interacted with page)
+          // Create AudioContext
           var AudioContext = window.AudioContext || window.webkitAudioContext;
           if (!audioCtx) audioCtx = new AudioContext();
           
-          if (audioCtx.state === 'suspended') {
-            // Can't unlock without user gesture, show button
-            if (unlockBtn) {
-              unlockBtn.style.display = 'block';
-              console.log('[Unity] Audio unlock requires user gesture - showing button');
-            }
-            
-            // Notify React that unlock is needed
-            if (isHandshakeComplete && trustedParentOrigin) {
-              window.parent.postMessage({
-                type: 'AUDIO_UNLOCK_REQUEST',
-                payload: true
-              }, trustedParentOrigin);
-            }
-          } else {
-            // Context not suspended, can unlock now!
+          console.log('[Unity] 🔍 AudioContext state:', audioCtx.state);
+          
+          // 🎯 CRITICAL: Only unlock if AudioContext is running or can be resumed
+          if (audioCtx.state === 'running') {
+            // Already running - unlock immediately
             audioUnlocked = true;
-            console.log('[Unity] ✅ Audio auto-unlocked successfully!');
+            console.log('[Unity] ✅ AudioContext already running - audio unlocked!');
             
             if (isHandshakeComplete && trustedParentOrigin) {
               window.parent.postMessage({
@@ -383,6 +372,68 @@
                 payload: true
               }, trustedParentOrigin);
             }
+            
+            if (unlockBtn) unlockBtn.style.display = 'none';
+          } else if (audioCtx.state === 'suspended') {
+            // Try to resume (works if user has interacted with page)
+            console.log('[Unity] AudioContext suspended - attempting resume...');
+            audioCtx.resume().then(function() {
+              // 🚀 SUCCESS: Only set unlocked flag AFTER successful resume
+              if (audioCtx.state === 'running') {
+                audioUnlocked = true;
+                console.log('[Unity] ✅ AudioContext resumed successfully - audio unlocked!');
+                
+                if (isHandshakeComplete && trustedParentOrigin) {
+                  window.parent.postMessage({
+                    type: 'AUDIO_UNLOCKED',
+                    payload: true
+                  }, trustedParentOrigin);
+                }
+                
+                if (unlockBtn) unlockBtn.style.display = 'none';
+                
+                // Play queued audio if any
+                if (pendingAudio) {
+                  console.log('[Unity] ✅ Auto-playing queued audio after resume');
+                  playHtmlAudioFallback(pendingAudio.audioData, pendingAudio.audioId);
+                  
+                  if (pendingAudio.phonemes && pendingAudio.phonemes.length > 0 && unityInstance) {
+                    var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
+                    unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
+                  }
+                  
+                  window.parent.postMessage({
+                    type: 'AUDIO_STARTED',
+                    payload: { id: pendingAudio.audioId }
+                  }, trustedParentOrigin);
+                  pendingAudio = null;
+                }
+              } else {
+                console.warn('[Unity] ⚠️ AudioContext still not running after resume - state:', audioCtx.state);
+                showUnlockButton();
+              }
+            }).catch(function(err) {
+              // 🔴 FAILED: Resume blocked by autoplay policy - keep locked, show button
+              console.warn('[Unity] ❌ AudioContext resume failed (autoplay policy):', err);
+              console.log('[Unity] User gesture required - showing unlock button');
+              showUnlockButton();
+            });
+          } else {
+            // Unknown state - show button to be safe
+            console.warn('[Unity] ⚠️ Unknown AudioContext state:', audioCtx.state);
+            showUnlockButton();
+          }
+        }
+        
+        // Helper: Show unlock button and notify React
+        function showUnlockButton() {
+          if (unlockBtn) unlockBtn.style.display = 'block';
+          
+          if (isHandshakeComplete && trustedParentOrigin) {
+            window.parent.postMessage({
+              type: 'AUDIO_UNLOCK_REQUEST',
+              payload: true
+            }, trustedParentOrigin);
           }
         }
         
