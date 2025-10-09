@@ -66,28 +66,23 @@ export function useUnityBridge({
   // Initialize handshake
   useEffect(() => {
     if (!iframeRef.current) return;
-    if (hasInitializedRef.current) {
-      console.log('[Unity Bridge] Already initialized, skipping handshake');
-      return; // Prevent duplicate handshakes
-    }
 
     // Start handshake after iframe loads
     const initHandshake = () => {
-      if (hasInitializedRef.current) return; // Double-check
-      hasInitializedRef.current = true;
+      if (hasInitializedRef.current) {
+        console.log('[Unity Bridge] Already initialized, skipping handshake');
+        return; // Prevent duplicate handshakes
+      }
       
       console.log('[Unity Bridge] Starting handshake...');
       sendMessageToUnity('UNITY_INIT', { timestamp: Date.now() });
 
       // Timeout if handshake fails (check via ref to avoid stale closure)
       handshakeTimeoutRef.current = setTimeout(() => {
-        setIsHandshakeComplete((current) => {
-          if (!current) {
-            console.error('[Unity Bridge] Handshake timeout - Unity WebGL may be loading slowly');
-            onError?.('Unity loading timeout - please wait or refresh');
-          }
-          return current;
-        });
+        if (!hasInitializedRef.current) {
+          console.error('[Unity Bridge] Handshake timeout - Unity WebGL may be loading slowly');
+          onError?.('Unity loading timeout - please wait or refresh');
+        }
       }, 20000); // 20 second timeout for 97MB WebGL load
     };
 
@@ -135,7 +130,9 @@ export function useUnityBridge({
         }
 
         trustedOriginRef.current = event.origin;
+        hasInitializedRef.current = true; // Mark as initialized ONLY after successful handshake
         console.log('[Unity Bridge] Trusted origin established:', event.origin);
+        console.log('[Unity Bridge] Handshake complete ✅');
         setIsHandshakeComplete(true);
         if (handshakeTimeoutRef.current) {
           clearTimeout(handshakeTimeoutRef.current);
