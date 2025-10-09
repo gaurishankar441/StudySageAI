@@ -943,9 +943,19 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                 onClick={() => setAvatarEnabled(!avatarEnabled)}
                 className={avatarEnabled ? "btn-gradient" : ""}
                 data-testid="button-toggle-avatar"
-                title={avatarEnabled ? "Hide 3D Avatar with Lip-Sync" : "Show 3D Avatar with Lip-Sync"}
+                title={
+                  avatarEnabled 
+                    ? "Hide 3D Avatar" 
+                    : unityAvatarRef.current?.isReady 
+                      ? "Show 3D Avatar - Ready!" 
+                      : "Show 3D Avatar - Loading in background..."
+                }
               >
-                <UserCircle className="w-4 h-4 mr-2" />
+                {unityAvatarRef.current?.isReady ? (
+                  <UserCircle className="w-4 h-4 mr-2" />
+                ) : (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                )}
                 {avatarEnabled ? (
                   <>
                     Avatar ON
@@ -953,8 +963,20 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       Lip-Sync
                     </span>
                   </>
+                ) : unityAvatarRef.current?.isReady ? (
+                  <>
+                    3D Avatar
+                    <span className="ml-2 px-1.5 py-0.5 bg-green-500/20 text-green-600 dark:text-green-400 rounded text-[10px]">
+                      Ready
+                    </span>
+                  </>
                 ) : (
-                  "3D Avatar"
+                  <>
+                    3D Avatar
+                    <span className="ml-2 px-1.5 py-0.5 bg-amber-500/20 text-amber-600 dark:text-amber-400 rounded text-[10px]">
+                      Loading
+                    </span>
+                  </>
                 )}
               </Button>
               <Button
@@ -1184,49 +1206,53 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         />
       )}
 
-      {/* 🎭 3D Avatar Panel (Responsive: Right on desktop, Bottom on mobile) */}
-      {avatarEnabled && (
-        <div 
-          className="fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 animate-slide-up md:animate-slide-in-right"
-          data-testid="avatar-panel"
-        >
-          <div className="h-full flex flex-col">
-            {/* Header */}
-            <div className="p-4 border-b border-border bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
-              <div className="flex items-center justify-between">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <UserCircle className="w-5 h-5 text-purple-600" />
-                  AI Tutor Avatar
-                </h3>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setAvatarEnabled(false)}
-                  data-testid="button-close-avatar"
-                  title="Close Avatar"
-                >
-                  <ChevronRight className="w-4 h-4 md:block hidden" />
-                  <ChevronLeft className="w-4 h-4 md:hidden" />
-                </Button>
-              </div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {unityAvatarRef.current?.isReady ? '✅ Ready with lip-sync' : '⏳ Loading...'}
-              </p>
+      {/* 🎭 3D Avatar Panel (Responsive: Right on desktop, Bottom on mobile) 
+          PRELOAD STRATEGY: Always rendered in background, visibility controlled by avatarEnabled */}
+      <div 
+        className={`fixed bottom-0 left-0 md:left-auto md:top-0 md:right-0 h-[40vh] md:h-screen w-full md:w-96 bg-white dark:bg-gray-900 border-t md:border-t-0 md:border-l border-border shadow-2xl z-50 transition-all duration-300 ${
+          avatarEnabled 
+            ? 'translate-y-0 md:translate-x-0 animate-slide-up md:animate-slide-in-right' 
+            : 'translate-y-full md:translate-y-0 md:translate-x-full pointer-events-none'
+        }`}
+        data-testid="avatar-panel"
+      >
+        <div className="h-full flex flex-col">
+          {/* Header */}
+          <div className="p-4 border-b border-border bg-gradient-to-r from-purple-50 to-blue-50 dark:from-gray-800 dark:to-gray-900">
+            <div className="flex items-center justify-between">
+              <h3 className="font-semibold text-sm flex items-center gap-2">
+                <UserCircle className="w-5 h-5 text-purple-600" />
+                AI Tutor Avatar
+              </h3>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setAvatarEnabled(false)}
+                data-testid="button-close-avatar"
+                title="Close Avatar"
+              >
+                <ChevronRight className="w-4 h-4 md:block hidden" />
+                <ChevronLeft className="w-4 h-4 md:hidden" />
+              </Button>
             </div>
+            <p className="text-xs text-muted-foreground mt-1">
+              {unityAvatarRef.current?.isReady ? '✅ Ready with lip-sync' : '⏳ Loading...'}
+            </p>
+          </div>
 
-            {/* Unity Avatar */}
-            <div className="flex-1">
-              <UnityAvatar
-                ref={unityAvatarRef}
-                className="w-full h-full"
-                defaultAvatar="priya"
-                onReady={() => {
-                  console.log('[Tutor] Unity avatar is ready!');
-                }}
-                onError={(error) => {
-                  console.error('[Tutor] Avatar error:', error);
-                  toast({
-                    title: "Avatar Error",
+          {/* Unity Avatar - Always rendered for preloading */}
+          <div className="flex-1">
+            <UnityAvatar
+              ref={unityAvatarRef}
+              className="w-full h-full"
+              defaultAvatar="priya"
+              onReady={() => {
+                console.log('[Tutor] Unity avatar is ready!');
+              }}
+              onError={(error) => {
+                console.error('[Tutor] Avatar error:', error);
+                toast({
+                  title: "Avatar Error",
                     description: error,
                     variant: "destructive",
                   });
@@ -1234,15 +1260,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               />
             </div>
 
-            {/* Footer Info */}
-            <div className="p-3 border-t border-border bg-gray-50 dark:bg-gray-800">
-              <p className="text-xs text-muted-foreground text-center">
-                3D Avatar with real-time lip-sync powered by Unity WebGL
-              </p>
-            </div>
+          {/* Footer Info */}
+          <div className="p-3 border-t border-border bg-gray-50 dark:bg-gray-800">
+            <p className="text-xs text-muted-foreground text-center">
+              3D Avatar with real-time lip-sync powered by Unity WebGL
+            </p>
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 }
