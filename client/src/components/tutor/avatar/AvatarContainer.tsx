@@ -117,7 +117,10 @@ export function AvatarContainer({
         {viewState === 'minimized' && (
           <MinimizedBubble
             key="minimized"
-            onClick={expandToHalf}
+            onClick={() => {
+              console.log('[Avatar Container] 🔘 Bubble clicked! Expanding to half...');
+              expandToHalf();
+            }}
             isSpeaking={isSpeaking}
           />
         )}
