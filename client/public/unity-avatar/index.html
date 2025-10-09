@@ -59,6 +59,35 @@
         right: 10px;
         display: none;
       }
+      #audio-unlock-btn {
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        z-index: 100;
+        padding: 12px 24px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-family: Arial, sans-serif;
+        font-size: 16px;
+        font-weight: 600;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        transition: all 0.3s;
+        display: none;
+      }
+      #audio-unlock-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.4);
+      }
+      #audio-unlock-btn.pulse {
+        animation: pulse 2s infinite;
+      }
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
     </style>
   </head>
   <body>
@@ -71,6 +100,9 @@
         <div id="unity-loading-text">Loading AI Tutor Avatar...</div>
       </div>
       <div id="unity-warning"></div>
+      <button id="audio-unlock-btn" class="pulse">
+        🔊 Enable Sound
+      </button>
     </div>
     
     <script>
@@ -87,6 +119,11 @@
       var trustedParentOrigin = null;
       var isHandshakeComplete = false;
       var isUnityInstanceReady = false; // Track Unity instance readiness
+      
+      // 🔊 AUDIO: Unlock AudioContext for autoplay policy compliance
+      var audioCtx = null;
+      var audioUnlocked = false;
+      var unlockBtn = document.getElementById('audio-unlock-btn');
 
       // 🚀 UNITY TO REACT COMMUNICATION (Secure with handshake)
       function SendMessageToReact(message) {
@@ -101,10 +138,59 @@
         }
       }
 
+      // 🔊 UNLOCK AUDIO: Resume AudioContext on user gesture
+      function unlockAudio() {
+        console.log('[Unity] Unlocking audio...');
+        var AudioContext = window.AudioContext || window.webkitAudioContext;
+        
+        if (!audioCtx) {
+          audioCtx = new AudioContext();
+        }
+        
+        if (audioCtx.state === 'suspended') {
+          audioCtx.resume().then(function() {
+            console.log('[Unity] AudioContext resumed successfully');
+            audioUnlocked = true;
+            unlockBtn.style.display = 'none';
+            
+            // Notify parent that audio is unlocked
+            if (trustedParentOrigin) {
+              window.parent.postMessage({
+                type: 'AUDIO_UNLOCKED',
+                payload: true
+              }, trustedParentOrigin);
+            }
+          }).catch(function(err) {
+            console.error('[Unity] Failed to resume AudioContext:', err);
+          });
+        } else {
+          audioUnlocked = true;
+          unlockBtn.style.display = 'none';
+          
+          if (trustedParentOrigin) {
+            window.parent.postMessage({
+              type: 'AUDIO_UNLOCKED',
+              payload: true
+            }, trustedParentOrigin);
+          }
+        }
+      }
+      
+      // Attach unlock handler
+      if (unlockBtn) {
+        unlockBtn.addEventListener('click', unlockAudio);
+      }
+
       // ✅ NOTIFY REACT WHEN UNITY IS READY (Only after handshake)
       function OnUnityReady() {
         console.log('[Unity] Avatar instance ready');
         isUnityInstanceReady = true;
+        
+        // Show audio unlock button if not already unlocked
+        if (!audioUnlocked && unlockBtn) {
+          unlockBtn.style.display = 'block';
+          console.log('[Unity] Audio unlock required - showing button');
+        }
         
         // Only send UNITY_READY if handshake is complete
         if (isHandshakeComplete) {

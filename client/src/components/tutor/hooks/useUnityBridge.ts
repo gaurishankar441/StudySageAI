@@ -161,6 +161,12 @@ export function useUnityBridge({
           onReady?.();
           break;
 
+        case 'AUDIO_UNLOCKED':
+          // Audio context unlocked in iframe
+          console.log('[Unity Bridge] Audio unlocked successfully ✅');
+          // Could emit event or update state if needed
+          break;
+
         case 'UNITY_MESSAGE':
           // Custom message from Unity
           console.log('[Unity Bridge] Message from Unity:', payload);
