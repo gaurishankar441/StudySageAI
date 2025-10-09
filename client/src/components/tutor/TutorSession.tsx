@@ -374,14 +374,15 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       console.log('[TTS] Setting playing audio to:', messageId);
       setPlayingAudio(messageId);
 
-      console.log('[TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FIX-v3 🚀');
+      console.log('[TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FINAL 🚀');
       console.log('[TTS] Fetching emotion-based TTS for text:', text.substring(0, 50) + '...');
       
-      // 🎯 Use chat.mode to detect optimized sessions (tutorSession query might not be loaded yet!)
-      const isOptimizedSession = chat?.mode === 'tutor';
-      console.log('[TTS] chat.mode:', chat?.mode, 'isOptimizedSession:', isOptimizedSession);
+      // 🎯 CRITICAL: Reliable tutor session detection (use tutorSession data, not chat!)
+      // tutorSession comes from useTutorSessionData hook - more reliable than chat
+      const isOptimizedSession = !!tutorSession || chat?.mode === 'tutor';
+      console.log('[TTS] tutorSession exists:', !!tutorSession, 'chat.mode:', chat?.mode, 'isOptimizedSession:', isOptimizedSession);
       
-      // 🎯 ALWAYS use phoneme endpoint for tutor mode (Unity will handle gracefully if not ready)
+      // 🎯 ALWAYS use phoneme endpoint for tutor mode
       const usePhonemeTTS = isOptimizedSession;
       const ttsEndpoint = usePhonemeTTS
         ? '/api/tutor/optimized/session/tts-with-phonemes'

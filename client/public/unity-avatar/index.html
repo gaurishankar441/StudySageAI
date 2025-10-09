@@ -199,18 +199,19 @@
           // Scale to 0-1 range (boost for visibility)
           var mouthOpen = Math.min(1, rms * 6);
           
-          // Send to Unity for blendshape control (safe call)
-          if (unityInstance) {
-            try {
-              unityInstance.SendMessage(
-                'AvatarController',
-                'OnExternalAmplitude',
-                mouthOpen.toFixed(3)
-              );
-            } catch (e) {
-              // Silently ignore if AvatarController doesn't exist
-            }
-          }
+          // 🎯 DISABLED: Amplitude lip-sync not needed - phonemes handle it!
+          // Keeping audio playback only, lip-sync via PlayPhonemeSequence
+          // if (unityInstance) {
+          //   try {
+          //     unityInstance.SendMessage(
+          //       'AvatarController',
+          //       'OnExternalAmplitude',
+          //       mouthOpen.toFixed(3)
+          //     );
+          //   } catch (e) {
+          //     // Silently ignore if AvatarController doesn't exist
+          //   }
+          // }
           
           animationFrameId = requestAnimationFrame(meterLoop);
         }
@@ -222,14 +223,14 @@
           cancelAnimationFrame(animationFrameId);
           animationFrameId = null;
         }
-        // Reset mouth to neutral (safe call)
-        if (unityInstance) {
-          try {
-            unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
-          } catch (e) {
-            // Silently ignore if AvatarController doesn't exist
-          }
-        }
+        // 🎯 DISABLED: No need to reset - phonemes handle lip-sync
+        // if (unityInstance) {
+        //   try {
+        //     unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
+        //   } catch (e) {
+        //     // Silently ignore if AvatarController doesn't exist
+        //   }
+        // }
       }
       
       // 🔄 HELPER: Convert base64 to Blob

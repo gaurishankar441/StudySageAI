@@ -1,0 +1,285 @@
+index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.Understand this warning
+6WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformatUnderstand this warning
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 [Unity] SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+injected.js:27 SendMessage: object AvatarController does not have receiver for function OnExternalAmplitude!
+
+useUnityBridge.ts:181 
