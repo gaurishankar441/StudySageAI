@@ -533,26 +533,31 @@
               var audioId = event.data.payload.id || 'tts-phoneme-' + Date.now();
               
               console.log('[Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes:', phonemes.length, 'Audio unlocked:', audioUnlocked);
+              console.log('[Unity] 🔍 DEBUG - First 3 phonemes:', JSON.stringify(phonemes.slice(0, 3)));
               
               if (audioUnlocked && audioData && phonemes.length > 0) {
                 console.log('[Unity] ✅ Playing audio + sending phonemes to Unity...');
+                console.log('[Unity] 🔍 DEBUG - Unity instance exists:', !!unityInstance);
                 try {
                   // 1. Play audio via HTML5
                   playHtmlAudioFallback(audioData, audioId);
                   
                   // 2. Send phoneme sequence to Unity for blendshape animation
                   var phonemeJson = JSON.stringify({ phonemes: phonemes });
-                  console.log('[Unity] Sending phonemes to AvatarController:', phonemeJson);
+                  console.log('[Unity] 📤 Sending phonemes to AvatarController - Count:', phonemes.length);
+                  console.log('[Unity] 📦 Phoneme JSON length:', phonemeJson.length, 'chars');
                   
                   try {
+                    console.log('[Unity] 🚀 CALLING PlayPhonemeSequence NOW...');
                     unityInstance.SendMessage(
                       'AvatarController',
                       'PlayPhonemeSequence',
                       phonemeJson
                     );
-                    console.log('[Unity] ✅ Phonemes sent to Unity successfully');
+                    console.log('[Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅');
                   } catch (e) {
-                    console.error('[Unity] ❌ Failed to send phonemes to Unity:', e);
+                    console.error('[Unity] ❌❌❌ SendMessage FAILED:', e.toString());
+                    console.error('[Unity] ❌ Error stack:', e.stack);
                   }
                   
                   // Notify React that audio+phonemes started
