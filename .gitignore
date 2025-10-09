@@ -14,3 +14,9 @@ vite.config.ts.*
 *.webm
 attached_assets/*.mov
 attached_assets/*.mp4
+
+# Unity WebGL Build files (large)
+client/public/unity-avatar/Build/*.gz
+client/public/unity-avatar/Build/*.wasm.gz
+client/public/unity-avatar/Build/*.data.gz
+attached_assets/Build_*.zip
