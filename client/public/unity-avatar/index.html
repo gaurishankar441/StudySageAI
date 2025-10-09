@@ -759,17 +759,12 @@
           
           console.log('[Unity] Instance created successfully');
           
-          // 🔧 CRITICAL FIX: Call OnUnityReady with error handling
+          // 🔧 DIRECT CALL: Skip RAF for now (debugging)
+          console.log('[Unity] ⏰ Calling OnUnityReady directly...');
           try {
-            // Use requestAnimationFrame for better timing (2 frames wait)
-            requestAnimationFrame(() => {
-              requestAnimationFrame(() => {
-                console.log('[Unity] ⏰ RAF callback executing, calling OnUnityReady...');
-                OnUnityReady();
-              });
-            });
+            OnUnityReady();
           } catch (err) {
-            console.error('[Unity] ❌ RAF/OnUnityReady error:', err);
+            console.error('[Unity] ❌ OnUnityReady error:', err);
           }
         }).catch((message) => {
           console.error('[Unity] Failed to create instance:', message);

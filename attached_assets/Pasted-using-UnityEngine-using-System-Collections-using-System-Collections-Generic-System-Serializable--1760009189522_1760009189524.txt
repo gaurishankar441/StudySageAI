@@ -1,0 +1,188 @@
+using UnityEngine;
+using System.Collections;
+using System.Collections.Generic;
+[System.Serializable]
+public class PhonemeData
+{
+    public int time;           // Milliseconds
+    public string blendshape;  // "B_M_P", "Ah", etc.
+    public float weight;       // 0.0 to 1.0
+}
+[System.Serializable]
+public class PhonemeSequence
+{
+    public List<PhonemeData> phonemes;
+}
+public class AvatarController : MonoBehaviour
+{
+    [Header("Avatar Face Reference")]
+    public SkinnedMeshRenderer avatarFace; // Inspector mein face mesh assign karo
+    [Header("Jaw Bone Settings")]
+    public Transform jawRoot; // Inspector mein jawRoot bone assign karo
+    public float maxJawRotation = 20f; // Maximum jaw open angle (degrees)
+    public float jawSmoothSpeed = 10f; // Jaw animation smoothness
+    [Header("Phoneme Blendshape Indices")]
+    public int index_B_M_P = 11;
+    public int index_F_V = 8;
+    public int index_TH = 9;
+    public int index_T_L_D_N = 10;
+    public int index_K_G_H_NG = 12;
+    public int index_Ch_J = 7;
+    public int index_S_Z = 6;
+    public int index_EE = 0;
+    public int index_IH = 2;
+    public int index_Ah = 3;
+    public int index_Oh = 4;
+    public int index_W_OO = 5;
+    public int index_AE = 13;
+    public int index_R = 14;
+    public int index_Er = 1;
+    private Coroutine currentAnimation;
+    private Quaternion neutralJawRotation; // Original jaw rotation
+    private float targetJawAngle = 0f; // Target jaw rotation
+    void Start()
+    {
+        // Store neutral jaw position
+        if (jawRoot != null)
+        {
+            neutralJawRotation = jawRoot.localRotation;
+        }
+    }
+    void Update()
+    {
+        // Smooth jaw animation (runs every frame)
+        if (jawRoot != null)
+        {
+            float currentAngle = Quaternion.Angle(jawRoot.localRotation, neutralJawRotation);
+            float smoothAngle = Mathf.Lerp(currentAngle, targetJawAngle, Time.deltaTime * jawSmoothSpeed);
+            jawRoot.localRotation = neutralJawRotation * Quaternion.Euler(smoothAngle, 0, 0);
+        }
+    }
+    // :white_tick: JavaScript se call hoga (JSON string)
+    public void PlayPhonemeSequence(string jsonData)
+    {
+        Debug.Log("[Avatar] Received phoneme data: " + jsonData);
+        try
+        {
+            PhonemeSequence sequence = JsonUtility.FromJson<PhonemeSequence>(jsonData);
+            if (currentAnimation != null)
+            {
+                StopCoroutine(currentAnimation);
+            }
+            currentAnimation = StartCoroutine(AnimatePhonemes(sequence.phonemes));
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError("[Avatar] JSON parse error: " + e.Message);
+        }
+    }
+    // :film_slate: Animate phonemes with timing
+    IEnumerator AnimatePhonemes(List<PhonemeData> phonemes)
+    {
+        float startTime = Time.time;
+        int currentIndex = 0;
+        while (currentIndex < phonemes.Count)
+        {
+            float elapsed = (Time.time - startTime) * 1000f;
+            if (elapsed >= phonemes[currentIndex].time)
+            {
+                ApplyPhonemeWithJaw(
+                    phonemes[currentIndex].blendshape,
+                    phonemes[currentIndex].weight
+                );
+                currentIndex++;
+            }
+            yield return null;
+        }
+        // Reset after animation
+        yield return new WaitForSeconds(0.2f);
+        ResetMouth();
+    }
+    // :dart: Apply phoneme blendshape + jaw bone rotation
+    void ApplyPhonemeWithJaw(string blendshapeName, float weight)
+    {
+        if (avatarFace == null) return;
+        // 1. Reset all blendshapes
+        ResetBlendshapes();
+        // 2. Apply lip shape blendshape
+        int index = GetBlendshapeIndex(blendshapeName);
+        if (index >= 0)
+        {
+            avatarFace.SetBlendShapeWeight(index, weight * 100f);
+        }
+        // 3. Apply jaw bone rotation for vowels
+        if (IsVowel(blendshapeName))
+        {
+            targetJawAngle = GetJawRotation(blendshapeName, weight);
+            Debug.Log($"[Jaw] {blendshapeName} → {targetJawAngle}° rotation");
+        }
+        else
+        {
+            targetJawAngle = 0f; // Close jaw for consonants
+        }
+    }
+    // :bone: Calculate jaw rotation based on phoneme
+    float GetJawRotation(string phoneme, float weight)
+    {
+        float baseRotation = 0f;
+        // Different vowels = different jaw opening
+        switch (phoneme)
+        {
+            case "Ah":      baseRotation = 1.0f; break;  // Full open (आ)
+            case "Oh":      baseRotation = 0.8f; break;  // Wide open (ओ)
+            case "AE":      baseRotation = 0.9f; break;  // Open (ऐ)
+            case "W_OO":    baseRotation = 0.6f; break;  // Medium (ऊ)
+            case "IH":      baseRotation = 0.4f; break;  // Slight (इ)
+            case "EE":      baseRotation = 0.3f; break;  // Smile (ई)
+            case "Er":      baseRotation = 0.35f; break; // Small open
+            default:        baseRotation = 0f;   break;
+        }
+        return baseRotation * weight * maxJawRotation;
+    }
+    // Check if vowel
+    bool IsVowel(string phoneme)
+    {
+        return phoneme == "Ah" || phoneme == "EE" || phoneme == "Oh" ||
+               phoneme == "IH" || phoneme == "W_OO" || phoneme == "AE" ||
+               phoneme == "Er";
+    }
+    // Map blendshape name → index
+    int GetBlendshapeIndex(string name)
+    {
+        switch (name)
+        {
+            case "B_M_P":    return index_B_M_P;
+            case "F_V":      return index_F_V;
+            case "TH":       return index_TH;
+            case "T_L_D_N":  return index_T_L_D_N;
+            case "K_G_H_NG": return index_K_G_H_NG;
+            case "Ch_J":     return index_Ch_J;
+            case "S_Z":      return index_S_Z;
+            case "EE":       return index_EE;
+            case "IH":       return index_IH;
+            case "Ah":       return index_Ah;
+            case "Oh":       return index_Oh;
+            case "W_OO":     return index_W_OO;
+            case "AE":       return index_AE;
+            case "R":        return index_R;
+            case "Er":       return index_Er;
+            case "sil":      return -1;
+            default:         return -1;
+        }
+    }
+    // Reset all blendshapes
+    void ResetBlendshapes()
+    {
+        if (avatarFace == null) return;
+        for (int i = 0; i < avatarFace.sharedMesh.blendShapeCount; i++)
+        {
+            avatarFace.SetBlendShapeWeight(i, 0f);
+        }
+    }
+    // Reset mouth to neutral
+    void ResetMouth()
+    {
+        ResetBlendshapes();
+        targetJawAngle = 0f;
+    }
+}
