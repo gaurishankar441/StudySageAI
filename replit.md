@@ -11,9 +11,10 @@ VaktaAI is an AI-powered educational platform offering an AI Tutor, Document Cha
 - **Root Cause**: useVoiceTutor received AI_RESPONSE_CHUNK via WebSocket but TutorSession UI only showed messages from react-query cache (invalidated on next send)
 - **Solution Implemented**: Added persistent `streamingResponse` state that survives after isProcessing=false
 - **Display Logic**: UI now shows streaming response immediately while streaming AND after completion until messages refresh
-- **State Management**: clearStreamingResponse() called 500ms after messages refresh to prevent duplicate display
+- **State Management**: clearStreamingResponse() called only when NEW assistant message ID detected (lastAssistantIdRef tracking), preventing race conditions with slow refetches
 - **Performance**: Instant response display - no more waiting for second message to trigger invalidation
-- **Files Modified**: useVoiceTutor.ts (streaming state), TutorSession.tsx (display logic)
+- **Race Condition Eliminated**: Message ID tracking ensures streaming response clears only when new persisted message actually appears, regardless of refetch speed
+- **Files Modified**: useVoiceTutor.ts (streaming state), TutorSession.tsx (message ID tracking + display logic)
 
 ### Phase 4: Upstash Redis Integration (Completed - October 10, 2025)
 **Production-grade caching with secure TLS connection**
