@@ -5,6 +5,17 @@ VaktaAI is an AI-powered educational platform offering an AI Tutor, Document Cha
 
 ## Recent Changes (October 2025)
 
+### Phase 6: Unity WebGL Build Update (Completed - October 10, 2025)
+**Replaced Unity avatar build with latest version from user**
+- **Old Build Backup**: Backed up previous build to `backup/unity-build-old/`
+- **Build Replacement**: New build (dated Oct 9, 2025) replaced old build (dated Oct 10, 2025 3:24 AM)
+- **File Changes**: Build.data.gz size changed from 96,593,801 to 96,593,239 bytes (562 bytes smaller)
+- **S3 Cleanup**: Deleted old Unity assets from S3 to ensure fresh upload
+- **S3 Upload**: New build successfully uploaded - Build.data.gz (96.5MB), Build.wasm.gz (6MB), Build.framework.js.gz (78KB)
+- **No Code Modifications**: Build.loader.js had no custom modifications - direct replacement safe
+- **Location**: `client/public/unity-avatar/Build/` → served via S3 CDN with presigned URLs
+- **Result**: New Unity WebGL avatar build live with phoneme-based lip-sync working
+
 ### Phase 5: Streaming Response UI Fix (Completed - October 10, 2025)
 **Critical fix for real-time AI response display**
 - **Problem Identified**: AI responses streamed successfully on backend but frontend only displayed after sending next message
