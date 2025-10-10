@@ -105,7 +105,7 @@ export function AvatarContainer({
           globalUnityContainer.style.bottom = 'auto';
           globalUnityContainer.style.right = 'auto';
           globalUnityContainer.style.borderRadius = window.innerWidth < 768 ? '1rem 1rem 0 0' : '1rem 0 0 1rem';
-          globalUnityContainer.style.zIndex = '9990';
+          globalUnityContainer.style.zIndex = '9999'; // ABOVE backdrop (9998), BELOW controls (10000)
           
           console.log(`[Avatar] ✅ Unity DYNAMIC positioned - Top: ${rect.top}px, Left: ${rect.left}px, Width: ${rect.width}px, Height: ${rect.height}px`);
           
@@ -147,7 +147,7 @@ export function AvatarContainer({
           globalUnityContainer.style.left = 'auto';     // ✅ Reset left (CRITICAL!)
           globalUnityContainer.style.width = '480px';   // ✅ Match w-[480px]
           globalUnityContainer.style.height = '600px';  // ✅ FIXED: Match h-[600px] (NOT 100vh!)
-          globalUnityContainer.style.zIndex = '9998';   // Below controls (10001)
+          globalUnityContainer.style.zIndex = '9999';   // ABOVE backdrop (9998), BELOW controls (10000)
           globalUnityContainer.style.borderRadius = '16px'; // Match rounded-2xl
           globalUnityContainer.style.overflow = 'hidden';
           

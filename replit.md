@@ -45,9 +45,18 @@ globalUnityContainer.style.left = 'auto';     // ✅ Reset
 
 3. **Fixed Control Bar Border**: `rounded-t-2xl md:rounded-t-none md:rounded-tl-2xl` for correct desktop appearance
 
+4. **Fixed Backdrop Blur Z-Index**: Unity container z-index changed from 9990 → 9999 to sit ABOVE backdrop (9998) so backdrop blur doesn't affect the avatar
+
+**Z-Index Layering**:
+- Background page content: default
+- Backdrop with blur: 9998
+- Unity avatar container: 9999 (ABOVE blur, BELOW controls)
+- Panel controls: 10000
+
 **Result**: 
 - ✅ Half-panel now correctly appears on RIGHT side of desktop
 - ✅ Unity avatar positioned correctly within panel bounds
+- ✅ Backdrop blur only affects background page, NOT the Unity avatar
 - ✅ Smooth slide-in animation from right (desktop) or bottom (mobile)
 - ✅ All 4 avatar states working: minimized → half-panel → fullscreen → fullscreen+chat
 
