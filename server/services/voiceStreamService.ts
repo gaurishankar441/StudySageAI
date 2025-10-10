@@ -645,6 +645,106 @@ export class VoiceStreamService {
   }
 
   /**
+   * 🚀 HELPER: Generate and stream TTS for a single sentence IMMEDIATELY
+   * Used for TRUE real-time streaming during AI response generation
+   */
+  private async generateAndStreamSentenceTTS(
+    ws: VoiceWebSocketClient,
+    sentence: string,
+    sequenceNumber: number,
+    isLast: boolean,
+    voiceOptions: {
+      emotion?: string;
+      intent?: string;
+      personaId?: string;
+      language: 'hi' | 'en';
+      enableMathSpeech?: boolean;
+      enablePauses?: boolean;
+      enableEmphasis?: boolean;
+    }
+  ): Promise<void> {
+    try {
+      const startTime = Date.now();
+      
+      // 🚀 PHASE 1: Check cache first
+      const cachedAudio = await ttsCacheService.get(
+        sentence, 
+        voiceOptions.language, 
+        voiceOptions.emotion, 
+        voiceOptions.personaId
+      );
+      
+      let audioBuffer: Buffer;
+      let cached = false;
+      
+      if (cachedAudio) {
+        audioBuffer = cachedAudio;
+        cached = true;
+      } else {
+        // Generate TTS audio
+        audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+        
+        // Store in cache for future use
+        await ttsCacheService.set(
+          sentence, 
+          voiceOptions.language, 
+          audioBuffer, 
+          voiceOptions.emotion, 
+          voiceOptions.personaId
+        );
+      }
+      
+      const genTime = Date.now() - startTime;
+      const cacheStatus = cached ? '💾 CACHED' : '🔨 GENERATED';
+      console.log(`[TRUE STREAM] ✅ Sentence ${sequenceNumber} ${cacheStatus} (${genTime}ms): "${sentence.substring(0, 40)}..."`);
+      
+      // 🚀 PHASE 2: Send TTS chunk immediately
+      const finalAudioData = audioBuffer.toString('base64');
+      
+      const ttsMsg = {
+        type: 'TTS_CHUNK',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        data: {
+          sequence: sequenceNumber,
+          data: finalAudioData,
+          text: sentence,
+          isLast,
+          compressed: false
+        }
+      };
+      
+      ws.send(JSON.stringify(ttsMsg));
+      
+      // 🚀 PHASE 3: Record metrics
+      ttsMetrics.record({
+        sentence,
+        language: voiceOptions.language,
+        generationTime: genTime,
+        cached,
+        compressed: false,
+        audioSize: audioBuffer.length,
+        sequence: sequenceNumber,
+        sessionId: ws.sessionId,
+      });
+      
+    } catch (error) {
+      console.error(`[TRUE STREAM] ❌ Failed sentence ${sequenceNumber}: ${error}`);
+      
+      // Send skip message
+      ws.send(JSON.stringify({
+        type: 'TTS_SKIP',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        data: {
+          sequence: sequenceNumber,
+          reason: 'Generation failed'
+        }
+      }));
+    }
+  }
+
+  /**
    * Process transcribed text through complete AI Tutor pipeline and stream TTS response
    * Integrates 7-phase system, emotion detection, intent classification, dynamic prompts, and voice synthesis
    */
@@ -816,18 +916,106 @@ export class VoiceStreamService {
         }
       });
 
-      // 🔥 STEP 8: GENERATE AI RESPONSE (non-streaming for voice - need complete response for TTS)
+      // 🔥 STEP 8: TRUE STREAMING - Generate AI response AND TTS in parallel sentence-by-sentence!
       const startAIGeneration = Date.now();
-      const aiResult = await optimizedAI.generateResponse(transcribedText, systemPrompt, {
-        language: detectedLang === 'hinglish' ? 'hindi' : 'english',
-        useCache: true
-      });
+      
+      // Send TTS_START to reset client queue state
+      const startMsg: TTSStartMessage = {
+        type: 'TTS_START',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        text: 'Generating response...'
+      };
+      ws.send(JSON.stringify(startMsg));
+      ws.isTTSActive = true;
+      
+      // Sentence accumulator and sequence tracking
+      let currentSentence = '';
+      let fullResponse = '';
+      let sentenceIndex = 0;
+      const sentenceBoundary = /[।.!?]\s+|[।.!?]$/;
+      
+      // Voice options for TTS
+      const voiceOptions = {
+        emotion: emotionResult.emotion,
+        intent: intentResult.intent,
+        personaId: session.personaId,
+        language,
+        enableMathSpeech: true,
+        enablePauses: true,
+        enableEmphasis: true
+      };
+      
+      // 🚀 Stream AI response with REAL-TIME sentence-by-sentence TTS generation!
+      const aiResult = await optimizedAI.generateStreamingResponse(
+        transcribedText,
+        systemPrompt,
+        async (chunk: string, meta?: any) => {
+          // Handle completion event (save metadata)
+          if (meta?.type === 'complete') {
+            console.log(`[VOICE TUTOR] ✅ AI streaming complete - Model: ${meta.model}, Cost: $${meta.cost?.toFixed(6) || 0}`);
+            
+            // Process final partial sentence if exists
+            if (currentSentence.trim().length > 0) {
+              await this.generateAndStreamSentenceTTS(
+                ws,
+                currentSentence.trim(),
+                sentenceIndex,
+                true, // isLast
+                voiceOptions
+              );
+            }
+            
+            // Send TTS_END
+            ws.send(JSON.stringify({
+              type: 'TTS_END',
+              timestamp: new Date().toISOString(),
+              sessionId: ws.sessionId,
+              data: { totalChunks: sentenceIndex + 1 }
+            }));
+            ws.isTTSActive = false;
+            
+            return;
+          }
+          
+          // Accumulate text chunks
+          currentSentence += chunk;
+          fullResponse += chunk;
+          
+          // Check for sentence boundary
+          const match = currentSentence.match(sentenceBoundary);
+          if (match) {
+            // Extract complete sentence(s)
+            const parts = currentSentence.split(sentenceBoundary);
+            
+            // Process all complete sentences (all except last part which may be incomplete)
+            for (let i = 0; i < parts.length - 1; i++) {
+              const sentence = parts[i].trim();
+              if (sentence) {
+                // 🚀 IMMEDIATELY generate TTS for this sentence!
+                await this.generateAndStreamSentenceTTS(
+                  ws,
+                  sentence,
+                  sentenceIndex,
+                  false, // not last
+                  voiceOptions
+                );
+                sentenceIndex++;
+              }
+            }
+            
+            // Keep the incomplete part for next iteration
+            currentSentence = parts[parts.length - 1] || '';
+          }
+        }
+      );
+      
       const aiGenerationTime = Date.now() - startAIGeneration;
-      console.log(`[VOICE TUTOR] AI response generated: ${aiResult.response.length} chars - ${aiGenerationTime}ms`);
+      console.log(`[VOICE TUTOR] ✅ TRUE STREAMING complete: ${fullResponse.length} chars - ${aiGenerationTime}ms total`);
 
-      // 🔥 STEP 9: VALIDATE RESPONSE QUALITY
+      // 🔥 STEP 9: VALIDATE RESPONSE QUALITY (after streaming)
       const startValidation = Date.now();
-      const validation = await responseValidator.validate(aiResult.response, {
+      const validation = await responseValidator.validate(fullResponse, {
         expectedLanguage: detectedLang,
         userEmotion: emotionResult.emotion,
         currentPhase: session.currentPhase,
@@ -842,7 +1030,7 @@ export class VoiceStreamService {
       await storage.addMessage({
         chatId,
         role: 'assistant',
-        content: aiResult.response,
+        content: fullResponse,
         tool: null,
         metadata: {
           model: aiResult.model,
@@ -852,6 +1040,7 @@ export class VoiceStreamService {
           emotion: emotionResult.emotion,
           phase: session.currentPhase,
           voiceOutput: true,
+          streamingTTS: true, // NEW: Indicates TRUE streaming was used
           validation: {
             isValid: validation.isValid,
             overallScore: validation.overallScore,
@@ -868,16 +1057,6 @@ export class VoiceStreamService {
           }
         }
       });
-
-      // 🔥 STEP 11: CONVERT TO TTS AND STREAM AUDIO CHUNKS (REAL-TIME STREAMING)
-      await this.streamTTSChunksRealtime(
-        ws, 
-        aiResult.response, 
-        language, 
-        emotionResult.emotion, 
-        intentResult.intent,
-        session.personaId
-      );
 
       console.log(`[VOICE TUTOR] ✅ Complete pipeline finished for session ${ws.sessionId}`);
 
