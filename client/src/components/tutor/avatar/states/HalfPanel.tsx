@@ -48,14 +48,13 @@ export function HalfPanel({
 
   return (
     <>
-      {/* Backdrop */}
+      {/* Backdrop - pointer-events: none so Unity is clickable */}
       <motion.div
         variants={backdropVariants}
         initial="hidden"
         animate="visible"
         exit="exit"
-        onClick={onClose}
-        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998]"
+        className="fixed inset-0 bg-black/40 backdrop-blur-sm z-[9998] pointer-events-none"
         data-testid="avatar-backdrop"
       />
 
@@ -87,9 +86,8 @@ export function HalfPanel({
 
         {/* Unity rendered globally will appear behind this panel */}
         <div 
-          className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden"
+          className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden pointer-events-none"
           data-testid="unity-avatar-container"
-          style={{ pointerEvents: 'auto' }}
         >
           {/* Loading Screen - Only show if Unity NOT ready */}
           {!isReady && !error && (

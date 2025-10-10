@@ -98,7 +98,7 @@ export function FullscreenWithChat({
 
         {/* Unity Avatar Render Area */}
         <div 
-          className="absolute inset-0 w-full h-full"
+          className="absolute inset-0 w-full h-full pointer-events-none"
           data-testid="unity-avatar-container"
         >
           {/* Loading Screen */}
