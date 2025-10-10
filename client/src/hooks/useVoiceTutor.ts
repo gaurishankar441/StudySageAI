@@ -19,6 +19,9 @@ type WSMessageType =
   | 'AVATAR_STATE'       // 🎭 Client → Server: Avatar state change
   | 'AVATAR_STATE_ACK'   // 🎭 Server → Client: Avatar state acknowledgment  
   | 'AI_RESPONSE_TEXT'   // 📝 Server → Client: Text-only AI response (avatar not ready)
+  | 'TEXT_QUERY'         // 📝 PHASE 2: Client → Server: Text chat query
+  | 'AI_RESPONSE_CHUNK'  // 📝 PHASE 2: Server → Client: Streaming AI response chunk
+  | 'AI_RESPONSE_COMPLETE' // 📝 PHASE 2: Server → Client: AI response complete with metadata
   | 'ERROR' 
   | 'PING' 
   | 'PONG';
@@ -49,6 +52,19 @@ interface WSMessage {
   
   // 📝 Flat format field for AI_RESPONSE_TEXT
   messageId?: string;
+  
+  // 📝 PHASE 2: Flat format fields for TEXT_QUERY
+  chatId?: string;
+  // text field already defined above for PHONEME_TTS_CHUNK
+  
+  // 📝 PHASE 2: Flat format fields for AI_RESPONSE_CHUNK and AI_RESPONSE_COMPLETE
+  content?: string;  // Chunk or complete AI response text
+  isFirst?: boolean; // First chunk flag for AI_RESPONSE_CHUNK
+  emotion?: string;
+  personaId?: string;
+  currentPhase?: string;
+  phase?: string;    // Alternative field name for currentPhase
+  progress?: number;
   
   timestamp?: string;
   sessionId?: string;
