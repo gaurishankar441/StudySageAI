@@ -20,6 +20,7 @@ import { audioCompression } from './audioCompression';
 import { ttsMetrics } from './ttsMetrics';
 import { voiceService } from './voiceService';
 import { mapPollyVisemesToUnityPhonemes } from '../utils/visemeMapping';
+import { avatarStateService } from './avatarStateService';
 
 // Initialize AI Tutor services
 const languageDetector = new LanguageDetectionEngine();
@@ -983,13 +984,30 @@ export class VoiceStreamService {
             
             // Process final partial sentence if exists
             if (currentSentence.trim().length > 0) {
-              await this.generateAndStreamSentenceTTS(
-                ws,
-                currentSentence.trim(),
-                sentenceIndex,
-                true, // isLast
-                voiceOptions
-              );
+              // 🎭 Check avatar state before TTS generation
+              const canGenerateTTS = avatarStateService.canGenerateTTS(ws.sessionId || '');
+              
+              if (canGenerateTTS) {
+                // 🚀 Avatar ready - Generate phoneme TTS for Unity lip-sync
+                await this.generateAndStreamSentenceTTS(
+                  ws,
+                  currentSentence.trim(),
+                  sentenceIndex,
+                  true, // isLast
+                  voiceOptions
+                );
+              } else {
+                // 📝 Avatar not ready - Send text-only response
+                const textMsg: VoiceMessage = {
+                  type: 'AI_RESPONSE_TEXT',
+                  timestamp: new Date().toISOString(),
+                  sessionId: ws.sessionId,
+                  text: currentSentence.trim(),
+                  messageId: `${ws.sessionId}-${sentenceIndex}-final`
+                };
+                ws.send(JSON.stringify(textMsg));
+                console.log(`[VOICE TUTOR] 📝 Avatar not ready - Sent final text-only: "${currentSentence.trim().substring(0, 40)}..."`);
+              }
             }
             
             // Send TTS_END
@@ -1019,14 +1037,31 @@ export class VoiceStreamService {
             for (let i = 0; i < parts.length - 1; i++) {
               const sentence = parts[i].trim();
               if (sentence) {
-                // 🚀 IMMEDIATELY generate TTS for this sentence!
-                await this.generateAndStreamSentenceTTS(
-                  ws,
-                  sentence,
-                  sentenceIndex,
-                  false, // not last
-                  voiceOptions
-                );
+                // 🎭 Check avatar state before TTS generation
+                const canGenerateTTS = avatarStateService.canGenerateTTS(ws.sessionId || '');
+                
+                if (canGenerateTTS) {
+                  // 🚀 Avatar ready - Generate phoneme TTS for Unity lip-sync
+                  await this.generateAndStreamSentenceTTS(
+                    ws,
+                    sentence,
+                    sentenceIndex,
+                    false, // not last
+                    voiceOptions
+                  );
+                } else {
+                  // 📝 Avatar not ready - Send text-only response
+                  const textMsg: VoiceMessage = {
+                    type: 'AI_RESPONSE_TEXT',
+                    timestamp: new Date().toISOString(),
+                    sessionId: ws.sessionId,
+                    text: sentence,
+                    messageId: `${ws.sessionId}-${sentenceIndex}`
+                  };
+                  ws.send(JSON.stringify(textMsg));
+                  console.log(`[VOICE TUTOR] 📝 Avatar not ready - Sent text-only: "${sentence.substring(0, 40)}..."`);
+                }
+                
                 sentenceIndex++;
               }
             }
