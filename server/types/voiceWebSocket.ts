@@ -20,6 +20,9 @@ export type VoiceMessageType =
   | 'AVATAR_STATE'         // Client → Server: Avatar state change (CLOSED, LOADING, READY, PLAYING, ERROR)
   | 'AVATAR_STATE_ACK'     // Server → Client: Avatar state acknowledgment
   | 'AI_RESPONSE_TEXT'     // Server → Client: Text-only AI response (when avatar not ready)
+  | 'TEXT_QUERY'           // Client → Server: Text-based question (PHASE 2)
+  | 'AI_RESPONSE_CHUNK'    // Server → Client: Streaming AI response chunk (PHASE 2)
+  | 'AI_RESPONSE_COMPLETE' // Server → Client: AI response finished (PHASE 2)
   | 'ERROR'                // Server → Client: Error occurred
   | 'PING'                 // Bidirectional: Keep-alive
   | 'PONG';                // Bidirectional: Keep-alive response
@@ -140,6 +143,33 @@ export interface AIResponseTextMessage extends VoiceWebSocketMessage {
   messageId?: string;
 }
 
+// Text query from client (Client → Server) - PHASE 2
+export interface TextQueryMessage extends VoiceWebSocketMessage {
+  type: 'TEXT_QUERY';
+  text: string;
+  chatId: string;
+  language?: 'hi' | 'en';
+}
+
+// AI response chunk (Server → Client) - PHASE 2
+export interface AIResponseChunkMessage extends VoiceWebSocketMessage {
+  type: 'AI_RESPONSE_CHUNK';
+  content: string;
+  messageId: string;
+  isFirst?: boolean; // First chunk in response
+}
+
+// AI response complete (Server → Client) - PHASE 2
+export interface AIResponseCompleteMessage extends VoiceWebSocketMessage {
+  type: 'AI_RESPONSE_COMPLETE';
+  messageId: string;
+  emotion?: string;
+  personaId?: string;
+  phase?: TutorPhase;
+  phaseStep?: number;
+  language?: 'hi' | 'en';
+}
+
 // Error message
 export interface ErrorMessage extends VoiceWebSocketMessage {
   type: 'ERROR';
@@ -172,6 +202,9 @@ export type VoiceMessage =
   | AvatarStateMessage
   | AvatarStateAckMessage
   | AIResponseTextMessage
+  | TextQueryMessage
+  | AIResponseChunkMessage
+  | AIResponseCompleteMessage
   | ErrorMessage
   | PingMessage
   | PongMessage;
