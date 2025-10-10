@@ -3,7 +3,16 @@ import { drizzle } from 'drizzle-orm/neon-serverless';
 import ws from "ws";
 import * as schema from "@shared/schema";
 
-neonConfig.webSocketConstructor = ws;
+// Configure WebSocket to accept self-signed certificates (for Replit development)
+class CustomWebSocket extends ws {
+  constructor(address: string, protocols?: string | string[]) {
+    super(address, protocols, {
+      rejectUnauthorized: false // Accept self-signed certificates
+    });
+  }
+}
+
+neonConfig.webSocketConstructor = CustomWebSocket as any;
 
 if (!process.env.DATABASE_URL) {
   throw new Error(
@@ -17,6 +26,7 @@ export const pool = new Pool({
   max: 20, // Maximum number of connections in the pool
   idleTimeoutMillis: 30000, // Close idle connections after 30 seconds
   connectionTimeoutMillis: 5000, // Wait max 5 seconds for a connection
+  ssl: false, // Disable SSL verification for development with self-signed certs
 });
 
 export const db = drizzle({ client: pool, schema });
