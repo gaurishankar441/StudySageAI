@@ -103,12 +103,53 @@ Return JSON: {"intent": "intent_name", "confidence": 0.85, "entities": {}}`;
       );
       
       const responseText = result.response.trim();
-      const jsonMatch = responseText.match(/\{[^}]+\}/);
-      const jsonStr = jsonMatch ? jsonMatch[0] : responseText;
-      const parsed = JSON.parse(jsonStr);
+      let parsed: any;
       
-      if (!parsed.intent || typeof parsed.confidence !== 'number') {
-        console.warn('[INTENT] Invalid LLM response, defaulting to ask_doubt');
+      // Strategy 1: Try parsing entire response directly
+      try {
+        parsed = JSON.parse(responseText);
+      } catch {
+        // Strategy 2: Look for JSON in code blocks (```json ... ```)
+        const codeBlockMatch = responseText.match(/```(?:json)?\s*(\{[\s\S]*?\})\s*```/);
+        if (codeBlockMatch) {
+          try {
+            parsed = JSON.parse(codeBlockMatch[1]);
+          } catch {
+            // Continue to next strategy
+          }
+        }
+      }
+      
+      // Strategy 3: Extract JSON object by counting braces (handles nested objects)
+      if (!parsed) {
+        const firstBrace = responseText.indexOf('{');
+        if (firstBrace !== -1) {
+          let braceCount = 0;
+          let jsonStr = '';
+          
+          for (let i = firstBrace; i < responseText.length; i++) {
+            const char = responseText[i];
+            jsonStr += char;
+            
+            if (char === '{') braceCount++;
+            if (char === '}') braceCount--;
+            
+            if (braceCount === 0) {
+              try {
+                parsed = JSON.parse(jsonStr);
+                break;
+              } catch {
+                // Invalid JSON, continue
+              }
+            }
+          }
+        }
+      }
+      
+      // Validate parsed result
+      if (!parsed || !parsed.intent || typeof parsed.confidence !== 'number') {
+        console.warn('[INTENT] Invalid LLM response format, defaulting to ask_doubt');
+        console.warn('[INTENT] Response was:', responseText.substring(0, 200));
         return { intent: 'ask_doubt', confidence: 0.5, entities: {} };
       }
       

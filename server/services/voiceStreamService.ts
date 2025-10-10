@@ -283,18 +283,14 @@ export class VoiceStreamService {
             sessionId: ws.sessionId,
           });
           
-          // 🔥 FIX #1: Wrap in proper data field format
-          const ttsMsg = {
+          // ✅ CORRECT: Send TTS chunk with flat payload (matches TTSChunkMessage)
+          const ttsMsg: TTSChunkMessage = {
             type: 'TTS_CHUNK',
             timestamp: new Date().toISOString(),
             sessionId: ws.sessionId,
-            data: {
-              sequence: sequenceNumber,
-              data: finalAudioData,
-              text: sentence,
-              isLast: index === sentences.length - 1,
-              compressed // Flag to indicate compression
-            }
+            data: finalAudioData,  // ✅ Direct base64 string (NOT nested!)
+            chunkIndex: sequenceNumber,
+            totalChunks: index === sentences.length - 1 ? sentences.length : undefined
           };
           
           ws.send(JSON.stringify(ttsMsg));
@@ -302,31 +298,29 @@ export class VoiceStreamService {
         } catch (error) {
           console.error(`[STREAMING TTS] ❌ Failed chunk ${index + 1}: ${error}`);
           
-          // 🔥 FIX #1: Wrap skip message in proper data field format
-          ws.send(JSON.stringify({
-            type: 'TTS_SKIP',
+          // Send error message for failed chunk
+          const errorMsg: VoiceMessage = {
+            type: 'ERROR',
             timestamp: new Date().toISOString(),
-            sessionId: ws.sessionId,
-            data: {
-              sequence: sequenceNumber,
-              reason: 'Generation failed'
-            }
-          }));
+            code: 'TTS_GENERATION_FAILED',
+            message: `Failed to generate TTS for chunk ${sequenceNumber}`,
+            recoverable: true
+          };
+          ws.send(JSON.stringify(errorMsg));
         }
       });
       
       // Don't await all - let them stream as they complete!
       // But track completion
       Promise.all(ttsPromises).then(() => {
-        // Send TTS end notification
-        ws.send(JSON.stringify({
+        // Send TTS end notification (matches TTSEndMessage)
+        const endMsg: TTSEndMessage = {
           type: 'TTS_END',
           timestamp: new Date().toISOString(),
           sessionId: ws.sessionId,
-          data: {
-            totalChunks: sentences.length
-          }
-        }));
+          totalChunks: sentences.length
+        };
+        ws.send(JSON.stringify(endMsg));
         
         ws.isTTSActive = false;
         console.log(`[STREAMING TTS] ✅ All ${sentences.length} chunks sent`);
@@ -698,20 +692,16 @@ export class VoiceStreamService {
       const cacheStatus = cached ? '💾 CACHED' : '🔨 GENERATED';
       console.log(`[TRUE STREAM] ✅ Sentence ${sequenceNumber} ${cacheStatus} (${genTime}ms): "${sentence.substring(0, 40)}..."`);
       
-      // 🚀 PHASE 2: Send TTS chunk immediately
+      // 🚀 PHASE 2: Send TTS chunk immediately (matching TTSChunkMessage format)
       const finalAudioData = audioBuffer.toString('base64');
       
-      const ttsMsg = {
+      const ttsMsg: TTSChunkMessage = {
         type: 'TTS_CHUNK',
         timestamp: new Date().toISOString(),
         sessionId: ws.sessionId,
-        data: {
-          sequence: sequenceNumber,
-          data: finalAudioData,
-          text: sentence,
-          isLast,
-          compressed: false
-        }
+        data: finalAudioData,  // ✅ Direct base64 string (NOT nested!)
+        chunkIndex: sequenceNumber,
+        totalChunks: isLast ? sequenceNumber + 1 : undefined
       };
       
       ws.send(JSON.stringify(ttsMsg));
@@ -731,16 +721,15 @@ export class VoiceStreamService {
     } catch (error) {
       console.error(`[TRUE STREAM] ❌ Failed sentence ${sequenceNumber}: ${error}`);
       
-      // Send skip message
-      ws.send(JSON.stringify({
-        type: 'TTS_SKIP',
+      // Send error message (skip this chunk)
+      const errorMsg: VoiceMessage = {
+        type: 'ERROR',
         timestamp: new Date().toISOString(),
-        sessionId: ws.sessionId,
-        data: {
-          sequence: sequenceNumber,
-          reason: 'Generation failed'
-        }
-      }));
+        code: 'TTS_GENERATION_FAILED',
+        message: `Failed to generate TTS for chunk ${sequenceNumber}`,
+        recoverable: true
+      };
+      ws.send(JSON.stringify(errorMsg));
     }
   }
 
@@ -967,12 +956,13 @@ export class VoiceStreamService {
             }
             
             // Send TTS_END
-            ws.send(JSON.stringify({
+            const endMsg: TTSEndMessage = {
               type: 'TTS_END',
               timestamp: new Date().toISOString(),
               sessionId: ws.sessionId,
-              data: { totalChunks: sentenceIndex + 1 }
-            }));
+              totalChunks: sentenceIndex + 1
+            };
+            ws.send(JSON.stringify(endMsg));
             ws.isTTSActive = false;
             
             return;
