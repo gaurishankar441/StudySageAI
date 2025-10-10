@@ -4,7 +4,8 @@ import { embeddingService } from '../embeddingService';
 // Check if Redis is explicitly disabled
 const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 
-// Redis client setup
+// Redis client setup with TLS for Upstash
+const isUpstash = process.env.REDIS_URL?.includes('upstash.io');
 const redis = REDIS_DISABLED 
   ? null 
   : new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -12,6 +13,8 @@ const redis = REDIS_DISABLED
       enableReadyCheck: true,
       lazyConnect: true,
       retryStrategy: () => null, // Don't retry
+      tls: isUpstash ? {} : undefined,
+      family: isUpstash ? 6 : 4,
     });
 
 // Suppress Redis error logs

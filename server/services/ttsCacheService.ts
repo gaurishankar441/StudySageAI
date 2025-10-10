@@ -7,23 +7,40 @@ const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 let redisConnected = false;
 let redisErrorLogged = false;
 
-// Redis client setup
-const redis = REDIS_DISABLED 
+// Redis client setup with TLS for Upstash
+const redisUrlRaw = process.env.REDIS_URL || 'redis://localhost:6379';
+const isUpstash = redisUrlRaw.includes('upstash.io');
+
+console.log('[TTS CACHE] 🔍 Raw URL starts with:', redisUrlRaw.substring(0, 20));
+console.log('[TTS CACHE] 🔍 Is Upstash:', isUpstash);
+
+// For Upstash, force TLS by using rediss:// scheme
+const redisUrl = isUpstash 
+  ? redisUrlRaw.replace(/^redis:\/\//, 'rediss://') 
+  : redisUrlRaw;
+
+console.log('[TTS CACHE] 🔍 Final URL starts with:', redisUrl.substring(0, 20));
+console.log('[TTS CACHE] 🔍 Using TLS:', redisUrl.startsWith('rediss://'));
+
+// ioredis will handle TLS automatically with rediss:// scheme
+const redis: Redis | null = REDIS_DISABLED 
   ? null 
-  : new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+  : new Redis(redisUrl, {
       maxRetriesPerRequest: 0,
       enableReadyCheck: true,
       lazyConnect: true,
-      retryStrategy: () => null, // Don't retry
+      retryStrategy: () => null,
+      family: isUpstash ? 6 : 4, // IPv6 for Upstash
     });
 
 // Add error handler before attempting connection
 if (redis) {
   redis.on('error', (err) => {
     redisConnected = false;
-    // Log only once
+    // Log only once with detailed error
     if (!redisErrorLogged) {
-      console.log('[TTS CACHE] ⚠️ Redis unavailable, using in-memory fallback');
+      console.log('[TTS CACHE] ⚠️ Redis error:', err.message);
+      console.log('[TTS CACHE] Using in-memory fallback');
       redisErrorLogged = true;
     }
   });
@@ -31,11 +48,12 @@ if (redis) {
   redis.on('ready', () => {
     redisConnected = true;
     redisErrorLogged = false;
-    console.log('[TTS CACHE] ✅ Redis connected');
+    console.log('[TTS CACHE] ✅ Redis connected successfully!');
   });
 
   redis.connect().catch((err) => {
-    console.log('[TTS CACHE] Redis connection failed, using in-memory fallback');
+    console.log('[TTS CACHE] ❌ Connection failed:', err.message);
+    console.log('[TTS CACHE] Using in-memory fallback');
     redisConnected = false;
   });
 } else {

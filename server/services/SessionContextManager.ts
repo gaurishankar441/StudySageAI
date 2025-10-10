@@ -4,6 +4,7 @@ import type { EmotionalState } from '../config/emotionPatterns';
 
 const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 
+const isUpstash = process.env.REDIS_URL?.includes('upstash.io');
 const redis = REDIS_DISABLED 
   ? null 
   : new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
@@ -11,6 +12,8 @@ const redis = REDIS_DISABLED
       enableReadyCheck: true,
       lazyConnect: true,
       retryStrategy: () => null,
+      tls: isUpstash ? {} : undefined,
+      family: isUpstash ? 6 : 4,
     });
 
 if (redis) {
