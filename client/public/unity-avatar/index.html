@@ -719,73 +719,109 @@
         updateBannerVisibility();
       }
 
-      // Unity build configuration
+      // 🚀 Unity S3 CDN Configuration
       var buildUrl = "Build";
-      var loaderUrl = buildUrl + "/Build.loader.js";
-      var config = {
-        dataUrl: buildUrl + "/Build.data.gz",
-        frameworkUrl: buildUrl + "/Build.framework.js.gz",
-        codeUrl: buildUrl + "/Build.wasm.gz",
-        streamingAssetsUrl: "StreamingAssets",
-        companyName: "VaktaAI",
-        productName: "AI Tutor Avatar",
-        productVersion: "1.0",
-        showBanner: unityShowBanner,
-      };
-
-      // Mobile optimization
-      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
-        var meta = document.createElement('meta');
-        meta.name = 'viewport';
-        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
-        document.getElementsByTagName('head')[0].appendChild(meta);
-        
-        // Lower resolution on mobile for performance
-        config.devicePixelRatio = 1;
-      }
-
-      // Show loading bar
-      loadingBar.style.display = "block";
-
-      // Load Unity
-      var script = document.createElement("script");
-      script.src = loaderUrl;
-      script.onload = () => {
-        createUnityInstance(canvas, config, (progress) => {
-          progressBarFull.style.width = 100 * progress + "%";
-        }).then((instance) => {
-          unityInstance = instance;
-          loadingBar.style.display = "none";
-          
-          console.log('[Unity] Instance created successfully');
-          
-          // 🔧 DIRECT CALL: Skip RAF for now (debugging)
-          console.log('[Unity] ⏰ Calling OnUnityReady directly...');
-          try {
-            OnUnityReady();
-          } catch (err) {
-            console.error('[Unity] ❌ OnUnityReady error:', err);
+      var loaderUrl = buildUrl + "/Build.loader.js"; // Loader always local (small file)
+      
+      // Fetch S3 presigned URLs for fast CDN loading
+      console.log('[Unity] 📡 Fetching S3 presigned URLs...');
+      fetch('/api/unity-assets/urls')
+        .then(res => res.json())
+        .then(data => {
+          if (!data.success || !data.urls) {
+            throw new Error('Failed to fetch Unity S3 URLs');
           }
-        }).catch((message) => {
-          console.error('[Unity] Failed to create instance:', message);
-          unityShowBanner('Failed to load avatar: ' + message, 'error');
           
-          // 🐛 FORWARD ERROR TO REACT: CSP violations and loader errors now visible!
-          if (trustedParentOrigin) {
-            window.parent.postMessage({
-              type: 'UNITY_ERROR',
-              payload: { error: String(message), stage: 'createUnityInstance' }
-            }, trustedParentOrigin);
-          }
+          console.log('[Unity] ✅ S3 URLs fetched successfully');
+          
+          var config = {
+            dataUrl: data.urls['Build.data.gz'],
+            frameworkUrl: data.urls['Build.framework.js.gz'],
+            codeUrl: data.urls['Build.wasm.gz'],
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "VaktaAI",
+            productName: "AI Tutor Avatar",
+            productVersion: "1.0",
+            showBanner: unityShowBanner,
+          };
+          
+          loadUnityWithConfig(config);
+        })
+        .catch(err => {
+          console.warn('[Unity] ⚠️ S3 fetch failed, falling back to local files:', err);
+          
+          // Fallback to local files
+          var config = {
+            dataUrl: buildUrl + "/Build.data.gz",
+            frameworkUrl: buildUrl + "/Build.framework.js.gz",
+            codeUrl: buildUrl + "/Build.wasm.gz",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "VaktaAI",
+            productName: "AI Tutor Avatar",
+            productVersion: "1.0",
+            showBanner: unityShowBanner,
+          };
+          
+          loadUnityWithConfig(config);
         });
-      };
+      
+      // Extracted Unity loading function
+      function loadUnityWithConfig(config) {
 
-      script.onerror = () => {
-        console.error('[Unity] Failed to load Unity loader');
-        unityShowBanner('Failed to load Unity loader script', 'error');
-      };
+        // Mobile optimization
+        if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+          var meta = document.createElement('meta');
+          meta.name = 'viewport';
+          meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+          document.getElementsByTagName('head')[0].appendChild(meta);
+          
+          // Lower resolution on mobile for performance
+          config.devicePixelRatio = 1;
+        }
 
-      document.body.appendChild(script);
+        // Show loading bar
+        loadingBar.style.display = "block";
+
+        // Load Unity
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+          createUnityInstance(canvas, config, (progress) => {
+            progressBarFull.style.width = 100 * progress + "%";
+          }).then((instance) => {
+            unityInstance = instance;
+            loadingBar.style.display = "none";
+            
+            console.log('[Unity] Instance created successfully');
+            
+            // 🔧 DIRECT CALL: Skip RAF for now (debugging)
+            console.log('[Unity] ⏰ Calling OnUnityReady directly...');
+            try {
+              OnUnityReady();
+            } catch (err) {
+              console.error('[Unity] ❌ OnUnityReady error:', err);
+            }
+          }).catch((message) => {
+            console.error('[Unity] Failed to create instance:', message);
+            unityShowBanner('Failed to load avatar: ' + message, 'error');
+            
+            // 🐛 FORWARD ERROR TO REACT: CSP violations and loader errors now visible!
+            if (trustedParentOrigin) {
+              window.parent.postMessage({
+                type: 'UNITY_ERROR',
+                payload: { error: String(message), stage: 'createUnityInstance' }
+              }, trustedParentOrigin);
+            }
+          });
+        };
+
+        script.onerror = () => {
+          console.error('[Unity] Failed to load Unity loader');
+          unityShowBanner('Failed to load Unity loader script', 'error');
+        };
+
+        document.body.appendChild(script);
+      }
     </script>
   </body>
 </html>

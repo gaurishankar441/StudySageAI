@@ -13,6 +13,7 @@ import multer from "multer";
 import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
+import unityAssetsRouter from "./routes/unityAssets";
 import { uploadLimiter, aiLimiter } from "./middleware/security";
 import type { VoiceWebSocketClient, VoiceMessage, AudioChunkMessage, AvatarStateMessage, TextQueryMessage } from "./types/voiceWebSocket";
 import { parse as parseUrl } from 'url';
@@ -373,6 +374,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Test Validation routes (JEE/NEET accuracy testing)
   app.use('/api/test', isAuthenticated, testValidationRouter);
+
+  // Unity assets (S3-backed presigned URLs for fast loading)
+  app.use('/api/unity-assets', unityAssetsRouter);
 
   // Tutor routes
   app.post('/api/tutor/session', isAuthenticated, async (req: any, res) => {
