@@ -96,6 +96,18 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
       });
     }
   });
+  
+  // 🔥 CRITICAL FIX: Connect WebSocket on mount
+  useEffect(() => {
+    console.log('[TutorSession] 🚀 Connecting WebSocket for chat:', chatId);
+    voiceTutor.connect();
+    
+    return () => {
+      console.log('[TutorSession] 🔌 Disconnecting WebSocket');
+      voiceTutor.disconnect();
+    };
+  }, [chatId]);
+  
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
