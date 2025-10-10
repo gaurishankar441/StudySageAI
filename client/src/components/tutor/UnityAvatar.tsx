@@ -209,7 +209,7 @@ const UnityAvatar = forwardRef<UnityAvatarHandle, UnityAvatarProps>(
           title="AI Tutor Avatar"
           allow="autoplay"
           onError={handleIframeError}
-          sandbox="allow-scripts allow-same-origin"
+          sandbox="allow-scripts allow-same-origin allow-downloads allow-pointer-lock"
           data-testid="unity-iframe"
         />
 

@@ -52,14 +52,16 @@ app.use(helmet({
   } : {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite dev needs these
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"], // Vite dev + Unity WebGL needs these
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind + Google Fonts
       imgSrc: ["'self'", "data:", "https:", "blob:"],
-      connectSrc: ["'self'", "https:", "wss:"],
+      connectSrc: ["'self'", "https:", "wss:", "blob:", "data:"], // Unity WebGL WASM loading
       fontSrc: ["'self'", "data:", "https://fonts.gstatic.com"], // Google Fonts
       objectSrc: ["'none'"],
-      mediaSrc: ["'self'", "blob:"],
+      mediaSrc: ["'self'", "blob:", "data:"], // Unity audio/video
       frameSrc: ["'self'", "https://www.youtube.com"], // Allow YouTube embeds
+      workerSrc: ["'self'", "blob:"], // Unity Web Workers
+      frameAncestors: ["'self'"], // Allow iframe embedding
     },
   },
   crossOriginEmbedderPolicy: false, // Disable for external resources

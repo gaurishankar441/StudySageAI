@@ -105,10 +105,11 @@ export function AvatarContainer({
       }
       
       // IMPORTANT: Hide Unity when minimized - bubble handles the view
-      // 🔥 FIX: Use opacity/z-index instead of display:none to keep Unity loaded
+      // 🔥 FIX: Use opacity/transform instead of position to keep WebGL active
       if (viewState === 'minimized') {
-        globalUnityContainer.style.opacity = '0';
-        globalUnityContainer.style.zIndex = '-1';
+        globalUnityContainer.style.opacity = '0.01';
+        globalUnityContainer.style.transform = 'scale(0.01)';
+        globalUnityContainer.style.zIndex = '-9999';
         globalUnityContainer.style.pointerEvents = 'none';
         console.log('[Avatar] 👻 Unity HIDDEN (minimized - bubble shows instead)');
         return;
@@ -116,6 +117,7 @@ export function AvatarContainer({
       
       // Show Unity and position it to match the panel - WITH interactions enabled
       globalUnityContainer.style.opacity = '1';
+      globalUnityContainer.style.transform = 'scale(1)';
       globalUnityContainer.style.position = 'fixed';
       globalUnityContainer.style.pointerEvents = 'auto'; // ENABLE Unity interactions!
       globalUnityContainer.style.overflow = 'hidden'; // Clip to bounds

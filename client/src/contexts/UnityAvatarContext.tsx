@@ -54,11 +54,16 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
         setIsVisible 
       }}
     >
-      {/* 🎭 Global Unity Avatar - Initially visible to allow Unity to load, then positioned by AvatarContainer */}
+      {/* 🎭 Global Unity Avatar - Visible for WebGL init, hidden via transform/opacity */}
       <div 
         id="global-unity-container" 
-        className="fixed inset-0 pointer-events-none opacity-0"
-        style={{ zIndex: -1 }}
+        className="fixed inset-0 pointer-events-none"
+        style={{ 
+          opacity: 0.01,
+          transform: 'scale(0.01)',
+          zIndex: -9999,
+          visibility: 'visible'
+        }}
         data-testid="global-avatar-unity-container"
       >
         <div 
