@@ -21,9 +21,8 @@ const redis = REDIS_DISABLED
 if (redis) {
   redis.on('error', (err) => {
     redisConnected = false;
-    // Log only once
+    // Silently handle Redis errors - fallback to in-memory
     if (!redisErrorLogged) {
-      console.log('[TTS CACHE] ⚠️ Redis unavailable, using in-memory fallback');
       redisErrorLogged = true;
     }
   });
@@ -35,11 +34,9 @@ if (redis) {
   });
 
   redis.connect().catch((err) => {
-    console.log('[TTS CACHE] Redis connection failed, using in-memory fallback');
+    // Silently fallback to in-memory cache
     redisConnected = false;
   });
-} else {
-  console.log('[TTS CACHE] Using in-memory fallback (Redis disabled)');
 }
 
 // In-memory fallback cache
