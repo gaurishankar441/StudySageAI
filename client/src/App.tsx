@@ -19,6 +19,8 @@ import StudyPlan from "@/pages/StudyPlan";
 import Notes from "@/pages/Notes";
 import NoteDetail from "@/pages/NoteDetail";
 import Settings from "@/pages/Settings";
+import AdminDashboard from "@/pages/AdminDashboard";
+import AdminTutorConfig from "@/pages/AdminTutorConfig";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -58,6 +60,8 @@ function Router() {
           <Route path="/notes/:id" component={NoteDetail} />
           <Route path="/notes" component={Notes} />
           <Route path="/settings" component={Settings} />
+          <Route path="/admin" component={AdminDashboard} />
+          <Route path="/admin/tutor" component={AdminTutorConfig} />
           <Route component={NotFound} />
         </Switch>
       </AppLayout>

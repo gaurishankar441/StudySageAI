@@ -18,7 +18,8 @@ import {
   Home,
   LogOut,
   Menu,
-  X
+  X,
+  Shield
 } from "lucide-react";
 import logoPath from "@assets/Vakta AI.122_1759509648531.png";
 
@@ -54,6 +55,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
     logoutMutation.mutate();
   };
 
+  const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
+  
   const navigation = [
     { name: 'Dashboard', href: '/', icon: Home, current: location === '/' },
     { name: 'AI Tutor', href: '/tutor', icon: GraduationCap, current: location === '/tutor' },
@@ -61,6 +64,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
     { name: 'Quiz', href: '/quiz', icon: HelpCircle, current: location === '/quiz' },
     { name: 'Study Plan', href: '/study-plan', icon: Calendar, current: location === '/study-plan' },
     { name: 'Notes', href: '/notes', icon: BookOpen, current: location === '/notes' },
+    ...(isAdmin ? [{ name: 'Admin', href: '/admin', icon: Shield, current: location.startsWith('/admin') }] : []),
   ];
 
   const initials = user ? `${user.firstName?.[0] || ''}${user.lastName?.[0] || ''}` : 'U';

@@ -72,6 +72,26 @@ router.get('/configs/:category/:key', async (req, res) => {
   try {
     const { category, key } = req.params;
     
+    // Special handling for tutor personas - return from tutorPersonas.ts if not in DB
+    if (category === 'tutor' && key === 'personas') {
+      const config = await db
+        .select()
+        .from(adminConfigs)
+        .where(and(
+          eq(adminConfigs.category, category),
+          eq(adminConfigs.key, key)
+        ))
+        .limit(1);
+      
+      if (config.length > 0) {
+        return res.json(config[0].value);
+      }
+      
+      // Fallback to hardcoded personas from config
+      const { TUTOR_PERSONAS } = await import('../config/tutorPersonas');
+      return res.json(Object.values(TUTOR_PERSONAS));
+    }
+    
     const config = await db
       .select()
       .from(adminConfigs)
