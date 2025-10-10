@@ -588,15 +588,24 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
   // 🔧 FIX: Stop audio when avatar closes
   const stopAudioPlayback = useCallback(() => {
+    console.log('[TTS] 🛑 Stopping all audio playback');
+    
+    // Stop browser audio
     if (audioElement) {
-      console.log('[TTS] 🛑 Stopping audio playback');
+      console.log('[TTS] 🛑 Stopping browser audio element');
       audioElement.pause();
       audioElement.src = '';
       audioElement.remove();
       setAudioElement(null);
       setPlayingAudio(null);
     }
-  }, [audioElement]);
+    
+    // Stop Unity audio
+    if (unityAvatarRef.current?.stopAudio) {
+      console.log('[TTS] 🛑 Stopping Unity avatar audio');
+      unityAvatarRef.current.stopAudio();
+    }
+  }, [audioElement, unityAvatarRef]);
 
   // 🔧 FIX: Stop audio when avatar minimizes
   useEffect(() => {

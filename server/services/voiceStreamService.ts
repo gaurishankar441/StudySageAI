@@ -1232,6 +1232,15 @@ export class VoiceStreamService {
         }
       });
 
+      // 🔧 FIX: Fetch conversation history AFTER saving user message
+      const messages = await storage.getChatMessages(chatId);
+      const conversationHistory = messages
+        .slice(0, -1) // Exclude the last message (current user message)
+        .map(m => `${m.role === 'user' ? 'Student' : 'Tutor'}: ${m.content}`)
+        .join('\n\n');
+
+      console.log(`[TEXT QUERY] 🔍 Context: ${messages.length} messages in history`);
+
       // Generate messageId for this response
       const messageId = `${ws.sessionId}-${Date.now()}`;
 
@@ -1243,7 +1252,7 @@ export class VoiceStreamService {
       await optimizedAI.generateStreamingResponse(
         queryText,
         systemPrompt,
-        '',
+        conversationHistory,
         async (chunk, metadata) => {
           if (metadata.type === 'chunk' && chunk) {
             fullResponse += chunk;
