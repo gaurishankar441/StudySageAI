@@ -10,11 +10,17 @@ const redis = REDIS_DISABLED
       maxRetriesPerRequest: 0,
       enableReadyCheck: true,
       lazyConnect: true,
+      retryStrategy: () => null, // Don't retry
     });
 
-if (redis && !REDIS_DISABLED) {
+// Add error handler before attempting connection
+if (redis) {
+  redis.on('error', (err) => {
+    // Silently ignore Redis errors
+  });
+
   redis.connect().catch((err) => {
-    console.error('[TTS CACHE] Redis connection failed:', err);
+    console.log('[TTS CACHE] Redis connection failed, using in-memory fallback');
   });
 } else {
   console.log('[TTS CACHE] Using in-memory fallback (Redis disabled)');
