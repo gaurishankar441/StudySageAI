@@ -1,0 +1,85 @@
+client:536 WebSocket connection to 'wss://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/?token=pr_RTQc6iM8N' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=pr_RTQc6iM8N' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-RPCDYKBN.js?v=01027981:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+useUnityBridge.ts:80 [Unity Bridge] Starting handshake...
+index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+useUnityBridge.ts:80 [Unity Bridge] Starting handshake...
+injected.js:27 [Unity] Handshake complete with origin: https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev
+injected.js:27 [Unity] Console forwarding enabled ✅
+useUnityBridge.ts:151 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:151
+useUnityBridge.ts:151 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:151
+useUnityBridge.ts:151 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:151
+useUnityBridge.ts:151 [Unity Bridge] Rejected message before handshake: UNITY_LOG
+handleMessage @ useUnityBridge.ts:151
+useUnityBridge.ts:140 [Unity Bridge] Trusted origin established: https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev
+useUnityBridge.ts:141 [Unity Bridge] Handshake complete ✅
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+injected.js:27 navigator.mediaDevices support available
+useUnityBridge.ts:184 [Unity] navigator.mediaDevices support available
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:121 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:121
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:121 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:121
+SmartTTSQueue.ts:231 [TTS Queue] 🧹 Clearing queue: Object
+useVoiceTutor.ts:679 [Smart TTS Queue] 🧹 Queue cleared - Avatar closed
+useVoiceTutor.ts:683 [Smart TTS Queue] 📊 Final metrics: Object
+TutorSession.tsx:102 [TutorSession] 🚀 Connecting WebSocket for chat: df023be0-95ff-45a9-bdb7-b5ff45de1557
+AvatarContainer.tsx:53 [Avatar Container] 🎭 Component mounted! Initial viewState: minimized
+AvatarContainer.tsx:54 [Avatar State] 🎭 Initial state: CLOSED | Can accept TTS: false
+useAvatarState.ts:60 [Avatar State] ❌ Invalid transition: Object
+(anonymous) @ useAvatarState.ts:60
+AvatarContainer.tsx:62 [Avatar State] 🎭 → CLOSED (minimized)
+AvatarContainer.tsx:94 [Avatar Container] 🔍 viewState changed to: minimized
+AvatarContainer.tsx:95 [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+TutorSession.tsx:587 [TTS] ⏳ Waiting for avatar to be ready before auto-playing TTS...
+AvatarContainer.tsx:114 [Avatar] 👻 Unity HIDDEN (minimized - bubble shows instead)
+useVoiceTutor.ts:486 [VOICE] WebSocket connected
+AvatarContainer.tsx:250 [Avatar Container] 🔘 Bubble clicked! Expanding to half...
+useAvatarState.ts:75 [Avatar State] ✅ Transition: Object
+useAvatarState.ts:123 [Avatar State] ⚠️ WebSocket not available for state sync
+notifyServerStateChange @ useAvatarState.ts:123
+AvatarContainer.tsx:66 [Avatar State] 🎭 → LOADING (opening avatar)
+AvatarContainer.tsx:94 [Avatar Container] 🔍 viewState changed to: half
+AvatarContainer.tsx:95 [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+useAvatarState.ts:60 [Avatar State] ❌ Invalid transition: Object
+(anonymous) @ useAvatarState.ts:60
+AvatarContainer.tsx:66 [Avatar State] 🎭 → LOADING (opening avatar)
+AvatarContainer.tsx:178 [Avatar] ❌ Half panel [data-half-panel] not found! Using FIXED fallback
+positionUnity @ AvatarContainer.tsx:178
+AvatarContainer.tsx:197 [Avatar] ✅ Unity FALLBACK - Height: calc(100vh - 48px) (accounting for 48px control bar)
+HalfPanel.tsx:39 [Half Panel] Unity state: Object
+useAvatarState.ts:75 [Avatar State] ✅ Transition: Object
+useAvatarState.ts:123 [Avatar State] ⚠️ WebSocket not available for state sync
+notifyServerStateChange @ useAvatarState.ts:123
+AvatarContainer.tsx:72 [Avatar State] 🎭 → READY (Unity loaded) | Can accept TTS: true
+useAvatarState.ts:60 [Avatar State] ❌ Invalid transition: Object
+(anonymous) @ useAvatarState.ts:60
+AvatarContainer.tsx:66 [Avatar State] 🎭 → LOADING (opening avatar)
+useAvatarState.ts:60 [Avatar State] ❌ Invalid transition: Object
+(anonymous) @ useAvatarState.ts:60
+AvatarContainer.tsx:72 [Avatar State] 🎭 → READY (Unity loaded) | Can accept TTS: true
