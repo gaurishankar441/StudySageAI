@@ -6,6 +6,30 @@ VaktaAI is an AI-powered educational platform designed as a comprehensive study 
 ## User Preferences
 Preferred communication style: Simple, everyday language (Hindi/English/Hinglish mix for Indian students).
 
+## Recent Changes
+
+### Unity 3D Avatar State Transition Fix (October 10, 2025)
+**Problem**: Unity WebGL avatar broke on state transitions (minimized → half → fullscreen → fullscreen-chat). Moving iframe between DOM containers via `appendChild()` destroyed Unity's internal state, causing black screens and broken interactions.
+
+**Solution**: Global fixed-position Unity container strategy with CSS-only positioning:
+1. **Single Unity Instance**: `#global-unity-container` stays in one fixed DOM location, never moved
+2. **CSS Positioning**: Each state resizes Unity via CSS (width/height/position) instead of DOM manipulation
+3. **Transparent Panels**: Panel containers use `pointer-events: none` with only controls/chat having `pointer-events: auto`
+4. **Z-Index Hierarchy**: Unity (9990) below panels (10000+) ensures both visibility and interaction
+5. **Minimized State**: Unity hidden (`display: none`) so bubble is clickable
+
+**Files Modified**:
+- `client/src/components/tutor/avatar/AvatarContainer.tsx`: CSS positioning logic per state
+- `client/src/components/tutor/avatar/states/HalfPanel.tsx`: Transparent panel with pointer-events fix
+- `client/src/components/tutor/avatar/states/FullscreenPanel.tsx`: Transparent panel overlay
+- `client/src/components/tutor/avatar/states/FullscreenWithChat.tsx`: Split-screen transparent overlay
+
+**Critical Learnings**:
+- Never use `appendChild()` to move Unity iframe - breaks WebGL state
+- Use fixed positioning + CSS transforms for all state changes
+- Pointer-events layering: Unity (auto) → Panels (none) → Controls (auto)
+- Browser cache requires hard refresh (Ctrl+Shift+R) to see updates
+
 ## System Architecture
 
 ### Frontend Architecture
