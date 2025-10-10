@@ -62,87 +62,92 @@ export function AvatarContainer({
     minimizeToBubble();
   };
 
-  // Move global Unity instance into active state container
+  // CRITICAL FIX: Don't move iframe, just show/hide with CSS - properly integrated with panels
   useEffect(() => {
     console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
-    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-FULLSCREEN-FIX-V2');
+    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-PANEL-INTEGRATED-V4');
     
-    // Wait for DOM to be ready
-    const timer = setTimeout(() => {
-      // Search for Unity element - it might be in the global container OR in any panel container
-      let globalUnity = document.querySelector('#global-unity-instance') as HTMLElement;
-      
-      // If not found in global location, search in ALL possible containers
-      if (!globalUnity) {
-        const possibleContainers = [
-          '#half-panel-unity-target',
-          '#fullscreen-unity-target', 
-          '#fullscreen-chat-unity-target',
-          '#global-unity-container'
-        ];
-        
-        for (const containerId of possibleContainers) {
-          const container = document.querySelector(containerId);
-          if (container) {
-            globalUnity = container.querySelector('#global-unity-instance') as HTMLElement;
-            if (globalUnity) {
-              console.log(`[Avatar Container] Found Unity in ${containerId} ✅`);
-              break;
-            }
-          }
-        }
-      }
-      
-      console.log('[Avatar Container] Global Unity element:', globalUnity ? 'FOUND ✅' : 'NOT FOUND ❌');
-      
-      if (!globalUnity) {
-        console.error('[Avatar] ❌ Global Unity instance not found anywhere!');
-        return;
-      }
-
-      // Find target container based on viewState
-      let targetContainer: HTMLElement | null = null;
-      let targetId = '';
-      
-      if (viewState === 'half') {
-        targetId = 'half-panel-unity-target';
-        targetContainer = document.getElementById(targetId);
-      } else if (viewState === 'fullscreen') {
-        targetId = 'fullscreen-unity-target';
-        targetContainer = document.getElementById(targetId);
-      } else if (viewState === 'fullscreen-chat') {
-        targetId = 'fullscreen-chat-unity-target';
-        targetContainer = document.getElementById(targetId);
-      }
-
-      console.log(`[Avatar Container] Target container (#${targetId}):`, targetContainer ? 'FOUND ✅' : 'NOT FOUND ❌');
-
-      if (targetContainer && !targetContainer.contains(globalUnity)) {
-        // Remove hidden class and make Unity visible
-        globalUnity.classList.remove('hidden');
-        globalUnity.classList.add('block', 'w-full', 'h-full');
-        
-        // Move Unity into the target container
-        targetContainer.appendChild(globalUnity);
-        console.log(`[Avatar] ✅ Unity moved to ${viewState} container (#${targetId})`);
-      } else if (targetContainer && targetContainer.contains(globalUnity)) {
-        console.log(`[Avatar] ⚡ Unity already in ${viewState} container`);
-      } else if (viewState === 'minimized') {
-        // Hide Unity and move back to global container
-        globalUnity.classList.add('hidden');
-        globalUnity.classList.remove('block', 'w-full', 'h-full');
-        
-        const globalContainer = document.getElementById('global-unity-container');
-        if (globalContainer && !globalContainer.contains(globalUnity)) {
-          globalContainer.appendChild(globalUnity);
-          console.log('[Avatar] 👻 Unity moved to hidden container (minimized)');
-        }
+    // Find global Unity container (iframe stays here always!)
+    const globalUnityContainer = document.getElementById('global-unity-container');
+    
+    if (!globalUnityContainer) {
+      console.error('[Avatar] ❌ Global Unity container not found!');
+      return;
+    }
+    
+    // IMPORTANT: Hide Unity when minimized - bubble handles the view
+    if (viewState === 'minimized') {
+      globalUnityContainer.style.display = 'none';
+      console.log('[Avatar] 👻 Unity HIDDEN (minimized - bubble shows instead)');
+      return;
+    }
+    
+    // Show Unity and position it to match the panel - WITH interactions enabled
+    globalUnityContainer.style.display = 'block';
+    globalUnityContainer.style.position = 'fixed';
+    globalUnityContainer.style.pointerEvents = 'auto'; // ENABLE Unity interactions!
+    globalUnityContainer.style.overflow = 'hidden'; // Clip to bounds
+    
+    if (viewState === 'half') {
+      // Half panel: Match EXACT panel dimensions
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // Mobile: Bottom sheet (60vh from bottom)
+        globalUnityContainer.style.width = '100%';
+        globalUnityContainer.style.height = '60vh';
+        globalUnityContainer.style.bottom = '0';
+        globalUnityContainer.style.left = '0';
+        globalUnityContainer.style.top = 'auto';
+        globalUnityContainer.style.right = 'auto';
+        globalUnityContainer.style.borderRadius = '1rem 1rem 0 0'; // rounded-t-2xl
       } else {
-        console.warn(`[Avatar] ⚠️ No valid target container for viewState: ${viewState}`);
+        // Desktop: Right panel (full height, 480px wide)
+        globalUnityContainer.style.width = '480px';
+        globalUnityContainer.style.height = '100vh'; // Full height on desktop
+        globalUnityContainer.style.right = '0';
+        globalUnityContainer.style.top = '0';
+        globalUnityContainer.style.bottom = 'auto';
+        globalUnityContainer.style.left = 'auto';
+        globalUnityContainer.style.borderRadius = '1rem 0 0 1rem'; // rounded-l-2xl
       }
-    }, 500); // Longer delay for AnimatePresence animation (300ms) + buffer
-
-    return () => clearTimeout(timer);
+      globalUnityContainer.style.zIndex = '9990'; // BELOW controls (controls are 10000+)
+      console.log('[Avatar] ✅ Unity positioned for HALF panel (pointer-events enabled)');
+      
+    } else if (viewState === 'fullscreen') {
+      // Fullscreen: Cover entire viewport
+      globalUnityContainer.style.width = '100vw';
+      globalUnityContainer.style.height = '100vh';
+      globalUnityContainer.style.top = '0';
+      globalUnityContainer.style.left = '0';
+      globalUnityContainer.style.bottom = 'auto';
+      globalUnityContainer.style.right = 'auto';
+      globalUnityContainer.style.borderRadius = '0';
+      globalUnityContainer.style.zIndex = '9990'; // BELOW controls
+      console.log('[Avatar] ✅ Unity positioned for FULLSCREEN');
+      
+    } else if (viewState === 'fullscreen-chat') {
+      // Fullscreen with chat: Avatar takes left portion, chat panel right
+      const isMobile = window.innerWidth < 768;
+      if (isMobile) {
+        // Mobile: Avatar top 40%, chat bottom 60%
+        globalUnityContainer.style.width = '100%';
+        globalUnityContainer.style.height = '40vh';
+        globalUnityContainer.style.top = '0';
+        globalUnityContainer.style.left = '0';
+      } else {
+        // Desktop: Avatar 60% left (3/5), chat 40% right (2/5)
+        globalUnityContainer.style.width = '60vw';
+        globalUnityContainer.style.height = '100vh';
+        globalUnityContainer.style.top = '0';
+        globalUnityContainer.style.left = '0';
+      }
+      globalUnityContainer.style.bottom = 'auto';
+      globalUnityContainer.style.right = 'auto';
+      globalUnityContainer.style.borderRadius = '0';
+      globalUnityContainer.style.zIndex = '9990'; // BELOW all controls
+      console.log('[Avatar] ✅ Unity positioned for FULLSCREEN-CHAT');
+    }
+    
   }, [viewState]);
 
   return (

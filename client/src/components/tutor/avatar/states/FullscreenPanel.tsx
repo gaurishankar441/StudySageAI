@@ -59,11 +59,11 @@ export function FullscreenPanel({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className={`fixed inset-0 bg-black z-[10000] ${className}`}
+      className={`fixed inset-0 z-[10001] pointer-events-none ${className}`}
       data-testid="avatar-fullscreen-panel"
     >
       {/* Control Bar (Floating) */}
-      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+      <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-auto">
         <div className="text-white text-sm font-medium px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full">
           VaktaAI Avatar
         </div>
@@ -112,21 +112,17 @@ export function FullscreenPanel({
           </div>
         )}
 
-        {/* Unity Target Container */}
-        <div 
-          id="fullscreen-unity-target" 
-          className="absolute inset-0 w-full h-full"
-          style={{ zIndex: 1 }}
-        />
       </div>
 
-      {/* Bottom Overlay */}
-      <BottomOverlay
-        avatarName="VaktaAI Tutor"
-        onMicClick={onMicClick}
-        onChatClick={onChatClick}
-        isMicActive={isMicActive}
-      />
+      {/* Bottom Overlay - with pointer events enabled */}
+      <div className="pointer-events-auto">
+        <BottomOverlay
+          avatarName="VaktaAI Tutor"
+          onMicClick={onMicClick}
+          onChatClick={onChatClick}
+          isMicActive={isMicActive}
+        />
+      </div>
     </motion.div>
   );
 }

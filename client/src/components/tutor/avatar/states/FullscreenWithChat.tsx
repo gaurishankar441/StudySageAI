@@ -74,13 +74,13 @@ export function FullscreenWithChat({
       initial="hidden"
       animate="visible"
       exit="exit"
-      className={`fixed inset-0 bg-black z-[10000] flex ${className}`}
+      className={`fixed inset-0 z-[10001] flex pointer-events-none ${className}`}
       data-testid="avatar-fullscreen-chat"
     >
       {/* Avatar Section */}
       <div className="flex-1 relative md:w-3/5 w-full md:h-full h-[40vh]">
         {/* Control Bar (Floating) */}
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10 pointer-events-auto">
           <div className="text-white text-sm font-medium px-4 py-2 bg-black/60 backdrop-blur-sm rounded-full">
             VaktaAI Avatar
           </div>
@@ -128,20 +128,16 @@ export function FullscreenWithChat({
             </div>
           )}
 
-          {/* Unity Target Container */}
-          <div 
-            id="fullscreen-chat-unity-target" 
-            className="absolute inset-0 w-full h-full"
-            style={{ zIndex: 1 }}
-          />
         </div>
 
-        {/* Bottom Overlay (Mic only, no chat button) */}
-        <BottomOverlay
-          avatarName="VaktaAI Tutor"
-          onMicClick={onMicClick}
-          isMicActive={isMicActive}
-        />
+        {/* Bottom Overlay (Mic only, no chat button) - with pointer events */}
+        <div className="pointer-events-auto">
+          <BottomOverlay
+            avatarName="VaktaAI Tutor"
+            onMicClick={onMicClick}
+            isMicActive={isMicActive}
+          />
+        </div>
       </div>
 
       {/* Chat Panel */}
@@ -150,7 +146,7 @@ export function FullscreenWithChat({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className="md:w-2/5 w-full md:h-full h-[60vh] bg-gray-900/95 backdrop-blur-xl border-l border-white/10 flex flex-col"
+        className="md:w-2/5 w-full md:h-full h-[60vh] bg-gray-900/95 backdrop-blur-xl border-l border-white/10 flex flex-col pointer-events-auto"
         data-testid="chat-panel"
       >
         {/* Chat Header */}

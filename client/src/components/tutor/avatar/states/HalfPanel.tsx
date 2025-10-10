@@ -65,14 +65,14 @@ export function HalfPanel({
         initial="hidden"
         animate="visible"
         exit="exit"
-        className={`fixed z-[9999] bg-gradient-to-br from-gray-900/95 to-black/95 backdrop-blur-xl shadow-2xl
-          md:right-0 md:bottom-0 md:top-0 md:w-[480px] md:rounded-l-2xl
-          bottom-0 left-0 right-0 h-[60vh] rounded-t-2xl
+        className={`fixed z-[10000] pointer-events-none
+          md:right-0 md:bottom-0 md:top-0 md:w-[480px]
+          bottom-0 left-0 right-0 h-[60vh]
           ${className}`}
         data-testid="avatar-half-panel"
       >
         {/* Control Bar */}
-        <div className="absolute top-0 left-0 right-0 h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 z-10 md:rounded-tl-2xl rounded-t-2xl">
+        <div className="absolute top-0 left-0 right-0 h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 z-10 md:rounded-tl-2xl rounded-t-2xl pointer-events-auto">
           <div className="text-white text-sm font-medium">VaktaAI Avatar</div>
           <AvatarControls
             onClose={onClose}
@@ -85,14 +85,15 @@ export function HalfPanel({
           />
         </div>
 
-        {/* Unity Avatar Render Area */}
+        {/* Unity rendered globally will appear behind this panel */}
         <div 
           className="absolute inset-0 w-full h-full rounded-2xl overflow-hidden"
           data-testid="unity-avatar-container"
+          style={{ pointerEvents: 'auto' }}
         >
           {/* Loading Screen - Only show if Unity NOT ready */}
           {!isReady && !error && (
-            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 to-blue-900/90 flex flex-col items-center justify-center z-20">
+            <div className="absolute inset-0 bg-gradient-to-br from-purple-900/90 to-blue-900/90 flex flex-col items-center justify-center z-20 pointer-events-auto">
               <Loader2 className="w-16 h-16 text-white animate-spin mb-4" />
               <p className="text-white text-lg font-medium mb-2">Loading 3D Avatar...</p>
               <p className="text-white/70 text-sm">This may take a few seconds (~28s)</p>
@@ -117,21 +118,17 @@ export function HalfPanel({
             </div>
           )}
 
-          {/* Global Unity will be positioned here - make it visible */}
-          <div 
-            id="half-panel-unity-target" 
-            className="absolute inset-0 w-full h-full"
-            style={{ zIndex: 1 }}
-          />
         </div>
 
-        {/* Bottom Overlay */}
-        <BottomOverlay
-          avatarName="VaktaAI Tutor"
-          onMicClick={onMicClick}
-          onChatClick={onChatClick}
-          isMicActive={isMicActive}
-        />
+        {/* Bottom Overlay - with pointer events enabled for interactions */}
+        <div className="pointer-events-auto">
+          <BottomOverlay
+            avatarName="VaktaAI Tutor"
+            onMicClick={onMicClick}
+            onChatClick={onChatClick}
+            isMicActive={isMicActive}
+          />
+        </div>
       </motion.div>
     </>
   );

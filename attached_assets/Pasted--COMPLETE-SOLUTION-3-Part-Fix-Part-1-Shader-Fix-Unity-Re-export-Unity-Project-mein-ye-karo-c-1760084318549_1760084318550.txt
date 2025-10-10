@@ -1,0 +1,125 @@
+🚀 COMPLETE SOLUTION (3-Part Fix)
+Part 1: Shader Fix (Unity Re-export)
+Unity Project mein ye karo:
+csharp// Replace RL_SkinShader_Variants_3D with Standard shader
+// File: Assets/Materials/CharacterSkin.mat
+
+// Change shader to:
+Shader: "Standard" // Instead of "Reallusion/Amplify/RL_SkinShader_Variants_3D"
+
+// OR use Mobile-Optimized shader:
+Shader: "Mobile/Bumped Diffuse"
+Rebuild Unity:
+
+Build Settings → WebGL
+Player Settings → Publishing Settings → Compression Format: Brotli (instead of Gzip)
+Quality Settings → Texture Quality: Medium (reduces texture count)
+Build karo → Replace client/public/unity-avatar/Build/ files
+
+Result: Build size 91 MB → 40-50 MB, shader errors fixed ✅
+
+Part 2: Fix Fullscreen Container (React Code)
+File: client/src/components/tutor/avatar/AvatarContainer.tsx
+typescriptuseEffect(() => {
+  console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
+  
+  // CRITICAL FIX: Don't move iframe, just change CSS visibility
+  const halfPanel = document.querySelector('#half-panel-unity-target');
+  const fullscreenPanel = document.querySelector('#fullscreen-unity-target');
+  const minimizedContainer = document.querySelector('#minimized-unity-target');
+  
+  // Find Unity iframe (should exist globally)
+  const unityIframe = document.querySelector('iframe[src*="unity-avatar"]') as HTMLIFrameElement;
+  
+  if (!unityIframe) {
+    console.error('[Avatar] ❌ Unity iframe not found in DOM!');
+    return;
+  }
+  
+  // Hide all containers
+  if (halfPanel) (halfPanel as HTMLElement).style.display = 'none';
+  if (fullscreenPanel) (fullscreenPanel as HTMLElement).style.display = 'none';
+  if (minimizedContainer) (minimizedContainer as HTMLElement).style.display = 'none';
+  
+  // Show active container and resize iframe
+  if (viewState === 'half' && halfPanel) {
+    (halfPanel as HTMLElement).style.display = 'block';
+    unityIframe.style.width = '100%';
+    unityIframe.style.height = '600px';
+    console.log('[Avatar] ✅ Unity visible in HALF panel');
+  } else if ((viewState === 'fullscreen' || viewState === 'fullscreen-chat') && fullscreenPanel) {
+    (fullscreenPanel as HTMLElement).style.display = 'block';
+    unityIframe.style.width = '100%';
+    unityIframe.style.height = '100vh';
+    console.log('[Avatar] ✅ Unity visible in FULLSCREEN panel');
+  } else if (viewState === 'minimized' && minimizedContainer) {
+    (minimizedContainer as HTMLElement).style.display = 'block';
+    unityIframe.style.width = '80px';
+    unityIframe.style.height = '80px';
+    console.log('[Avatar] ✅ Unity visible in MINIMIZED bubble');
+  }
+  
+}, [viewState]);
+Key Change: DON'T move iframe between containers - just resize it with CSS and show/hide containers!
+
+Part 3: Single Unity Instance (Global Loading)
+File: client/src/components/tutor/avatar/UnityAvatar.tsx
+Add preload in App.tsx:
+typescript// File: client/src/App.tsx
+import { UnityAvatarProvider } from './components/tutor/avatar/UnityAvatarContext';
+
+function App() {
+  return (
+    <UnityAvatarProvider>
+      {/* Rest of your app */}
+      <Routes>
+        ...
+      </Routes>
+    </UnityAvatarProvider>
+  );
+}
+Modify UnityAvatar.tsx to render ONCE globally:
+typescript// File: client/src/components/tutor/avatar/UnityAvatar.tsx
+
+export function UnityAvatar() {
+  const [isLoading, setIsLoading] = useState(true);
+  
+  useEffect(() => {
+    // Load Unity script ONCE on mount
+    const script = document.createElement('script');
+    script.src = '/unity-avatar/Build/Build.loader.js';
+    script.async = true;
+    script.onload = () => {
+      console.log('[Unity] Script loaded, initializing...');
+      // Unity initialization happens in index.html
+    };
+    document.body.appendChild(script);
+    
+    // Cleanup on unmount
+    return () => {
+      console.log('[Unity] Cleanup - keeping instance for reuse');
+    };
+  }, []); // Empty deps = run ONCE
+  
+  return (
+    <div 
+      id="global-unity-container" 
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none', // Don't block UI
+        zIndex: 9999,
+      }}
+    >
+      {/* Unity iframe renders here ONCE */}
+      {isLoading && (
+        <div style={{ /* Loading spinner */ }}>
+          Loading Unity Avatar...
+        </div>
+      )}
+    </div>
+  );
+}
