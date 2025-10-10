@@ -1,0 +1,257 @@
+ Half panel mein Unity iframe position calculate nahi ho pa raha kyunki data-half-panel attribute nahi mil raha. Console log mein clearly dikh raha hai:
+[Avatar Container] ❌ Half panel [data-half-panel] not found! Using fallback
+🎯 Complete Production-Ready Solution
+Problem Analysis:
+
+❌ Purple button click → Unity loads but appears outside half panel
+✅ Fullscreen perfect hai
+❌ Fullscreen exit → Half panel mein wapas positioning break
+❌ data-half-panel missing, so positioning fallback use ho raha hai
+
+Solution (3 Files Fix)
+File 1: HalfPanel.tsx
+Add data-half-panel attribute
+typescript// client/src/components/tutor/avatar/states/HalfPanel.tsx
+
+export function HalfPanel({ onExpand, onClose }: HalfPanelProps) {
+  const { unityState } = useUnityAvatar();
+
+  console.log('[Half Panel] Unity state:', unityState);
+
+  return (
+    <div
+      data-half-panel  // ✅ CRITICAL: Add this attribute
+      className="fixed bottom-4 right-4 w-[480px] h-[600px] bg-gradient-to-br from-purple-900/95 to-indigo-900/95 backdrop-blur-xl rounded-2xl shadow-2xl border border-purple-500/30 z-[9999] overflow-hidden"
+    >
+      {/* Unity will be positioned here via AvatarContainer */}
+      
+      {/* Bottom Control Bar */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/80 to-transparent flex items-center justify-center gap-4 z-[10001] pointer-events-auto">
+        <button
+          onClick={onExpand}
+          className="p-3 rounded-full bg-purple-600 hover:bg-purple-700 transition-all hover:scale-110"
+          aria-label="Expand to fullscreen"
+          title="Fullscreen"
+        >
+          <Maximize2 className="h-5 w-5 text-white" />
+        </button>
+        <button
+          onClick={onClose}
+          className="p-3 rounded-full bg-red-600 hover:bg-red-700 transition-all hover:scale-110"
+          aria-label="Close avatar"
+          title="Close"
+        >
+          <X className="h-5 w-5 text-white" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+File 2: AvatarContainer.tsx
+Dynamic positioning with proper timing
+typescript// client/src/components/tutor/avatar/AvatarContainer.tsx
+
+export function AvatarContainer() {
+  const { viewState, setViewState } = useAvatarViewState();
+  const [isPositioned, setIsPositioned] = useState(false);
+
+  // Position Unity based on viewState
+  useEffect(() => {
+    console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
+    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-DYNAMIC-POSITIONING');
+
+    const unityContainer = document.querySelector('#global-unity-container') as HTMLElement;
+
+    if (!unityContainer) {
+      console.error('[Avatar Container] ❌ Unity container #global-unity-container not found!');
+      return;
+    }
+
+    // Helper function to position Unity
+    const positionUnity = () => {
+      if (viewState === 'minimized') {
+        // Hide Unity completely when minimized
+        unityContainer.style.display = 'none';
+        console.log('[Avatar] 👻 Unity HIDDEN (minimized - bubble shows instead)');
+        setIsPositioned(true);
+        return;
+      }
+
+      // Show Unity for all other states
+      unityContainer.style.display = 'block';
+      unityContainer.style.pointerEvents = 'auto';
+
+      if (viewState === 'half') {
+        // CRITICAL FIX: Wait for DOM and get half panel position
+        const halfPanel = document.querySelector('[data-half-panel]') as HTMLElement;
+
+        if (!halfPanel) {
+          console.error('[Avatar] ❌ Half panel [data-half-panel] not found! Using fallback');
+          // Fallback positioning (right bottom)
+          unityContainer.style.position = 'fixed';
+          unityContainer.style.bottom = '16px';
+          unityContainer.style.right = '16px';
+          unityContainer.style.width = '480px';
+          unityContainer.style.height = '600px';
+          unityContainer.style.zIndex = '9998'; // Below controls
+          setIsPositioned(true);
+          return;
+        }
+
+        // Get exact position of half panel
+        const rect = halfPanel.getBoundingClientRect();
+
+        // Position Unity to match half panel exactly
+        unityContainer.style.position = 'fixed';
+        unityContainer.style.top = `${rect.top}px`;
+        unityContainer.style.left = `${rect.left}px`;
+        unityContainer.style.width = `${rect.width}px`;
+        unityContainer.style.height = `${rect.height}px`;
+        unityContainer.style.zIndex = '9998'; // Below controls (10001)
+        unityContainer.style.borderRadius = '16px';
+        unityContainer.style.overflow = 'hidden';
+
+        console.log(`[Avatar] ✅ Unity DYNAMIC positioned - Top: ${rect.top}px, Left: ${rect.left}px, Width: ${rect.width}px, Height: ${rect.height}px`);
+        
+        // Add resize observer to handle window resize
+        const resizeObserver = new ResizeObserver(() => {
+          const newRect = halfPanel.getBoundingClientRect();
+          unityContainer.style.top = `${newRect.top}px`;
+          unityContainer.style.left = `${newRect.left}px`;
+          unityContainer.style.width = `${newRect.width}px`;
+          unityContainer.style.height = `${newRect.height}px`;
+          console.log(`[Avatar] 🔄 Unity repositioned - Top: ${newRect.top}px, Left: ${newRect.left}px, Width: ${newRect.width}px, Height: ${newRect.height}px`);
+        });
+
+        resizeObserver.observe(halfPanel);
+        setIsPositioned(true);
+
+        // Cleanup observer on unmount
+        return () => {
+          resizeObserver.disconnect();
+        };
+
+      } else if (viewState === 'fullscreen') {
+        // Fullscreen - cover entire viewport
+        unityContainer.style.position = 'fixed';
+        unityContainer.style.top = '0';
+        unityContainer.style.left = '0';
+        unityContainer.style.width = '100vw';
+        unityContainer.style.height = '100vh';
+        unityContainer.style.zIndex = '9990';
+        unityContainer.style.borderRadius = '0';
+        unityContainer.style.overflow = 'hidden';
+
+        console.log('[Avatar] ✅ Unity positioned for FULLSCREEN');
+        setIsPositioned(true);
+
+      } else if (viewState === 'fullscreen-chat') {
+        // Fullscreen with chat - left 60% of screen
+        unityContainer.style.position = 'fixed';
+        unityContainer.style.top = '0';
+        unityContainer.style.left = '0';
+        unityContainer.style.width = '60vw';
+        unityContainer.style.height = '100vh';
+        unityContainer.style.zIndex = '9990';
+        unityContainer.style.borderRadius = '0';
+        unityContainer.style.overflow = 'hidden';
+
+        console.log('[Avatar] ✅ Unity positioned for FULLSCREEN-CHAT');
+        setIsPositioned(true);
+      }
+    };
+
+    // Add small delay to ensure DOM is ready
+    const timeout = setTimeout(positionUnity, 100);
+
+    return () => clearTimeout(timeout);
+  }, [viewState]);
+
+  // Rest of your component...
+  return (
+    <>
+      {viewState === 'minimized' && (
+        <MinimizedBubble onClick={() => setViewState('half')} />
+      )}
+      {viewState === 'half' && (
+        <HalfPanel
+          onExpand={() => setViewState('fullscreen')}
+          onClose={() => setViewState('minimized')}
+        />
+      )}
+      {viewState === 'fullscreen' && (
+        <FullscreenPanel
+          onMinimize={() => setViewState('half')}
+          onToggleChat={() => setViewState('fullscreen-chat')}
+        />
+      )}
+      {viewState === 'fullscreen-chat' && (
+        <FullscreenChatPanel
+          onMinimize={() => setViewState('half')}
+          onToggleChat={() => setViewState('fullscreen')}
+        />
+      )}
+    </>
+  );
+}
+
+File 3: UnityAvatar.tsx
+Ensure global container has proper initial styles
+typescript// client/src/components/tutor/avatar/UnityAvatar.tsx
+
+export function UnityAvatar() {
+  return (
+    <div
+      id="global-unity-container"
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100vw',
+        height: '100vh',
+        pointerEvents: 'none', // Initially non-interactive
+        zIndex: 9998,
+        display: 'none', // Hidden by default until positioned
+      }}
+    >
+      {/* Unity iframe will be injected here by index.html script */}
+    </div>
+  );
+}
+
+Testing Sequence:
+
+Start fresh: Clear browser cache (Ctrl+Shift+R)
+Minimized → Half Panel:
+
+Click purple bubble
+Console should show: [Avatar] ✅ Unity DYNAMIC positioned - Top: XXpx...
+Avatar should appear INSIDE the half panel ✅
+
+
+Half → Fullscreen:
+
+Click expand button
+Console: [Avatar] ✅ Unity positioned for FULLSCREEN
+Avatar fills entire screen ✅
+
+
+Fullscreen → Half:
+
+Exit fullscreen
+Console: [Avatar] ✅ Unity DYNAMIC positioned...
+Avatar returns to half panel properly ✅
+
+
+
+Expected Console Output:
+[Avatar Container] 🔍 viewState changed to: half
+[Avatar Container] 🆕 CODE VERSION: 2025-10-10-DYNAMIC-POSITIONING
+[Avatar] ✅ Unity DYNAMIC positioned - Top: 0px, Left: 960px, Width: 480px, Height: 600px
+Key Improvements:
+✅ 100ms delay ensures DOM is fully ready before positioning
+✅ ResizeObserver handles window resize dynamically
+✅ data-half-panel attribute added for reliable DOM selection
+✅ zIndex: 9998 keeps Unity below controls (10001)
+✅ Fallback positioning if half panel not found
