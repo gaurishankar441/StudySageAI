@@ -54,10 +54,11 @@ export function UnityAvatarProvider({ children }: UnityAvatarProviderProps) {
         setIsVisible 
       }}
     >
-      {/* 🎭 Global Unity Avatar - Hidden container, will be moved to active state */}
+      {/* 🎭 Global Unity Avatar - Initially visible to allow Unity to load, then positioned by AvatarContainer */}
       <div 
         id="global-unity-container" 
-        className="hidden"
+        className="fixed inset-0 pointer-events-none opacity-0"
+        style={{ zIndex: -1 }}
         data-testid="global-avatar-unity-container"
       >
         <div 
