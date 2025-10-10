@@ -977,6 +977,7 @@ export class VoiceStreamService {
       const aiResult = await optimizedAI.generateStreamingResponse(
         transcribedText,
         systemPrompt,
+        '', // context (empty for voice queries)
         async (chunk: string, meta?: any) => {
           // Handle completion event (save metadata)
           if (meta?.type === 'complete') {
@@ -1258,7 +1259,7 @@ export class VoiceStreamService {
                 const sentence = parts[i].trim();
                 if (sentence) {
                   // Check if avatar is ready for TTS
-                  const canGenerateTTS = avatarStateService.canGenerateTTS(ws);
+                  const canGenerateTTS = avatarStateService.canGenerateTTS(ws.sessionId || '');
 
                   if (canGenerateTTS) {
                     // Generate TTS with phonemes
@@ -1302,7 +1303,7 @@ export class VoiceStreamService {
 
       // Handle remaining text
       if (currentSentence.trim()) {
-        const canGenerateTTS = avatarStateService.canGenerateTTS(ws);
+        const canGenerateTTS = avatarStateService.canGenerateTTS(ws.sessionId || '');
         if (canGenerateTTS) {
           await this.generateAndStreamSentenceTTS(
             ws,
@@ -1333,7 +1334,7 @@ export class VoiceStreamService {
       }
 
       // Send TTS_END if TTS was generated
-      if (avatarStateService.canGenerateTTS(ws)) {
+      if (avatarStateService.canGenerateTTS(ws.sessionId || '')) {
         const endMsg: VoiceMessage = {
           type: 'TTS_END',
           timestamp: new Date().toISOString(),
@@ -1351,8 +1352,8 @@ export class VoiceStreamService {
         messageId,
         emotion: emotionResult.emotion,
         personaId: session.personaId,
-        phase: session.currentPhase,
-        phaseStep: session.currentPhaseStep,
+        phase: session.currentPhase as any, // Type cast - DB has string, interface expects TutorPhase
+        phaseStep: session.phaseStep || 0,
         language
       };
       ws.send(JSON.stringify(completeMsg));
@@ -1368,7 +1369,7 @@ export class VoiceStreamService {
           personaId: session.personaId,
           phase: session.currentPhase,
           source: 'text_websocket',
-          avatarTTS: avatarStateService.canGenerateTTS(ws)
+          avatarTTS: avatarStateService.canGenerateTTS(ws.sessionId || '')
         }
       });
 

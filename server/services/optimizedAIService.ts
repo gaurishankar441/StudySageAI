@@ -125,6 +125,7 @@ export class OptimizedAIService {
    */
   async generateStreamingResponse(
     query: string,
+    systemPrompt: string,
     context?: string,
     onChunk?: (chunk: string, meta?: any) => void
   ): Promise<{ response: string; cached: boolean; model?: string; cost?: number }> {
@@ -146,9 +147,8 @@ export class OptimizedAIService {
       return { response: cached, cached: true, model: 'cache', cost: 0 };
     }
     
-    // Step 2: Analyze query for specialized prompt (but use GPT-4o-mini for streaming)
-    const analysis = await modelRouter.classifyQuery(query);
-    const systemPrompt = getPromptForQuery(query, analysis.intent, analysis.subject);
+    // Step 2: Use provided systemPrompt (already optimized by caller)
+    // No need to regenerate - voiceStreamService already did intent analysis
     
     // Step 3: Stream using GPT-4o-mini (best streaming support, still 97% cheaper than GPT-4)
     const streamModel = 'gpt-4o-mini';
