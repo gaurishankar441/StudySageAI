@@ -290,6 +290,9 @@ export default function AuthModal({ isOpen, onClose, defaultTab = 'login' }: Aut
                           className="h-12 px-4 bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-500 focus:border-cyan-500 focus:bg-white transition-smooth"
                         />
                       </FormControl>
+                      <p className="text-xs text-slate-600 mt-1">
+                        Must be 8+ characters with uppercase, lowercase, number, and special character
+                      </p>
                       <FormMessage />
                     </FormItem>
                   )}
