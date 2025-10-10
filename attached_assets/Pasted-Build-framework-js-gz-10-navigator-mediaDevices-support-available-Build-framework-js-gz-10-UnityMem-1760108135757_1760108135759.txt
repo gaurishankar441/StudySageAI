@@ -1,0 +1,518 @@
+Build.framework.js.gz:10 navigator.mediaDevices support available
+Build.framework.js.gz:10 [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+Build.framework.js.gz:10     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+Build.framework.js.gz:10     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+Build.framework.js.gz:10     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+Build.framework.js.gz:10     "memorysetup-temp-allocator-size-background-worker=32768"
+
+Build.framework.js.gz:10     "memorysetup-bucket-allocator-granularity=16"
+
+Build.framework.js.gz:10     "memorysetup-bucket-allocator-bucket-count=8"
+
+Build.framework.js.gz:10     "memorysetup-bucket-allocator-block-size=4194304"
+
+Build.framework.js.gz:10     "memorysetup-bucket-allocator-block-count=1"
+
+Build.framework.js.gz:10     "memorysetup-main-allocator-block-size=16777216"
+
+Build.framework.js.gz:10     "memorysetup-thread-allocator-block-size=16777216"
+
+Build.framework.js.gz:10     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+Build.framework.js.gz:10     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+Build.framework.js.gz:10     "memorysetup-cache-allocator-block-size=4194304"
+
+Build.framework.js.gz:10     "memorysetup-typetree-allocator-block-size=2097152"
+
+Build.framework.js.gz:10     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+Build.framework.js.gz:10     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+Build.framework.js.gz:10     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+Build.framework.js.gz:10     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+Build.framework.js.gz:10     "memorysetup-profiler-allocator-block-size=16777216"
+
+Build.framework.js.gz:10     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+Build.framework.js.gz:10     "memorysetup-temp-allocator-size-main=4194304"
+
+Build.framework.js.gz:10     "memorysetup-job-temp-allocator-block-size=2097152"
+
+Build.framework.js.gz:10     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+Build.framework.js.gz:10     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+Build.framework.js.gz:10 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+Build.framework.js.gz:10 Loading player data from data.unity3d
+
+Build.framework.js.gz:10 Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+Build.loader.js:1 Creating WebGL 2.0 context.
+Build.framework.js.gz:10 Renderer: WebKit WebGL
+
+Build.framework.js.gz:10 Vendor:   WebKit
+
+Build.framework.js.gz:10 Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+Build.framework.js.gz:10 GLES:     3
+
+Build.framework.js.gz:10  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+Build.framework.js.gz:10 depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+Build.framework.js.gz:10 OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+Build.framework.js.gz:10 Input Manager initialize...
+
+Build.framework.js.gz:10 PlatformGetStacktrace
+
+Build.framework.js.gz:10 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+_JS_Log_Dump @ Build.framework.js.gz:10
+$func55271 @ Build.wasm.gz:0x1230d3b
+$func55274 @ Build.wasm.gz:0x1230feb
+$func55286 @ Build.wasm.gz:0x12320d2
+$func55284 @ Build.wasm.gz:0x1231fe8
+$func55282 @ Build.wasm.gz:0x1231985
+$func39272 @ Build.wasm.gz:0xa54ec8
+$func50628 @ Build.wasm.gz:0x1101418
+$func50624 @ Build.wasm.gz:0x110017c
+$func49265 @ Build.wasm.gz:0x10581cb
+$func49266 @ Build.wasm.gz:0x105c8e8
+$func52116 @ Build.wasm.gz:0x1193a18
+$func52164 @ Build.wasm.gz:0x11a077d
+$func48740 @ Build.wasm.gz:0xfca003
+$func48751 @ Build.wasm.gz:0xfcb4b2
+$func48763 @ Build.wasm.gz:0xfcc603
+$func48764 @ Build.wasm.gz:0xfcc7b2
+$func55404 @ Build.wasm.gz:0x12599ae
+$main @ Build.wasm.gz:0x125a062
+Module._main @ Build.framework.js.gz:10
+callMain @ Build.framework.js.gz:10
+doRun @ Build.framework.js.gz:10
+run @ Build.framework.js.gz:10
+runCaller @ Build.framework.js.gz:10
+removeRunDependency @ Build.framework.js.gz:10
+(anonymous) @ Build.loader.js:1
+Promise.then
+(anonymous) @ Build.loader.js:1
+callRuntimeCallbacks @ Build.framework.js.gz:10
+preRun @ Build.framework.js.gz:10
+run @ Build.framework.js.gz:10
+runCaller @ Build.framework.js.gz:10
+removeRunDependency @ Build.framework.js.gz:10
+receiveInstance @ Build.framework.js.gz:10
+receiveInstantiationResult @ Build.framework.js.gz:10
+Promise.then
+(anonymous) @ Build.framework.js.gz:10
+Promise.then
+instantiateAsync @ Build.framework.js.gz:10
+createWasm @ Build.framework.js.gz:10
+(anonymous) @ Build.framework.js.gz:10
+(anonymous) @ Build.loader.js:1
+Promise.then
+T @ Build.loader.js:1
+(anonymous) @ Build.loader.js:1
+createUnityInstance @ Build.loader.js:1
+script.onload @ index.html:754
+script
+(anonymous) @ index.html:751
+Build.framework.js.gz:10 PlatformGetStacktrace
+
+Build.framework.js.gz:10 Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+_JS_Log_Dump @ Build.framework.js.gz:10
+$func55271 @ Build.wasm.gz:0x1230d3b
+$func55274 @ Build.wasm.gz:0x1230feb
+$func55286 @ Build.wasm.gz:0x12320d2
+$func55284 @ Build.wasm.gz:0x1231fe8
+$func55282 @ Build.wasm.gz:0x1231985
+$func39272 @ Build.wasm.gz:0xa54ec8
+$func50628 @ Build.wasm.gz:0x1101418
+$func50624 @ Build.wasm.gz:0x110017c
+$func49265 @ Build.wasm.gz:0x10581cb
+$func49266 @ Build.wasm.gz:0x105c8e8
+$func52116 @ Build.wasm.gz:0x1193a18
+$func52164 @ Build.wasm.gz:0x11a077d
+$func48740 @ Build.wasm.gz:0xfca003
+$func48751 @ Build.wasm.gz:0xfcb4b2
+$func48763 @ Build.wasm.gz:0xfcc603
+$func48764 @ Build.wasm.gz:0xfcc7b2
+$func55404 @ Build.wasm.gz:0x12599ae
+$main @ Build.wasm.gz:0x125a062
+Module._main @ Build.framework.js.gz:10
+callMain @ Build.framework.js.gz:10
+doRun @ Build.framework.js.gz:10
+run @ Build.framework.js.gz:10
+runCaller @ Build.framework.js.gz:10
+removeRunDependency @ Build.framework.js.gz:10
+(anonymous) @ Build.loader.js:1
+Promise.then
+(anonymous) @ Build.loader.js:1
+callRuntimeCallbacks @ Build.framework.js.gz:10
+preRun @ Build.framework.js.gz:10
+run @ Build.framework.js.gz:10
+runCaller @ Build.framework.js.gz:10
+removeRunDependency @ Build.framework.js.gz:10
+receiveInstance @ Build.framework.js.gz:10
+receiveInstantiationResult @ Build.framework.js.gz:10
+Promise.then
+(anonymous) @ Build.framework.js.gz:10
+Promise.then
+instantiateAsync @ Build.framework.js.gz:10
+createWasm @ Build.framework.js.gz:10
+(anonymous) @ Build.framework.js.gz:10
+(anonymous) @ Build.loader.js:1
+Promise.then
+T @ Build.loader.js:1
+(anonymous) @ Build.loader.js:1
+createUnityInstance @ Build.loader.js:1
+script.onload @ index.html:754
+script
+(anonymous) @ index.html:751
+Build.framework.js.gz:10 [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+Build.framework.js.gz:10 UnloadTime: 3.500000 ms
+
+index.html:760 [Unity] Instance created successfully
+index.html:763 [Unity] ⏰ Calling OnUnityReady directly...
+index.html:351 [Unity] Avatar instance ready
+index.html:356 [Unity] ⏳ Waiting for handshake before audio unlock...
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+The AudioContext was not allowed to start. It must be resumed (or created) after a user gesture on the page. <URL>
+Build.loader.js:1 [UnityCache] 'https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+Build.framework.js.gz:10 PlatformGetStacktrace
+
+Build.framework.js.gz:10 -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+_JS_Log_Dump @ Build.framework.js.gz:10
+$func55271 @ Build.wasm.gz:0x1230d3b
+$func55274 @ Build.wasm.gz:0x1230feb
+$func55286 @ Build.wasm.gz:0x12320d2
+$func55284 @ Build.wasm.gz:0x1231fe8
+$func55282 @ Build.wasm.gz:0x1231985
+$func51315 @ Build.wasm.gz:0x11571ea
+$func51358 @ Build.wasm.gz:0x115b3a0
+$func51614 @ Build.wasm.gz:0x11741b2
+$func41076 @ Build.wasm.gz:0xb15318
+$func50687 @ Build.wasm.gz:0x11076e5
+$func41057 @ Build.wasm.gz:0xb11f7e
+$func49396 @ Build.wasm.gz:0x107265e
+$func41119 @ Build.wasm.gz:0xb2809d
+$func41137 @ Build.wasm.gz:0xb2c4ba
+$func51710 @ Build.wasm.gz:0x1178d60
+$func41138 @ Build.wasm.gz:0xb2f9b2
+$func49180 @ Build.wasm.gz:0x1042e1c
+$func49087 @ Build.wasm.gz:0x102d87d
+$func50075 @ Build.wasm.gz:0x10cf7fc
+$func50032 @ Build.wasm.gz:0x10c9764
+$func50032 @ Build.wasm.gz:0x10c97d8
+$func55402 @ Build.wasm.gz:0x123fc81
+$dynCall_v @ Build.wasm.gz:0x125af9c
+browserIterationFunc @ Build.framework.js.gz:10
+callUserCallback @ Build.framework.js.gz:10
+runIter @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+requestAnimationFrame
+requestAnimationFrame @ Build.framework.js.gz:10
+Browser_mainLoop_scheduler_rAF @ Build.framework.js.gz:10
+Browser_mainLoop_runner @ Build.framework.js.gz:10
+Build.framework.js.gz:10 Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
