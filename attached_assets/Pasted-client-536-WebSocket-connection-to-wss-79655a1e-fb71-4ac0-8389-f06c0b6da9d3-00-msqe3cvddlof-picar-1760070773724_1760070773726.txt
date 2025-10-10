@@ -1,0 +1,745 @@
+client:536 WebSocket connection to 'wss://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/?token=hgobUoGtrOeV' failed: 
+setupWebSocket @ client:536
+client:536 Uncaught (in promise) SyntaxError: Failed to construct 'WebSocket': The URL 'wss://localhost:undefined/?token=hgobUoGtrOeV' is invalid.
+    at setupWebSocket (client:536:19)
+    at fallback (client:509:16)
+    at WebSocket.<anonymous> (client:555:7)
+chunk-RPCDYKBN.js?v=01027981:21551 Download the React DevTools for a better development experience: https://reactjs.org/link/react-devtools
+unity-avatar/index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+useUnityBridge.ts:80 [Unity Bridge] Starting handshake...
+ navigator.mediaDevices support available
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:148
+useUnityBridge.ts:80 [Unity Bridge] Starting handshake...
+ [Unity] Handshake complete with origin: https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev
+ [Unity] Console forwarding enabled ✅
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:148
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:148
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: forward-log
+handleMessage @ useUnityBridge.ts:148
+useUnityBridge.ts:148 [Unity Bridge] Rejected message before handshake: UNITY_LOG
+handleMessage @ useUnityBridge.ts:148
+useUnityBridge.ts:137 [Unity Bridge] Trusted origin established: https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev
+useUnityBridge.ts:138 [Unity Bridge] Handshake complete ✅
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:118 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:118
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+ [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+     "memorysetup-temp-allocator-size-background-worker=32768"
+
+     "memorysetup-bucket-allocator-granularity=16"
+
+     "memorysetup-bucket-allocator-bucket-count=8"
+
+     "memorysetup-bucket-allocator-block-size=4194304"
+
+     "memorysetup-bucket-allocator-block-count=1"
+
+     "memorysetup-main-allocator-block-size=16777216"
+
+     "memorysetup-thread-allocator-block-size=16777216"
+
+     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+     "memorysetup-cache-allocator-block-size=4194304"
+
+     "memorysetup-typetree-allocator-block-size=2097152"
+
+     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+     "memorysetup-profiler-allocator-block-size=16777216"
+
+     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+     "memorysetup-temp-allocator-size-main=4194304"
+
+     "memorysetup-job-temp-allocator-block-size=2097152"
+
+     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+ [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+ Loading player data from data.unity3d
+
+ Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+ Creating WebGL 2.0 context.
+ Renderer: WebKit WebGL
+
+ Vendor:   WebKit
+
+ Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+ GLES:     3
+
+  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+ depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+ OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+ Input Manager initialize...
+
+ PlatformGetStacktrace
+
+ Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ PlatformGetStacktrace
+
+ Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+ UnloadTime: 3.400000 ms
+
+ [Unity] Instance created successfully
+ [Unity] ⏰ Calling OnUnityReady directly...
+ [Unity] Avatar instance ready
+ [Unity] 🔓 Attempting audio unlock for phoneme lip-sync...
+ [Unity] 🔍 AudioContext state: running
+ [Unity] ✅ AudioContext already running - audio unlocked!
+ [Unity] Handshake complete, notifying React...
+useUnityBridge.ts:181 [Unity] [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-background-worker=32768"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-granularity=16"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-bucket-count=8"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-bucket-allocator-block-count=1"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-main-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-thread-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-cache-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-typetree-allocator-block-size=2097152"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-allocator-block-size=16777216"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-temp-allocator-size-main=4194304"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-block-size=2097152"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+useUnityBridge.ts:181 [Unity]     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+useUnityBridge.ts:181 [Unity] [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+useUnityBridge.ts:181 [Unity] Loading player data from data.unity3d
+
+useUnityBridge.ts:181 [Unity] Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+useUnityBridge.ts:181 [Unity] Creating WebGL 2.0 context.
+useUnityBridge.ts:181 [Unity] Renderer: WebKit WebGL
+
+useUnityBridge.ts:181 [Unity] Vendor:   WebKit
+
+useUnityBridge.ts:181 [Unity] Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+useUnityBridge.ts:181 [Unity] GLES:     3
+
+useUnityBridge.ts:181 [Unity]  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+useUnityBridge.ts:181 [Unity] depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+useUnityBridge.ts:181 [Unity] OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+useUnityBridge.ts:181 [Unity] Input Manager initialize...
+
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+handleMessage @ useUnityBridge.ts:182
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+handleMessage @ useUnityBridge.ts:182
+useUnityBridge.ts:181 [Unity] [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+useUnityBridge.ts:181 [Unity] UnloadTime: 3.400000 ms
+
+useUnityBridge.ts:181 [Unity] [Unity] Instance created successfully
+useUnityBridge.ts:181 [Unity] [Unity] ⏰ Calling OnUnityReady directly...
+useUnityBridge.ts:181 [Unity] [Unity] Avatar instance ready
+useUnityBridge.ts:181 [Unity] [Unity] 🔓 Attempting audio unlock for phoneme lip-sync...
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 AudioContext state: running
+useUnityBridge.ts:181 [Unity] [Unity] ✅ AudioContext already running - audio unlocked!
+useUnityBridge.ts:169 [Unity Bridge] Audio unlocked successfully ✅
+useUnityBridge.ts:181 [Unity] [Unity] Handshake complete, notifying React...
+useUnityBridge.ts:162 [Unity Bridge] Unity is ready!
+UnityAvatar.tsx:89 [Unity Avatar] Avatar ready!
+UnityAvatarContext.tsx:34 [Unity Context] ✅ Avatar ready globally!
+UnityAvatar.tsx:110 [Unity Avatar] Audio unlocked detected, notifying parent
+UnityAvatarContext.tsx:74 [Unity Context] 🔊 Audio unlocked!
+UnityAvatar.tsx:110 [Unity Avatar] Audio unlocked detected, notifying parent
+UnityAvatarContext.tsx:74 [Unity Context] 🔊 Audio unlocked!
+ [UnityCache] 'https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+useUnityBridge.ts:181 [Unity] [UnityCache] 'https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+useUnityBridge.ts:76 [Unity Bridge] Already initialized, skipping handshake
+ PlatformGetStacktrace
+
+ -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+useUnityBridge.ts:181 [Unity] PlatformGetStacktrace
+
+useUnityBridge.ts:182 [Unity] -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+handleMessage @ useUnityBridge.ts:182
+useUnityBridge.ts:181 [Unity] Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+useUnityBridge.ts:118 [Unity Bridge] Rejected message from non-iframe source
+handleMessage @ useUnityBridge.ts:118
+AvatarContainer.tsx:49 [Avatar Container] 🎭 Component mounted! Initial viewState: minimized
+AvatarContainer.tsx:67 [Avatar Container] 🔍 viewState changed to: minimized
+TutorSession.tsx:640 [TTS] Auto-playing new assistant message: greeting-1760070420623
+TutorSession.tsx:641 [TTS] Chat mode: tutor - Will use PHONEME TTS
+TutorSession.tsx:341 [TTS] playAudio called for message: greeting-1760070420623
+TutorSession.tsx:363 [TTS] Setting playing audio to: greeting-1760070420623
+TutorSession.tsx:366 [TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FINAL 🚀
+TutorSession.tsx:367 [TTS] Fetching emotion-based TTS for text: Good morning Vakta! Perfect time for learning! 🌅
+...
+TutorSession.tsx:372 [TTS] tutorSession exists: true chat.mode: tutor isOptimizedSession: true
+TutorSession.tsx:379 [TTS] Endpoint: /api/tutor/optimized/session/tts-with-phonemes
+AvatarContainer.tsx:95 [Avatar Container] Global Unity element: FOUND ✅
+AvatarContainer.tsx:117 [Avatar Container] Target container (#): NOT FOUND ❌
+TutorSession.tsx:394 [TTS] Response status: 200
+TutorSession.tsx:406 [TTS] Phoneme data received - Phonemes: 142 Audio base64 length: 125240
+TutorSession.tsx:413 [TTS] Converted to blob, size: 93928
+TutorSession.tsx:424 [Avatar] Status check - Ready: true Loading: false
+TutorSession.tsx:479 [Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync
+TutorSession.tsx:480 [Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync
+TutorSession.tsx:483 🔍 DEBUG: Phonemes count: 142 usePhonemeTTS: true
+TutorSession.tsx:488 [Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes: 142
+TutorSession.tsx:489 🔍 DEBUG: About to send 142 phonemes to Unity
+TutorSession.tsx:498 🔍 DEBUG: Base64 audio length: 125240
+TutorSession.tsx:499 🔍 DEBUG: Calling sendAudioWithPhonemesToAvatar...
+useUnityBridge.ts:304 [Unity Bridge] 🎵 Sending audio + phonemes to Unity - Phonemes: 142
+useUnityBridge.ts:313 [Unity Bridge] ✅ Audio + phonemes sent to Unity iframe
+TutorSession.tsx:503 🔍 DEBUG: ✅ sendAudioWithPhonemesToAvatar called successfully!
+TutorSession.tsx:509 [Avatar] ✅ Audio sent to Unity successfully
+ [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+ [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 142 Audio unlocked: true
+ [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":136,"blendshape":"W_OO","weight":1},{"time":213,"blendshape":"T_L_D_N","weight":1}]
+ [Unity] ✅ Playing audio + sending phonemes to Unity...
+ [Unity] 🔍 DEBUG - Unity instance exists: true
+ [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+ [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 142
+ [Unity] 📦 Phoneme JSON length: 6418 chars
+ [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+ [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":136,"blendshape":"W_OO","weight":1},{"time":213,"blendshape":"T_L_D_N","weight":1},{"time":287,"blendshape":"B_M_P","weight":1},{"time":370,"blendshape":"sil","weight":0},{"time":498,"blendshape":"T_L_D_N","weight":1},{"time":581,"blendshape":"IH","weight":1},{"time":609,"blendshape":"K_G_H_NG","weight":1},{"time":654,"blendshape":"F_V","weight":1},{"time":704,"blendshape":"Er","weight":1},{"time":774,"blendshape":"K_G_H_NG","weight":1},{"time":882,"blendshape":"T_L_D_N","weight":1},{"time":985,"blendshape":"Ah","weight":1},{"time":1168,"blendshape":"sil","weight":0},{"time":1561,"blendshape":"B_M_P","weight":1},{"time":1627,"blendshape":"AE","weight":1},{"time":1726,"blendshape":"F_V","weight":1},{"time":1858,"blendshape":"IH","weight":1},{"time":1925,"blendshape":"K_G_H_NG","weight":1},{"time":1980,"blendshape":"T_L_D_N","weight":1},{"time":2026,"blendshape":"T_L_D_N","weight":1},{"time":2082,"blendshape":"Ah","weight":1},{"time":2242,"blendshape":"B_M_P","weight":1},{"time":2337,"blendshape":"F_V","weight":1},{"time":2431,"blendshape":"Er","weight":1},{"time":2480,"blendshape":"R","weight":1},{"time":2519,"blendshape":"T_L_D_N","weight":1},{"time":2618,"blendshape":"AE","weight":1},{"time":2728,"blendshape":"T_L_D_N","weight":1},{"time":2815,"blendshape":"IH","weight":1},{"time":2916,"blendshape":"K_G_H_NG","weight":1},{"time":3113,"blendshape":"sil","weight":0},{"time":3301,"blendshape":"S_Z","weight":1},{"time":3492,"blendshape":"AE","weight":1},{"time":3573,"blendshape":"T_L_D_N","weight":1},{"time":3658,"blendshape":"R","weight":1},{"time":3751,"blendshape":"Ah","weight":1},{"time":3901,"blendshape":"S_Z","weight":1},{"time":4027,"blendshape":"IH","weight":1},{"time":4097,"blendshape":"B_M_P","weight":1},{"time":4184,"blendshape":"Er","weight":1},{"time":4302,"blendshape":"Ch_J","weight":1},{"time":4442,"blendshape":"IH","weight":1},{"time":4693,"blendshape":"sil","weight":0},{"time":5343,"blendshape":"Ah","weight":1},{"time":5526,"blendshape":"B_M_P","weight":1},{"time":5615,"blendshape":"K_G_H_NG","weight":1},{"time":5671,"blendshape":"Er","weight":1},{"time":5725,"blendshape":"T_L_D_N","weight":1},{"time":5781,"blendshape":"IH","weight":1},{"time":5840,"blendshape":"B_M_P","weight":1},{"time":5928,"blendshape":"Ah","weight":1},{"time":6146,"blendshape":"sil","weight":0},{"time":6341,"blendshape":"IH","weight":1},{"time":6526,"blendshape":"sil","weight":0},{"time":6576,"blendshape":"R","weight":1},{"time":6613,"blendshape":"S_Z","weight":1},{"time":6752,"blendshape":"Ah","weight":1},{"time":6934,"blendshape":"Er","weight":1},{"time":6964,"blendshape":"T_L_D_N","weight":1},{"time":7032,"blendshape":"S_Z","weight":1},{"time":7166,"blendshape":"T_L_D_N","weight":1},{"time":7231,"blendshape":"IH","weight":1},{"time":7341,"blendshape":"Ch_J","weight":1},{"time":7484,"blendshape":"Er","weight":1},{"time":7623,"blendshape":"R","weight":1},{"time":7711,"blendshape":"sil","weight":0},{"time":8105,"blendshape":"IH","weight":1},{"time":8237,"blendshape":"sil","weight":0},{"time":8328,"blendshape":"R","weight":1},{"time":8360,"blendshape":"IH","weight":1},{"time":8406,"blendshape":"T_L_D_N","weight":1},{"time":8494,"blendshape":"K_G_H_NG","weight":1},{"time":8572,"blendshape":"T_L_D_N","weight":1},{"time":8620,"blendshape":"Ah","weight":1},{"time":8760,"blendshape":"S_Z","weight":1},{"time":8900,"blendshape":"T_L_D_N","weight":1},{"time":8969,"blendshape":"W_OO","weight":1},{"time":9023,"blendshape":"AE","weight":1},{"time":9122,"blendshape":"T_L_D_N","weight":1},{"time":9201,"blendshape":"F_V","weight":1},{"time":9282,"blendshape":"Er","weight":1},{"time":9356,"blendshape":"T_L_D_N","weight":1},{"time":9414,"blendshape":"T_L_D_N","weight":1},{"time":9461,"blendshape":"B_M_P","weight":1},{"time":9513,"blendshape":"R","weight":1},{"time":9543,"blendshape":"IH","weight":1},{"time":9571,"blendshape":"B_M_P","weight":1},{"time":9682,"blendshape":"AE","weight":1},{"time":9821,"blendshape":"R","weight":1},{"time":9881,"blendshape":"IH","weight":1},{"time":9919,"blendshape":"K_G_H_NG","weight":1},{"time":9989,"blendshape":"F_V","weight":1},{"time":10095,"blendshape":"Er","weight":1},{"time":10123,"blendshape":"R","weight":1},{"time":10155,"blendshape":"Ch_J","weight":1},{"time":10294,"blendshape":"IH","weight":1},{"time":10499,"blendshape":"sil","weight":0},{"time":10693,"blendshape":"R","weight":1},{"time":10843,"blendshape":"Ah","weight":1},{"time":11062,"blendshape":"T_L_D_N","weight":1},{"time":11239,"blendshape":"sil","weight":0},{"time":11632,"blendshape":"T_L_D_N","weight":1},{"time":11703,"blendshape":"Er","weight":1},{"time":11744,"blendshape":"T_L_D_N","weight":1},{"time":11801,"blendshape":"EE","weight":1},{"time":11946,"blendshape":"W_OO","weight":1},{"time":12034,"blendshape":"IH","weight":1},{"time":12136,"blendshape":"T_L_D_N","weight":1},{"time":12205,"blendshape":"IH","weight":1},{"time":12267,"blendshape":"K_G_H_NG","weight":1},{"time":12341,"blendshape":"S_Z","weight":1},{"time":12431,"blendshape":"B_M_P","weight":1},{"time":12523,"blendshape":"T_L_D_N","weight":1},{"time":12572,"blendshape":"sil","weight":0},{"time":12703,"blendshape":"R","weight":1},{"time":12812,"blendshape":"IH","weight":1},{"time":12891,"blendshape":"F_V","weight":1},{"time":12972,"blendshape":"Er","weight":1},{"time":13010,"blendshape":"T_L_D_N","weight":1},{"time":13099,"blendshape":"W_OO","weight":1},{"time":13198,"blendshape":"Ch_J","weight":1},{"time":13328,"blendshape":"T_L_D_N","weight":1},{"time":13419,"blendshape":"T_L_D_N","weight":1},{"time":13485,"blendshape":"Er","weight":1},{"time":13523,"blendshape":"K_G_H_NG","weight":1},{"time":13617,"blendshape":"AE","weight":1},{"time":13734,"blendshape":"TH","weight":1},{"time":13827,"blendshape":"Er","weight":1},{"time":13913,"blendshape":"R","weight":1},{"time":14082,"blendshape":"sil","weight":0},{"time":14476,"blendshape":"R","weight":1},{"time":14616,"blendshape":"AE","weight":1},{"time":14709,"blendshape":"T_L_D_N","weight":1},{"time":14776,"blendshape":"IH","weight":1},{"time":14858,"blendshape":"T_L_D_N","weight":1},{"time":14942,"blendshape":"W_OO","weight":1},{"time":14979,"blendshape":"S_Z","weight":1},{"time":15128,"blendshape":"T_L_D_N","weight":1},{"time":15203,"blendshape":"Ah","weight":1},{"time":15446,"blendshape":"T_L_D_N","weight":1},{"time":15580,"blendshape":"sil","weight":0}]}
+
+ [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+useUnityBridge.ts:181 [Unity] [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+useUnityBridge.ts:181 [Unity] [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 142 Audio unlocked: true
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":136,"blendshape":"W_OO","weight":1},{"time":213,"blendshape":"T_L_D_N","weight":1}]
+useUnityBridge.ts:181 [Unity] [Unity] ✅ Playing audio + sending phonemes to Unity...
+useUnityBridge.ts:181 [Unity] [Unity] 🔍 DEBUG - Unity instance exists: true
+useUnityBridge.ts:181 [Unity] [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+ [Unity] HTML5 Audio playing, starting amplitude meter
+useUnityBridge.ts:181 [Unity] [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 142
+useUnityBridge.ts:181 [Unity] [Unity] 📦 Phoneme JSON length: 6418 chars
+useUnityBridge.ts:181 [Unity] [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+useUnityBridge.ts:181 [Unity] [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":136,"blendshape":"W_OO","weight":1},{"time":213,"blendshape":"T_L_D_N","weight":1},{"time":287,"blendshape":"B_M_P","weight":1},{"time":370,"blendshape":"sil","weight":0},{"time":498,"blendshape":"T_L_D_N","weight":1},{"time":581,"blendshape":"IH","weight":1},{"time":609,"blendshape":"K_G_H_NG","weight":1},{"time":654,"blendshape":"F_V","weight":1},{"time":704,"blendshape":"Er","weight":1},{"time":774,"blendshape":"K_G_H_NG","weight":1},{"time":882,"blendshape":"T_L_D_N","weight":1},{"time":985,"blendshape":"Ah","weight":1},{"time":1168,"blendshape":"sil","weight":0},{"time":1561,"blendshape":"B_M_P","weight":1},{"time":1627,"blendshape":"AE","weight":1},{"time":1726,"blendshape":"F_V","weight":1},{"time":1858,"blendshape":"IH","weight":1},{"time":1925,"blendshape":"K_G_H_NG","weight":1},{"time":1980,"blendshape":"T_L_D_N","weight":1},{"time":2026,"blendshape":"T_L_D_N","weight":1},{"time":2082,"blendshape":"Ah","weight":1},{"time":2242,"blendshape":"B_M_P","weight":1},{"time":2337,"blendshape":"F_V","weight":1},{"time":2431,"blendshape":"Er","weight":1},{"time":2480,"blendshape":"R","weight":1},{"time":2519,"blendshape":"T_L_D_N","weight":1},{"time":2618,"blendshape":"AE","weight":1},{"time":2728,"blendshape":"T_L_D_N","weight":1},{"time":2815,"blendshape":"IH","weight":1},{"time":2916,"blendshape":"K_G_H_NG","weight":1},{"time":3113,"blendshape":"sil","weight":0},{"time":3301,"blendshape":"S_Z","weight":1},{"time":3492,"blendshape":"AE","weight":1},{"time":3573,"blendshape":"T_L_D_N","weight":1},{"time":3658,"blendshape":"R","weight":1},{"time":3751,"blendshape":"Ah","weight":1},{"time":3901,"blendshape":"S_Z","weight":1},{"time":4027,"blendshape":"IH","weight":1},{"time":4097,"blendshape":"B_M_P","weight":1},{"time":4184,"blendshape":"Er","weight":1},{"time":4302,"blendshape":"Ch_J","weight":1},{"time":4442,"blendshape":"IH","weight":1},{"time":4693,"blendshape":"sil","weight":0},{"time":5343,"blendshape":"Ah","weight":1},{"time":5526,"blendshape":"B_M_P","weight":1},{"time":5615,"blendshape":"K_G_H_NG","weight":1},{"time":5671,"blendshape":"Er","weight":1},{"time":5725,"blendshape":"T_L_D_N","weight":1},{"time":5781,"blendshape":"IH","weight":1},{"time":5840,"blendshape":"B_M_P","weight":1},{"time":5928,"blendshape":"Ah","weight":1},{"time":6146,"blendshape":"sil","weight":0},{"time":6341,"blendshape":"IH","weight":1},{"time":6526,"blendshape":"sil","weight":0},{"time":6576,"blendshape":"R","weight":1},{"time":6613,"blendshape":"S_Z","weight":1},{"time":6752,"blendshape":"Ah","weight":1},{"time":6934,"blendshape":"Er","weight":1},{"time":6964,"blendshape":"T_L_D_N","weight":1},{"time":7032,"blendshape":"S_Z","weight":1},{"time":7166,"blendshape":"T_L_D_N","weight":1},{"time":7231,"blendshape":"IH","weight":1},{"time":7341,"blendshape":"Ch_J","weight":1},{"time":7484,"blendshape":"Er","weight":1},{"time":7623,"blendshape":"R","weight":1},{"time":7711,"blendshape":"sil","weight":0},{"time":8105,"blendshape":"IH","weight":1},{"time":8237,"blendshape":"sil","weight":0},{"time":8328,"blendshape":"R","weight":1},{"time":8360,"blendshape":"IH","weight":1},{"time":8406,"blendshape":"T_L_D_N","weight":1},{"time":8494,"blendshape":"K_G_H_NG","weight":1},{"time":8572,"blendshape":"T_L_D_N","weight":1},{"time":8620,"blendshape":"Ah","weight":1},{"time":8760,"blendshape":"S_Z","weight":1},{"time":8900,"blendshape":"T_L_D_N","weight":1},{"time":8969,"blendshape":"W_OO","weight":1},{"time":9023,"blendshape":"AE","weight":1},{"time":9122,"blendshape":"T_L_D_N","weight":1},{"time":9201,"blendshape":"F_V","weight":1},{"time":9282,"blendshape":"Er","weight":1},{"time":9356,"blendshape":"T_L_D_N","weight":1},{"time":9414,"blendshape":"T_L_D_N","weight":1},{"time":9461,"blendshape":"B_M_P","weight":1},{"time":9513,"blendshape":"R","weight":1},{"time":9543,"blendshape":"IH","weight":1},{"time":9571,"blendshape":"B_M_P","weight":1},{"time":9682,"blendshape":"AE","weight":1},{"time":9821,"blendshape":"R","weight":1},{"time":9881,"blendshape":"IH","weight":1},{"time":9919,"blendshape":"K_G_H_NG","weight":1},{"time":9989,"blendshape":"F_V","weight":1},{"time":10095,"blendshape":"Er","weight":1},{"time":10123,"blendshape":"R","weight":1},{"time":10155,"blendshape":"Ch_J","weight":1},{"time":10294,"blendshape":"IH","weight":1},{"time":10499,"blendshape":"sil","weight":0},{"time":10693,"blendshape":"R","weight":1},{"time":10843,"blendshape":"Ah","weight":1},{"time":11062,"blendshape":"T_L_D_N","weight":1},{"time":11239,"blendshape":"sil","weight":0},{"time":11632,"blendshape":"T_L_D_N","weight":1},{"time":11703,"blendshape":"Er","weight":1},{"time":11744,"blendshape":"T_L_D_N","weight":1},{"time":11801,"blendshape":"EE","weight":1},{"time":11946,"blendshape":"W_OO","weight":1},{"time":12034,"blendshape":"IH","weight":1},{"time":12136,"blendshape":"T_L_D_N","weight":1},{"time":12205,"blendshape":"IH","weight":1},{"time":12267,"blendshape":"K_G_H_NG","weight":1},{"time":12341,"blendshape":"S_Z","weight":1},{"time":12431,"blendshape":"B_M_P","weight":1},{"time":12523,"blendshape":"T_L_D_N","weight":1},{"time":12572,"blendshape":"sil","weight":0},{"time":12703,"blendshape":"R","weight":1},{"time":12812,"blendshape":"IH","weight":1},{"time":12891,"blendshape":"F_V","weight":1},{"time":12972,"blendshape":"Er","weight":1},{"time":13010,"blendshape":"T_L_D_N","weight":1},{"time":13099,"blendshape":"W_OO","weight":1},{"time":13198,"blendshape":"Ch_J","weight":1},{"time":13328,"blendshape":"T_L_D_N","weight":1},{"time":13419,"blendshape":"T_L_D_N","weight":1},{"time":13485,"blendshape":"Er","weight":1},{"time":13523,"blendshape":"K_G_H_NG","weight":1},{"time":13617,"blendshape":"AE","weight":1},{"time":13734,"blendshape":"TH","weight":1},{"time":13827,"blendshape":"Er","weight":1},{"time":13913,"blendshape":"R","weight":1},{"time":14082,"blendshape":"sil","weight":0},{"time":14476,"blendshape":"R","weight":1},{"time":14616,"blendshape":"AE","weight":1},{"time":14709,"blendshape":"T_L_D_N","weight":1},{"time":14776,"blendshape":"IH","weight":1},{"time":14858,"blendshape":"T_L_D_N","weight":1},{"time":14942,"blendshape":"W_OO","weight":1},{"time":14979,"blendshape":"S_Z","weight":1},{"time":15128,"blendshape":"T_L_D_N","weight":1},{"time":15203,"blendshape":"Ah","weight":1},{"time":15446,"blendshape":"T_L_D_N","weight":1},{"time":15580,"blendshape":"sil","weight":0}]}
+
+useUnityBridge.ts:181 [Unity] [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+useUnityBridge.ts:193 [Unity Bridge] ✅ Audio playback started: greeting-1760070420623
+useUnityBridge.ts:181 [Unity] [Unity] HTML5 Audio playing, starting amplitude meter
+ [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+AvatarContainer.tsx:155 [Avatar Container] 🔘 Bubble clicked! Expanding to half...
+AvatarContainer.tsx:67 [Avatar Container] 🔍 viewState changed to: half
+ [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+HalfPanel.tsx:39 [Half Panel] Unity state: Object
+ [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+AvatarContainer.tsx:95 [Avatar Container] Global Unity element: FOUND ✅
+AvatarContainer.tsx:117 [Avatar Container] Target container (#half-panel-unity-target): FOUND ✅
+AvatarContainer.tsx:126 [Avatar] ✅ Unity moved to half container (#half-panel-unity-target)
+unity-avatar/index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+ navigator.mediaDevices support available
+ [UnityMemory] Configuration Parameters - Can be set up in boot.config
+
+     "memorysetup-allocator-temp-initial-block-size-main=262144"
+
+     "memorysetup-allocator-temp-initial-block-size-worker=262144"
+
+     "memorysetup-temp-allocator-size-audio-worker=65536"
+
+     "memorysetup-temp-allocator-size-background-worker=32768"
+
+     "memorysetup-bucket-allocator-granularity=16"
+
+     "memorysetup-bucket-allocator-bucket-count=8"
+
+     "memorysetup-bucket-allocator-block-size=4194304"
+
+     "memorysetup-bucket-allocator-block-count=1"
+
+     "memorysetup-main-allocator-block-size=16777216"
+
+     "memorysetup-thread-allocator-block-size=16777216"
+
+     "memorysetup-gfx-main-allocator-block-size=16777216"
+
+     "memorysetup-gfx-thread-allocator-block-size=16777216"
+
+     "memorysetup-cache-allocator-block-size=4194304"
+
+     "memorysetup-typetree-allocator-block-size=2097152"
+
+     "memorysetup-profiler-bucket-allocator-granularity=16"
+
+     "memorysetup-profiler-bucket-allocator-bucket-count=8"
+
+     "memorysetup-profiler-bucket-allocator-block-size=4194304"
+
+     "memorysetup-profiler-bucket-allocator-block-count=1"
+
+     "memorysetup-profiler-allocator-block-size=16777216"
+
+     "memorysetup-profiler-editor-allocator-block-size=1048576"
+
+     "memorysetup-temp-allocator-size-main=4194304"
+
+     "memorysetup-job-temp-allocator-block-size=2097152"
+
+     "memorysetup-job-temp-allocator-block-size-background=1048576"
+
+     "memorysetup-job-temp-allocator-reduction-small-platforms=262144"
+
+ [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+ Loading player data from data.unity3d
+
+ Initialize engine version: 2022.3.53f1 (df4e529d20d3)
+
+ Creating WebGL 2.0 context.
+ Renderer: WebKit WebGL
+
+ Vendor:   WebKit
+
+ Version:  OpenGL ES 3.0 (WebGL 2.0 (OpenGL ES 3.0 Chromium))
+
+ GLES:     3
+
+  EXT_clip_control EXT_color_buffer_float EXT_color_buffer_half_float EXT_conservative_depth EXT_depth_clamp EXT_disjoint_timer_query_webgl2 EXT_float_blend EXT_polygon_offset_clamp EXT_render_snorm EXT_texture_compression_bptc EXT_texture_compression_rgtc EXT_texture_filter_anisotropic EXT_texture_mirror_clamp_to_edge EXT_texture_norm16 KHR_parallel_shader_compile NV_shader_noperspective_interpolation OES_draw_buffers_indexed OES_sample_variables OES_shader_multisample_interpolation OES_texture_float_linear WEBGL_blend_func_extended WEBGL_clip_cull_distance WEBGL_compressed_texture_astc WEBGL_compressed_texture_etc WEBGL_compressed_texture_etc1 WEBGL_compressed_texture_pvrtc WEBGL_compressed_texture_s3tc WEBGL_compressed_texture_s3tc_srgb WEBGL_debug_renderer_info WEBGL_debug_shaders WEBGL_lose_context WEBGL_multi_draw WEBGL_polygon_mode WEBGL_provoking_vertex WEBGL_render_shared_exponent WEBGL_stencil_texturing GL_EXT_clip_control GL_EXT_color_buffer_float GL_EXT_color_buffer_half_float GL_EXT_conservative_
+
+ depth GL_EXT_depth_clamp GL_EXT_disjoint_timer_query_webgl2 GL_EXT_float_blend GL_EXT_polygon_offset_clamp GL_EXT_render_snorm GL_EXT_texture_compression_bptc GL_EXT_texture_compression_rgtc GL_EXT_texture_filter_anisotropic GL_EXT_texture_mirror_clamp_to_edge GL_EXT_texture_norm16 GL_KHR_parallel_shader_compile GL_NV_shader_noperspective_interpolation GL_OES_draw_buffers_indexed GL_OES_sample_variables GL_OES_shader_multisample_interpolation GL_OES_texture_float_linear GL_WEBGL_blend_func_extended GL_WEBGL_clip_cull_distance GL_WEBGL_compressed_texture_astc GL_WEBGL_compressed_texture_etc GL_WEBGL_compressed_texture_etc1 GL_WEBGL_compressed_texture_pvrtc GL_WEBGL_compressed_texture_s3tc GL_WEBGL_compressed_texture_s3tc_srgb GL_WEBGL_debug_renderer_info GL_WEBGL_debug_shaders GL_WEBGL_lose_context GL_WEBGL_multi_draw GL_WEBGL_polygon_mode GL_WEBGL_provoking_vertex GL_WEBGL_render_shared_exponent GL_WEBGL_stencil_texturing
+
+ OPENGL LOG: Creating OpenGL ES 3.0 graphics device ; Context level  <OpenGL ES 3.0> ; Context handle 1
+
+ Input Manager initialize...
+
+ PlatformGetStacktrace
+
+ Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 33 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ PlatformGetStacktrace
+
+ Shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' uses 34 texture parameters, more than the 32 supported by the current graphics device.
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[39272]:0xa54ec8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50628]:0x1101418
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50624]:0x110017c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49265]:0x10581cb
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49266]:0x105c8e8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52116]:0x1193a18
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[52164]:0x11a077d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48740]:0xfca003
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48751]:0xfcb4b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48763]:0xfcc603
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[48764]:0xfcc7b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55404]:0x12599ae
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55410]:0x125a062
+    at Module._main (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:319056)
+    at callMain (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390977)
+    at doRun (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391424)
+    at run (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:391596)
+    at runCaller (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:390636)
+    at Object.removeRunDependency (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:19145)
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.loader.js:1:9461
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ [PhysX] Initialized SinglethreadedTaskDispatcher.
+
+ UnloadTime: 2.800000 ms
+
+ [Unity] Instance created successfully
+ [Unity] ⏰ Calling OnUnityReady directly...
+ [Unity] Avatar instance ready
+ [Unity] ⏳ Waiting for handshake before audio unlock...
+ [UnityCache] 'https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.data.gz' successfully downloaded and stored in the indexedDB cache
+ PlatformGetStacktrace
+
+ -------- Shader Reallusion/Amplify/RL_SkinShader_Variants_3D
+-------- GLSL link error: FRAGMENT shader texture image units count exceeds MAX_TEXTURE_IMAGE_UNITS(16)
+
+
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55282]:0x1231872
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51315]:0x11571ea
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51358]:0x115b3a0
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51614]:0x11741b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41076]:0xb15318
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50687]:0x11076e5
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41057]:0xb11f7e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49396]:0x107265e
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41119]:0xb2809d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41137]:0xb2c4ba
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[51710]:0x1178d60
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[41138]:0xb2f9b2
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49180]:0x1042e1c
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[49087]:0x102d87d
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50075]:0x10cf7fc
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c9764
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[50032]:0x10c97d8
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55402]:0x123fc81
+    at https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.wasm.gz:wasm-function[55432]:0x125af9c
+    at browserIterationFunc (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:216542)
+    at callUserCallback (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:170164)
+    at Object.runIter (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:171404)
+    at Browser_mainLoop_runner (https://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/unity-avatar/Build/Build.framework.js.gz:10:169700)
+
+
+(anonymous) @ __replco/static/devtools/injected.js:27
+ Note: Creation of internal variant of shader 'Reallusion/Amplify/RL_SkinShader_Variants_3D' failed.
+
+AvatarContainer.tsx:67 [Avatar Container] 🔍 viewState changed to: fullscreen
+AvatarContainer.tsx:95 [Avatar Container] Global Unity element: NOT FOUND ❌
+AvatarContainer.tsx:98 [Avatar] ❌ Global Unity instance not found anywhere!
+(anonymous) @ AvatarContainer.tsx:98
+AvatarContainer.tsx:67 [Avatar Container] 🔍 viewState changed to: minimized
+AvatarContainer.tsx:95 [Avatar Container] Global Unity element: NOT FOUND ❌
+AvatarContainer.tsx:98 [Avatar] ❌ Global Unity instance not found anywhere!
+(anonymous) @ AvatarContainer.tsx:98

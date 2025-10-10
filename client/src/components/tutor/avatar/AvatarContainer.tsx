@@ -65,6 +65,7 @@ export function AvatarContainer({
   // Move global Unity instance into active state container
   useEffect(() => {
     console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
+    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-FULLSCREEN-FIX-V2');
     
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
