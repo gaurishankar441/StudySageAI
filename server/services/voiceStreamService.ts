@@ -1,4 +1,4 @@
-import type { VoiceWebSocketClient, VoiceMessage, TTSChunkMessage, TranscriptionMessage, TTSStartMessage, TTSEndMessage } from '../types/voiceWebSocket';
+import type { VoiceWebSocketClient, VoiceMessage, TTSChunkMessage, PhonemeTTSChunkMessage, TranscriptionMessage, TTSStartMessage, TTSEndMessage } from '../types/voiceWebSocket';
 import { sarvamVoiceService } from './sarvamVoice';
 import { AssemblyAI } from 'assemblyai';
 import { PollyClient, SynthesizeSpeechCommand } from '@aws-sdk/client-polly';
@@ -18,6 +18,8 @@ import { hintService } from './hintService';
 import { ttsCacheService } from './ttsCacheService';
 import { audioCompression } from './audioCompression';
 import { ttsMetrics } from './ttsMetrics';
+import { voiceService } from './voiceService';
+import { mapPollyVisemesToUnityPhonemes } from '../utils/visemeMapping';
 
 // Initialize AI Tutor services
 const languageDetector = new LanguageDetectionEngine();
@@ -641,6 +643,7 @@ export class VoiceStreamService {
   /**
    * 🚀 HELPER: Generate and stream TTS for a single sentence IMMEDIATELY
    * Used for TRUE real-time streaming during AI response generation
+   * Now supports PHONEME_TTS_CHUNK for Unity lip-sync!
    */
   private async generateAndStreamSentenceTTS(
     ws: VoiceWebSocketClient,
@@ -655,56 +658,89 @@ export class VoiceStreamService {
       enableMathSpeech?: boolean;
       enablePauses?: boolean;
       enableEmphasis?: boolean;
+      enablePhonemes?: boolean;  // 🎤 NEW: Enable phoneme generation for lip-sync
     }
   ): Promise<void> {
     try {
       const startTime = Date.now();
       
-      // 🚀 PHASE 1: Check cache first
-      const cachedAudio = await ttsCacheService.get(
-        sentence, 
-        voiceOptions.language, 
-        voiceOptions.emotion, 
-        voiceOptions.personaId
-      );
-      
       let audioBuffer: Buffer;
+      let phonemes: Array<{time: number; blendshape: string; weight: number}> | undefined;
       let cached = false;
       
-      if (cachedAudio) {
-        audioBuffer = cachedAudio;
-        cached = true;
-      } else {
-        // Generate TTS audio
-        audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+      // 🎤 PHASE 1: Generate audio with or without phonemes
+      if (voiceOptions.enablePhonemes) {
+        // 🎤 Generate audio + phonemes using Polly synthesizeWithVisemes
+        console.log(`[PHONEME STREAM] 🎤 Generating audio + phonemes for sentence ${sequenceNumber}...`);
         
-        // Store in cache for future use
-        await ttsCacheService.set(
+        const result = await voiceService.synthesizeWithVisemes(sentence, voiceOptions.language);
+        audioBuffer = result.audio;
+        
+        // Map Polly visemes to Unity phonemes
+        phonemes = mapPollyVisemesToUnityPhonemes(result.visemes);
+        
+        console.log(`[PHONEME STREAM] ✅ Generated ${phonemes.length} phonemes for sentence ${sequenceNumber}`);
+      } else {
+        // 🚀 Regular TTS without phonemes (check cache first)
+        const cachedAudio = await ttsCacheService.get(
           sentence, 
           voiceOptions.language, 
-          audioBuffer, 
           voiceOptions.emotion, 
           voiceOptions.personaId
         );
+        
+        if (cachedAudio) {
+          audioBuffer = cachedAudio;
+          cached = true;
+        } else {
+          // Generate TTS audio
+          audioBuffer = await enhancedVoiceService.synthesize(sentence, voiceOptions);
+          
+          // Store in cache for future use
+          await ttsCacheService.set(
+            sentence, 
+            voiceOptions.language, 
+            audioBuffer, 
+            voiceOptions.emotion, 
+            voiceOptions.personaId
+          );
+        }
       }
       
       const genTime = Date.now() - startTime;
-      const cacheStatus = cached ? '💾 CACHED' : '🔨 GENERATED';
+      const cacheStatus = voiceOptions.enablePhonemes ? '🎤 WITH PHONEMES' : (cached ? '💾 CACHED' : '🔨 GENERATED');
       console.log(`[TRUE STREAM] ✅ Sentence ${sequenceNumber} ${cacheStatus} (${genTime}ms): "${sentence.substring(0, 40)}..."`);
       
-      // 🚀 PHASE 2: Send TTS chunk immediately (matching TTSChunkMessage format)
+      // 🚀 PHASE 2: Send appropriate TTS chunk message
       const finalAudioData = audioBuffer.toString('base64');
       
-      const ttsMsg: TTSChunkMessage = {
-        type: 'TTS_CHUNK',
-        timestamp: new Date().toISOString(),
-        sessionId: ws.sessionId,
-        data: finalAudioData,  // ✅ Direct base64 string (NOT nested!)
-        chunkIndex: sequenceNumber,
-        totalChunks: isLast ? sequenceNumber + 1 : undefined
-      };
-      
-      ws.send(JSON.stringify(ttsMsg));
+      if (voiceOptions.enablePhonemes && phonemes) {
+        // 🎤 Send PHONEME_TTS_CHUNK with audio + phoneme data
+        const phonemeMsg: PhonemeTTSChunkMessage = {
+          type: 'PHONEME_TTS_CHUNK',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          audio: finalAudioData,
+          phonemes: phonemes,
+          chunkIndex: sequenceNumber,
+          totalChunks: isLast ? sequenceNumber + 1 : undefined,
+          text: sentence
+        };
+        
+        ws.send(JSON.stringify(phonemeMsg));
+      } else {
+        // 🔊 Send regular TTS_CHUNK without phonemes
+        const ttsMsg: TTSChunkMessage = {
+          type: 'TTS_CHUNK',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          data: finalAudioData,  // ✅ Direct base64 string (NOT nested!)
+          chunkIndex: sequenceNumber,
+          totalChunks: isLast ? sequenceNumber + 1 : undefined
+        };
+        
+        ws.send(JSON.stringify(ttsMsg));
+      }
       
       // 🚀 PHASE 3: Record metrics
       ttsMetrics.record({
@@ -932,7 +968,8 @@ export class VoiceStreamService {
         language,
         enableMathSpeech: true,
         enablePauses: true,
-        enableEmphasis: true
+        enableEmphasis: true,
+        enablePhonemes: true  // 🎤 Enable phoneme generation for Unity lip-sync via WebSocket!
       };
       
       // 🚀 Stream AI response with REAL-TIME sentence-by-sentence TTS generation!

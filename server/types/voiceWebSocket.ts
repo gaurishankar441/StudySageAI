@@ -9,6 +9,7 @@ export type VoiceMessageType =
   | 'AUDIO_CHUNK'          // Client → Server: Audio data for STT
   | 'TRANSCRIPTION'        // Server → Client: STT result
   | 'TTS_CHUNK'            // Server → Client: Audio chunk for playback
+  | 'PHONEME_TTS_CHUNK'    // Server → Client: Audio + Phoneme data for lip-sync
   | 'TTS_START'            // Server → Client: TTS generation started
   | 'TTS_END'              // Server → Client: TTS generation complete
   | 'TTS_SKIP'             // Server → Client: Skip failed TTS chunk (PHASE 1)
@@ -50,6 +51,23 @@ export interface TTSChunkMessage extends VoiceWebSocketMessage {
   data: string; // Base64 encoded audio (MP3)
   chunkIndex: number;
   totalChunks?: number;
+}
+
+// Phoneme data structure for Unity lip-sync
+export interface PhonemeData {
+  time: number;
+  blendshape: string;
+  weight: number;
+}
+
+// TTS audio chunk with phoneme data for lip-sync
+export interface PhonemeTTSChunkMessage extends VoiceWebSocketMessage {
+  type: 'PHONEME_TTS_CHUNK';
+  audio: string; // Base64 encoded audio (MP3)
+  phonemes: PhonemeData[]; // Phoneme timing data for Unity lip-sync
+  chunkIndex: number;
+  totalChunks?: number;
+  text: string; // Text being spoken (for debugging/display)
 }
 
 // TTS start notification
@@ -120,6 +138,7 @@ export type VoiceMessage =
   | AudioChunkMessage
   | TranscriptionMessage
   | TTSChunkMessage
+  | PhonemeTTSChunkMessage
   | TTSStartMessage
   | TTSEndMessage
   | InterruptMessage
