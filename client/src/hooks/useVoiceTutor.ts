@@ -8,12 +8,15 @@ type WSMessageType =
   | 'AUDIO_CHUNK' 
   | 'TRANSCRIPTION' 
   | 'TTS_CHUNK' 
-  | 'PHONEME_TTS_CHUNK'  // 🎤 NEW: TTS with phoneme data for Unity lip-sync
+  | 'PHONEME_TTS_CHUNK'  // 🎤 TTS with phoneme data for Unity lip-sync
   | 'TTS_START' 
   | 'TTS_END'
-  | 'TTS_SKIP'       // Deprecated - use ERROR instead
+  | 'TTS_SKIP'           // Deprecated - use ERROR instead
   | 'INTERRUPT' 
-  | 'SESSION_STATE' 
+  | 'SESSION_STATE'
+  | 'AVATAR_STATE'       // 🎭 Client → Server: Avatar state change
+  | 'AVATAR_STATE_ACK'   // 🎭 Server → Client: Avatar state acknowledgment  
+  | 'AI_RESPONSE_TEXT'   // 📝 Server → Client: Text-only AI response (avatar not ready)
   | 'ERROR' 
   | 'PING' 
   | 'PONG';
@@ -24,19 +27,26 @@ interface WSMessage {
   data?: any;
   error?: string;  // Legacy field
   
-  // ✅ NEW: Flat format fields for TTSChunkMessage
+  // ✅ Flat format fields for TTSChunkMessage
   chunkIndex?: number;
   totalChunks?: number;
   
-  // ✅ NEW: Flat format fields for ERROR VoiceMessage
+  // ✅ Flat format fields for ERROR VoiceMessage
   code?: string;
   message?: string;
   recoverable?: boolean;
   
-  // 🎤 NEW: Flat format fields for PHONEME_TTS_CHUNK
+  // 🎤 Flat format fields for PHONEME_TTS_CHUNK
   audio?: string;  // Base64 audio data
   phonemes?: Array<{time: number; blendshape: string; weight: number}>;  // Unity phoneme data
   text?: string;  // Text being spoken
+  
+  // 🎭 Flat format fields for AVATAR_STATE and AVATAR_STATE_ACK
+  state?: 'CLOSED' | 'LOADING' | 'READY' | 'PLAYING' | 'ERROR';
+  canAcceptTTS?: boolean;
+  
+  // 📝 Flat format field for AI_RESPONSE_TEXT
+  messageId?: string;
   
   timestamp?: string;
   sessionId?: string;

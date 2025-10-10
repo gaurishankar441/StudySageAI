@@ -17,6 +17,9 @@ export type VoiceMessageType =
   | 'PHASE_CHANGE'         // Server → Client: Tutor phase transition
   | 'EMOTION_DETECTED'     // Server → Client: Emotion detection result
   | 'SESSION_STATE'        // Bidirectional: Session state sync
+  | 'AVATAR_STATE'         // Client → Server: Avatar state change (CLOSED, LOADING, READY, PLAYING, ERROR)
+  | 'AVATAR_STATE_ACK'     // Server → Client: Avatar state acknowledgment
+  | 'AI_RESPONSE_TEXT'     // Server → Client: Text-only AI response (when avatar not ready)
   | 'ERROR'                // Server → Client: Error occurred
   | 'PING'                 // Bidirectional: Keep-alive
   | 'PONG';                // Bidirectional: Keep-alive response
@@ -116,6 +119,27 @@ export interface SessionStateMessage extends VoiceWebSocketMessage {
   isVoiceActive: boolean;
 }
 
+// Avatar state change message (Client → Server)
+export interface AvatarStateMessage extends VoiceWebSocketMessage {
+  type: 'AVATAR_STATE';
+  state: 'CLOSED' | 'LOADING' | 'READY' | 'PLAYING' | 'ERROR';
+  canAcceptTTS: boolean;
+}
+
+// Avatar state acknowledgment (Server → Client)
+export interface AvatarStateAckMessage extends VoiceWebSocketMessage {
+  type: 'AVATAR_STATE_ACK';
+  canAcceptTTS: boolean;
+  state: string;
+}
+
+// AI response text-only (Server → Client) - When avatar not ready
+export interface AIResponseTextMessage extends VoiceWebSocketMessage {
+  type: 'AI_RESPONSE_TEXT';
+  text: string;
+  messageId?: string;
+}
+
 // Error message
 export interface ErrorMessage extends VoiceWebSocketMessage {
   type: 'ERROR';
@@ -145,6 +169,9 @@ export type VoiceMessage =
   | PhaseChangeMessage
   | EmotionDetectedMessage
   | SessionStateMessage
+  | AvatarStateMessage
+  | AvatarStateAckMessage
+  | AIResponseTextMessage
   | ErrorMessage
   | PingMessage
   | PongMessage;
