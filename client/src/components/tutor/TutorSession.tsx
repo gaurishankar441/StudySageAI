@@ -566,8 +566,8 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const lastPlayedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // 🎯 CRITICAL: Wait for chat to load before auto-playing (needed for mode detection)
-    if (messages.length > 0 && chat) {
+    // 🎯 CRITICAL: Wait for chat to load AND avatar to be ready before auto-playing
+    if (messages.length > 0 && chat && avatarIsReady) {
       const lastMessage = messages[messages.length - 1];
       
       if (
@@ -575,7 +575,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         lastMessage.id !== lastPlayedRef.current &&
         !isStreaming
       ) {
-        console.log('[TTS] Auto-playing new assistant message:', lastMessage.id);
+        console.log('[TTS] ✅ Avatar ready - Auto-playing new assistant message:', lastMessage.id);
         console.log('[TTS] Chat mode:', chat.mode, '- Will use', chat.mode === 'tutor' ? 'PHONEME' : 'REGULAR', 'TTS');
         lastPlayedRef.current = lastMessage.id;
         
@@ -583,8 +583,10 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           console.log('[TTS] Auto-play blocked, user can click speaker manually', err);
         });
       }
+    } else if (messages.length > 0 && chat && !avatarIsReady) {
+      console.log('[TTS] ⏳ Waiting for avatar to be ready before auto-playing TTS...');
     }
-  }, [messages, isStreaming, chat]);
+  }, [messages, isStreaming, chat, avatarIsReady]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
