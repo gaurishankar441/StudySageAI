@@ -54,6 +54,10 @@ export const users = pgTable("users", {
   currentClass: varchar("current_class"), // '10th', '12th', 'BSc Year 1', etc.
   subjects: text("subjects").array(), // Array of subjects
   
+  // Admin access control
+  role: varchar("role").default('user'), // 'user', 'admin', 'super_admin'
+  permissions: jsonb("permissions").$type<string[]>(), // ['edit_personas', 'manage_builds', etc.]
+  
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -413,6 +417,71 @@ export const tutorMetrics = pgTable("tutor_metrics", {
   index("tutor_metrics_type_idx").on(table.periodType),
 ]);
 
+// ========== ADMIN PANEL TABLES ==========
+
+// Admin Configuration Storage
+export const adminConfigs = pgTable("admin_configs", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  category: varchar("category").notNull(), // 'tutor', 'unity', 'tts', 'api', 'system', 'cache'
+  key: varchar("key").notNull().unique(), // e.g., 'tutor_personas', 'unity_gameobject_name'
+  value: jsonb("value").notNull(), // JSON configuration data
+  description: text("description"),
+  dataType: varchar("data_type"), // 'json', 'string', 'number', 'boolean', 'array'
+  isActive: boolean("is_active").default(true),
+  createdBy: varchar("created_by").references(() => users.id),
+  updatedBy: varchar("updated_by").references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+}, (table) => [
+  index("admin_configs_category_idx").on(table.category),
+  index("admin_configs_key_idx").on(table.key),
+  index("admin_configs_active_idx").on(table.isActive),
+]);
+
+// Configuration Audit Log
+export const configAuditLog = pgTable("config_audit_log", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  configId: varchar("config_id").references(() => adminConfigs.id, { onDelete: "cascade" }),
+  action: varchar("action").notNull(), // 'create', 'update', 'delete', 'restore'
+  category: varchar("category").notNull(),
+  key: varchar("key").notNull(),
+  oldValue: jsonb("old_value"),
+  newValue: jsonb("new_value"),
+  changedBy: varchar("changed_by").references(() => users.id).notNull(),
+  ipAddress: varchar("ip_address"),
+  userAgent: text("user_agent"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("audit_log_config_idx").on(table.configId),
+  index("audit_log_user_idx").on(table.changedBy),
+  index("audit_log_created_idx").on(table.createdAt),
+  index("audit_log_category_idx").on(table.category),
+]);
+
+// Unity Build Management
+export const unityBuilds = pgTable("unity_builds", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  version: varchar("version").notNull(), // '1.0.0', '1.1.0'
+  buildDate: timestamp("build_date").notNull(),
+  gameObjectName: varchar("game_object_name").notNull(), // 'AvatarController'
+  s3Prefix: varchar("s3_prefix").default('unity-assets/'),
+  files: jsonb("files").$type<{
+    dataGz: { key: string; size: number; uploadedAt: string };
+    wasmGz: { key: string; size: number; uploadedAt: string };
+    frameworkJsGz: { key: string; size: number; uploadedAt: string };
+    loaderJs: { key: string; size: number; uploadedAt: string };
+  }>(),
+  isActive: boolean("is_active").default(false),
+  uploadedBy: varchar("uploaded_by").references(() => users.id),
+  notes: text("notes"),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => [
+  index("unity_builds_version_idx").on(table.version),
+  index("unity_builds_active_idx").on(table.isActive),
+  index("unity_builds_created_idx").on(table.createdAt),
+]);
+
 // Relations
 export const usersRelations = relations(users, ({ many }) => ({
   documents: many(documents),
@@ -617,6 +686,23 @@ export const insertUserSchema = createInsertSchema(users).omit({
   updatedAt: true,
 });
 
+// Admin tables insert schemas
+export const insertAdminConfigSchema = createInsertSchema(adminConfigs).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+});
+
+export const insertConfigAuditLogSchema = createInsertSchema(configAuditLog).omit({
+  id: true,
+  createdAt: true,
+});
+
+export const insertUnityBuildSchema = createInsertSchema(unityBuilds).omit({
+  id: true,
+  createdAt: true,
+});
+
 // Types
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
@@ -649,3 +735,9 @@ export type InsertLanguageDetectionLog = typeof insertLanguageDetectionLogSchema
 export type LanguageDetectionLog = typeof languageDetectionLogs.$inferSelect;
 export type InsertResponseValidationLog = typeof insertResponseValidationLogSchema._type;
 export type ResponseValidationLog = typeof responseValidationLogs.$inferSelect;
+export type InsertAdminConfig = typeof insertAdminConfigSchema._type;
+export type AdminConfig = typeof adminConfigs.$inferSelect;
+export type InsertConfigAuditLog = typeof insertConfigAuditLogSchema._type;
+export type ConfigAuditLog = typeof configAuditLog.$inferSelect;
+export type InsertUnityBuild = typeof insertUnityBuildSchema._type;
+export type UnityBuild = typeof unityBuilds.$inferSelect;
