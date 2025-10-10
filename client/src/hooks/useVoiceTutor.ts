@@ -2,6 +2,8 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './use-toast';
 import { useUnityAvatar } from '@/contexts/UnityAvatarContext';
 import pako from 'pako';
+import { SmartTTSQueue } from '@/services/SmartTTSQueue';
+import { useAvatarState } from './useAvatarState';
 
 // WebSocket message types
 type WSMessageType = 
@@ -98,11 +100,15 @@ export function useVoiceTutor({
   const shouldReconnectRef = useRef(true);
   const { toast } = useToast();
   const { avatarRef } = useUnityAvatar();  // 🎤 Access Unity avatar for lip-sync
+  const { canAcceptTTS } = useAvatarState();  // 🎭 Get avatar TTS readiness
 
   // 🚀 PHASE 1: Sequence-based TTS queue for out-of-order handling
   const ttsSequenceQueueRef = useRef<Map<number, AudioBuffer>>(new Map());
   const nextExpectedSequenceRef = useRef(0);
   const skippedSequencesRef = useRef<Set<number>>(new Set());
+
+  // 🎭 Smart TTS Queue for avatar state management
+  const smartTTSQueueRef = useRef<SmartTTSQueue>(new SmartTTSQueue());
 
   // Get WebSocket URL
   const getWsUrl = useCallback(() => {
@@ -274,36 +280,70 @@ export function useVoiceTutor({
         }
 
         case 'PHONEME_TTS_CHUNK': {
-          // 🎤 NEW: Handle TTS with phoneme data for Unity lip-sync
+          // 🎤 Handle TTS with phoneme data for Unity lip-sync via Smart TTS Queue
           // { type: 'PHONEME_TTS_CHUNK', audio: 'base64...', phonemes: [...], chunkIndex: 1, text: '...' }
           const { audio, phonemes, chunkIndex, text } = message;
           
-          if (audio && phonemes && avatarRef.current) {
+          if (audio && phonemes) {
             console.log(`[PHONEME STREAM] 🎤 Received phoneme TTS chunk ${chunkIndex}: ${phonemes.length} phonemes for "${text?.substring(0, 30)}..."`);
             
-            try {
-              // Send audio + phonemes to Unity avatar for synchronized lip-sync
-              avatarRef.current.sendAudioWithPhonemesToAvatar(
-                audio, 
-                phonemes, 
-                `tts-chunk-${chunkIndex}`
-              );
-              
-              // Update speaking state
-              setState(prev => ({ ...prev, isSpeaking: true }));
-              
-              console.log(`[PHONEME STREAM] ✅ Sent to Unity: ${phonemes.length} phonemes`);
-            } catch (error) {
-              console.error('[PHONEME STREAM] ❌ Error sending to Unity:', error);
-              // Fallback to regular audio playback
-              const audioData = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
-              await handleTTSChunk(audioData.buffer, chunkIndex);
+            // 🎭 Enqueue through Smart TTS Queue with avatar state validation
+            const enqueueResult = smartTTSQueueRef.current.enqueue({
+              id: `tts-chunk-${chunkIndex}`,
+              audio,
+              phonemes,
+              text: text || '',
+              timestamp: new Date(),
+              canAcceptTTS
+            });
+            
+            console.log(`[Smart TTS Queue] 📊 Enqueue result:`, enqueueResult);
+            
+            // If successfully enqueued, send to Unity
+            if (enqueueResult.success && avatarRef.current) {
+              try {
+                // Send audio + phonemes to Unity avatar for synchronized lip-sync
+                avatarRef.current.sendAudioWithPhonemesToAvatar(
+                  audio, 
+                  phonemes, 
+                  `tts-chunk-${chunkIndex}`
+                );
+                
+                // Update speaking state
+                setState(prev => ({ ...prev, isSpeaking: true }));
+                
+                console.log(`[PHONEME STREAM] ✅ Sent to Unity: ${phonemes.length} phonemes`);
+              } catch (error) {
+                console.error('[PHONEME STREAM] ❌ Error sending to Unity:', error);
+                // Fallback to regular audio playback
+                const audioData = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+                await handleTTSChunk(audioData.buffer, chunkIndex);
+              }
+            } else {
+              console.log(`[Smart TTS Queue] ⏭️ TTS rejected - Avatar not ready or queue validation failed`);
             }
           } else if (audio) {
-            // Fallback: No Unity avatar or no phonemes - play audio normally
-            console.log(`[PHONEME STREAM] ⚠️ Fallback to regular audio playback (no Unity/phonemes)`);
+            // Fallback: No phonemes - play audio normally
+            console.log(`[PHONEME STREAM] ⚠️ Fallback to regular audio playback (no phonemes)`);
             const audioData = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
             await handleTTSChunk(audioData.buffer, chunkIndex);
+          }
+          break;
+        }
+
+        case 'AI_RESPONSE_TEXT': {
+          // 📝 Handle text-only AI response (when avatar not ready for TTS)
+          // { type: 'AI_RESPONSE_TEXT', text: '...', messageId: '...' }
+          const { text, messageId } = message;
+          
+          if (text) {
+            console.log(`[AI RESPONSE] 📝 Text-only response (avatar not ready): "${text.substring(0, 50)}..."`);
+            
+            // Display text in chat UI - use callback if provided
+            onTranscription?.(text);
+            
+            // Log metrics
+            console.log(`[AI RESPONSE] 📊 Message ID: ${messageId || 'none'}`);
           }
           break;
         }
@@ -554,6 +594,19 @@ export function useVoiceTutor({
     
     setState(prev => ({ ...prev, isSpeaking: false }));
   }, [sendMessage]);
+
+  // 🎭 Clear TTS queue when avatar closes
+  useEffect(() => {
+    if (!canAcceptTTS) {
+      // Avatar closed - clear pending TTS
+      smartTTSQueueRef.current.clear();
+      console.log('[Smart TTS Queue] 🧹 Queue cleared - Avatar closed');
+      
+      // Log final metrics
+      const metrics = smartTTSQueueRef.current.getMetrics();
+      console.log('[Smart TTS Queue] 📊 Final metrics:', metrics);
+    }
+  }, [canAcceptTTS]);
 
   // Auto-update chat language when detected
   useEffect(() => {
