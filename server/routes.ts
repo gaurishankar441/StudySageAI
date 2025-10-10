@@ -14,6 +14,7 @@ import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
 import unityAssetsRouter from "./routes/unityAssets";
+import adminRouter from "./routes/admin";
 import { uploadLimiter, aiLimiter } from "./middleware/security";
 import type { VoiceWebSocketClient, VoiceMessage, AudioChunkMessage, AvatarStateMessage, TextQueryMessage } from "./types/voiceWebSocket";
 import { parse as parseUrl } from 'url';
@@ -377,6 +378,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Unity assets (S3-backed presigned URLs for fast loading)
   app.use('/api/unity-assets', unityAssetsRouter);
+
+  // Admin panel routes (admin authentication required)
+  app.use('/api/admin', adminRouter);
 
   // Tutor routes
   app.post('/api/tutor/session', isAuthenticated, async (req: any, res) => {
