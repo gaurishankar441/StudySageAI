@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { apiRequest } from "@/lib/queryClient";
 import { Button } from "@/components/ui/button";
@@ -128,12 +128,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     enabled: !!chatId,
   });
 
-  // 🔧 FIX: Sort messages by createdAt to ensure proper chronological order
-  const messages = rawMessages.sort((a, b) => {
-    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return dateA - dateB; // Ascending order (oldest first)
-  });
+  // 🔧 FIX: Sort messages by createdAt with useMemo to avoid re-sorting on every render
+  const messages = useMemo(() => {
+    return [...rawMessages].sort((a, b) => {
+      const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return dateA - dateB; // Ascending order (oldest first)
+    });
+  }, [rawMessages]);
 
   const { data: user } = useQuery({
     queryKey: ["/api/auth/user"],
@@ -572,6 +574,37 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
 
   const lastPlayedRef = useRef<string | null>(null);
   const [avatarViewState, setAvatarViewState] = useState<'minimized' | 'half' | 'fullscreen' | 'fullscreen-chat'>('minimized'); // 🆕 Track avatar visibility
+
+  // 🔧 FIX: Clear lastPlayedRef when chatId changes or component unmounts
+  useEffect(() => {
+    console.log('[TTS] 🧹 Chat changed, clearing lastPlayedRef');
+    lastPlayedRef.current = null;
+    
+    return () => {
+      console.log('[TTS] 🧹 Component unmounting, clearing lastPlayedRef');
+      lastPlayedRef.current = null;
+    };
+  }, [chatId]);
+
+  // 🔧 FIX: Stop audio when avatar closes
+  const stopAudioPlayback = useCallback(() => {
+    if (audioElement) {
+      console.log('[TTS] 🛑 Stopping audio playback');
+      audioElement.pause();
+      audioElement.src = '';
+      audioElement.remove();
+      setAudioElement(null);
+      setPlayingAudio(null);
+    }
+  }, [audioElement]);
+
+  // 🔧 FIX: Stop audio when avatar minimizes
+  useEffect(() => {
+    if (avatarViewState === 'minimized') {
+      console.log('[TTS] 🛑 Avatar minimized - stopping audio');
+      stopAudioPlayback();
+    }
+  }, [avatarViewState, stopAudioPlayback]);
 
   useEffect(() => {
     // 🎯 CRITICAL: Auto-play TTS ONLY when avatar is VISIBLE (not minimized)
