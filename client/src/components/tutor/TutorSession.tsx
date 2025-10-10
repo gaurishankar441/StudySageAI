@@ -24,8 +24,6 @@ import {
   TrendingUp,
   AlertCircle,
   Settings,
-  Volume2,
-  VolumeX,
   Loader2,
   ChevronLeft,
   ChevronRight,
@@ -962,24 +960,6 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                   <p className="text-xs text-muted-foreground">
                     {new Date(msg.createdAt!).toLocaleTimeString()}
                   </p>
-                  {msg.role === 'assistant' && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => playAudio(msg.id, msg.content)}
-                      disabled={playingAudio !== null && playingAudio !== msg.id}
-                      className="h-8 px-3 hover:bg-indigo-100 dark:hover:bg-indigo-900/30 rounded-lg transition-all duration-200"
-                      data-testid={`button-play-audio-${msg.id}`}
-                    >
-                      {playingAudio === msg.id ? (
-                        <Loader2 className="w-4 h-4 animate-spin text-indigo-600" />
-                      ) : playingAudio ? (
-                        <VolumeX className="w-4 h-4 text-slate-400" />
-                      ) : (
-                        <Volume2 className="w-4 h-4 text-indigo-600" />
-                      )}
-                    </Button>
-                  )}
                 </div>
               </div>
 
