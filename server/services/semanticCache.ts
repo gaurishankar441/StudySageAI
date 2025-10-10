@@ -22,8 +22,10 @@ if (redis) {
 
   // Connect to Redis
   redis.connect().catch(err => {
-    // Silently continue without cache
+    console.log('[CACHE] ⚠️ Redis unavailable, semantic caching disabled');
   });
+} else {
+  console.log('[CACHE] ✅ Semantic caching disabled (REDIS_DISABLED=true)');
 }
 
 export class SemanticCache {

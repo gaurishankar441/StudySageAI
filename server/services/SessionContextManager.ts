@@ -15,12 +15,14 @@ const redis = REDIS_DISABLED
 
 if (redis) {
   redis.on('error', (err) => {
-    // Silently ignore Redis errors - fallback to in-memory
+    // Silently ignore Redis errors
   });
 
   redis.connect().catch(err => {
-    // Silently fallback to in-memory context storage
+    console.log('[SESSION CONTEXT] ⚠️ Redis unavailable, using in-memory storage');
   });
+} else {
+  console.log('[SESSION CONTEXT] ✅ Using in-memory storage (REDIS_DISABLED=true)');
 }
 
 export interface SessionContext {

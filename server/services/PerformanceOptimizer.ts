@@ -15,12 +15,14 @@ const redis = REDIS_DISABLED
 
 if (redis) {
   redis.on('error', (err) => {
-    // Silently ignore Redis errors - fallback to direct operations
+    // Silently ignore Redis errors
   });
 
   redis.connect().catch(err => {
-    // Silently continue without performance cache
+    console.log('[PERFORMANCE] ⚠️ Redis unavailable, performance caching disabled');
   });
+} else {
+  console.log('[PERFORMANCE] ✅ Performance caching disabled (REDIS_DISABLED=true)');
 }
 
 /**
