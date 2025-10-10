@@ -14,10 +14,11 @@ import { optimizedTutorRouter } from "./routes/optimizedTutor";
 import voiceRouter from "./routes/voice";
 import testValidationRouter from "./routes/testValidation";
 import { uploadLimiter, aiLimiter } from "./middleware/security";
-import type { VoiceWebSocketClient, VoiceMessage, AudioChunkMessage } from "./types/voiceWebSocket";
+import type { VoiceWebSocketClient, VoiceMessage, AudioChunkMessage, AvatarStateMessage, TextQueryMessage } from "./types/voiceWebSocket";
 import { parse as parseUrl } from 'url';
 import { parse as parseQuery } from 'querystring';
 import { voiceStreamService } from "./services/voiceStreamService";
+import { avatarStateService } from "./services/avatarStateService";
 
 // Configure multer for file uploads
 const upload = multer({
@@ -1633,6 +1634,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
                     audioMsg.format,
                     audioMsg.isLast,
                     language
+                  );
+                  break;
+                }
+                
+                case 'AVATAR_STATE': {
+                  const avatarMsg = message as AvatarStateMessage;
+                  console.log(`[WebSocket] Avatar state update for ${ws.sessionId}: ${avatarMsg.state}`);
+                  
+                  avatarStateService.updateSession(ws, {
+                    state: avatarMsg.state,
+                    canAcceptTTS: avatarMsg.canAcceptTTS,
+                    timestamp: Date.now()
+                  });
+                  break;
+                }
+                
+                case 'TEXT_QUERY': {
+                  const textMsg = message as TextQueryMessage;
+                  console.log(`[WebSocket] Text query for ${ws.sessionId}: "${textMsg.text.substring(0, 50)}..."`);
+                  
+                  await voiceStreamService.processTextQuery(
+                    ws,
+                    textMsg.text,
+                    textMsg.chatId,
+                    textMsg.language || ws.language || 'en'
                   );
                   break;
                 }

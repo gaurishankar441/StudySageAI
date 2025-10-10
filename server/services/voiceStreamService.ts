@@ -1137,6 +1137,258 @@ export class VoiceStreamService {
       ws.send(JSON.stringify(errorMsg));
     }
   }
+
+  /**
+   * Process text query through AI Tutor pipeline and stream response via WebSocket
+   * PHASE 2: Unified WebSocket streaming for text chat
+   */
+  async processTextQuery(
+    ws: VoiceWebSocketClient,
+    queryText: string,
+    chatId: string,
+    language: 'hi' | 'en'
+  ): Promise<void> {
+    try {
+      console.log(`[TEXT QUERY] Processing: "${queryText.substring(0, 50)}..." for chat ${chatId}`);
+
+      if (!ws.userId) {
+        throw new Error('User ID not found on WebSocket connection');
+      }
+
+      const userId = ws.userId;
+
+      // Get chat and user
+      const chat = await storage.getChat(chatId);
+      if (!chat) {
+        throw new Error('Chat not found');
+      }
+
+      const user = await storage.getUser(userId);
+      if (!user) {
+        throw new Error('User not found');
+      }
+
+      // Get or create tutor session
+      const session = await tutorSessionService.getOrCreateSession(
+        chatId,
+        userId,
+        chat.subject || 'General',
+        chat.topic || 'General',
+        user
+      );
+
+      // Language detection
+      const langDetection = await languageDetector.detectLanguage(queryText, {
+        conversationHistory: [],
+        userPreference: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+        topic: session.topic
+      });
+      const detectedLang = langDetection?.language || 'english';
+
+      // Intent classification + Emotion detection (parallel)
+      const [intentResult, emotionResult] = await Promise.all([
+        intentClassifier.classify(queryText, {
+          currentPhase: session.currentPhase,
+          currentTopic: session.topic,
+          isInPracticeMode: session.currentPhase === 'practice'
+        }),
+        emotionDetector.detectEmotion(queryText, [], language)
+      ]);
+
+      console.log(`[TEXT QUERY] Intent: ${intentResult.intent} | Emotion: ${emotionResult.emotion}`);
+
+      // Generate dynamic prompt
+      const promptResult = dynamicPromptEngine.generateSystemPrompt({
+        detectedLanguage: detectedLang,
+        preferredLanguage: session.profileSnapshot?.preferredLanguage as DetectedLanguage,
+        languageConfidence: langDetection?.confidence || 0.5,
+        currentEmotion: emotionResult.emotion,
+        emotionConfidence: emotionResult.confidence,
+        emotionalStability: 0.5,
+        subject: session.subject,
+        topic: session.topic,
+        level: session.level || 'beginner',
+        currentPhase: session.currentPhase,
+        intent: intentResult.intent,
+        misconceptions: session.adaptiveMetrics?.misconceptions || [],
+        strongConcepts: session.adaptiveMetrics?.strongConcepts || []
+      });
+
+      const systemPrompt = promptResult.systemPrompt;
+
+      // Save user message
+      const userMessage = await storage.addMessage({
+        chatId,
+        role: 'user',
+        content: queryText,
+        tool: null,
+        metadata: {
+          intent: intentResult.intent,
+          emotion: emotionResult.emotion,
+          detectedLanguage: detectedLang,
+          confidence: intentResult.confidence,
+          source: 'text_websocket'
+        }
+      });
+
+      // Generate messageId for this response
+      const messageId = `${ws.sessionId}-${Date.now()}`;
+
+      // Stream AI response
+      let fullResponse = '';
+      let sentenceIndex = 0;
+      let currentSentence = '';
+
+      await optimizedAI.generateStreamingResponse(
+        queryText,
+        systemPrompt,
+        '',
+        async (chunk, metadata) => {
+          if (metadata.type === 'chunk' && chunk) {
+            fullResponse += chunk;
+            currentSentence += chunk;
+
+            // Split into sentences for TTS
+            const sentenceBoundary = /[।.!?]\s+|[।.!?]$/;
+            const parts = currentSentence.split(sentenceBoundary);
+
+            // Process complete sentences
+            if (parts.length > 1) {
+              for (let i = 0; i < parts.length - 1; i++) {
+                const sentence = parts[i].trim();
+                if (sentence) {
+                  // Check if avatar is ready for TTS
+                  const canGenerateTTS = avatarStateService.canGenerateTTS(ws);
+
+                  if (canGenerateTTS) {
+                    // Generate TTS with phonemes
+                    await this.generateAndStreamSentenceTTS(
+                      ws,
+                      sentence,
+                      sentenceIndex,
+                      false,
+                      {
+                        emotion: emotionResult.emotion,
+                        intent: intentResult.intent,
+                        personaId: session.personaId,
+                        language,
+                        enableMathSpeech: true,
+                        enablePauses: true,
+                        enableEmphasis: true,
+                        enablePhonemes: true
+                      }
+                    );
+                  }
+
+                  // Always send text chunk (for display in chat)
+                  const chunkMsg: VoiceMessage = {
+                    type: 'AI_RESPONSE_CHUNK',
+                    timestamp: new Date().toISOString(),
+                    sessionId: ws.sessionId,
+                    content: sentence + ' ',
+                    messageId,
+                    isFirst: sentenceIndex === 0
+                  };
+                  ws.send(JSON.stringify(chunkMsg));
+
+                  sentenceIndex++;
+                }
+              }
+              currentSentence = parts[parts.length - 1] || '';
+            }
+          }
+        }
+      );
+
+      // Handle remaining text
+      if (currentSentence.trim()) {
+        const canGenerateTTS = avatarStateService.canGenerateTTS(ws);
+        if (canGenerateTTS) {
+          await this.generateAndStreamSentenceTTS(
+            ws,
+            currentSentence.trim(),
+            sentenceIndex,
+            true,
+            {
+              emotion: emotionResult.emotion,
+              intent: intentResult.intent,
+              personaId: session.personaId,
+              language,
+              enableMathSpeech: true,
+              enablePauses: true,
+              enableEmphasis: true,
+              enablePhonemes: true
+            }
+          );
+        }
+
+        const chunkMsg: VoiceMessage = {
+          type: 'AI_RESPONSE_CHUNK',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          content: currentSentence.trim(),
+          messageId
+        };
+        ws.send(JSON.stringify(chunkMsg));
+      }
+
+      // Send TTS_END if TTS was generated
+      if (avatarStateService.canGenerateTTS(ws)) {
+        const endMsg: VoiceMessage = {
+          type: 'TTS_END',
+          timestamp: new Date().toISOString(),
+          sessionId: ws.sessionId,
+          totalChunks: sentenceIndex + 1
+        };
+        ws.send(JSON.stringify(endMsg));
+      }
+
+      // Send completion message
+      const completeMsg: VoiceMessage = {
+        type: 'AI_RESPONSE_COMPLETE',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        messageId,
+        emotion: emotionResult.emotion,
+        personaId: session.personaId,
+        phase: session.currentPhase,
+        phaseStep: session.currentPhaseStep,
+        language
+      };
+      ws.send(JSON.stringify(completeMsg));
+
+      // Save AI response
+      await storage.addMessage({
+        chatId,
+        role: 'assistant',
+        content: fullResponse,
+        tool: null,
+        metadata: {
+          emotion: emotionResult.emotion,
+          personaId: session.personaId,
+          phase: session.currentPhase,
+          source: 'text_websocket',
+          avatarTTS: avatarStateService.canGenerateTTS(ws)
+        }
+      });
+
+      console.log(`[TEXT QUERY] ✅ Complete: ${fullResponse.length} chars streamed`);
+
+    } catch (error) {
+      console.error('[TEXT QUERY] Error:', error);
+
+      const errorMsg: VoiceMessage = {
+        type: 'ERROR',
+        timestamp: new Date().toISOString(),
+        sessionId: ws.sessionId,
+        code: 'TEXT_QUERY_ERROR',
+        message: error instanceof Error ? error.message : 'Text query processing failed',
+        recoverable: true
+      };
+
+      ws.send(JSON.stringify(errorMsg));
+    }
+  }
 }
 
 // Export singleton instance

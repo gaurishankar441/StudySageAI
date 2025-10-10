@@ -107,8 +107,8 @@ export function useVoiceTutor({
   const nextExpectedSequenceRef = useRef(0);
   const skippedSequencesRef = useRef<Set<number>>(new Set());
 
-  // 🎭 Smart TTS Queue for avatar state management
-  const smartTTSQueueRef = useRef<SmartTTSQueue>(new SmartTTSQueue());
+  // 🎭 Smart TTS Queue for avatar state management (PHASE 1 FIX: Pass avatarRef!)
+  const smartTTSQueueRef = useRef<SmartTTSQueue>(new SmartTTSQueue(avatarRef));
 
   // Get WebSocket URL
   const getWsUrl = useCallback(() => {
@@ -417,6 +417,37 @@ export function useVoiceTutor({
           break;
         }
 
+        case 'AI_RESPONSE_CHUNK': {
+          // PHASE 2: Handle streaming text response chunks
+          const content = message.content || '';
+          const messageId = message.messageId || '';
+          const isFirst = message.isFirst || false;
+          
+          console.log(`[TEXT QUERY] 📝 Chunk received: "${content.substring(0, 50)}..."`);
+          
+          // Update streaming text state
+          setState(prev => ({
+            ...prev,
+            transcription: isFirst ? content : prev.transcription + content,
+            isProcessing: true
+          }));
+          break;
+        }
+
+        case 'AI_RESPONSE_COMPLETE': {
+          // PHASE 2: AI response streaming complete
+          const emotion = message.emotion;
+          const phase = message.phase;
+          
+          console.log(`[TEXT QUERY] ✅ Response complete - Emotion: ${emotion}, Phase: ${phase}`);
+          
+          setState(prev => ({
+            ...prev,
+            isProcessing: false
+          }));
+          break;
+        }
+
         case 'PONG':
           // Heartbeat response
           break;
@@ -595,6 +626,35 @@ export function useVoiceTutor({
     setState(prev => ({ ...prev, isSpeaking: false }));
   }, [sendMessage]);
 
+  // PHASE 2: Send text query via WebSocket
+  const sendTextQuery = useCallback((text: string, language?: 'hi' | 'en') => {
+    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
+      console.error('[TEXT QUERY] WebSocket not connected');
+      return false;
+    }
+
+    try {
+      const message = {
+        type: 'TEXT_QUERY',
+        timestamp: new Date().toISOString(),
+        text,
+        chatId,
+        language: language || state.detectedLanguage || 'en'
+      };
+
+      wsRef.current.send(JSON.stringify(message));
+      console.log(`[TEXT QUERY] Sent: "${text.substring(0, 50)}..."`);
+      
+      // Set processing state
+      setState(prev => ({ ...prev, isProcessing: true, transcription: '' }));
+      
+      return true;
+    } catch (error) {
+      console.error('[TEXT QUERY] Send error:', error);
+      return false;
+    }
+  }, [chatId, state.detectedLanguage]);
+
   // 🎭 Clear TTS queue when avatar closes
   useEffect(() => {
     if (!canAcceptTTS) {
@@ -648,6 +708,7 @@ export function useVoiceTutor({
     startRecording,
     stopRecording,
     interrupt,
+    sendTextQuery, // PHASE 2: Text query via WebSocket
     isConnected: state.isConnected,
     isRecording: state.isRecording,
     isProcessing: state.isProcessing,

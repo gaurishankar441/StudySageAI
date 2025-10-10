@@ -35,6 +35,7 @@ import VoiceControl from "./VoiceControl";
 import { Phone, PhoneOff } from "lucide-react";
 import { useUnityAvatar } from "@/contexts/UnityAvatarContext";
 import { AvatarContainer } from "./avatar/AvatarContainer";
+import { useVoiceTutor } from "@/hooks/useVoiceTutor";
 
 interface TutorResponse {
   type: 'teach' | 'check' | 'diagnose';
@@ -61,7 +62,6 @@ type ToolType = 'explain' | 'hint' | 'example' | 'practice5' | 'summary';
 export default function TutorSession({ chatId, onEndSession }: TutorSessionProps) {
   const [message, setMessage] = useState("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [streamingMessage, setStreamingMessage] = useState("");
   const [activeToolModal, setActiveToolModal] = useState<ToolType | null>(null);
   const [toolStreaming, setToolStreaming] = useState(false);
   const [toolStreamingContent, setToolStreamingContent] = useState("");
@@ -75,6 +75,27 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   const [voiceMode, setVoiceMode] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // PHASE 2: Unified WebSocket for voice + text
+  const voiceTutor = useVoiceTutor({
+    chatId,
+    onTranscription: (text) => {
+      console.log('[TutorSession] Transcription received:', text);
+    },
+    onTTSStart: () => {
+      setPlayingAudio('tts');
+    },
+    onTTSEnd: () => {
+      setPlayingAudio(null);
+    },
+    onError: (error) => {
+      toast({
+        title: "Voice Error",
+        description: error,
+        variant: "destructive"
+      });
+    }
+  });
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   
@@ -118,126 +139,28 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     retry: false,
   });
 
+  // PHASE 2: WebSocket-based text query (replaces HTTP streaming)
   const sendMessageMutation = useMutation({
     mutationFn: async (messageText: string) => {
-      setIsStreaming(true);
-      setStreamingMessage("");
-
-      const useSessionStream = !!tutorSession?.session;
+      console.log('[TutorSession] Sending text query via WebSocket:', messageText);
       
-      if (useSessionStream) {
-        const response = await fetch('/api/tutor/optimized/session/ask-stream', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          credentials: 'include',
-          body: JSON.stringify({
-            chatId,
-            query: messageText
-          })
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to stream response');
-        }
-
-        const reader = response.body?.getReader();
-        const decoder = new TextDecoder();
-
-        return new Promise((resolve, reject) => {
-          let buffer = '';
-          let sessionMetadata: any = null;
-
-          const readStream = async () => {
-            try {
-              while (reader) {
-                const { done, value } = await reader.read();
-                if (done) break;
-
-                buffer += decoder.decode(value, { stream: true });
-                const lines = buffer.split('\n');
-                
-                buffer = lines.pop() || '';
-
-                for (const line of lines) {
-                  if (line.startsWith('data: ')) {
-                    const data = line.slice(6).trim();
-                    if (data === '[DONE]') continue;
-                    
-                    try {
-                      const parsed = JSON.parse(data);
-                      
-                      if (parsed.type === 'chunk') {
-                        setStreamingMessage(prev => prev + parsed.content);
-                      } else if (parsed.type === 'complete') {
-                        setIsStreaming(false);
-                        sessionMetadata = parsed.session;
-                        setShouldAutoPlayTTS(true);
-                        queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
-                        queryClient.invalidateQueries({ queryKey: [`/api/tutor/optimized/session/${chatId}`] });
-                        resolve({ 
-                          success: true, 
-                          emotion: parsed.emotion,
-                          personaId: parsed.personaId,
-                          session: sessionMetadata
-                        });
-                      } else if (parsed.type === 'error') {
-                        setIsStreaming(false);
-                        reject(new Error(parsed.error));
-                      }
-                    } catch (e) {
-                      console.warn('Parse error:', e, 'Line:', line);
-                    }
-                  }
-                }
-              }
-            } catch (error) {
-              setIsStreaming(false);
-              reject(error);
-            }
-          };
-
-          readStream();
-        });
-      } else {
-        const eventSource = new EventSource(
-          `/api/chats/${chatId}/stream?message=${encodeURIComponent(messageText)}`,
-          { withCredentials: true }
-        );
-
-        return new Promise((resolve, reject) => {
-          eventSource.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'chunk') {
-              setStreamingMessage(prev => prev + data.content);
-            } else if (data.type === 'complete') {
-              setStreamingMessage(data.content);
-            } else if (data.type === 'done') {
-              eventSource.close();
-              setIsStreaming(false);
-              setShouldAutoPlayTTS(true);
-              resolve(data);
-            } else if (data.type === 'error') {
-              eventSource.close();
-              setIsStreaming(false);
-              reject(new Error(data.message));
-            }
-          };
-
-          eventSource.onerror = () => {
-            eventSource.close();
-            setIsStreaming(false);
-            reject(new Error('Connection error'));
-          };
-        });
+      // Send via WebSocket instead of HTTP
+      const success = voiceTutor.sendTextQuery(messageText, chat?.language as 'hi' | 'en' | undefined);
+      
+      if (!success) {
+        throw new Error('WebSocket not connected');
       }
+      
+      // Wait a bit for response to start (WebSocket is async)
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      return { success: true };
     },
     onSuccess: () => {
       setMessage("");
-      setStreamingMessage("");
+      // Streaming message comes from voiceTutor.transcription now
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/tutor/optimized/session/${chatId}`] });
     },
     onError: (error) => {
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
@@ -621,7 +544,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         container.scrollTop = container.scrollHeight;
       }
     }
-  }, [messages, streamingMessage, isStreaming, transcribeMutation.isPending]);
+  }, [messages, voiceTutor.transcription, voiceTutor.isProcessing, transcribeMutation.isPending]);
+
+  // PHASE 2: Sync isStreaming with voiceTutor.isProcessing
+  useEffect(() => {
+    setIsStreaming(voiceTutor.isProcessing);
+  }, [voiceTutor.isProcessing]);
 
   const lastPlayedRef = useRef<string | null>(null);
 
@@ -994,14 +922,14 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
               </div>
               <div className="flex-1 max-w-3xl">
                 <div className="bg-gradient-to-br from-slate-50/90 via-white/90 to-indigo-50/90 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-6 shadow-md">
-                  {streamingMessage ? (
+                  {voiceTutor.transcription ? (
                     <>
                       <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed inline-block">
                         <ReactMarkdown
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
                         >
-                          {streamingMessage}
+                          {voiceTutor.transcription}
                         </ReactMarkdown>
                       </div>
                       <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />
