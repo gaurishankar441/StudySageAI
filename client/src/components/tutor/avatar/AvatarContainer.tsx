@@ -68,13 +68,34 @@ export function AvatarContainer({
     
     // Wait for DOM to be ready
     const timer = setTimeout(() => {
-      // Use querySelector to find Unity element anywhere in DOM (more reliable than getElementById)
-      const globalUnity = document.querySelector('#global-unity-instance') as HTMLElement;
+      // Search for Unity element - it might be in the global container OR in any panel container
+      let globalUnity = document.querySelector('#global-unity-instance') as HTMLElement;
+      
+      // If not found in global location, search in ALL possible containers
+      if (!globalUnity) {
+        const possibleContainers = [
+          '#half-panel-unity-target',
+          '#fullscreen-unity-target', 
+          '#fullscreen-chat-unity-target',
+          '#global-unity-container'
+        ];
+        
+        for (const containerId of possibleContainers) {
+          const container = document.querySelector(containerId);
+          if (container) {
+            globalUnity = container.querySelector('#global-unity-instance') as HTMLElement;
+            if (globalUnity) {
+              console.log(`[Avatar Container] Found Unity in ${containerId} ✅`);
+              break;
+            }
+          }
+        }
+      }
       
       console.log('[Avatar Container] Global Unity element:', globalUnity ? 'FOUND ✅' : 'NOT FOUND ❌');
       
       if (!globalUnity) {
-        console.error('[Avatar] ❌ Global Unity instance not found!');
+        console.error('[Avatar] ❌ Global Unity instance not found anywhere!');
         return;
       }
 
