@@ -160,6 +160,11 @@ export interface VoiceWebSocketClient extends WebSocket {
   audioBuffer?: Buffer[];
   isTTSActive?: boolean;
   ttsSequence?: number; // PHASE 1: Sequence counter for streaming TTS chunks
+  
+  // Avatar state management
+  avatarSession?: any; // AvatarSession from avatarStateService
+  avatarState?: string; // Current avatar state (CLOSED, LOADING, READY, PLAYING, ERROR)
+  avatarReady?: boolean; // Quick check if avatar can accept TTS
 }
 
 // Session state for voice tutor
