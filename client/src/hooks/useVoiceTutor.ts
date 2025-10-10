@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useToast } from './use-toast';
+import { useUnityAvatar } from '@/contexts/UnityAvatarContext';
 import pako from 'pako';
 
 // WebSocket message types
@@ -7,6 +8,7 @@ type WSMessageType =
   | 'AUDIO_CHUNK' 
   | 'TRANSCRIPTION' 
   | 'TTS_CHUNK' 
+  | 'PHONEME_TTS_CHUNK'  // 🎤 NEW: TTS with phoneme data for Unity lip-sync
   | 'TTS_START' 
   | 'TTS_END'
   | 'TTS_SKIP'       // Deprecated - use ERROR instead
@@ -30,6 +32,11 @@ interface WSMessage {
   code?: string;
   message?: string;
   recoverable?: boolean;
+  
+  // 🎤 NEW: Flat format fields for PHONEME_TTS_CHUNK
+  audio?: string;  // Base64 audio data
+  phonemes?: Array<{time: number; blendshape: string; weight: number}>;  // Unity phoneme data
+  text?: string;  // Text being spoken
   
   timestamp?: string;
   sessionId?: string;
@@ -80,6 +87,7 @@ export function useVoiceTutor({
   const reconnectAttemptsRef = useRef(0);
   const shouldReconnectRef = useRef(true);
   const { toast } = useToast();
+  const { avatarRef } = useUnityAvatar();  // 🎤 Access Unity avatar for lip-sync
 
   // 🚀 PHASE 1: Sequence-based TTS queue for out-of-order handling
   const ttsSequenceQueueRef = useRef<Map<number, AudioBuffer>>(new Map());
@@ -251,6 +259,41 @@ export function useVoiceTutor({
             if (isLast) {
               console.log('[STREAMING TTS] ✅ Last chunk received');
             }
+          }
+          break;
+        }
+
+        case 'PHONEME_TTS_CHUNK': {
+          // 🎤 NEW: Handle TTS with phoneme data for Unity lip-sync
+          // { type: 'PHONEME_TTS_CHUNK', audio: 'base64...', phonemes: [...], chunkIndex: 1, text: '...' }
+          const { audio, phonemes, chunkIndex, text } = message;
+          
+          if (audio && phonemes && avatarRef.current) {
+            console.log(`[PHONEME STREAM] 🎤 Received phoneme TTS chunk ${chunkIndex}: ${phonemes.length} phonemes for "${text?.substring(0, 30)}..."`);
+            
+            try {
+              // Send audio + phonemes to Unity avatar for synchronized lip-sync
+              avatarRef.current.sendAudioWithPhonemesToAvatar(
+                audio, 
+                phonemes, 
+                `tts-chunk-${chunkIndex}`
+              );
+              
+              // Update speaking state
+              setState(prev => ({ ...prev, isSpeaking: true }));
+              
+              console.log(`[PHONEME STREAM] ✅ Sent to Unity: ${phonemes.length} phonemes`);
+            } catch (error) {
+              console.error('[PHONEME STREAM] ❌ Error sending to Unity:', error);
+              // Fallback to regular audio playback
+              const audioData = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+              await handleTTSChunk(audioData.buffer, chunkIndex);
+            }
+          } else if (audio) {
+            // Fallback: No Unity avatar or no phonemes - play audio normally
+            console.log(`[PHONEME STREAM] ⚠️ Fallback to regular audio playback (no Unity/phonemes)`);
+            const audioData = Uint8Array.from(atob(audio), c => c.charCodeAt(0));
+            await handleTTSChunk(audioData.buffer, chunkIndex);
           }
           break;
         }
