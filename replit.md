@@ -30,6 +30,43 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 - Pointer-events layering: Unity (auto) → Panels (none) → Controls (auto)
 - Browser cache requires hard refresh (Ctrl+Shift+R) to see updates
 
+### Unity Half Panel Dynamic Positioning Fix (October 10, 2025)
+**Problem**: Half panel Unity positioning was static (480px width, 100vh height), causing avatar to display full classroom background outside panel bounds instead of being clipped to panel area.
+
+**Solution**: Dynamic positioning with triple-layer position tracking:
+1. **getBoundingClientRect()**: Calculate exact panel position/size from DOM instead of hardcoded values
+2. **data-half-panel Attribute**: Added to HalfPanel for reliable DOM selection
+3. **Triple-Layer Tracking**:
+   - `ResizeObserver`: Detects panel size changes
+   - `window.resize`: Handles position shifts when size stays same (viewport resize)
+   - `window.scroll`: Updates position during scroll events
+4. **Proper Cleanup**: Disconnects observer and removes event listeners on state change to prevent memory leaks
+
+**Implementation**:
+```typescript
+// Get exact panel bounds
+const rect = halfPanel.getBoundingClientRect();
+globalUnityContainer.style.top = `${rect.top}px`;
+globalUnityContainer.style.left = `${rect.left}px`;
+globalUnityContainer.style.width = `${rect.width}px`;
+globalUnityContainer.style.height = `${rect.height}px`;
+
+// Update function for all position changes
+const updateUnityPosition = () => { /* recalculate bounds */ };
+
+// Track all changes
+resizeObserver.observe(halfPanel);
+window.addEventListener('resize', updateUnityPosition);
+window.addEventListener('scroll', updateUnityPosition);
+```
+
+**Files Modified**:
+- `client/src/components/tutor/avatar/AvatarContainer.tsx`: Dynamic getBoundingClientRect() positioning with triple tracking
+- `client/src/components/tutor/avatar/states/HalfPanel.tsx`: Added `data-half-panel="true"` attribute
+- `client/src/hooks/useVoiceTutor.ts`: Fixed null check for `message.data?.text`
+
+**Result**: Unity container now EXACTLY matches half panel bounds at all times, updates on window resize/scroll, and displays properly cropped avatar view inside panel.
+
 ## System Architecture
 
 ### Frontend Architecture
