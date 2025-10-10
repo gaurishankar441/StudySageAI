@@ -3,6 +3,10 @@ import crypto from 'crypto';
 
 const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 
+// Track Redis connection status
+let redisConnected = false;
+let redisErrorLogged = false;
+
 // Redis client setup
 const redis = REDIS_DISABLED 
   ? null 
@@ -16,11 +20,23 @@ const redis = REDIS_DISABLED
 // Add error handler before attempting connection
 if (redis) {
   redis.on('error', (err) => {
-    // Silently ignore Redis errors
+    redisConnected = false;
+    // Log only once
+    if (!redisErrorLogged) {
+      console.log('[TTS CACHE] ⚠️ Redis unavailable, using in-memory fallback');
+      redisErrorLogged = true;
+    }
+  });
+
+  redis.on('ready', () => {
+    redisConnected = true;
+    redisErrorLogged = false;
+    console.log('[TTS CACHE] ✅ Redis connected');
   });
 
   redis.connect().catch((err) => {
     console.log('[TTS CACHE] Redis connection failed, using in-memory fallback');
+    redisConnected = false;
   });
 } else {
   console.log('[TTS CACHE] Using in-memory fallback (Redis disabled)');
@@ -93,8 +109,8 @@ export class TTSCacheService {
     const key = this.generateKey(text, language, emotion, voice);
     
     try {
-      // Try Redis first
-      if (redis && !REDIS_DISABLED) {
+      // Try Redis first (only if connected)
+      if (redis && !REDIS_DISABLED && redisConnected) {
         const cached = await redis.getBuffer(key);
         if (cached) {
           console.log(`[TTS CACHE] ✅ Redis HIT: "${text.substring(0, 30)}..."`);
@@ -124,7 +140,7 @@ export class TTSCacheService {
       return null;
       
     } catch (error) {
-      console.error('[TTS CACHE] Get error:', error);
+      // Silently fallback to memory cache
       return null;
     }
   }
@@ -144,8 +160,8 @@ export class TTSCacheService {
     const cacheTTL = ttl || this.DEFAULT_TTL;
     
     try {
-      // Store in Redis if available
-      if (redis && !REDIS_DISABLED) {
+      // Store in Redis if available and connected
+      if (redis && !REDIS_DISABLED && redisConnected) {
         await redis.setex(key, cacheTTL, audio);
         console.log(`[TTS CACHE] 💾 Redis STORED: "${text.substring(0, 30)}..." (${audio.length} bytes, TTL: ${cacheTTL}s)`);
       }
@@ -168,7 +184,7 @@ export class TTSCacheService {
       console.log(`[TTS CACHE] 💾 Memory STORED: "${text.substring(0, 30)}..." (${memoryCache.size}/${MAX_MEMORY_CACHE_SIZE})`);
       
     } catch (error) {
-      console.error('[TTS CACHE] Set error:', error);
+      // Silently fallback to memory-only caching
     }
   }
 
@@ -198,7 +214,7 @@ export class TTSCacheService {
     };
     
     try {
-      if (redis && !REDIS_DISABLED) {
+      if (redis && !REDIS_DISABLED && redisConnected) {
         const hitStats = await redis.hgetall(`${this.REDIS_PREFIX}stats`);
         if (hitStats) {
           const topHits = Object.entries(hitStats)
