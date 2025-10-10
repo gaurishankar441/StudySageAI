@@ -47,6 +47,8 @@ globalUnityContainer.style.left = 'auto';     // ✅ Reset
 
 4. **Fixed Backdrop Blur Z-Index**: Unity container z-index changed from 9990 → 9999 to sit ABOVE backdrop (9998) so backdrop blur doesn't affect the avatar
 
+5. **Fixed Unity Iframe Sizing**: Unity container now accounts for control bar height (48px). Unity height = panel height - 48px, and Unity top = panel top + 48px, ensuring Unity fits EXACTLY in the visible avatar area below the control bar
+
 **Z-Index Layering**:
 - Background page content: default
 - Backdrop with blur: 9998

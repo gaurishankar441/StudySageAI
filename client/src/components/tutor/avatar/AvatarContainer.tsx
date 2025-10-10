@@ -97,26 +97,34 @@ export function AvatarContainer({
         if (halfPanel) {
           const rect = halfPanel.getBoundingClientRect();
           
-          // Match Unity container to half panel EXACT position
-          globalUnityContainer.style.top = `${rect.top}px`;
+          // CRITICAL FIX: Account for control bar height (48px = h-12)
+          // Unity should fit EXACTLY in visible avatar area (below control bar)
+          const controlBarHeight = 48;
+          const unityTop = rect.top + controlBarHeight;
+          const unityHeight = rect.height - controlBarHeight;
+          
+          // Match Unity container to visible avatar area ONLY
+          globalUnityContainer.style.top = `${unityTop}px`;
           globalUnityContainer.style.left = `${rect.left}px`;
           globalUnityContainer.style.width = `${rect.width}px`;
-          globalUnityContainer.style.height = `${rect.height}px`;
+          globalUnityContainer.style.height = `${unityHeight}px`;
           globalUnityContainer.style.bottom = 'auto';
           globalUnityContainer.style.right = 'auto';
-          globalUnityContainer.style.borderRadius = window.innerWidth < 768 ? '1rem 1rem 0 0' : '1rem 0 0 1rem';
+          globalUnityContainer.style.borderRadius = window.innerWidth < 768 ? '0 0 1rem 1rem' : '0 0 0 1rem';
           globalUnityContainer.style.zIndex = '9999'; // ABOVE backdrop (9998), BELOW controls (10000)
           
-          console.log(`[Avatar] ✅ Unity DYNAMIC positioned - Top: ${rect.top}px, Left: ${rect.left}px, Width: ${rect.width}px, Height: ${rect.height}px`);
+          console.log(`[Avatar] ✅ Unity EXACT FIT - Top: ${unityTop}px (panel ${rect.top}px + control bar ${controlBarHeight}px), Height: ${unityHeight}px (panel ${rect.height}px - ${controlBarHeight}px)`);
           
           // Update Unity position function
           const updateUnityPosition = () => {
             const newRect = halfPanel.getBoundingClientRect();
-            globalUnityContainer.style.top = `${newRect.top}px`;
+            const newUnityTop = newRect.top + controlBarHeight;
+            const newUnityHeight = newRect.height - controlBarHeight;
+            globalUnityContainer.style.top = `${newUnityTop}px`;
             globalUnityContainer.style.left = `${newRect.left}px`;
             globalUnityContainer.style.width = `${newRect.width}px`;
-            globalUnityContainer.style.height = `${newRect.height}px`;
-            console.log(`[Avatar] 🔄 Unity repositioned - Top: ${newRect.top}px, Left: ${newRect.left}px, Width: ${newRect.width}px, Height: ${newRect.height}px`);
+            globalUnityContainer.style.height = `${newUnityHeight}px`;
+            console.log(`[Avatar] 🔄 Unity repositioned - Top: ${newUnityTop}px, Height: ${newUnityHeight}px (accounting for control bar)`);
           };
           
           // ResizeObserver for panel size changes
@@ -137,21 +145,24 @@ export function AvatarContainer({
         } else {
           console.error('[Avatar] ❌ Half panel [data-half-panel] not found! Using FIXED fallback');
           
-          // FIXED FALLBACK: Match HalfPanel's Tailwind classes EXACTLY
-          // HalfPanel uses: bottom-4 right-4 w-[480px] h-[600px]
-          // That means: bottom: 16px, right: 16px, width: 480px, height: 600px
+          // FIXED FALLBACK: Account for control bar (48px)
+          // Panel: bottom-4 right-4 w-[480px] h-[60vh] (mobile) or full height (desktop)
+          const controlBarHeight = 48;
+          const isMobile = window.innerWidth < 768;
+          const fallbackHeight = isMobile ? 'calc(60vh - 48px)' : 'calc(100vh - 48px)';
+          
           globalUnityContainer.style.position = 'fixed';
-          globalUnityContainer.style.bottom = '16px';   // ✅ FIXED: Match bottom-4
-          globalUnityContainer.style.right = '16px';    // ✅ FIXED: Match right-4
-          globalUnityContainer.style.top = 'auto';      // ✅ Reset top (CRITICAL!)
-          globalUnityContainer.style.left = 'auto';     // ✅ Reset left (CRITICAL!)
-          globalUnityContainer.style.width = '480px';   // ✅ Match w-[480px]
-          globalUnityContainer.style.height = '600px';  // ✅ FIXED: Match h-[600px] (NOT 100vh!)
-          globalUnityContainer.style.zIndex = '9999';   // ABOVE backdrop (9998), BELOW controls (10000)
-          globalUnityContainer.style.borderRadius = '16px'; // Match rounded-2xl
+          globalUnityContainer.style.bottom = isMobile ? '16px' : '0px';
+          globalUnityContainer.style.right = isMobile ? '16px' : '0px';
+          globalUnityContainer.style.top = 'auto';
+          globalUnityContainer.style.left = isMobile ? '0px' : 'auto';
+          globalUnityContainer.style.width = isMobile ? '100%' : '480px';
+          globalUnityContainer.style.height = fallbackHeight;  // Account for control bar!
+          globalUnityContainer.style.zIndex = '9999';
+          globalUnityContainer.style.borderRadius = isMobile ? '0 0 1rem 1rem' : '0 0 0 1rem';
           globalUnityContainer.style.overflow = 'hidden';
           
-          console.log('[Avatar] ✅ Unity FALLBACK positioned - Bottom: 16px, Right: 16px, Width: 480px, Height: 600px');
+          console.log(`[Avatar] ✅ Unity FALLBACK - Height: ${fallbackHeight} (accounting for ${controlBarHeight}px control bar)`);
         }
         
       } else if (viewState === 'fullscreen') {
