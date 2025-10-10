@@ -1,0 +1,173 @@
+❌ Current Problem:
+
+Half panel mein Unity wrong position par hai - Avatar background classroom dikh raha hai but half-panel ke bounds ke bahar
+Fullscreen perfect hai ✅
+Shader warnings - Non-critical (avatar chalta hai but texture limit exceed)
+
+
+🚀 Production-Ready Solution (Step-by-Step)
+Issue 1: Half Panel Unity Positioning Bug
+Problem: CSS position: fixed Unity container ko screen ke center mein rakh raha hai, lekin half panel right side pe hai.
+Fix: Half panel state mein Unity ko panel ke relative position mein move karna hai.
+File: client/src/components/tutor/avatar/AvatarContainer.tsx
+typescriptuseEffect(() => {
+  console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
+  
+  const unityContainer = document.querySelector('#global-unity-container') as HTMLElement;
+  
+  if (!unityContainer) {
+    console.error('[Avatar] Unity container not found!');
+    return;
+  }
+
+  if (viewState === 'minimized') {
+    // Hide Unity completely
+    unityContainer.style.display = 'none';
+    console.log('[Avatar] 👻 Unity HIDDEN (minimized)');
+  } else {
+    unityContainer.style.display = 'block';
+    unityContainer.style.pointerEvents = 'auto';
+
+    if (viewState === 'half') {
+      // CRITICAL FIX: Position Unity relative to half panel
+      const halfPanel = document.querySelector('[data-half-panel]') as HTMLElement;
+      
+      if (halfPanel) {
+        const rect = halfPanel.getBoundingClientRect();
+        
+        // Match Unity container to half panel position
+        unityContainer.style.position = 'fixed';
+        unityContainer.style.top = `${rect.top}px`;
+        unityContainer.style.left = `${rect.left}px`;
+        unityContainer.style.width = `${rect.width}px`;
+        unityContainer.style.height = `${rect.height}px`;
+        unityContainer.style.zIndex = '9990';
+        
+        console.log(`[Avatar] ✅ Unity positioned for HALF panel - Top: ${rect.top}px, Left: ${rect.left}px, Width: ${rect.width}px, Height: ${rect.height}px`);
+      }
+    } else if (viewState === 'fullscreen') {
+      // Fullscreen - cover entire viewport (left side)
+      unityContainer.style.position = 'fixed';
+      unityContainer.style.top = '0';
+      unityContainer.style.left = '0';
+      unityContainer.style.width = '100vw';
+      unityContainer.style.height = '100vh';
+      unityContainer.style.zIndex = '9990';
+      
+      console.log('[Avatar] ✅ Unity positioned for FULLSCREEN');
+    } else if (viewState === 'fullscreen-chat') {
+      // Fullscreen with chat - left 60% of screen
+      unityContainer.style.position = 'fixed';
+      unityContainer.style.top = '0';
+      unityContainer.style.left = '0';
+      unityContainer.style.width = '60vw';
+      unityContainer.style.height = '100vh';
+      unityContainer.style.zIndex = '9990';
+      
+      console.log('[Avatar] ✅ Unity positioned for FULLSCREEN-CHAT');
+    }
+  }
+}, [viewState]);
+
+Issue 2: Add data-half-panel Attribute
+File: client/src/components/tutor/avatar/states/HalfPanel.tsx
+typescriptexport function HalfPanel({ onExpand, onClose }: HalfPanelProps) {
+  // ... existing code ...
+
+  return (
+    <div 
+      data-half-panel  // ✅ ADD THIS ATTRIBUTE
+      className="fixed bottom-0 right-4 w-96 h-[600px] z-[10000] pointer-events-auto"
+      style={{ pointerEvents: 'auto' }}
+    >
+      {/* Rest of the component */}
+      <div className="absolute inset-0 bg-transparent pointer-events-none">
+        {/* Unity renders here via positioning */}
+      </div>
+      
+      {/* Bottom controls overlay */}
+      <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-black/50 to-transparent flex items-center justify-center gap-4 pointer-events-auto z-[10001]">
+        <button
+          onClick={onExpand}
+          className="p-3 rounded-full bg-purple-600 hover:bg-purple-700 transition-colors"
+          aria-label="Expand to fullscreen"
+        >
+          <Maximize2 className="h-5 w-5 text-white" />
+        </button>
+        <button
+          onClick={onClose}
+          className="p-3 rounded-full bg-red-600 hover:bg-red-700 transition-colors"
+          aria-label="Close avatar"
+        >
+          <X className="h-5 w-5 text-white" />
+        </button>
+      </div>
+    </div>
+  );
+}
+
+Issue 3: Resize Observer for Dynamic Positioning
+File: client/src/components/tutor/avatar/AvatarContainer.tsx
+typescriptuseEffect(() => {
+  // ... existing positioning code ...
+
+  // Add resize observer for half panel
+  if (viewState === 'half') {
+    const halfPanel = document.querySelector('[data-half-panel]') as HTMLElement;
+    const unityContainer = document.querySelector('#global-unity-container') as HTMLElement;
+    
+    if (halfPanel && unityContainer) {
+      const resizeObserver = new ResizeObserver(() => {
+        const rect = halfPanel.getBoundingClientRect();
+        unityContainer.style.top = `${rect.top}px`;
+        unityContainer.style.left = `${rect.left}px`;
+        unityContainer.style.width = `${rect.width}px`;
+        unityContainer.style.height = `${rect.height}px`;
+      });
+      
+      resizeObserver.observe(halfPanel);
+      
+      return () => resizeObserver.disconnect();
+    }
+  }
+}, [viewState]);
+
+Issue 4: Fix Voice WebSocket Error
+Problem: useVoiceTutor.ts:200 - Cannot read property 'text' of undefined
+File: client/src/hooks/useVoiceTutor.ts (Line 200)
+typescript// BEFORE (Broken):
+setTranscript(prev => prev + data.text);
+
+// AFTER (Fixed):
+setTranscript(prev => prev + (data?.text || ''));
+
+// OR better - add null check:
+if (data && data.text) {
+  setTranscript(prev => prev + data.text);
+}
+
+📊 Expected Results:
+StateUnity PositionStatusMinimizedHidden (display: none)✅ Bubble clickableHalf PanelFixed to panel bounds (right side)✅ Avatar visible inside panelFullscreenFull viewport (100vw x 100vh)✅ Already workingFullscreen+ChatLeft 60% (60vw x 100vh)✅ Already working
+
+🎬 Implementation Steps:
+
+Update AvatarContainer.tsx - Add getBoundingClientRect() positioning logic
+Update HalfPanel.tsx - Add data-half-panel attribute
+Add ResizeObserver - Handle window resize dynamically
+Fix useVoiceTutor.ts - Add null check for data.text
+Hard refresh - Ctrl+Shift+R to clear cache
+Test sequence:
+
+Click purple bubble → Avatar should appear INSIDE half panel ✅
+Click expand → Fullscreen works ✅
+Click chat → Split view works ✅
+Minimize → Bubble appears ✅
+
+
+
+
+🔧 Shader Warning (Optional Fix):
+Current: Shader uses 33 texture parameters, more than 32 supported
+Impact: Non-critical - avatar works but may have minor visual glitches
+Long-term fix: Unity rebuild with simpler shader (reduce from 33 → 16 textures)
+Immediate workaround: Ignore warning - avatar functions fine with HTML5 audio fallback

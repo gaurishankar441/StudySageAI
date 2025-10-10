@@ -62,10 +62,10 @@ export function AvatarContainer({
     minimizeToBubble();
   };
 
-  // CRITICAL FIX: Don't move iframe, just show/hide with CSS - properly integrated with panels
+  // CRITICAL FIX: Don't move iframe, use dynamic positioning with getBoundingClientRect()
   useEffect(() => {
     console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
-    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-PANEL-INTEGRATED-V4');
+    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-DYNAMIC-POSITIONING');
     
     // Find global Unity container (iframe stays here always!)
     const globalUnityContainer = document.getElementById('global-unity-container');
@@ -89,29 +89,70 @@ export function AvatarContainer({
     globalUnityContainer.style.overflow = 'hidden'; // Clip to bounds
     
     if (viewState === 'half') {
-      // Half panel: Match EXACT panel dimensions
-      const isMobile = window.innerWidth < 768;
-      if (isMobile) {
-        // Mobile: Bottom sheet (60vh from bottom)
-        globalUnityContainer.style.width = '100%';
-        globalUnityContainer.style.height = '60vh';
-        globalUnityContainer.style.bottom = '0';
-        globalUnityContainer.style.left = '0';
-        globalUnityContainer.style.top = 'auto';
-        globalUnityContainer.style.right = 'auto';
-        globalUnityContainer.style.borderRadius = '1rem 1rem 0 0'; // rounded-t-2xl
-      } else {
-        // Desktop: Right panel (full height, 480px wide)
-        globalUnityContainer.style.width = '480px';
-        globalUnityContainer.style.height = '100vh'; // Full height on desktop
-        globalUnityContainer.style.right = '0';
-        globalUnityContainer.style.top = '0';
+      // DYNAMIC POSITIONING: Get exact panel bounds from DOM
+      const halfPanel = document.querySelector('[data-half-panel="true"]') as HTMLElement;
+      
+      if (halfPanel) {
+        const rect = halfPanel.getBoundingClientRect();
+        
+        // Match Unity container to half panel EXACT position
+        globalUnityContainer.style.top = `${rect.top}px`;
+        globalUnityContainer.style.left = `${rect.left}px`;
+        globalUnityContainer.style.width = `${rect.width}px`;
+        globalUnityContainer.style.height = `${rect.height}px`;
         globalUnityContainer.style.bottom = 'auto';
-        globalUnityContainer.style.left = 'auto';
-        globalUnityContainer.style.borderRadius = '1rem 0 0 1rem'; // rounded-l-2xl
+        globalUnityContainer.style.right = 'auto';
+        globalUnityContainer.style.borderRadius = window.innerWidth < 768 ? '1rem 1rem 0 0' : '1rem 0 0 1rem';
+        globalUnityContainer.style.zIndex = '9990';
+        
+        console.log(`[Avatar] ✅ Unity DYNAMIC positioned - Top: ${rect.top}px, Left: ${rect.left}px, Width: ${rect.width}px, Height: ${rect.height}px`);
+        
+        // Update Unity position function
+        const updateUnityPosition = () => {
+          const newRect = halfPanel.getBoundingClientRect();
+          globalUnityContainer.style.top = `${newRect.top}px`;
+          globalUnityContainer.style.left = `${newRect.left}px`;
+          globalUnityContainer.style.width = `${newRect.width}px`;
+          globalUnityContainer.style.height = `${newRect.height}px`;
+          console.log(`[Avatar] 🔄 Unity repositioned - Top: ${newRect.top}px, Left: ${newRect.left}px, Width: ${newRect.width}px, Height: ${newRect.height}px`);
+        };
+        
+        // ResizeObserver for panel size changes
+        const resizeObserver = new ResizeObserver(updateUnityPosition);
+        resizeObserver.observe(halfPanel);
+        
+        // Window resize listener for position changes (when size stays same but position shifts)
+        window.addEventListener('resize', updateUnityPosition);
+        
+        // Scroll listener for position changes during scroll
+        window.addEventListener('scroll', updateUnityPosition);
+        
+        return () => {
+          resizeObserver.disconnect();
+          window.removeEventListener('resize', updateUnityPosition);
+          window.removeEventListener('scroll', updateUnityPosition);
+        };
+      } else {
+        console.error('[Avatar] ❌ Half panel [data-half-panel] not found! Using fallback');
+        // Fallback to static positioning
+        const isMobile = window.innerWidth < 768;
+        if (isMobile) {
+          globalUnityContainer.style.width = '100%';
+          globalUnityContainer.style.height = '60vh';
+          globalUnityContainer.style.bottom = '0';
+          globalUnityContainer.style.left = '0';
+          globalUnityContainer.style.top = 'auto';
+        } else {
+          globalUnityContainer.style.width = '480px';
+          globalUnityContainer.style.height = '100vh'; // Full height on desktop
+          globalUnityContainer.style.right = '0';
+          globalUnityContainer.style.top = '0';
+          globalUnityContainer.style.bottom = 'auto';
+          globalUnityContainer.style.left = 'auto';
+          globalUnityContainer.style.borderRadius = '1rem 0 0 1rem'; // rounded-l-2xl
+        }
+        globalUnityContainer.style.zIndex = '9990';
       }
-      globalUnityContainer.style.zIndex = '9990'; // BELOW controls (controls are 10000+)
-      console.log('[Avatar] ✅ Unity positioned for HALF panel (pointer-events enabled)');
       
     } else if (viewState === 'fullscreen') {
       // Fullscreen: Cover entire viewport

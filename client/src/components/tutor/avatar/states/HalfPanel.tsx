@@ -69,6 +69,7 @@ export function HalfPanel({
           bottom-0 left-0 right-0 h-[60vh]
           ${className}`}
         data-testid="avatar-half-panel"
+        data-half-panel="true"
       >
         {/* Control Bar */}
         <div className="absolute top-0 left-0 right-0 h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 z-10 md:rounded-tl-2xl rounded-t-2xl pointer-events-auto">

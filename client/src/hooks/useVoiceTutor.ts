@@ -197,10 +197,12 @@ export function useVoiceTutor({
           setState(prev => ({ 
             ...prev, 
             isProcessing: false,
-            transcription: message.data.text,
-            detectedLanguage: message.data.language || prev.detectedLanguage
+            transcription: message.data?.text || '',
+            detectedLanguage: message.data?.language || prev.detectedLanguage
           }));
-          onTranscription?.(message.data.text);
+          if (message.data?.text) {
+            onTranscription?.(message.data.text);
+          }
           break;
 
         case 'TTS_CHUNK': {
