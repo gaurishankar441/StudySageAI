@@ -65,14 +65,14 @@ export function HalfPanel({
         animate="visible"
         exit="exit"
         className={`fixed z-[10000] pointer-events-none
-          md:right-0 md:bottom-0 md:top-0 md:w-[480px]
           bottom-0 left-0 right-0 h-[60vh]
+          md:left-auto md:right-0 md:bottom-0 md:top-0 md:w-[480px] md:h-auto
           ${className}`}
         data-testid="avatar-half-panel"
         data-half-panel="true"
       >
         {/* Control Bar */}
-        <div className="absolute top-0 left-0 right-0 h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 z-10 md:rounded-tl-2xl rounded-t-2xl pointer-events-auto">
+        <div className="absolute top-0 left-0 right-0 h-12 bg-black/60 backdrop-blur-sm flex items-center justify-between px-4 z-10 rounded-t-2xl md:rounded-t-none md:rounded-tl-2xl pointer-events-auto">
           <div className="text-white text-sm font-medium">VaktaAI Avatar</div>
           <AvatarControls
             onClose={onClose}

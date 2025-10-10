@@ -8,33 +8,48 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 
 ## Recent Changes
 
-### Unity Half Panel Fallback Positioning Fix (October 10, 2025)
-**Problem**: When `[data-half-panel]` element not found (timing issue), fallback positioning used `top: 0, right: 0, height: 100vh`, causing Unity to appear OUTSIDE half panel at top of screen instead of inside panel bounds.
+### Unity Half Panel Positioning - Complete Fix (October 10, 2025)
 
-**Root Cause**: Fallback didn't match HalfPanel's actual Tailwind classes (`bottom-4 right-4 w-[480px] h-[600px]`). Used wrong CSS properties.
+**Critical Bug Discovered**: HalfPanel appeared on LEFT side of desktop screen instead of RIGHT side, breaking the entire avatar UX.
 
-**Solution**: Fixed fallback to EXACTLY match HalfPanel positioning:
+**Root Causes**:
+1. **CSS Inheritance Bug**: Mobile `left-0` wasn't reset with `md:left-auto`, causing desktop panel to stick to LEFT
+2. **Fallback Positioning Wrong**: Used `top: 0, height: 100vh` instead of matching actual Tailwind classes
+3. **Border Radius**: Control bar had wrong rounding on desktop
+
+**Complete Solution**:
+
+1. **Fixed HalfPanel CSS** (client/src/components/tutor/avatar/states/HalfPanel.tsx):
 ```typescript
-// OLD (WRONG) - Unity appeared at top:
-globalUnityContainer.style.top = '0';         // ❌
-globalUnityContainer.style.right = '0';       // ❌ Should be 16px  
-globalUnityContainer.style.height = '100vh';  // ❌ Should be 600px
+// OLD (WRONG) - Panel on LEFT:
+className={`fixed z-[10000] pointer-events-none
+  md:right-0 md:bottom-0 md:top-0 md:w-[480px]  // ❌ left-0 not reset!
+  bottom-0 left-0 right-0 h-[60vh]`}
 
-// NEW (CORRECT) - Unity inside panel:
-globalUnityContainer.style.bottom = '16px';   // ✅ Matches bottom-4
-globalUnityContainer.style.right = '16px';    // ✅ Matches right-4
-globalUnityContainer.style.width = '480px';   // ✅ Matches w-[480px]
-globalUnityContainer.style.height = '600px';  // ✅ Matches h-[600px]
-globalUnityContainer.style.top = 'auto';      // ✅ Reset (CRITICAL!)
-globalUnityContainer.style.left = 'auto';     // ✅ Reset (CRITICAL!)
+// NEW (CORRECT) - Panel on RIGHT:
+className={`fixed z-[10000] pointer-events-none
+  bottom-0 left-0 right-0 h-[60vh]
+  md:left-auto md:right-0 md:bottom-0 md:top-0 md:w-[480px] md:h-auto`}  // ✅ Reset left!
 ```
 
-**Additional Fix**: Increased delay from 100ms → 200ms to give React more time to render HalfPanel.
+2. **Fixed Fallback Positioning** (client/src/components/tutor/avatar/AvatarContainer.tsx):
+```typescript
+// Unity container fallback - EXACTLY matches HalfPanel
+globalUnityContainer.style.bottom = '16px';   // ✅ bottom-4
+globalUnityContainer.style.right = '16px';    // ✅ right-4
+globalUnityContainer.style.width = '480px';   // ✅ w-[480px]
+globalUnityContainer.style.height = '600px';  // ✅ h-[600px]
+globalUnityContainer.style.top = 'auto';      // ✅ Reset
+globalUnityContainer.style.left = 'auto';     // ✅ Reset
+```
 
-**Files Modified**:
-- `client/src/components/tutor/avatar/AvatarContainer.tsx`: Fixed fallback positioning and increased delay to 200ms
+3. **Fixed Control Bar Border**: `rounded-t-2xl md:rounded-t-none md:rounded-tl-2xl` for correct desktop appearance
 
-**Result**: Even when DOM timing fails, Unity appears at bottom-right (16px, 16px) matching HalfPanel exactly. No more Unity outside panel bounds.
+**Result**: 
+- ✅ Half-panel now correctly appears on RIGHT side of desktop
+- ✅ Unity avatar positioned correctly within panel bounds
+- ✅ Smooth slide-in animation from right (desktop) or bottom (mobile)
+- ✅ All 4 avatar states working: minimized → half-panel → fullscreen → fullscreen+chat
 
 ## System Architecture
 
