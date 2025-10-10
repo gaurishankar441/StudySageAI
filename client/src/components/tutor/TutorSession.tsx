@@ -179,7 +179,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     },
     onSuccess: () => {
       setMessage("");
-      // Streaming message comes from voiceTutor.transcription now
+      // 📝 Invalidate queries to refresh messages - streaming response will clear after
       queryClient.invalidateQueries({ queryKey: [`/api/chats/${chatId}/messages`] });
       queryClient.invalidateQueries({ queryKey: [`/api/tutor/optimized/session/${chatId}`] });
     },
@@ -571,6 +571,28 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   useEffect(() => {
     setIsStreaming(voiceTutor.isProcessing);
   }, [voiceTutor.isProcessing]);
+  
+  // 📝 Clear streaming response only when NEW assistant message actually appears
+  const lastAssistantIdRef = useRef<string | null>(null);
+  
+  useEffect(() => {
+    // Find most recent assistant message
+    const lastAssistant = [...messages].reverse().find(m => m.role === 'assistant');
+    
+    if (voiceTutor.streamingResponse && !voiceTutor.isProcessing && lastAssistant) {
+      // Check if this is a NEW assistant message (different ID from last tracked)
+      if (lastAssistantIdRef.current !== lastAssistant.id) {
+        console.log(`[STREAMING] ✅ New assistant message detected (${lastAssistant.id}), clearing streaming response`);
+        lastAssistantIdRef.current = lastAssistant.id;
+        voiceTutor.clearStreamingResponse();
+      }
+    }
+    
+    // Update tracking even if not clearing (for next message)
+    if (lastAssistant && lastAssistantIdRef.current !== lastAssistant.id) {
+      lastAssistantIdRef.current = lastAssistant.id;
+    }
+  }, [messages, voiceTutor.streamingResponse, voiceTutor.isProcessing, voiceTutor]);
 
   const lastPlayedRef = useRef<string | null>(null);
   const [avatarViewState, setAvatarViewState] = useState<'minimized' | 'half' | 'fullscreen' | 'fullscreen-chat'>('minimized'); // 🆕 Track avatar visibility
@@ -983,24 +1005,24 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
             </div>
           )}
 
-          {isStreaming && (
+          {(isStreaming || voiceTutor.streamingResponse) && (
             <div className="flex gap-4 animate-fade-in-up">
               <div className="w-11 h-11 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 shadow-lg animate-pulse-glow">
                 <Bot className="w-6 h-6 text-white" />
               </div>
               <div className="flex-1 max-w-3xl">
                 <div className="bg-gradient-to-br from-slate-50/90 via-white/90 to-indigo-50/90 dark:from-slate-800/90 dark:via-slate-900/90 dark:to-indigo-950/90 backdrop-blur-sm border border-slate-200/50 dark:border-slate-700/50 rounded-2xl p-6 shadow-md">
-                  {voiceTutor.transcription ? (
+                  {voiceTutor.streamingResponse ? (
                     <>
                       <div className="prose prose-base max-w-none dark:prose-invert leading-relaxed inline-block">
                         <ReactMarkdown
                           remarkPlugins={[remarkMath]}
                           rehypePlugins={[rehypeKatex]}
                         >
-                          {voiceTutor.transcription}
+                          {voiceTutor.streamingResponse}
                         </ReactMarkdown>
                       </div>
-                      <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />
+                      {isStreaming && <div className="inline-block w-0.5 h-5 bg-indigo-600 animate-pulse ml-1" />}
                     </>
                   ) : (
                     <div className="typing-indicator" data-testid="typing-indicator">

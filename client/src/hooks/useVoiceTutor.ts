@@ -76,6 +76,7 @@ interface VoiceState {
   isProcessing: boolean;
   isSpeaking: boolean;
   transcription: string;
+  streamingResponse: string; // 📝 Persist streaming response even after isProcessing=false
   detectedLanguage?: 'hi' | 'en' | string;
   sessionState?: any;
 }
@@ -103,6 +104,7 @@ export function useVoiceTutor({
     isProcessing: false,
     isSpeaking: false,
     transcription: '',
+    streamingResponse: '', // 📝 Persist streaming text
   });
 
   const wsRef = useRef<WebSocket | null>(null);
@@ -308,15 +310,14 @@ export function useVoiceTutor({
               id: `tts-chunk-${chunkIndex}`,
               audio,
               phonemes,
-              text: text || '',
-              timestamp: new Date(),
-              canAcceptTTS
+              duration: 1000, // Estimate 1 second per chunk (actual duration from Unity)
+              timestamp: Date.now()
             });
             
             console.log(`[Smart TTS Queue] 📊 Enqueue result:`, enqueueResult);
             
             // If successfully enqueued, send to Unity
-            if (enqueueResult.success && avatarRef.current) {
+            if (enqueueResult && avatarRef.current) {
               try {
                 // Send audio + phonemes to Unity avatar for synchronized lip-sync
                 avatarRef.current.sendAudioWithPhonemesToAvatar(
@@ -441,10 +442,11 @@ export function useVoiceTutor({
           
           console.log(`[TEXT QUERY] 📝 Chunk received: "${content.substring(0, 50)}..."`);
           
-          // Update streaming text state
+          // Update BOTH transcription (temp) and streamingResponse (persistent)
           setState(prev => ({
             ...prev,
             transcription: isFirst ? content : prev.transcription + content,
+            streamingResponse: isFirst ? content : prev.streamingResponse + content, // 📝 Persist here
             isProcessing: true
           }));
           break;
@@ -457,9 +459,11 @@ export function useVoiceTutor({
           
           console.log(`[TEXT QUERY] ✅ Response complete - Emotion: ${emotion}, Phase: ${phase}`);
           
+          // 📝 Keep streamingResponse visible, just stop processing
           setState(prev => ({
             ...prev,
             isProcessing: false
+            // streamingResponse stays - will be cleared when messages refresh
           }));
           break;
         }
@@ -559,6 +563,7 @@ export function useVoiceTutor({
       isProcessing: false,
       isSpeaking: false,
       transcription: '',
+      streamingResponse: '', // 📝 Clear streaming response on disconnect
     });
   }, []);
 
@@ -712,6 +717,15 @@ export function useVoiceTutor({
   // 🔥 REMOVED auto-connect - TutorSession handles connection explicitly
   // This prevents double connection/disconnection issues
 
+  // 📝 Function to clear streaming response after messages refresh
+  const clearStreamingResponse = useCallback(() => {
+    setState(prev => ({
+      ...prev,
+      streamingResponse: '',
+      transcription: ''
+    }));
+  }, []);
+
   return {
     state,
     connect,
@@ -720,11 +734,13 @@ export function useVoiceTutor({
     stopRecording,
     interrupt,
     sendTextQuery, // PHASE 2: Text query via WebSocket
+    clearStreamingResponse, // 📝 Clear after messages refresh
     isConnected: state.isConnected,
     isRecording: state.isRecording,
     isProcessing: state.isProcessing,
     isSpeaking: state.isSpeaking,
     transcription: state.transcription,
+    streamingResponse: state.streamingResponse, // 📝 Expose persistent streaming text
     detectedLanguage: state.detectedLanguage,
   };
 }
