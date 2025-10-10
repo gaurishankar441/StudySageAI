@@ -709,13 +709,8 @@ export function useVoiceTutor({
     updateLanguage();
   }, [state.detectedLanguage, chatId, onLanguageChange]);
 
-  // Auto-connect on mount
-  useEffect(() => {
-    connect();
-    return () => {
-      disconnect();
-    };
-  }, [connect, disconnect]);
+  // 🔥 REMOVED auto-connect - TutorSession handles connection explicitly
+  // This prevents double connection/disconnection issues
 
   return {
     state,
