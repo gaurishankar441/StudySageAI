@@ -8,6 +8,58 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 
 ## Recent Changes
 
+### WebSocket TTS Payload Format Fix (October 10, 2025)
+
+**Critical Bug Discovered**: TTS chunks were being sent with NESTED payload structure, violating the TTSChunkMessage interface contract and causing client-side audio decoding errors.
+
+**Root Cause**:
+```typescript
+// ❌ WRONG (Nested structure):
+{
+  type: 'TTS_CHUNK',
+  data: {
+    sequence: 1,
+    data: 'base64audio...',  // Nested!
+    text: 'sentence'
+  }
+}
+
+// ✅ CORRECT (Flat structure):
+{
+  type: 'TTS_CHUNK',
+  data: 'base64audio...',     // Direct base64!
+  chunkIndex: 1,
+  totalChunks: 5
+}
+```
+
+**Complete Fix Applied**:
+
+1. **Fixed generateAndStreamSentenceTTS** (server/services/voiceStreamService.ts:704-716):
+   - Changed from nested `data.data` to flat `data: finalAudioData`
+   - Replaced `sequence` with `chunkIndex` and `totalChunks`
+   - Properly typed as `TTSChunkMessage`
+
+2. **Fixed streamTTSChunksRealtime** (server/services/voiceStreamService.ts:289-299):
+   - Same flat payload structure applied
+   - Matches TTSChunkMessage interface exactly
+   - Both streaming paths now consistent
+
+3. **Standardized Error Messages**:
+   - Replaced deprecated `TTS_SKIP` with proper `ERROR` type
+   - Added `code`, `message`, and `recoverable` fields
+   - Aligns with VoiceMessage interface
+
+4. **Fixed TTS_END Messages**:
+   - Changed from nested `data.totalChunks` to flat `totalChunks`
+   - Properly typed as `TTSEndMessage`
+
+**Result**:
+- ✅ All TTS streaming paths emit correct flat payloads
+- ✅ Client can decode audio without format mismatches
+- ✅ Both real-time and buffered flows are consistent
+- ✅ Error handling standardized across all paths
+
 ### TRUE Streaming Voice System - Performance Fix (October 10, 2025)
 
 **Critical Performance Issue Resolved**: Voice responses were slow because the system waited for the COMPLETE AI response before generating TTS, creating a sequential bottleneck.
