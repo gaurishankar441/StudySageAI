@@ -67,6 +67,29 @@ window.addEventListener('scroll', updateUnityPosition);
 
 **Result**: Unity container now EXACTLY matches half panel bounds at all times, updates on window resize/scroll, and displays properly cropped avatar view inside panel.
 
+### Unity Half Panel 100ms Timing Fix (October 10, 2025)
+**Problem**: Dynamic positioning logic was executing BEFORE DOM was ready, causing `[data-half-panel]` element to not be found, resulting in fallback positioning and Unity appearing outside panel bounds.
+
+**Root Cause**: React useEffect fires immediately after component render, but Framer Motion animations take time to mount DOM elements. Without delay, `document.querySelector('[data-half-panel]')` returned null.
+
+**Solution**: Added 100ms setTimeout delay before positioning logic:
+```typescript
+const positionUnity = () => {
+  const globalUnityContainer = document.getElementById('global-unity-container');
+  const halfPanel = document.querySelector('[data-half-panel="true"]');
+  // ... positioning logic
+};
+
+// CRITICAL: 100ms delay ensures DOM is ready
+const timeout = setTimeout(positionUnity, 100);
+return () => clearTimeout(timeout);
+```
+
+**Files Modified**:
+- `client/src/components/tutor/avatar/AvatarContainer.tsx`: Wrapped positioning logic in `positionUnity()` function with 100ms setTimeout
+
+**Result**: Unity positioning now waits for DOM, successfully finds half panel element, and applies exact getBoundingClientRect() positioning on every state change.
+
 ## System Architecture
 
 ### Frontend Architecture
