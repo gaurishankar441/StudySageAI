@@ -5,6 +5,7 @@ import { HalfPanel } from './states/HalfPanel';
 import { FullscreenPanel } from './states/FullscreenPanel';
 import { FullscreenWithChat } from './states/FullscreenWithChat';
 import { useEffect } from 'react';
+import { useAvatarState } from '@/hooks/useAvatarState';
 
 interface Message {
   id: string;
@@ -44,10 +45,36 @@ export function AvatarContainer({
     minimizeToBubble,
   } = useAvatarViewState('minimized');
 
+  // 🎭 Avatar State Machine
+  const { state: avatarState, transition, canAcceptTTS, history } = useAvatarState();
+
   // Debug: Log when component mounts
   useEffect(() => {
     console.log('[Avatar Container] 🎭 Component mounted! Initial viewState:', viewState);
+    console.log('[Avatar State] 🎭 Initial state:', avatarState, '| Can accept TTS:', canAcceptTTS);
   }, []);
+
+  // 🎭 Avatar State Transitions based on viewState
+  useEffect(() => {
+    if (viewState === 'minimized') {
+      // Avatar closed
+      transition('CLOSED');
+      console.log('[Avatar State] 🎭 → CLOSED (minimized)');
+    } else {
+      // Avatar opening - start with LOADING, will transition to READY when Unity loads
+      transition('LOADING');
+      console.log('[Avatar State] 🎭 → LOADING (opening avatar)');
+      
+      // Simulate Unity ready after brief delay (in production, this would be triggered by Unity message)
+      // TODO: Replace with actual Unity ready event listener
+      const readyTimeout = setTimeout(() => {
+        transition('READY');
+        console.log('[Avatar State] 🎭 → READY (Unity loaded) | Can accept TTS:', true);
+      }, 500);
+      
+      return () => clearTimeout(readyTimeout);
+    }
+  }, [viewState, transition]);
 
   // Unity iframe URL
   const unityIframeUrl = '/unity-avatar/index.html';
