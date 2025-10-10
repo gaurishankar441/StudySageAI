@@ -5,6 +5,16 @@ VaktaAI is an AI-powered educational platform offering an AI Tutor, Document Cha
 
 ## Recent Changes (October 2025)
 
+### Phase 3: Unity WebGL Avatar Loading Fix (Completed - October 10, 2025)
+**Critical CSP fix for Unity WASM compilation**
+- **Root Cause Identified**: Unity WebGL loader requires `'wasm-unsafe-eval'` in CSP `script-src` to compile WebAssembly modules
+- **CSP Headers Updated**: Added `'wasm-unsafe-eval'` to development CSP script-src (server/index.ts line 58)
+- **Error Forwarding**: Added Unity error forwarding via postMessage to React for visibility of loader failures
+- **Handshake Timing**: Reduced Unity bridge handshake delay from 500ms to 50ms to capture early Unity logs
+- **Debugging Enhancements**: Console forwarding now captures all Unity logs (memory config, WebGL context, shader warnings)
+- **Result**: Unity WebGL avatar now loads successfully with full audio unlock and phoneme-based lip-sync capability
+- **Known Issues**: Non-critical shader warnings (texture parameters exceed device limits - cosmetic only)
+
 ### Phase 2: Unified WebSocket Protocol for AI Tutor (Completed)
 **Migration from HTTP to WebSocket for all AI Tutor interactions**
 - **Unified Protocol**: All AI Tutor communications (voice + text chat) now use WebSocket instead of mixed HTTP/WebSocket architecture

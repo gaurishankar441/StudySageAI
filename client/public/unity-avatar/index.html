@@ -769,6 +769,14 @@
         }).catch((message) => {
           console.error('[Unity] Failed to create instance:', message);
           unityShowBanner('Failed to load avatar: ' + message, 'error');
+          
+          // 🐛 FORWARD ERROR TO REACT: CSP violations and loader errors now visible!
+          if (trustedParentOrigin) {
+            window.parent.postMessage({
+              type: 'UNITY_ERROR',
+              payload: { error: String(message), stage: 'createUnityInstance' }
+            }, trustedParentOrigin);
+          }
         });
       };
 
