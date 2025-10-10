@@ -52,7 +52,7 @@ app.use(helmet({
   } : {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'"], // Vite dev + Unity WebGL WASM compilation
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'", "'wasm-unsafe-eval'", "https://*.s3.ap-south-1.amazonaws.com"], // Vite dev + Unity WebGL WASM + S3 CDN
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"], // Tailwind + Google Fonts
       imgSrc: ["'self'", "data:", "https:", "blob:"],
       connectSrc: ["'self'", "https:", "wss:", "blob:", "data:"], // Unity WebGL WASM loading
