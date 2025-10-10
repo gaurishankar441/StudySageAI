@@ -92,12 +92,12 @@ export function useUnityBridge({
     // Wait for iframe to load
     const iframe = iframeRef.current;
     if (iframe.contentWindow) {
-      // Iframe already loaded, start handshake QUICKLY before Unity starts logging
-      setTimeout(initHandshake, 50); // Reduced from 500ms to 50ms for faster handshake
+      // Iframe already loaded - wait for Unity loader to attach message listener
+      setTimeout(initHandshake, 500); // 500ms needed for Unity WebGL loader initialization
     } else {
       iframe.addEventListener('load', () => {
-        // Handshake immediately after iframe loads
-        setTimeout(initHandshake, 50);
+        // Wait after iframe loads for Unity script to initialize
+        setTimeout(initHandshake, 500);
       });
       return () => iframe.removeEventListener('load', initHandshake);
     }
