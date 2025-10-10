@@ -5,6 +5,22 @@ VaktaAI is an AI-powered educational platform offering an AI Tutor, Document Cha
 
 ## Recent Changes (October 2025)
 
+### Phase 7: Admin Panel Architecture (Planned - October 10, 2025)
+**Comprehensive platform configuration management system**
+- **Purpose**: Enable non-technical admins to manage all platform settings without code changes
+- **Architecture Document**: `docs/admin-panel-architecture.md` - Complete technical specification
+- **Configuration Categories**:
+  1. **AI Tutor**: Personas (Priya/Amit/Garima), prompts, first messages, response adaptation, hint progression
+  2. **Unity Avatar**: Build upload/replacement, S3 management, GameObject settings, state machine config
+  3. **Voice Services**: TTS/STT providers (Sarvam/Polly/AssemblyAI), circuit breaker, enhancement rules
+  4. **API Management**: OpenAI/Gemini/Anthropic keys, model selection, AWS credentials
+  5. **Caching**: Redis config, TTS cache, semantic cache, session TTL
+  6. **System**: Feature flags, rate limits, quiz defaults, study plan settings
+- **Database Schema**: `adminConfigs`, `configAuditLog`, `unityBuilds` tables with full audit trail
+- **Security**: Role-based access, encrypted API keys, change approval workflow, rollback protection
+- **Features**: Live preview, import/export, version history, health monitoring dashboard
+- **Implementation Plan**: 6-phase rollout (Core → Tutor → Unity → Voice/API → System → Import/Export)
+
 ### Phase 6: Unity WebGL Build Update (Completed - October 10, 2025)
 **Replaced Unity avatar build with latest version from user**
 - **Old Build Backup**: Backed up previous build to `backup/unity-build-old/`
