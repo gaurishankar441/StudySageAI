@@ -11,16 +11,19 @@ let redisErrorLogged = false;
 const redisUrlRaw = process.env.REDIS_URL || 'redis://localhost:6379';
 const isUpstash = redisUrlRaw.includes('upstash.io');
 
-console.log('[TTS CACHE] 🔍 Raw URL starts with:', redisUrlRaw.substring(0, 20));
-console.log('[TTS CACHE] 🔍 Is Upstash:', isUpstash);
-
-// For Upstash, force TLS by using rediss:// scheme
-const redisUrl = isUpstash 
-  ? redisUrlRaw.replace(/^redis:\/\//, 'rediss://') 
-  : redisUrlRaw;
-
-console.log('[TTS CACHE] 🔍 Final URL starts with:', redisUrl.substring(0, 20));
-console.log('[TTS CACHE] 🔍 Using TLS:', redisUrl.startsWith('rediss://'));
+// Convert REST URL to Redis protocol URL if needed
+let redisUrl = redisUrlRaw;
+if (isUpstash && redisUrlRaw.startsWith('https://')) {
+  // Extract host from REST URL: https://capital-elf-22316.upstash.io
+  const restUrl = new URL(redisUrlRaw);
+  // Need to get password from UPSTASH_REDIS_REST_TOKEN env
+  const password = process.env.UPSTASH_REDIS_REST_TOKEN || '';
+  redisUrl = `redis://default:${password}@${restUrl.hostname}:6379`;
+  console.log('[TTS CACHE] 🔄 Converted REST URL to Redis protocol');
+} else if (isUpstash && redisUrlRaw.startsWith('redis://')) {
+  // Convert to rediss:// for TLS
+  redisUrl = redisUrlRaw.replace(/^redis:\/\//, 'rediss://');
+}
 
 // ioredis will handle TLS automatically with rediss:// scheme
 const redis: Redis | null = REDIS_DISABLED 

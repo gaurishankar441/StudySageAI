@@ -4,15 +4,25 @@ import type { ValidationResult } from './ResponseValidator';
 
 const REDIS_DISABLED = process.env.REDIS_DISABLED === 'true';
 
-const isUpstash = process.env.REDIS_URL?.includes('upstash.io');
+// Convert REST URL to Redis protocol URL if needed
+const redisUrlRaw = process.env.REDIS_URL || 'redis://localhost:6379';
+const isUpstash = redisUrlRaw.includes('upstash.io');
+let redisUrl = redisUrlRaw;
+if (isUpstash && redisUrlRaw.startsWith('https://')) {
+  const restUrl = new URL(redisUrlRaw);
+  const password = process.env.UPSTASH_REDIS_REST_TOKEN || '';
+  redisUrl = `redis://default:${password}@${restUrl.hostname}:6379`;
+} else if (isUpstash && redisUrlRaw.startsWith('redis://')) {
+  redisUrl = redisUrlRaw.replace(/^redis:\/\//, 'rediss://');
+}
+
 const redis = REDIS_DISABLED 
   ? null 
-  : new Redis(process.env.REDIS_URL || 'redis://localhost:6379', {
+  : new Redis(redisUrl, {
       maxRetriesPerRequest: 0,
       enableReadyCheck: true,
       lazyConnect: true,
       retryStrategy: () => null,
-      tls: isUpstash ? {} : undefined,
       family: isUpstash ? 6 : 4,
     });
 
