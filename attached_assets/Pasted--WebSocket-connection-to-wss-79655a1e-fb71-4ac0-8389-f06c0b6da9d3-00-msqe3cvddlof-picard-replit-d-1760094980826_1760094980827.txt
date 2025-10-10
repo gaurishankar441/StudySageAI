@@ -1,0 +1,1939 @@
+ WebSocket connection to 'wss://79655a1e-fb71-4ac0-8389-f06c0b6da9d3-00-msqe3cvddlof.picard.replit.dev/?token=XvI294N9m43w' failed: 
+setupWebSocket @ client:536
+index.html:1 An iframe which has both allow-scripts and allow-same-origin for its sandbox attribute can escape its sandboxing.
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+WebGL: INVALID_ENUM: getInternalformatParameter: invalid internalformat
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Unity] HTML5 Audio ended
+ [Unity] [Unity] HTML5 Audio ended
+ [TTS] Auto-playing new assistant message: f879833f-558e-43b0-88c5-84d2e7b044d7
+ [TTS] Chat mode: tutor - Will use PHONEME TTS
+ [TTS] playAudio called for message: f879833f-558e-43b0-88c5-84d2e7b044d7
+ [TTS] Setting playing audio to: f879833f-558e-43b0-88c5-84d2e7b044d7
+ [TTS] 🚀 CODE VERSION: 2025-10-09-PHONEME-FINAL 🚀
+ [TTS] Fetching emotion-based TTS for text: Great! I'm excited to begin our journey into the f...
+ [TTS] tutorSession exists: true chat.mode: tutor isOptimizedSession: true
+ [TTS] Endpoint: /api/tutor/optimized/session/tts-with-phonemes
+ [TTS] Response status: 200
+ [TTS] Phoneme data received - Phonemes: 1194 Audio base64 length: 974324
+ [TTS] Converted to blob, size: 730741
+ [Avatar] Status check - Ready: true Loading: false
+ [Avatar] ✅ Avatar ready - sending audio to Unity WebGL with lip-sync
+ [Avatar] 🔇 Skipping browser audio - Unity will play with lip-sync
+ 🔍 DEBUG: Phonemes count: 1194 usePhonemeTTS: true
+ [Avatar] 🎵 Sending phoneme-based lip-sync - Phonemes: 1194
+ 🔍 DEBUG: About to send 1194 phonemes to Unity
+ 🔍 DEBUG: Base64 audio length: 974324
+ 🔍 DEBUG: Calling sendAudioWithPhonemesToAvatar...
+ [Unity Bridge] 🎵 Sending audio + phonemes to Unity - Phonemes: 1194
+ [Unity Bridge] ✅ Audio + phonemes sent to Unity iframe
+ 🔍 DEBUG: ✅ sendAudioWithPhonemesToAvatar called successfully!
+ [Avatar] ✅ Audio sent to Unity successfully
+ [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+ [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 1194 Audio unlocked: true
+ [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":177,"blendshape":"R","weight":1},{"time":307,"blendshape":"EE","weight":1}]
+ [Unity] ✅ Playing audio + sending phonemes to Unity...
+ [Unity] 🔍 DEBUG - Unity instance exists: true
+ [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+ [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 1194
+ [Unity] 📦 Phoneme JSON length: 54910 chars
+ [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+ [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":177,"blendshape":"R","weight":1},{"time":307,"blendshape":"EE","weight":1},{"time":465,"blendshape":"T_L_D_N","weight":1},{"time":666,"blendshape":"sil","weight":0},{"time":1060,"blendshape":"Ah","weight":1},{"time":1196,"blendshape":"B_M_P","weight":1},{"time":1286,"blendshape":"IH","weight":1},{"time":1328,"blendshape":"K_G_H_NG","weight":1},{"time":1411,"blendshape":"S_Z","weight":1},{"time":1525,"blendshape":"Ah","weight":1},{"time":1657,"blendshape":"T_L_D_N","weight":1},{"time":1756,"blendshape":"IH","weight":1},{"time":1813,"blendshape":"T_L_D_N","weight":1},{"time":1850,"blendshape":"T_L_D_N","weight":1},{"time":1951,"blendshape":"W_OO","weight":1},{"time":2000,"blendshape":"B_M_P","weight":1},{"time":2082,"blendshape":"IH","weight":1},{"time":2141,"blendshape":"K_G_H_NG","weight":1},{"time":2250,"blendshape":"IH","weight":1},{"time":2300,"blendshape":"T_L_D_N","weight":1},{"time":2379,"blendshape":"Ah","weight":1},{"time":2448,"blendshape":"R","weight":1},{"time":2492,"blendshape":"Ch_J","weight":1},{"time":2648,"blendshape":"AE","weight":1},{"time":2750,"blendshape":"T_L_D_N","weight":1},{"time":2824,"blendshape":"IH","weight":1},{"time":2963,"blendshape":"IH","weight":1},{"time":3023,"blendshape":"T_L_D_N","weight":1},{"time":3089,"blendshape":"T_L_D_N","weight":1},{"time":3151,"blendshape":"W_OO","weight":1},{"time":3204,"blendshape":"TH","weight":1},{"time":3259,"blendshape":"Er","weight":1},{"time":3297,"blendshape":"F_V","weight":1},{"time":3438,"blendshape":"Ah","weight":1},{"time":3559,"blendshape":"S_Z","weight":1},{"time":3688,"blendshape":"IH","weight":1},{"time":3718,"blendshape":"T_L_D_N","weight":1},{"time":3767,"blendshape":"EE","weight":1},{"time":3880,"blendshape":"T_L_D_N","weight":1},{"time":3970,"blendshape":"IH","weight":1},{"time":4011,"blendshape":"K_G_H_NG","weight":1},{"time":4078,"blendshape":"W_OO","weight":1},{"time":4249,"blendshape":"AE","weight":1},{"time":4321,"blendshape":"T_L_D_N","weight":1},{"time":4381,"blendshape":"T_L_D_N","weight":1},{"time":4415,"blendshape":"Er","weight":1},{"time":4465,"blendshape":"F_V","weight":1},{"time":4514,"blendshape":"S_Z","weight":1},{"time":4665,"blendshape":"Ah","weight":1},{"time":4864,"blendshape":"Er","weight":1},{"time":4926,"blendshape":"T_L_D_N","weight":1},{"time":5043,"blendshape":"S_Z","weight":1},{"time":5235,"blendshape":"sil","weight":0},{"time":5428,"blendshape":"S_Z","weight":1},{"time":5550,"blendshape":"B_M_P","weight":1},{"time":5617,"blendshape":"Er","weight":1},{"time":5688,"blendshape":"S_Z","weight":1},{"time":5808,"blendshape":"IH","weight":1},{"time":5861,"blendshape":"F_V","weight":1},{"time":5959,"blendshape":"IH","weight":1},{"time":6011,"blendshape":"K_G_H_NG","weight":1},{"time":6094,"blendshape":"T_L_D_N","weight":1},{"time":6162,"blendshape":"IH","weight":1},{"time":6246,"blendshape":"F_V","weight":1},{"time":6394,"blendshape":"Er","weight":1},{"time":6486,"blendshape":"K_G_H_NG","weight":1},{"time":6571,"blendshape":"Er","weight":1},{"time":6608,"blendshape":"S_Z","weight":1},{"time":6734,"blendshape":"IH","weight":1},{"time":6783,"blendshape":"K_G_H_NG","weight":1},{"time":6872,"blendshape":"sil","weight":0},{"time":6984,"blendshape":"T_L_D_N","weight":1},{"time":7039,"blendshape":"IH","weight":1},{"time":7139,"blendshape":"F_V","weight":1},{"time":7211,"blendshape":"Er","weight":1},{"time":7249,"blendshape":"T_L_D_N","weight":1},{"time":7349,"blendshape":"W_OO","weight":1},{"time":7448,"blendshape":"Ch_J","weight":1},{"time":7618,"blendshape":"T_L_D_N","weight":1},{"time":7891,"blendshape":"sil","weight":0},{"time":8285,"blendshape":"TH","weight":1},{"time":8375,"blendshape":"IH","weight":1},{"time":8436,"blendshape":"S_Z","weight":1},{"time":8551,"blendshape":"IH","weight":1},{"time":8602,"blendshape":"S_Z","weight":1},{"time":8691,"blendshape":"Er","weight":1},{"time":8740,"blendshape":"F_V","weight":1},{"time":8889,"blendshape":"AE","weight":1},{"time":8941,"blendshape":"T_L_D_N","weight":1},{"time":9012,"blendshape":"T_L_D_N","weight":1},{"time":9053,"blendshape":"Er","weight":1},{"time":9082,"blendshape":"B_M_P","weight":1},{"time":9169,"blendshape":"AE","weight":1},{"time":9233,"blendshape":"T_L_D_N","weight":1},{"time":9292,"blendshape":"T_L_D_N","weight":1},{"time":9365,"blendshape":"T_L_D_N","weight":1},{"time":9475,"blendshape":"T_L_D_N","weight":1},{"time":9568,"blendshape":"sil","weight":0},{"time":9691,"blendshape":"B_M_P","weight":1},{"time":9802,"blendshape":"IH","weight":1},{"time":9871,"blendshape":"K_G_H_NG","weight":1},{"time":9930,"blendshape":"TH","weight":1},{"time":10004,"blendshape":"Ah","weight":1},{"time":10109,"blendshape":"T_L_D_N","weight":1},{"time":10181,"blendshape":"K_G_H_NG","weight":1},{"time":10290,"blendshape":"AE","weight":1},{"time":10354,"blendshape":"T_L_D_N","weight":1},{"time":10403,"blendshape":"B_M_P","weight":1},{"time":10488,"blendshape":"S_Z","weight":1},{"time":10562,"blendshape":"AE","weight":1},{"time":10630,"blendshape":"S_Z","weight":1},{"time":10753,"blendshape":"AE","weight":1},{"time":10806,"blendshape":"T_L_D_N","weight":1},{"time":10855,"blendshape":"T_L_D_N","weight":1},{"time":10895,"blendshape":"Er","weight":1},{"time":10926,"blendshape":"S_Z","weight":1},{"time":11038,"blendshape":"T_L_D_N","weight":1},{"time":11116,"blendshape":"Ah","weight":1},{"time":11288,"blendshape":"T_L_D_N","weight":1},{"time":11349,"blendshape":"T_L_D_N","weight":1},{"time":11378,"blendshape":"TH","weight":1},{"time":11415,"blendshape":"Er","weight":1},{"time":11463,"blendshape":"T_L_D_N","weight":1},{"time":11556,"blendshape":"Ah","weight":1},{"time":11681,"blendshape":"F_V","weight":1},{"time":11782,"blendshape":"AE","weight":1},{"time":11881,"blendshape":"S_Z","weight":1},{"time":12005,"blendshape":"Er","weight":1},{"time":12035,"blendshape":"T_L_D_N","weight":1},{"time":12144,"blendshape":"IH","weight":1},{"time":12224,"blendshape":"Er","weight":1},{"time":12273,"blendshape":"F_V","weight":1},{"time":12397,"blendshape":"T_L_D_N","weight":1},{"time":12505,"blendshape":"Ah","weight":1},{"time":12687,"blendshape":"F_V","weight":1},{"time":12845,"blendshape":"sil","weight":0},{"time":12977,"blendshape":"T_L_D_N","weight":1},{"time":13097,"blendshape":"AE","weight":1},{"time":13235,"blendshape":"TH","weight":1},{"time":13321,"blendshape":"Er","weight":1},{"time":13397,"blendshape":"T_L_D_N","weight":1},{"time":13450,"blendshape":"T_L_D_N","weight":1},{"time":13480,"blendshape":"K_G_H_NG","weight":1},{"time":13626,"blendshape":"Ah","weight":1},{"time":13753,"blendshape":"S_Z","weight":1},{"time":13883,"blendshape":"B_M_P","weight":1},{"time":13965,"blendshape":"IH","weight":1},{"time":14084,"blendshape":"Ch_J","weight":1},{"time":14236,"blendshape":"IH","weight":1},{"time":14348,"blendshape":"S_Z","weight":1},{"time":14438,"blendshape":"Er","weight":1},{"time":14498,"blendshape":"T_L_D_N","weight":1},{"time":14575,"blendshape":"Ah","weight":1},{"time":14699,"blendshape":"B_M_P","weight":1},{"time":14783,"blendshape":"T_L_D_N","weight":1},{"time":14863,"blendshape":"Er","weight":1},{"time":14976,"blendshape":"F_V","weight":1},{"time":15027,"blendshape":"Er","weight":1},{"time":15056,"blendshape":"R","weight":1},{"time":15090,"blendshape":"T_L_D_N","weight":1},{"time":15216,"blendshape":"Ah","weight":1},{"time":15471,"blendshape":"B_M_P","weight":1},{"time":15656,"blendshape":"sil","weight":0},{"time":16306,"blendshape":"S_Z","weight":1},{"time":16478,"blendshape":"T_L_D_N","weight":1},{"time":16539,"blendshape":"AE","weight":1},{"time":16647,"blendshape":"B_M_P","weight":1},{"time":16784,"blendshape":"W_OO","weight":1},{"time":16926,"blendshape":"AE","weight":1},{"time":17035,"blendshape":"T_L_D_N","weight":1},{"time":17241,"blendshape":"sil","weight":0},{"time":17435,"blendshape":"AE","weight":1},{"time":17504,"blendshape":"T_L_D_N","weight":1},{"time":17576,"blendshape":"T_L_D_N","weight":1},{"time":17612,"blendshape":"Er","weight":1},{"time":17662,"blendshape":"S_Z","weight":1},{"time":17758,"blendshape":"T_L_D_N","weight":1},{"time":17832,"blendshape":"Ah","weight":1},{"time":17951,"blendsh
+ [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+ [Unity] [Unity] 📩 Message received: PLAY_TTS_WITH_PHONEMES | unityInstance ready: true | audioUnlocked: true
+ [Unity] [Unity] 🎵 PLAY_TTS_WITH_PHONEMES received - Phonemes: 1194 Audio unlocked: true
+ [Unity] [Unity] 🔍 DEBUG - First 3 phonemes: [{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":177,"blendshape":"R","weight":1},{"time":307,"blendshape":"EE","weight":1}]
+ [Unity] [Unity] ✅ Playing audio + sending phonemes to Unity...
+ [Unity] [Unity] 🔍 DEBUG - Unity instance exists: true
+ [Unity] [Unity] Using HTML5 Audio fallback with amplitude lip-sync
+ [Unity] HTML5 Audio playing, starting amplitude meter
+ [Unity] [Unity] 📤 Sending phonemes to AvatarControllerScript - Count: 1194
+ [Unity] [Unity] 📦 Phoneme JSON length: 54910 chars
+ [Unity] [Unity] 🚀 CALLING PlayPhonemeSequence NOW...
+ [Unity] [Avatar] Received phoneme data: {"phonemes":[{"time":6,"blendshape":"K_G_H_NG","weight":1},{"time":177,"blendshape":"R","weight":1},{"time":307,"blendshape":"EE","weight":1},{"time":465,"blendshape":"T_L_D_N","weight":1},{"time":666,"blendshape":"sil","weight":0},{"time":1060,"blendshape":"Ah","weight":1},{"time":1196,"blendshape":"B_M_P","weight":1},{"time":1286,"blendshape":"IH","weight":1},{"time":1328,"blendshape":"K_G_H_NG","weight":1},{"time":1411,"blendshape":"S_Z","weight":1},{"time":1525,"blendshape":"Ah","weight":1},{"time":1657,"blendshape":"T_L_D_N","weight":1},{"time":1756,"blendshape":"IH","weight":1},{"time":1813,"blendshape":"T_L_D_N","weight":1},{"time":1850,"blendshape":"T_L_D_N","weight":1},{"time":1951,"blendshape":"W_OO","weight":1},{"time":2000,"blendshape":"B_M_P","weight":1},{"time":2082,"blendshape":"IH","weight":1},{"time":2141,"blendshape":"K_G_H_NG","weight":1},{"time":2250,"blendshape":"IH","weight":1},{"time":2300,"blendshape":"T_L_D_N","weight":1},{"time":2379,"blendshape":"Ah","weight":1},{"time":2448,"blendshape":"R","weight":1},{"time":2492,"blendshape":"Ch_J","weight":1},{"time":2648,"blendshape":"AE","weight":1},{"time":2750,"blendshape":"T_L_D_N","weight":1},{"time":2824,"blendshape":"IH","weight":1},{"time":2963,"blendshape":"IH","weight":1},{"time":3023,"blendshape":"T_L_D_N","weight":1},{"time":3089,"blendshape":"T_L_D_N","weight":1},{"time":3151,"blendshape":"W_OO","weight":1},{"time":3204,"blendshape":"TH","weight":1},{"time":3259,"blendshape":"Er","weight":1},{"time":3297,"blendshape":"F_V","weight":1},{"time":3438,"blendshape":"Ah","weight":1},{"time":3559,"blendshape":"S_Z","weight":1},{"time":3688,"blendshape":"IH","weight":1},{"time":3718,"blendshape":"T_L_D_N","weight":1},{"time":3767,"blendshape":"EE","weight":1},{"time":3880,"blendshape":"T_L_D_N","weight":1},{"time":3970,"blendshape":"IH","weight":1},{"time":4011,"blendshape":"K_G_H_NG","weight":1},{"time":4078,"blendshape":"W_OO","weight":1},{"time":4249,"blendshape":"AE","weight":1},{"time":4321,"blendshape":"T_L_D_N","weight":1},{"time":4381,"blendshape":"T_L_D_N","weight":1},{"time":4415,"blendshape":"Er","weight":1},{"time":4465,"blendshape":"F_V","weight":1},{"time":4514,"blendshape":"S_Z","weight":1},{"time":4665,"blendshape":"Ah","weight":1},{"time":4864,"blendshape":"Er","weight":1},{"time":4926,"blendshape":"T_L_D_N","weight":1},{"time":5043,"blendshape":"S_Z","weight":1},{"time":5235,"blendshape":"sil","weight":0},{"time":5428,"blendshape":"S_Z","weight":1},{"time":5550,"blendshape":"B_M_P","weight":1},{"time":5617,"blendshape":"Er","weight":1},{"time":5688,"blendshape":"S_Z","weight":1},{"time":5808,"blendshape":"IH","weight":1},{"time":5861,"blendshape":"F_V","weight":1},{"time":5959,"blendshape":"IH","weight":1},{"time":6011,"blendshape":"K_G_H_NG","weight":1},{"time":6094,"blendshape":"T_L_D_N","weight":1},{"time":6162,"blendshape":"IH","weight":1},{"time":6246,"blendshape":"F_V","weight":1},{"time":6394,"blendshape":"Er","weight":1},{"time":6486,"blendshape":"K_G_H_NG","weight":1},{"time":6571,"blendshape":"Er","weight":1},{"time":6608,"blendshape":"S_Z","weight":1},{"time":6734,"blendshape":"IH","weight":1},{"time":6783,"blendshape":"K_G_H_NG","weight":1},{"time":6872,"blendshape":"sil","weight":0},{"time":6984,"blendshape":"T_L_D_N","weight":1},{"time":7039,"blendshape":"IH","weight":1},{"time":7139,"blendshape":"F_V","weight":1},{"time":7211,"blendshape":"Er","weight":1},{"time":7249,"blendshape":"T_L_D_N","weight":1},{"time":7349,"blendshape":"W_OO","weight":1},{"time":7448,"blendshape":"Ch_J","weight":1},{"time":7618,"blendshape":"T_L_D_N","weight":1},{"time":7891,"blendshape":"sil","weight":0},{"time":8285,"blendshape":"TH","weight":1},{"time":8375,"blendshape":"IH","weight":1},{"time":8436,"blendshape":"S_Z","weight":1},{"time":8551,"blendshape":"IH","weight":1},{"time":8602,"blendshape":"S_Z","weight":1},{"time":8691,"blendshape":"Er","weight":1},{"time":8740,"blendshape":"F_V","weight":1},{"time":8889,"blendshape":"AE","weight":1},{"time":8941,"blendshape":"T_L_D_N","weight":1},{"time":9012,"blendshape":"T_L_D_N","weight":1},{"time":9053,"blendshape":"Er","weight":1},{"time":9082,"blendshape":"B_M_P","weight":1},{"time":9169,"blendshape":"AE","weight":1},{"time":9233,"blendshape":"T_L_D_N","weight":1},{"time":9292,"blendshape":"T_L_D_N","weight":1},{"time":9365,"blendshape":"T_L_D_N","weight":1},{"time":9475,"blendshape":"T_L_D_N","weight":1},{"time":9568,"blendshape":"sil","weight":0},{"time":9691,"blendshape":"B_M_P","weight":1},{"time":9802,"blendshape":"IH","weight":1},{"time":9871,"blendshape":"K_G_H_NG","weight":1},{"time":9930,"blendshape":"TH","weight":1},{"time":10004,"blendshape":"Ah","weight":1},{"time":10109,"blendshape":"T_L_D_N","weight":1},{"time":10181,"blendshape":"K_G_H_NG","weight":1},{"time":10290,"blendshape":"AE","weight":1},{"time":10354,"blendshape":"T_L_D_N","weight":1},{"time":10403,"blendshape":"B_M_P","weight":1},{"time":10488,"blendshape":"S_Z","weight":1},{"time":10562,"blendshape":"AE","weight":1},{"time":10630,"blendshape":"S_Z","weight":1},{"time":10753,"blendshape":"AE","weight":1},{"time":10806,"blendshape":"T_L_D_N","weight":1},{"time":10855,"blendshape":"T_L_D_N","weight":1},{"time":10895,"blendshape":"Er","weight":1},{"time":10926,"blendshape":"S_Z","weight":1},{"time":11038,"blendshape":"T_L_D_N","weight":1},{"time":11116,"blendshape":"Ah","weight":1},{"time":11288,"blendshape":"T_L_D_N","weight":1},{"time":11349,"blendshape":"T_L_D_N","weight":1},{"time":11378,"blendshape":"TH","weight":1},{"time":11415,"blendshape":"Er","weight":1},{"time":11463,"blendshape":"T_L_D_N","weight":1},{"time":11556,"blendshape":"Ah","weight":1},{"time":11681,"blendshape":"F_V","weight":1},{"time":11782,"blendshape":"AE","weight":1},{"time":11881,"blendshape":"S_Z","weight":1},{"time":12005,"blendshape":"Er","weight":1},{"time":12035,"blendshape":"T_L_D_N","weight":1},{"time":12144,"blendshape":"IH","weight":1},{"time":12224,"blendshape":"Er","weight":1},{"time":12273,"blendshape":"F_V","weight":1},{"time":12397,"blendshape":"T_L_D_N","weight":1},{"time":12505,"blendshape":"Ah","weight":1},{"time":12687,"blendshape":"F_V","weight":1},{"time":12845,"blendshape":"sil","weight":0},{"time":12977,"blendshape":"T_L_D_N","weight":1},{"time":13097,"blendshape":"AE","weight":1},{"time":13235,"blendshape":"TH","weight":1},{"time":13321,"blendshape":"Er","weight":1},{"time":13397,"blendshape":"T_L_D_N","weight":1},{"time":13450,"blendshape":"T_L_D_N","weight":1},{"time":13480,"blendshape":"K_G_H_NG","weight":1},{"time":13626,"blendshape":"Ah","weight":1},{"time":13753,"blendshape":"S_Z","weight":1},{"time":13883,"blendshape":"B_M_P","weight":1},{"time":13965,"blendshape":"IH","weight":1},{"time":14084,"blendshape":"Ch_J","weight":1},{"time":14236,"blendshape":"IH","weight":1},{"time":14348,"blendshape":"S_Z","weight":1},{"time":14438,"blendshape":"Er","weight":1},{"time":14498,"blendshape":"T_L_D_N","weight":1},{"time":14575,"blendshape":"Ah","weight":1},{"time":14699,"blendshape":"B_M_P","weight":1},{"time":14783,"blendshape":"T_L_D_N","weight":1},{"time":14863,"blendshape":"Er","weight":1},{"time":14976,"blendshape":"F_V","weight":1},{"time":15027,"blendshape":"Er","weight":1},{"time":15056,"blendshape":"R","weight":1},{"time":15090,"blendshape":"T_L_D_N","weight":1},{"time":15216,"blendshape":"Ah","weight":1},{"time":15471,"blendshape":"B_M_P","weight":1},{"time":15656,"blendshape":"sil","weight":0},{"time":16306,"blendshape":"S_Z","weight":1},{"time":16478,"blendshape":"T_L_D_N","weight":1},{"time":16539,"blendshape":"AE","weight":1},{"time":16647,"blendshape":"B_M_P","weight":1},{"time":16784,"blendshape":"W_OO","weight":1},{"time":16926,"blendshape":"AE","weight":1},{"time":17035,"blendshape":"T_L_D_N","weight":1},{"time":17241,"blendshape":"sil","weight":0},{"time":17435,"blendshape":"AE","weight":1},{"time":17504,"blendshape":"T_L_D_N","weight":1},{"time":17576,"blendshape":"T_L_D_N","weight":1},{"time":17612,"blendshape":"Er","weight":1},{"time":17662,"blendshape":"S_Z","weight":1},{"time":17758,"blendshape":"T_L_D_N","weight":1},{"time":17832,"blendshape":"Ah","weight":1},{"time":17951,"blendsh
+ [Unity] [Unity] ✅✅✅ PlayPhonemeSequence SUCCESSFULLY CALLED! ✅✅✅
+ [Unity Bridge] ✅ Audio playback started: f879833f-558e-43b0-88c5-84d2e7b044d7
+ [Unity] [Unity] HTML5 Audio playing, starting amplitude meter
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Avatar Container] 🔍 viewState changed to: fullscreen
+ [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+ [Avatar] ✅ Unity positioned for FULLSCREEN
+ Performance Warning: Recreating Offscreen FBO (960x1528 => 2880x1624)
+
+ [Unity] Performance Warning: Recreating Offscreen FBO (960x1528 => 2880x1624)
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Avatar Container] 🔍 viewState changed to: fullscreen-chat
+ [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Avatar] ✅ Unity positioned for FULLSCREEN-CHAT
+ Performance Warning: Recreating Offscreen FBO (2880x1624 => 1728x1624)
+
+ [Unity] Performance Warning: Recreating Offscreen FBO (2880x1624 => 1728x1624)
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] EE → -6° rotation
+
+ [Unity] [Jaw] EE → -6° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Unity] HTML5 Audio ended
+ [Unity] [Unity] HTML5 Audio ended
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] W_OO → -12° rotation
+
+ [Unity] [Jaw] W_OO → -12° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Avatar Container] 🔍 viewState changed to: fullscreen
+ [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+ [Avatar] ✅ Unity positioned for FULLSCREEN
+ Performance Warning: Recreating Offscreen FBO (1728x1624 => 2880x1624)
+
+ [Unity] Performance Warning: Recreating Offscreen FBO (1728x1624 => 2880x1624)
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Ah → -20° rotation
+
+ [Unity] [Jaw] Ah → -20° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] AE → -18° rotation
+
+ [Unity] [Jaw] AE → -18° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Avatar Container] 🔍 viewState changed to: minimized
+ [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+ [Avatar] 👻 Unity HIDDEN (minimized - bubble shows instead)
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] Er → -7° rotation
+
+ [Unity] [Jaw] Er → -7° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+ [Jaw] IH → -8° rotation
+
+ [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+AvatarContainer.tsx:218 [Avatar Container] 🔘 Bubble clicked! Expanding to half...
+AvatarContainer.tsx:67 [Avatar Container] 🔍 viewState changed to: half
+AvatarContainer.tsx:68 [Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+AvatarContainer.tsx:146 [Avatar] ❌ Half panel [data-half-panel] not found! Using FIXED fallback
+positionUnity @ AvatarContainer.tsx:146
+AvatarContainer.tsx:165 [Avatar] ✅ Unity FALLBACK - Height: calc(100vh - 48px) (accounting for 48px control bar)
+HalfPanel.tsx:39 [Half Panel] Unity state: Object
+injected.js:27 Performance Warning: Recreating Offscreen FBO (2880x1624 => 960x1528)
+
+useUnityBridge.ts:181 [Unity] Performance Warning: Recreating Offscreen FBO (2880x1624 => 960x1528)
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] EE → -6° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] EE → -6° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] EE → -6° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] EE → -6° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+TutorSession.tsx:1325 [Avatar] Language toggle clicked
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] EE → -6° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] EE → -6° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] Ah → -20° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Ah → -20° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] AE → -18° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] AE → -18° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] IH → -8° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] IH → -8° rotation
+
+injected.js:27 [Jaw] Er → -7° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] Er → -7° rotation
+
+injected.js:27 [Jaw] W_OO → -12° rotation
+
+useUnityBridge.ts:181 [Unity] [Jaw] W_OO → -12° rotation
+

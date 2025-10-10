@@ -9,17 +9,30 @@ type WSMessageType =
   | 'TTS_CHUNK' 
   | 'TTS_START' 
   | 'TTS_END'
-  | 'TTS_SKIP'       // PHASE 1: Skip failed TTS chunk
+  | 'TTS_SKIP'       // Deprecated - use ERROR instead
   | 'INTERRUPT' 
   | 'SESSION_STATE' 
   | 'ERROR' 
   | 'PING' 
   | 'PONG';
 
+// ✅ CORRECT: WebSocket message with flat format fields
 interface WSMessage {
   type: WSMessageType;
   data?: any;
-  error?: string;
+  error?: string;  // Legacy field
+  
+  // ✅ NEW: Flat format fields for TTSChunkMessage
+  chunkIndex?: number;
+  totalChunks?: number;
+  
+  // ✅ NEW: Flat format fields for ERROR VoiceMessage
+  code?: string;
+  message?: string;
+  recoverable?: boolean;
+  
+  timestamp?: string;
+  sessionId?: string;
 }
 
 interface VoiceState {
@@ -206,38 +219,33 @@ export function useVoiceTutor({
           break;
 
         case 'TTS_CHUNK': {
-          // 🚀 PHASE 1: Handle sequence-based TTS chunks (new format)
-          // 🚀 PHASE 2.2: Support compressed audio
-          // Also support legacy format for backward compatibility
+          // ✅ CORRECT FORMAT: Expects flat TTSChunkMessage from server
+          // { type: 'TTS_CHUNK', data: 'base64...', chunkIndex: 1, totalChunks?: 5 }
           let audioDataB64: string | undefined;
           let sequence: number | undefined;
           let isLast = false;
-          let compressed = false;
           
-          if (message.data && typeof message.data === 'object') {
-            // New format: { type, data: { sequence, data, text, isLast, compressed } }
+          // Check for new FLAT format (chunkIndex at top level)
+          if (typeof message.data === 'string' && typeof message.chunkIndex === 'number') {
+            // ✅ CORRECT: Flat format from server
+            audioDataB64 = message.data;
+            sequence = message.chunkIndex;
+            isLast = typeof message.totalChunks === 'number';
+            console.log(`[STREAMING TTS] 📥 Flat format chunk ${sequence}`);
+          } else if (message.data && typeof message.data === 'object' && 'data' in message.data) {
+            // OLD nested format (backward compatibility)
             audioDataB64 = message.data.data;
             sequence = message.data.sequence;
             isLast = message.data.isLast;
-            compressed = message.data.compressed || false;
+            console.log(`[STREAMING TTS] 📥 Nested format chunk ${sequence} (legacy)`);
           } else if (message.data && typeof message.data === 'string') {
-            // Legacy format: { type, data: "base64..." }
+            // Legacy format without sequence
             audioDataB64 = message.data;
+            console.log('[STREAMING TTS] 📥 Legacy format chunk (no sequence)');
           }
           
           if (audioDataB64) {
-            let audioData = Uint8Array.from(atob(audioDataB64), c => c.charCodeAt(0));
-            
-            // 🚀 PHASE 2.2: Decompress if needed
-            if (compressed) {
-              try {
-                audioData = pako.inflate(audioData);
-                console.log('[STREAMING TTS] 📦 Decompressed audio chunk');
-              } catch (error) {
-                console.error('[STREAMING TTS] Decompression failed:', error);
-              }
-            }
-            
+            const audioData = Uint8Array.from(atob(audioDataB64), c => c.charCodeAt(0));
             await handleTTSChunk(audioData.buffer, sequence);
             
             if (isLast) {
@@ -281,28 +289,40 @@ export function useVoiceTutor({
           isPlayingRef.current = false; // Reset playback state
           break;
 
-        case 'TTS_END':
+        case 'TTS_END': {
+          // ✅ CORRECT: Handle flat TTSEndMessage format
+          // { type: 'TTS_END', totalChunks: 5 } instead of { type: 'TTS_END', data: { totalChunks: 5 } }
+          const totalChunks = message.totalChunks || message.data?.totalChunks;
+          if (totalChunks) {
+            console.log(`[STREAMING TTS] ✅ TTS ended - Total chunks: ${totalChunks}`);
+          }
           onTTSEnd?.();
           break;
+        }
 
         case 'SESSION_STATE':
           setState(prev => ({ ...prev, sessionState: message.data }));
           break;
 
-        case 'ERROR':
-          console.error('[VOICE] Server error:', message.error);
+        case 'ERROR': {
+          // ✅ CORRECT: Handle new VoiceMessage ERROR format
+          // { type: 'ERROR', code: 'TTS_GENERATION_FAILED', message: '...', recoverable: true }
+          const errorMsg = message.message || message.error || "An error occurred";
+          const errorCode = message.code || 'UNKNOWN_ERROR';
+          console.error(`[VOICE] Server error [${errorCode}]:`, errorMsg);
           toast({
             title: "Voice Error",
-            description: message.error || "An error occurred",
+            description: errorMsg,
             variant: "destructive"
           });
-          onError?.(message.error || "Unknown error");
+          onError?.(errorMsg);
           setState(prev => ({ 
             ...prev, 
             isProcessing: false, 
             isRecording: false 
           }));
           break;
+        }
 
         case 'PONG':
           // Heartbeat response
