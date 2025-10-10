@@ -226,7 +226,7 @@
         // 🎯 DISABLED: No need to reset - phonemes handle lip-sync
         // if (unityInstance) {
         //   try {
-        //     unityInstance.SendMessage('AvatarControllerScript', 'OnExternalAmplitude', '0');
+        //     unityInstance.SendMessage('AvatarController', 'OnExternalAmplitude', '0');
         //   } catch (e) {
         //     // Silently ignore if AvatarController doesn't exist
         //   }
@@ -290,7 +290,7 @@
                 console.log('[Unity] ✅ Sending queued phonemes to Unity:', pendingAudio.phonemes.length);
                 try {
                   var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
-                  unityInstance.SendMessage('AvatarControllerScript', 'PlayPhonemeSequence', phonemeJson);
+                  unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
                 } catch (e) {
                   console.error('[Unity] ❌ Failed to send queued phonemes:', e);
                 }
@@ -407,7 +407,7 @@
                   
                   if (pendingAudio.phonemes && pendingAudio.phonemes.length > 0 && unityInstance) {
                     var phonemeJson = JSON.stringify({ phonemes: pendingAudio.phonemes });
-                    unityInstance.SendMessage('AvatarControllerScript', 'PlayPhonemeSequence', phonemeJson);
+                    unityInstance.SendMessage('AvatarController', 'PlayPhonemeSequence', phonemeJson);
                   }
                   
                   window.parent.postMessage({
@@ -601,13 +601,13 @@
                   
                   // 2. Send phoneme sequence to Unity for blendshape animation
                   var phonemeJson = JSON.stringify({ phonemes: phonemes });
-                  console.log('[Unity] 📤 Sending phonemes to AvatarControllerScript - Count:', phonemes.length);
+                  console.log('[Unity] 📤 Sending phonemes to AvatarController - Count:', phonemes.length);
                   console.log('[Unity] 📦 Phoneme JSON length:', phonemeJson.length, 'chars');
                   
                   try {
                     console.log('[Unity] 🚀 CALLING PlayPhonemeSequence NOW...');
                     unityInstance.SendMessage(
-                      'AvatarControllerScript',
+                      'AvatarController',
                       'PlayPhonemeSequence',
                       phonemeJson
                     );
@@ -687,7 +687,7 @@
               
               // Also stop Unity audio (if applicable)
               if (unityInstance) {
-                unityInstance.SendMessage('AvatarControllerScript', 'StopAudio', '');
+                unityInstance.SendMessage('AvatarController', 'StopAudio', '');
               }
               console.log('[Unity] Audio stopped (HTML5 + Unity)');
               break;
