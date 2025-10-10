@@ -123,9 +123,16 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     enabled: !!chatId,
   });
 
-  const { data: messages = [], isLoading: messagesLoading } = useQuery<Message[]>({
+  const { data: rawMessages = [], isLoading: messagesLoading } = useQuery<Message[]>({
     queryKey: [`/api/chats/${chatId}/messages`],
     enabled: !!chatId,
+  });
+
+  // 🔧 FIX: Sort messages by createdAt to ensure proper chronological order
+  const messages = rawMessages.sort((a, b) => {
+    const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return dateA - dateB; // Ascending order (oldest first)
   });
 
   const { data: user } = useQuery({
@@ -564,10 +571,13 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
   }, [voiceTutor.isProcessing]);
 
   const lastPlayedRef = useRef<string | null>(null);
+  const [avatarViewState, setAvatarViewState] = useState<'minimized' | 'half' | 'fullscreen' | 'fullscreen-chat'>('minimized'); // 🆕 Track avatar visibility
 
   useEffect(() => {
-    // 🎯 CRITICAL: Wait for chat to load AND avatar to be ready before auto-playing
-    if (messages.length > 0 && chat && avatarIsReady) {
+    // 🎯 CRITICAL: Auto-play TTS ONLY when avatar is VISIBLE (not minimized)
+    const isAvatarVisible = avatarViewState !== 'minimized';
+    
+    if (messages.length > 0 && chat && avatarIsReady && isAvatarVisible) {
       const lastMessage = messages[messages.length - 1];
       
       if (
@@ -575,7 +585,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
         lastMessage.id !== lastPlayedRef.current &&
         !isStreaming
       ) {
-        console.log('[TTS] ✅ Avatar ready - Auto-playing new assistant message:', lastMessage.id);
+        console.log('[TTS] ✅ Avatar VISIBLE - Auto-playing with lip-sync:', lastMessage.id);
         console.log('[TTS] Chat mode:', chat.mode, '- Will use', chat.mode === 'tutor' ? 'PHONEME' : 'REGULAR', 'TTS');
         lastPlayedRef.current = lastMessage.id;
         
@@ -583,10 +593,12 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           console.log('[TTS] Auto-play blocked, user can click speaker manually', err);
         });
       }
+    } else if (messages.length > 0 && chat && !isAvatarVisible) {
+      console.log('[TTS] ⏳ Avatar minimized - TTS will play when avatar opens...');
     } else if (messages.length > 0 && chat && !avatarIsReady) {
-      console.log('[TTS] ⏳ Waiting for avatar to be ready before auto-playing TTS...');
+      console.log('[TTS] ⏳ Waiting for avatar Unity instance to load...');
     }
-  }, [messages, isStreaming, chat, avatarIsReady]);
+  }, [messages, isStreaming, chat, avatarIsReady, avatarViewState]); // 🆕 Added avatarViewState dependency
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -1247,6 +1259,7 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
           console.log('[Avatar] Language toggle clicked');
         }}
         isSpeaking={playingAudio !== null}
+        onViewStateChange={setAvatarViewState} // 🆕 Track avatar visibility for TTS control
       />
     </div>
   );

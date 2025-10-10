@@ -23,6 +23,7 @@ interface AvatarContainerProps {
   onLanguageToggle?: () => void;
   isSpeaking?: boolean;
   className?: string;
+  onViewStateChange?: (viewState: 'minimized' | 'half' | 'fullscreen' | 'fullscreen-chat') => void; // 🆕 Notify parent of viewState changes
 }
 
 export function AvatarContainer({
@@ -34,6 +35,7 @@ export function AvatarContainer({
   onLanguageToggle,
   isSpeaking = false,
   className = '',
+  onViewStateChange, // 🆕 Callback to notify parent
 }: AvatarContainerProps) {
   const {
     viewState,
@@ -88,6 +90,13 @@ export function AvatarContainer({
   const handleClose = () => {
     minimizeToBubble();
   };
+
+  // 🆕 Notify parent when viewState changes (for TTS auto-play control)
+  useEffect(() => {
+    if (onViewStateChange) {
+      onViewStateChange(viewState);
+    }
+  }, [viewState, onViewStateChange]);
 
   // CRITICAL FIX: Don't move iframe, use dynamic positioning with getBoundingClientRect()
   useEffect(() => {
