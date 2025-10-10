@@ -13,7 +13,7 @@ export type AvatarState =
   | 'PLAYING'     // Currently speaking
   | 'ERROR';      // Error state
 
-interface StateTransitionLog {
+export interface StateTransitionLog {
   from: AvatarState;
   to: AvatarState;
   timestamp: number;
