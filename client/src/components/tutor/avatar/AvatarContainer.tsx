@@ -65,7 +65,7 @@ export function AvatarContainer({
   // CRITICAL FIX: Don't move iframe, use dynamic positioning with getBoundingClientRect()
   useEffect(() => {
     console.log(`[Avatar Container] 🔍 viewState changed to: ${viewState}`);
-    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-TIMING-FIX');
+    console.log('[Avatar Container] 🆕 CODE VERSION: 2025-10-10-FALLBACK-FIX');
     
     // CRITICAL: Position Unity function - called after DOM is ready
     const positionUnity = () => {
@@ -135,25 +135,23 @@ export function AvatarContainer({
             window.removeEventListener('scroll', updateUnityPosition);
           };
         } else {
-          console.error('[Avatar] ❌ Half panel [data-half-panel] not found! Using fallback');
-          // Fallback to static positioning
-          const isMobile = window.innerWidth < 768;
-          if (isMobile) {
-            globalUnityContainer.style.width = '100%';
-            globalUnityContainer.style.height = '60vh';
-            globalUnityContainer.style.bottom = '0';
-            globalUnityContainer.style.left = '0';
-            globalUnityContainer.style.top = 'auto';
-          } else {
-            globalUnityContainer.style.width = '480px';
-            globalUnityContainer.style.height = '100vh'; // Full height on desktop
-            globalUnityContainer.style.right = '0';
-            globalUnityContainer.style.top = '0';
-            globalUnityContainer.style.bottom = 'auto';
-            globalUnityContainer.style.left = 'auto';
-            globalUnityContainer.style.borderRadius = '1rem 0 0 1rem'; // rounded-l-2xl
-          }
-          globalUnityContainer.style.zIndex = '9990';
+          console.error('[Avatar] ❌ Half panel [data-half-panel] not found! Using FIXED fallback');
+          
+          // FIXED FALLBACK: Match HalfPanel's Tailwind classes EXACTLY
+          // HalfPanel uses: bottom-4 right-4 w-[480px] h-[600px]
+          // That means: bottom: 16px, right: 16px, width: 480px, height: 600px
+          globalUnityContainer.style.position = 'fixed';
+          globalUnityContainer.style.bottom = '16px';   // ✅ FIXED: Match bottom-4
+          globalUnityContainer.style.right = '16px';    // ✅ FIXED: Match right-4
+          globalUnityContainer.style.top = 'auto';      // ✅ Reset top (CRITICAL!)
+          globalUnityContainer.style.left = 'auto';     // ✅ Reset left (CRITICAL!)
+          globalUnityContainer.style.width = '480px';   // ✅ Match w-[480px]
+          globalUnityContainer.style.height = '600px';  // ✅ FIXED: Match h-[600px] (NOT 100vh!)
+          globalUnityContainer.style.zIndex = '9998';   // Below controls (10001)
+          globalUnityContainer.style.borderRadius = '16px'; // Match rounded-2xl
+          globalUnityContainer.style.overflow = 'hidden';
+          
+          console.log('[Avatar] ✅ Unity FALLBACK positioned - Bottom: 16px, Right: 16px, Width: 480px, Height: 600px');
         }
         
       } else if (viewState === 'fullscreen') {
@@ -192,8 +190,8 @@ export function AvatarContainer({
       }
     };
     
-    // CRITICAL: Add 100ms delay to ensure DOM is ready before positioning
-    const timeout = setTimeout(positionUnity, 100);
+    // CRITICAL FIX: Increase delay 100ms → 200ms to let React render HalfPanel completely
+    const timeout = setTimeout(positionUnity, 200);
     
     return () => clearTimeout(timeout);
   }, [viewState]);
