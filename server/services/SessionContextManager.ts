@@ -23,7 +23,8 @@ const redis = REDIS_DISABLED
       enableReadyCheck: true,
       lazyConnect: true,
       retryStrategy: () => null,
-      family: isUpstash ? 6 : 4,
+      family: 4,
+      tls: isUpstash ? {} : undefined,
     });
 
 if (redis) {

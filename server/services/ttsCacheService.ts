@@ -33,7 +33,8 @@ const redis: Redis | null = REDIS_DISABLED
       enableReadyCheck: true,
       lazyConnect: true,
       retryStrategy: () => null,
-      family: isUpstash ? 6 : 4, // IPv6 for Upstash
+      family: 4, // Use IPv4 for better compatibility
+      tls: isUpstash ? {} : undefined, // TLS for Upstash with proper cert verification
     });
 
 // Add error handler before attempting connection
