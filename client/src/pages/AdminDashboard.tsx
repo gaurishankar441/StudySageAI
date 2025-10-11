@@ -10,6 +10,21 @@ export default function AdminDashboard() {
   // Check admin permission
   const isAdmin = user?.role === 'admin' || user?.role === 'super_admin';
 
+  // Fetch real stats
+  const { data: configs = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/configs'],
+  });
+
+  const { data: builds = [] } = useQuery<any[]>({
+    queryKey: ['/api/admin/unity/builds'],
+  });
+
+  // Calculate real stats
+  const personasConfig = configs.find(c => c.category === 'tutor' && c.key === 'personas');
+  const activePersonas = personasConfig?.value?.length || 0;
+  const activeUnityBuild = builds.find(b => b.isActive);
+  const unityBuildVersion = activeUnityBuild ? activeUnityBuild.version : 'None';
+
   if (!isAdmin) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -109,15 +124,15 @@ export default function AdminDashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Active Personas</p>
-            <p className="text-2xl font-bold">3</p>
+            <p className="text-2xl font-bold" data-testid="stat-active-personas">{activePersonas}</p>
           </div>
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">Unity Build Version</p>
-            <p className="text-2xl font-bold">Oct 9, 2025</p>
+            <p className="text-2xl font-bold" data-testid="stat-unity-version">{unityBuildVersion}</p>
           </div>
           <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">Cache Hit Rate</p>
-            <p className="text-2xl font-bold">70%</p>
+            <p className="text-sm text-muted-foreground">Total Configs</p>
+            <p className="text-2xl font-bold" data-testid="stat-total-configs">{configs.length}</p>
           </div>
         </div>
       </Card>

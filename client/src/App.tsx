@@ -24,6 +24,7 @@ import AdminTutorConfig from "@/pages/AdminTutorConfig";
 import AdminUnityBuild from "@/pages/AdminUnityBuild";
 import AdminVoiceSettings from "@/pages/AdminVoiceSettings";
 import AdminAPIManagement from "@/pages/AdminAPIManagement";
+import AdminAuditLogs from "@/pages/AdminAuditLogs";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -68,6 +69,7 @@ function Router() {
           <Route path="/admin/unity" component={AdminUnityBuild} />
           <Route path="/admin/voice" component={AdminVoiceSettings} />
           <Route path="/admin/api" component={AdminAPIManagement} />
+          <Route path="/admin/audit" component={AdminAuditLogs} />
           <Route component={NotFound} />
         </Switch>
       </AppLayout>
