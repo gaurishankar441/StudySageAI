@@ -496,19 +496,194 @@ export default function AdminTutorConfig() {
         </TabsContent>
 
         <TabsContent value="prompts">
-          <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">System Prompts</h3>
-            <p className="text-muted-foreground">Configure AI tutor system prompts and instructions</p>
-            {/* TODO: Prompt editor */}
-          </Card>
+          <div className="space-y-6">
+            <Card className="p-6">
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-xl font-semibold">System Prompts</h3>
+                  <Select defaultValue="hindi_hinglish">
+                    <SelectTrigger className="w-48" data-testid="select-prompt-language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="hindi_hinglish">Hindi/Hinglish</SelectItem>
+                      <SelectItem value="english_pure">English (Pure)</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="space-y-2">
+                  <Label>Core System Prompt</Label>
+                  <Textarea
+                    rows={12}
+                    placeholder="Enter the main system prompt..."
+                    className="font-mono text-sm"
+                    data-testid="textarea-core-prompt"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    This defines the AI tutor's personality, language style, and teaching approach
+                  </p>
+                </div>
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h4 className="text-lg font-semibold mb-4">Intent-Specific Prompts</h4>
+              <div className="space-y-6">
+                {[
+                  { key: 'request_explanation', label: 'Explanation Request', desc: 'When student asks to explain a concept' },
+                  { key: 'request_hint', label: 'Hint Request', desc: 'When student wants a hint without full solution' },
+                  { key: 'request_simplification', label: 'Simplification Request', desc: 'When student didn\'t understand' },
+                  { key: 'submit_answer', label: 'Answer Evaluation', desc: 'When evaluating student answers' },
+                  { key: 'frustration', label: 'Frustration Detection', desc: 'When student is frustrated' },
+                  { key: 'celebration', label: 'Success Celebration', desc: 'When celebrating correct answers' }
+                ].map((intent) => (
+                  <div key={intent.key} className="space-y-2">
+                    <div>
+                      <Label className="text-base">{intent.label}</Label>
+                      <p className="text-xs text-muted-foreground mt-1">{intent.desc}</p>
+                    </div>
+                    <Textarea
+                      rows={4}
+                      placeholder={`Enter ${intent.label.toLowerCase()} instructions...`}
+                      className="font-mono text-sm"
+                      data-testid={`textarea-intent-${intent.key}`}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              <div className="flex justify-end mt-6">
+                <Button data-testid="button-save-prompts">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Prompts
+                </Button>
+              </div>
+            </Card>
+          </div>
         </TabsContent>
 
         <TabsContent value="first-messages">
-          <Card className="p-6">
-            <h3 className="text-xl font-semibold mb-4">First Messages</h3>
-            <p className="text-muted-foreground">Configure tutor greeting messages by language</p>
-            {/* TODO: First message editor */}
-          </Card>
+          <div className="space-y-6">
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Greeting Messages (Hindi)</h3>
+              <p className="text-muted-foreground mb-4">Configure greeting messages for Hindi/Hinglish mode</p>
+              
+              <div className="space-y-4">
+                {[1, 2, 3].map((num) => (
+                  <div key={num} className="space-y-2">
+                    <Label>Greeting Variation {num}</Label>
+                    <Input
+                      placeholder="e.g., Namaste {name}! Aaj kya padhna hai?"
+                      data-testid={`input-hindi-greeting-${num}`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use {'{name}'} as placeholder for student name
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Greeting Messages (English)</h3>
+              <p className="text-muted-foreground mb-4">Configure greeting messages for English mode</p>
+              
+              <div className="space-y-4">
+                {[1, 2, 3].map((num) => (
+                  <div key={num} className="space-y-2">
+                    <Label>Greeting Variation {num}</Label>
+                    <Input
+                      placeholder="e.g., Hello {name}! What would you like to learn today?"
+                      data-testid={`input-english-greeting-${num}`}
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Use {'{name}'} as placeholder for student name
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
+            <Card className="p-6">
+              <h3 className="text-xl font-semibold mb-4">Response Templates</h3>
+              <p className="text-muted-foreground mb-4">Configure common response phrases</p>
+              
+              <Tabs defaultValue="hindi-templates" className="space-y-4">
+                <TabsList>
+                  <TabsTrigger value="hindi-templates">Hindi</TabsTrigger>
+                  <TabsTrigger value="english-templates">English</TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="hindi-templates" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Correct Answer Responses</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., Bilkul sahi! Bahut badhiya!"
+                      className="text-sm"
+                      data-testid="textarea-hindi-correct"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Wrong Answer Responses</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., Hmm, close tha! Ek baar aur try karo..."
+                      className="text-sm"
+                      data-testid="textarea-hindi-wrong"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Understanding Check Phrases</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., Samajh aa gaya? Koi doubt hai?"
+                      className="text-sm"
+                      data-testid="textarea-hindi-check"
+                    />
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="english-templates" className="space-y-4">
+                  <div className="space-y-2">
+                    <Label>Correct Answer Responses</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., That's absolutely correct! Well done!"
+                      className="text-sm"
+                      data-testid="textarea-english-correct"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Wrong Answer Responses</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., Not quite, but you're on the right track!"
+                      className="text-sm"
+                      data-testid="textarea-english-wrong"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Understanding Check Phrases</Label>
+                    <Textarea
+                      rows={3}
+                      placeholder="e.g., Does this make sense? Any questions?"
+                      className="text-sm"
+                      data-testid="textarea-english-check"
+                    />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end mt-6">
+                <Button data-testid="button-save-messages">
+                  <Save className="w-4 h-4 mr-2" />
+                  Save Messages
+                </Button>
+              </div>
+            </Card>
+          </div>
         </TabsContent>
       </Tabs>
 
