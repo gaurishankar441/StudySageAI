@@ -129,11 +129,18 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 - `/admin/api` - API key management
 - `/admin/audit` - Audit log viewer
 
+**Testing Status:**
+- ✅ Admin user credentials set: `vaktaai12@example.com` / `admin123`
+- ✅ All admin routes configured and working
+- ✅ Server running successfully on port 5000
+- ✅ Database tables ready (fresh for testing)
+- 📋 **Manual browser testing required** - see `docs/admin-panel-testing-guide.md`
+
 **Testing Requirements:**
-- Test admin access at `/admin` with admin user (vaktaai12@example.com)
-- All CRUD operations on personas, prompts, first messages
-- Unity build upload and activation
-- Voice settings save and load
-- API key management with show/hide
-- Audit log filtering and search
-- See `docs/admin-panel-testing.md` for comprehensive checklist
+- Login at `/admin` with credentials above
+- Test all CRUD operations (personas, prompts, messages)
+- Test Unity build upload and activation
+- Test voice settings save/load
+- Test API key management with show/hide
+- Test audit log filtering and search
+- Follow step-by-step guide: `docs/admin-panel-testing-guide.md`
