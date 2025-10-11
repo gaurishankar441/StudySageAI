@@ -1192,9 +1192,9 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                       size="sm"
                       className="h-7 px-2 text-xs hover:bg-primary/10"
                       onClick={() => {
-                        const ssml = msg.metadata.speakSSML;
-                        const persona = msg.metadata.speakMeta?.persona || chat.persona || 'Priya';
-                        const language = msg.metadata.speakMeta?.language || chat.language || 'en';
+                        const ssml = (msg.metadata as any)?.speakSSML as string;
+                        const persona = (msg.metadata as any)?.speakMeta?.persona || tutorSession?.session?.personaId || 'Priya';
+                        const language = (msg.metadata as any)?.speakMeta?.language || chat?.language || 'en';
                         playSSMLAudio(msg.id, ssml, persona, language);
                       }}
                       disabled={playingAudio === msg.id}
