@@ -22,6 +22,8 @@ import Settings from "@/pages/Settings";
 import AdminDashboard from "@/pages/AdminDashboard";
 import AdminTutorConfig from "@/pages/AdminTutorConfig";
 import AdminUnityBuild from "@/pages/AdminUnityBuild";
+import AdminVoiceSettings from "@/pages/AdminVoiceSettings";
+import AdminAPIManagement from "@/pages/AdminAPIManagement";
 import NotFound from "@/pages/not-found";
 
 function Router() {
@@ -64,6 +66,8 @@ function Router() {
           <Route path="/admin" component={AdminDashboard} />
           <Route path="/admin/tutor" component={AdminTutorConfig} />
           <Route path="/admin/unity" component={AdminUnityBuild} />
+          <Route path="/admin/voice" component={AdminVoiceSettings} />
+          <Route path="/admin/api" component={AdminAPIManagement} />
           <Route component={NotFound} />
         </Switch>
       </AppLayout>
