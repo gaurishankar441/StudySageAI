@@ -28,6 +28,7 @@ import {
   ChevronLeft,
   ChevronRight,
   UserCircle,
+  Volume2,
 } from "lucide-react";
 import { Chat, Message } from "@shared/schema";
 import QuickToolModal from "./QuickToolModal";
@@ -556,6 +557,213 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
     }
   };
 
+  const playSSMLAudio = async (messageId: string, ssml: string, persona: string, language: string) => {
+    console.log('[TTS SSML] playSSMLAudio called for message:', messageId);
+    
+    if (playingAudio === messageId && audioElement) {
+      console.log('[TTS SSML] Stopping currently playing audio');
+      audioElement.pause();
+      audioElement.src = '';
+      audioElement.remove();
+      setPlayingAudio(null);
+      setAudioElement(null);
+      return;
+    }
+
+    if (audioElement) {
+      console.log('[TTS SSML] Stopping other playing audio');
+      audioElement.pause();
+      audioElement.src = '';
+      audioElement.remove();
+      setPlayingAudio(null);
+      setAudioElement(null);
+    }
+
+    try {
+      console.log('[TTS SSML] Setting playing audio to:', messageId);
+      setPlayingAudio(messageId);
+
+      console.log('[TTS SSML] Fetching SSML-based TTS - SSML length:', ssml.length, 'Persona:', persona, 'Language:', language);
+      
+      const response = await fetch('/api/tutor/optimized/session/tts-with-phonemes', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        credentials: 'include',
+        body: JSON.stringify({ chatId, ssml, persona, language }),
+      });
+
+      console.log('[TTS SSML] Response status:', response.status);
+      if (!response.ok) {
+        throw new Error(`Failed to generate speech from SSML: ${response.status}`);
+      }
+
+      const ttsData = await response.json();
+      console.log('[TTS SSML] Received - Phonemes:', ttsData.phonemes?.length || 0, 'Audio base64 length:', ttsData.audio?.length || 0);
+      
+      const audioBuffer = Uint8Array.from(atob(ttsData.audio), c => c.charCodeAt(0));
+      const audioBlob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+      const phonemes = ttsData.phonemes || [];
+      
+      console.log('[TTS SSML] Converted to blob, size:', audioBlob.size);
+      
+      const currentAvatarReady = unityAvatarRef.current?.isReady || false;
+      const isAvatarStillLoading = avatarIsLoading && !currentAvatarReady;
+      
+      console.log('[Avatar] Status check - Ready:', currentAvatarReady, 'Loading:', isAvatarStillLoading);
+      
+      if (isAvatarStillLoading && unityAvatarRef.current) {
+        console.log('[Avatar] ⏳ Unity loading... waiting for it to be ready (max 5s)');
+        
+        const waitForUnity = new Promise<boolean>((resolve) => {
+          const startTime = Date.now();
+          const checkInterval = setInterval(() => {
+            const isNowReady = unityAvatarRef.current?.isReady || false;
+            const elapsed = Date.now() - startTime;
+            
+            if (isNowReady) {
+              clearInterval(checkInterval);
+              console.log('[Avatar] ✅ Unity ready after', elapsed, 'ms');
+              resolve(true);
+            } else if (elapsed > 5000) {
+              clearInterval(checkInterval);
+              console.log('[Avatar] ⏱️ Timeout waiting for Unity (5s) - using browser fallback');
+              resolve(false);
+            }
+          }, 100);
+        });
+        
+        const unityBecameReady = await waitForUnity;
+        
+        if (unityBecameReady && unityAvatarRef.current) {
+          console.log('[Avatar] ✅ Unity ready - sending SSML audio with lip-sync');
+          try {
+            if (phonemes.length > 0) {
+              console.log('[Avatar] 🎵 Sending SSML phoneme-based lip-sync - Phonemes:', phonemes.length);
+              const audioBase64 = await new Promise<string>((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
+                reader.readAsDataURL(audioBlob);
+              });
+              unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audioBase64, phonemes, messageId);
+            } else {
+              console.log('[Avatar] 🔊 Sending amplitude-based lip-sync (no phonemes)');
+              await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+            }
+            console.log('[Avatar] ✅ SSML audio sent to Unity successfully');
+            setPlayingAudio(null);
+            return;
+          } catch (avatarError) {
+            console.error('[Avatar] ❌ Failed to send SSML audio:', avatarError);
+            console.warn('[Avatar] ⚠️ Falling back to browser audio');
+          }
+        }
+      }
+      
+      if (currentAvatarReady && unityAvatarRef.current) {
+        console.log('[Avatar] ✅ Avatar ready - sending SSML audio to Unity WebGL with lip-sync');
+        
+        try {
+          if (phonemes.length > 0) {
+            console.log('[Avatar] 🎵 Sending SSML phoneme-based lip-sync - Phonemes:', phonemes.length);
+            const audioBase64 = await new Promise<string>((resolve) => {
+              const reader = new FileReader();
+              reader.onloadend = () => resolve(reader.result?.toString().split(',')[1] || '');
+              reader.readAsDataURL(audioBlob);
+            });
+            unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audioBase64, phonemes, messageId);
+          } else {
+            console.log('[Avatar] 🔊 Sending amplitude-based lip-sync (no phonemes)');
+            await unityAvatarRef.current.sendAudioToAvatar(audioBlob);
+          }
+          console.log('[Avatar] ✅ SSML audio sent to Unity successfully');
+          setPlayingAudio(null);
+          return;
+        } catch (avatarError) {
+          console.error('[Avatar] ❌ Failed to send SSML audio:', avatarError);
+          console.warn('[Avatar] ⚠️ Falling back to browser audio');
+        }
+      }
+      
+      console.log('[TTS SSML] 🔊 Using browser fallback audio player');
+      const audioUrl = URL.createObjectURL(audioBlob);
+      const audio = new Audio(audioUrl);
+      
+      audio.onended = () => {
+        console.log('[TTS SSML] Browser audio playback ended');
+        setPlayingAudio(null);
+        setAudioElement(null);
+        URL.revokeObjectURL(audioUrl);
+      };
+      
+      audio.onerror = (e) => {
+        console.error('[TTS SSML] Browser audio error:', e);
+        const mediaError = audio.error;
+        let errorCode = 'UNKNOWN';
+        let errorDetails = 'Unknown audio error';
+        
+        if (mediaError) {
+          switch (mediaError.code) {
+            case MediaError.MEDIA_ERR_ABORTED:
+              errorCode = 'MEDIA_ERR_ABORTED';
+              errorDetails = 'Audio playback was aborted';
+              break;
+            case MediaError.MEDIA_ERR_NETWORK:
+              errorCode = 'MEDIA_ERR_NETWORK';
+              errorDetails = 'Network error while loading audio';
+              break;
+            case MediaError.MEDIA_ERR_DECODE:
+              errorCode = 'MEDIA_ERR_DECODE';
+              errorDetails = 'Audio decoding failed - format may be unsupported or corrupt';
+              break;
+            case MediaError.MEDIA_ERR_SRC_NOT_SUPPORTED:
+              errorCode = 'MEDIA_ERR_SRC_NOT_SUPPORTED';
+              errorDetails = 'Audio format not supported by browser';
+              break;
+            default:
+              errorDetails = mediaError.message || 'Unknown media error';
+          }
+        }
+        
+        setPlayingAudio(null);
+        setAudioElement(null);
+        URL.revokeObjectURL(audioUrl);
+        
+        toast({
+          title: "Audio Playback Error",
+          description: `${errorDetails} (Code: ${errorCode})`,
+          variant: "destructive",
+        });
+      };
+
+      setAudioElement(audio);
+      console.log('[TTS SSML] Attempting to play audio...');
+      
+      await audio.play();
+      console.log('[TTS SSML] Audio play() successful');
+    } catch (error: any) {
+      console.error('[TTS SSML] Error in playSSMLAudio:', error);
+      setPlayingAudio(null);
+      setAudioElement(null);
+      
+      if (error.name === 'NotAllowedError') {
+        console.log('[TTS SSML] Audio autoplay blocked by browser policy');
+        toast({
+          title: "Audio Blocked",
+          description: "Please interact with the page first to enable audio playback.",
+          variant: "default",
+        });
+      } else {
+        toast({
+          title: "Speech Generation Failed",
+          description: error.message || "Could not generate speech from SSML. Please try again.",
+          variant: "destructive",
+        });
+      }
+    }
+  };
+
   useEffect(() => {
     if (chatContainerRef.current) {
       const container = chatContainerRef.current;
@@ -978,6 +1186,27 @@ export default function TutorSession({ chatId, onEndSession }: TutorSessionProps
                   <p className="text-xs text-muted-foreground">
                     {new Date(msg.createdAt!).toLocaleTimeString()}
                   </p>
+                  {msg.role === 'assistant' && msg.metadata?.speakSSML && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 px-2 text-xs hover:bg-primary/10"
+                      onClick={() => {
+                        const ssml = msg.metadata.speakSSML;
+                        const persona = msg.metadata.speakMeta?.persona || chat.persona || 'Priya';
+                        const language = msg.metadata.speakMeta?.language || chat.language || 'en';
+                        playSSMLAudio(msg.id, ssml, persona, language);
+                      }}
+                      disabled={playingAudio === msg.id}
+                      data-testid={`button-speak-${msg.id}`}
+                    >
+                      {playingAudio === msg.id ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-primary" />
+                      ) : (
+                        <Volume2 className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />
+                      )}
+                    </Button>
+                  )}
                 </div>
               </div>
 
