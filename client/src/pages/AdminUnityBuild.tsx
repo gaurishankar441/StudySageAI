@@ -64,7 +64,7 @@ export default function AdminUnityBuild() {
   // Activate build mutation
   const activateMutation = useMutation({
     mutationFn: async (buildId: string) => {
-      return apiRequest('POST', `/api/admin/unity/${buildId}/activate`);
+      return apiRequest('POST', `/api/admin/unity/builds/${buildId}/activate`);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['/api/admin/unity/builds'] });

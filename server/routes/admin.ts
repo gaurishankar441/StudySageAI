@@ -1,4 +1,9 @@
 import { Router } from 'express';
+import multer from 'multer';
+import AdmZip from 'adm-zip';
+import path from 'path';
+import fs from 'fs';
+import { S3Client, PutObjectCommand } from '@aws-sdk/client-s3';
 import { db } from '../db';
 import { 
   adminConfigs, 
@@ -11,6 +16,43 @@ import {
 } from '@shared/schema';
 import { eq, desc, and } from 'drizzle-orm';
 import { isAdmin, isSuperAdmin, hasPermission, ADMIN_PERMISSIONS, logAdminAction } from '../middleware/adminAuth';
+
+// Configure S3 client
+const s3Client = new S3Client({
+  region: process.env.AWS_REGION!,
+  credentials: {
+    accessKeyId: process.env.AWS_ACCESS_KEY_ID!,
+    secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY!,
+  },
+});
+
+const BUCKET_NAME = process.env.AWS_S3_BUCKET_NAME!;
+
+// Configure multer for Unity build uploads
+const upload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      const uploadDir = '/tmp/unity-uploads';
+      if (!fs.existsSync(uploadDir)) {
+        fs.mkdirSync(uploadDir, { recursive: true });
+      }
+      cb(null, uploadDir);
+    },
+    filename: (req, file, cb) => {
+      cb(null, `${Date.now()}-${file.originalname}`);
+    },
+  }),
+  fileFilter: (req, file, cb) => {
+    if (file.mimetype === 'application/zip' || file.originalname.endsWith('.zip')) {
+      cb(null, true);
+    } else {
+      cb(new Error('Only ZIP files are allowed'));
+    }
+  },
+  limits: {
+    fileSize: 200 * 1024 * 1024, // 200MB max
+  },
+});
 
 const router = Router();
 
@@ -326,6 +368,141 @@ router.get('/unity/builds/:id', hasPermission(ADMIN_PERMISSIONS.MANAGE_UNITY), a
   } catch (error) {
     console.error('[ADMIN] Error fetching Unity build:', error);
     res.status(500).json({ error: 'Failed to fetch Unity build' });
+  }
+});
+
+// Upload Unity build
+router.post('/unity/upload', hasPermission(ADMIN_PERMISSIONS.MANAGE_UNITY), upload.single('build'), async (req, res) => {
+  const uploadedFile = req.file;
+  let extractPath: string | null = null;
+
+  try {
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No file uploaded' });
+    }
+
+    const userId = (req.user as AuthUser).id;
+    const { version = 'custom', notes } = req.body;
+
+    console.log('[UNITY UPLOAD] Processing upload:', uploadedFile.originalname);
+
+    // Extract ZIP file
+    const zip = new AdmZip(uploadedFile.path);
+    extractPath = path.join('/tmp/unity-uploads', `extract-${Date.now()}`);
+    zip.extractAllTo(extractPath, true);
+
+    // Find Unity build files (they might be in a Build subfolder)
+    const requiredFiles = ['Build.data.gz', 'Build.wasm.gz', 'Build.framework.js.gz'];
+    const fileMap: Record<string, string> = {};
+
+    function findFiles(dir: string) {
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          findFiles(fullPath);
+        } else if (requiredFiles.includes(entry.name)) {
+          fileMap[entry.name] = fullPath;
+        }
+      }
+    }
+
+    findFiles(extractPath);
+
+    // Validate all required files are present
+    const missingFiles = requiredFiles.filter(f => !fileMap[f]);
+    if (missingFiles.length > 0) {
+      throw new Error(`Missing required files: ${missingFiles.join(', ')}`);
+    }
+
+    console.log('[UNITY UPLOAD] Found all required files');
+
+    // Upload files to S3
+    const s3Prefix = `unity-assets-${Date.now()}/`;
+    const uploadedFiles: any = {};
+
+    for (const [fileName, filePath] of Object.entries(fileMap)) {
+      const fileBuffer = fs.readFileSync(filePath);
+      const s3Key = s3Prefix + fileName;
+
+      const contentType = fileName.endsWith('.wasm.gz') 
+        ? 'application/wasm'
+        : fileName.endsWith('.js.gz')
+        ? 'application/javascript'
+        : 'application/octet-stream';
+
+      await s3Client.send(new PutObjectCommand({
+        Bucket: BUCKET_NAME,
+        Key: s3Key,
+        Body: fileBuffer,
+        ContentType: contentType,
+        ContentEncoding: 'gzip',
+        CacheControl: 'public, max-age=31536000, immutable',
+      }));
+
+      const fileKey = fileName.replace('Build.', '').replace('.gz', '').replace('.', '');
+      uploadedFiles[fileKey] = {
+        key: s3Key,
+        size: fileBuffer.length,
+        uploadedAt: new Date().toISOString(),
+      };
+
+      console.log(`[UNITY UPLOAD] ✅ Uploaded ${fileName} to S3 (${fileBuffer.length} bytes)`);
+    }
+
+    // Store in database
+    const [newBuild] = await db
+      .insert(unityBuilds)
+      .values({
+        version,
+        buildDate: new Date(),
+        gameObjectName: 'AvatarController', // Default, can be configured later
+        s3Prefix,
+        files: {
+          dataGz: uploadedFiles.data,
+          wasmGz: uploadedFiles.wasm,
+          frameworkJsGz: uploadedFiles['frameworkjs'],
+          loaderJs: uploadedFiles.loader || null,
+        },
+        isActive: false,
+        uploadedBy: userId,
+        notes,
+      })
+      .returning();
+
+    // Log action
+    await logAdminAction(
+      userId,
+      'create',
+      'unity',
+      'build_upload',
+      null,
+      { buildId: newBuild.id, version, fileCount: Object.keys(fileMap).length },
+      req
+    );
+
+    // Clean up temporary files
+    fs.unlinkSync(uploadedFile.path);
+    fs.rmSync(extractPath, { recursive: true, force: true });
+
+    console.log('[UNITY UPLOAD] ✅ Build uploaded successfully:', newBuild.id);
+
+    res.status(201).json(newBuild);
+  } catch (error: any) {
+    console.error('[UNITY UPLOAD] Error:', error);
+
+    // Clean up on error
+    if (uploadedFile && fs.existsSync(uploadedFile.path)) {
+      fs.unlinkSync(uploadedFile.path);
+    }
+    if (extractPath && fs.existsSync(extractPath)) {
+      fs.rmSync(extractPath, { recursive: true, force: true });
+    }
+
+    res.status(500).json({ 
+      error: 'Failed to upload Unity build',
+      message: error.message 
+    });
   }
 });
 
