@@ -120,6 +120,105 @@ export class TTSCacheService {
   }
 
   /**
+   * 🎯 Phase 5: Generate unified cache key for SSML (v2)
+   * Key pattern: tts:v2:{voiceId}:{engine}:{language}:{persona}:{hash(ssml)}
+   */
+  private generateSSMLKey(
+    ssml: string,
+    options: {
+      voiceId: string;
+      engine: string;
+      language: 'hi' | 'en' | 'hinglish';
+      persona: string;
+    }
+  ): string {
+    // Hash SSML for key
+    const ssmlHash = crypto.createHash('md5').update(ssml.trim()).digest('hex');
+    
+    return `tts:v2:${options.voiceId}:${options.engine}:${options.language}:${options.persona}:${ssmlHash}`;
+  }
+
+  /**
+   * 🎯 Phase 5: Get unified cache (audio + phonemes) for SSML
+   * Returns: { audio: Buffer, phonemes: Array } or null if not cached
+   */
+  async getUnified(
+    ssml: string,
+    options: {
+      voiceId: string;
+      engine: string;
+      language: 'hi' | 'en' | 'hinglish';
+      persona: string;
+    }
+  ): Promise<{ audio: Buffer; phonemes: Array<{time: number; blendshape: string; weight: number}> } | null> {
+    const baseKey = this.generateSSMLKey(ssml, options);
+    const audioKey = `${baseKey}:audio`;
+    const phonemesKey = `${baseKey}:visemes`;
+    
+    try {
+      // Try Redis first
+      if (redis && !REDIS_DISABLED && redisConnected) {
+        const [cachedAudio, cachedPhonemes] = await Promise.all([
+          redis.getBuffer(audioKey),
+          redis.get(phonemesKey)
+        ]);
+        
+        if (cachedAudio && cachedPhonemes) {
+          const phonemes = JSON.parse(cachedPhonemes);
+          console.log(`[TTS CACHE V2] ✅ Redis HIT (audio + phonemes): ${ssml.substring(0, 50)}...`);
+          
+          // Increment hit counter
+          await redis.hincrby('tts:v2:stats', baseKey, 1);
+          
+          return { audio: cachedAudio, phonemes };
+        }
+      }
+      
+      console.log(`[TTS CACHE V2] ❌ MISS: ${ssml.substring(0, 50)}...`);
+      return null;
+    } catch (error) {
+      return null;
+    }
+  }
+
+  /**
+   * 🎯 Phase 5: Set unified cache (audio + phonemes) for SSML
+   * Stores both with TTL of 24 hours (86400s)
+   */
+  async setUnified(
+    ssml: string,
+    options: {
+      voiceId: string;
+      engine: string;
+      language: 'hi' | 'en' | 'hinglish';
+      persona: string;
+    },
+    data: {
+      audio: Buffer;
+      phonemes: Array<{time: number; blendshape: string; weight: number}>;
+    },
+    ttl: number = 86400 // 24 hours
+  ): Promise<void> {
+    const baseKey = this.generateSSMLKey(ssml, options);
+    const audioKey = `${baseKey}:audio`;
+    const phonemesKey = `${baseKey}:visemes`;
+    
+    try {
+      // Store in Redis if available
+      if (redis && !REDIS_DISABLED && redisConnected) {
+        await Promise.all([
+          redis.setex(audioKey, ttl, data.audio),
+          redis.setex(phonemesKey, ttl, JSON.stringify(data.phonemes))
+        ]);
+        
+        console.log(`[TTS CACHE V2] 💾 Redis STORED (audio + phonemes): ${ssml.substring(0, 50)}... (TTL: ${ttl}s)`);
+      }
+    } catch (error) {
+      console.warn('[TTS CACHE V2] Storage failed:', error);
+    }
+  }
+
+  /**
    * Get cached audio if available
    */
   async get(

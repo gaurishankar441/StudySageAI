@@ -265,6 +265,82 @@ export class VoiceService {
   }
   
   /**
+   * 🎯 Phase 5: Synthesize SSML with Polly AND get viseme data (for phoneme-based lip-sync)
+   * Same as synthesizeWithVisemes but accepts SSML instead of text
+   * Returns: { audio: Buffer, visemes: Array<{time, type, value}> }
+   */
+  async synthesizeSSMLWithVisemes(
+    ssml: string,
+    options: {
+      voiceId?: string;
+      engine?: 'neural' | 'standard';
+      language: 'hi' | 'en' | 'hinglish';
+    }
+  ): Promise<{ audio: Buffer; visemes: Array<{time: number; type: string; value: string}> }> {
+    try {
+      // Language code mapping (Hinglish uses en-IN)
+      const languageCode = options.language === 'hi' ? 'hi-IN' : 'en-IN';
+      
+      // Default voice selection
+      const voiceId = (options.voiceId || (options.language === 'hi' ? 'Aditi' : 'Aditi')) as any;
+      const engine = options.engine || 'standard'; // SSML + visemes work best with standard
+      
+      console.log(`[VOICE+SSML] Synthesizing SSML audio + visemes with Polly ${voiceId} (${engine})...`);
+      
+      // 1. Get audio (MP3) from SSML
+      const audioCommand = new SynthesizeSpeechCommand({
+        Text: ssml,
+        TextType: 'ssml', // 🎯 KEY: Tell Polly this is SSML
+        OutputFormat: 'mp3',
+        VoiceId: voiceId as any,
+        Engine: engine,
+        LanguageCode: languageCode,
+      });
+      
+      const audioResponse = await polly.send(audioCommand);
+      const audioBuffer = await this.streamToBuffer(audioResponse.AudioStream as any);
+      
+      // 2. Get visemes (Speech Marks) from SSML
+      const visemeCommand = new SynthesizeSpeechCommand({
+        Text: ssml,
+        TextType: 'ssml', // 🎯 KEY: Tell Polly this is SSML
+        OutputFormat: 'json',
+        VoiceId: voiceId as any,
+        Engine: engine, // Must match audio engine
+        LanguageCode: languageCode,
+        SpeechMarkTypes: ['viseme'],
+      });
+      
+      const visemeResponse = await polly.send(visemeCommand);
+      const speechMarksText = await this.streamToString(visemeResponse.AudioStream as any);
+      
+      // Parse visemes
+      const visemes: Array<{time: number; type: string; value: string}> = [];
+      const lines = speechMarksText.trim().split('\n');
+      
+      for (const line of lines) {
+        if (line.trim()) {
+          const mark = JSON.parse(line);
+          if (mark.type === 'viseme') {
+            visemes.push({
+              time: mark.time,
+              type: 'viseme',
+              value: mark.value,
+            });
+          }
+        }
+      }
+      
+      console.log(`[VOICE+SSML] ✅ Generated ${audioBuffer.length} bytes audio + ${visemes.length} visemes from SSML`);
+      
+      return { audio: audioBuffer, visemes };
+    } catch (error) {
+      console.error('[VOICE+SSML] Error:', error);
+      throw error;
+    }
+  }
+  
+  /**
    * Convert Readable stream to string
    */
   private async streamToString(stream: Readable): Promise<string> {

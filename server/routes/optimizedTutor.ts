@@ -26,33 +26,72 @@ export const optimizedTutorRouter = express.Router();
 
 /**
  * POST /api/tutor/optimized/ask
- * Ask a question with intelligent model routing and caching
+ * 🎯 Phase 6: AI Tutor with Dual Output (chat_md + speak_ssml)
+ * Now generates both display text and speech SSML simultaneously
  */
 optimizedTutorRouter.post('/ask', async (req, res) => {
   try {
-    const { query, context, language, useCache = true } = req.body;
+    const { chatId, userQuery, persona, language, emotion } = req.body;
     
-    if (!query) {
-      return res.status(400).json({ error: 'Query is required' });
+    if (!chatId || !userQuery) {
+      return res.status(400).json({ error: 'chatId and userQuery required' });
     }
     
-    const result = await optimizedAI.generateResponse(query, context, {
-      language: language || 'english',
-      useCache,
+    // 1. Load chat context (last 10 messages)
+    const contextMessages = await storage.getChatMessages(chatId, 10);
+    
+    // 2. Store user message first
+    await storage.addMessage({
+      chatId,
+      role: 'user',
+      content: userQuery,
+      tool: null,
+      metadata: null
     });
     
+    // 3. Generate dual output (chat_md + speak_ssml)
+    const { generateDualOutput } = await import('../services/aiDualOutput');
+    
+    const dualOutput = await generateDualOutput({
+      userQuery,
+      contextMessages: contextMessages.map(m => ({
+        role: m.role as 'user' | 'assistant',
+        content: m.content
+      })),
+      persona: (persona || 'Priya') as 'Priya' | 'Amit',
+      language: (language || 'en') as 'en' | 'hi' | 'hinglish',
+      emotion: emotion || 'neutral'
+    });
+    
+    // 4. Store assistant message with dual output metadata
+    const assistantMsg = await storage.addMessage({
+      chatId,
+      role: 'assistant',
+      content: dualOutput.chat_md,
+      tool: null,
+      metadata: {
+        speakSSML: dualOutput.speak_ssml,
+        speakMeta: dualOutput.speak_meta,
+        source: dualOutput.metadata?.source || 'ai'
+      }
+    });
+    
+    console.log(`[TUTOR ASK DUAL] ✅ Generated dual output for chat ${chatId}`);
+    
+    // 5. Return chat markdown + speak availability
     res.json({
-      response: result.response,
+      response: dualOutput.chat_md,
+      messageId: assistantMsg.id,
+      speak_available: true,
       meta: {
-        optimized: true,
-        cached: result.cached,
-        model: result.model,
-        cost: result.cost,
+        source: dualOutput.metadata?.source || 'ai',
+        persona,
+        language
       }
     });
   } catch (error) {
-    console.error('[OPTIMIZED TUTOR] Error:', error);
-    res.status(500).json({ error: 'Failed to generate response' });
+    console.error('[TUTOR ASK DUAL] Error:', error);
+    res.status(500).json({ error: 'Failed to generate dual output response' });
   }
 });
 
@@ -1153,28 +1192,28 @@ optimizedTutorRouter.post('/session/tts', async (req, res) => {
 
 /**
  * POST /api/tutor/optimized/session/tts-with-phonemes
- * Generate TTS with phoneme data for Unity lip-sync
+ * 🎯 Phase 5: Generate TTS with phoneme data from SSML for Unity lip-sync
+ * NOW ACCEPTS SSML (not plain text) + uses unified caching
  * Returns: { audio: base64, phonemes: [{time, blendshape, weight}] }
  */
 optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => {
   try {
-    const { chatId, text, emotion } = req.body;
+    const { chatId, ssml, persona, language } = req.body;
     
-    if (!chatId || !text) {
-      return res.status(400).json({ error: 'chatId and text required' });
+    if (!chatId || !ssml) {
+      return res.status(400).json({ error: 'chatId and ssml required' });
     }
     
-    // Get session to determine persona and language
+    // Get session
     const session = await storage.getTutorSession(chatId);
     if (!session) {
       return res.status(404).json({ error: 'Session not found' });
     }
     
-    const persona = tutorSessionService.getPersona(session);
-    const language = persona.languageStyle.hindiPercentage > 50 ? 'hi' : 'en';
-    const personaId = session.personaId;
+    const personaId = persona || session.personaId || 'Priya';
+    const lang = (language || 'en') as 'hi' | 'en' | 'hinglish';
     
-    console.log(`[TTS+PHONEMES] Generating for chatId ${chatId}: ${text.substring(0, 50)}...`);
+    console.log(`[TTS+PHONEMES SSML] Generating for chatId ${chatId}: ${ssml.substring(0, 50)}...`);
     
     const startTime = Date.now();
     
@@ -1183,50 +1222,55 @@ optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => {
     const { voiceService } = await import('../services/voiceService');
     const { mapPollyVisemesToUnityPhonemes } = await import('../utils/visemeMapping');
     
-    // 🎯 FIX: Use Polly for BOTH audio and visemes to ensure timing alignment
-    // Critical: enhancedVoiceService may use Sarvam/other voices, causing timing mismatch
-    
     let audioBuffer: Buffer;
     let phonemes: Array<{time: number; blendshape: string; weight: number}> = [];
     let cached = false;
     
-    // 1. Check cache for audio
-    const cachedAudio = await ttsCacheService.get(text, language, emotion, personaId);
+    // Voice config for Polly
+    const voiceId = lang === 'hi' ? 'Aditi' : 'Aditi'; // Indian English
+    const engine = 'standard'; // SSML + visemes work with standard
     
-    if (cachedAudio) {
+    // 1. Check unified cache (audio + phonemes)
+    const cachedData = await ttsCacheService.getUnified(ssml, {
+      voiceId,
+      engine,
+      language: lang,
+      persona: personaId
+    });
+    
+    if (cachedData) {
       cached = true;
-      audioBuffer = cachedAudio;
-      console.log(`[TTS+PHONEMES] 💾 Audio cache hit! (${Date.now() - startTime}ms)`);
-      
-      // Still need to fetch visemes (not cached)
-      try {
-        const pollyVisemes = await voiceService.getVisemeData(text, language);
-        if (pollyVisemes.length > 0) {
-          phonemes = mapPollyVisemesToUnityPhonemes(pollyVisemes);
-          console.log(`[TTS+PHONEMES] ✅ Mapped ${phonemes.length} phonemes for Unity (cached audio)`);
-        }
-      } catch (visemeError) {
-        console.warn('[TTS+PHONEMES] Viseme fetch failed (cached path):', visemeError);
-      }
+      audioBuffer = cachedData.audio;
+      phonemes = cachedData.phonemes;
+      console.log(`[TTS+PHONEMES SSML] 💾 Unified cache hit! Audio + Phonemes (${Date.now() - startTime}ms)`);
     } else {
-      // 2. Generate NEW audio + visemes from SAME Polly voice (critical for timing)
+      // 2. Generate NEW audio + visemes from SSML with Polly
       try {
-        const result = await voiceService.synthesizeWithVisemes(text, language);
+        const result = await voiceService.synthesizeSSMLWithVisemes(ssml, {
+          voiceId,
+          engine,
+          language: lang
+        });
+        
         audioBuffer = result.audio;
         
         if (result.visemes.length > 0) {
           phonemes = mapPollyVisemesToUnityPhonemes(result.visemes);
-          console.log(`[TTS+PHONEMES] ✅ Generated ${phonemes.length} phonemes from Polly`);
+          console.log(`[TTS+PHONEMES SSML] ✅ Generated ${phonemes.length} phonemes from SSML`);
         } else {
-          console.warn('[TTS+PHONEMES] No visemes from Polly, falling back to amplitude-based');
+          console.warn('[TTS+PHONEMES SSML] No visemes from Polly');
         }
         
-        // Store in cache
-        await ttsCacheService.set(text, language, audioBuffer, emotion, personaId);
-        console.log(`[TTS+PHONEMES] 🔨 Generated and cached audio (${Date.now() - startTime}ms)`);
+        // Store in unified cache
+        await ttsCacheService.setUnified(
+          ssml,
+          { voiceId, engine, language: lang, persona: personaId },
+          { audio: audioBuffer, phonemes }
+        );
+        console.log(`[TTS+PHONEMES SSML] 🔨 Generated and cached (${Date.now() - startTime}ms)`);
       } catch (synthError) {
-        console.error('[TTS+PHONEMES] Polly synthesis failed:', synthError);
-        throw new Error('Failed to generate TTS with phonemes');
+        console.error('[TTS+PHONEMES SSML] Polly synthesis failed:', synthError);
+        throw new Error('Failed to generate TTS with phonemes from SSML');
       }
     }
     
@@ -1234,7 +1278,7 @@ optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => {
     const audioBase64 = audioBuffer.toString('base64');
     
     const genTime = Date.now() - startTime;
-    console.log(`[TTS+PHONEMES] ✅ Complete in ${genTime}ms - Audio: ${audioBuffer.length} bytes, Phonemes: ${phonemes.length}`);
+    console.log(`[TTS+PHONEMES SSML] ✅ Complete in ${genTime}ms - Audio: ${audioBuffer.length} bytes, Phonemes: ${phonemes.length}`);
     
     // Return JSON with audio and phonemes
     res.json({
@@ -1248,8 +1292,8 @@ optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('[TTS+PHONEMES] Error:', error);
-    res.status(500).json({ error: 'Failed to generate TTS with phonemes' });
+    console.error('[TTS+PHONEMES SSML] Error:', error);
+    res.status(500).json({ error: 'Failed to generate TTS with phonemes from SSML' });
   }
 });
 
