@@ -63,7 +63,7 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 
 ## Recent Changes
 
-### Admin Panel Implementation (Phase 1-3)
+### Admin Panel Implementation (Phase 1-6 COMPLETE)
 **Date: October 11, 2025**
 
 **✅ Core Infrastructure (Phase 1)**
@@ -84,15 +84,56 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 - Build history display with activation system
 - Audit logging for all build changes
 
-**🐛 Critical Bug Fixed: Unity Build Data Mismatch**
-- **Issue**: Frontend expected `fileName`, `fileSize`, `s3Keys`, `status`, `uploadedAt`
-- **Reality**: Database has `version`, `buildDate`, `files` (JSONB), `isActive`, `createdAt`
-- **Fix**: Updated interface to match schema, fixed display logic and file size calculation
-- **Status**: ✅ Tested, compiled successfully, HMR working
+**✅ Voice Settings UI (Phase 4)** - `/admin/voice`
+- TTS Configuration: Primary/fallback provider selection (Sarvam AI, AWS Polly)
+- Sarvam AI: Speaker selection (Hindi/English), Pitch/Pace/Loudness sliders
+- AWS Polly: Voice selection, Engine (neural/standard), Speaking rate
+- STT Configuration: Primary/fallback provider (Sarvam AI, AssemblyAI)
+- TTS phrase-level caching settings (TTL, max size)
+- All settings persist to backend with proper cache invalidation
+
+**✅ API Management UI (Phase 5)** - `/admin/api`
+- Provider-specific API key management:
+  - OpenAI (API key, org, chat/embedding models)
+  - Google Gemini (API key, models)
+  - Anthropic Claude (API key, models)
+  - Sarvam AI (API key, TTS/STT service toggles)
+  - AWS (Access/Secret keys, Region, S3/Polly toggles)
+- Show/hide password functionality for all keys
+- Enable/disable switches for each provider
+- Encrypted storage with audit trail
+
+**✅ System Dashboard & Audit Logs (Phase 6)**
+- AdminDashboard: Real-time stats (active personas, Unity build version, total configs)
+- Quick action cards for all admin sections
+- AdminAuditLogs (`/admin/audit`): Complete audit log viewer
+  - Search by action/user ID
+  - Filter by action type
+  - Detailed log display with previous/new value comparison
+  - Stats: Total logs, filtered results, unique actions
+
+**🐛 Critical Bugs Fixed:**
+1. **Unity Build Data Mismatch**: Frontend/backend schema alignment
+2. **AdminTutorConfig Data Extraction**: Backend returns full config row, must extract `.value` in useEffect
+
+**Architecture Notes:**
+- All admin config UIs use same flow: `useQuery` for fetch, `useMutation` for save, invalidate on success
+- Backend endpoint `/api/admin/configs` handles all category/key/value saves
+- Security pattern: API keys masked with optional reveal, encrypted storage, full audit trail
+
+**Admin Panel Routes:**
+- `/admin` - Main dashboard with navigation cards
+- `/admin/tutor` - AI Tutor configuration
+- `/admin/unity` - Unity build manager
+- `/admin/voice` - Voice settings
+- `/admin/api` - API key management
+- `/admin/audit` - Audit log viewer
 
 **Testing Requirements:**
-- User testing needed with browser session (curl can't test auth endpoints)
 - Test admin access at `/admin` with admin user (vaktaai12@example.com)
-- Test persona Add/Edit/Delete flow
-- Test Unity build upload and activation
+- All CRUD operations on personas, prompts, first messages
+- Unity build upload and activation
+- Voice settings save and load
+- API key management with show/hide
+- Audit log filtering and search
 - See `docs/admin-panel-testing.md` for comprehensive checklist
