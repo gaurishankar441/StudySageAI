@@ -138,7 +138,27 @@ export const messages = pgTable("messages", {
   role: varchar("role").notNull(), // 'user', 'assistant', 'system'
   content: text("content").notNull(),
   tool: varchar("tool"), // tool used for this message
-  metadata: jsonb("metadata"),
+  metadata: jsonb("metadata").$type<{
+    speakSSML?: string; // SSML for TTS (dual-output approach)
+    speakMeta?: {
+      persona?: "Priya" | "Amit";
+      language?: "en" | "hi" | "hinglish";
+      avg_wpm?: number;
+      segments?: Array<{
+        id: string;
+        purpose?: "hook" | "explain" | "example" | "step" | "recap" | "cta";
+        text_preview: string;
+        approx_seconds: number;
+      }>;
+    };
+    citations?: Array<{ text: string; source: string; page?: number }>;
+    confidence?: number;
+    toolUsed?: string;
+    regenerated?: boolean;
+    emotionDetected?: string;
+    languageDetected?: string;
+    [key: string]: any;
+  }>(),
   createdAt: timestamp("created_at").defaultNow(),
 }, (table) => [
   // Composite index for chat messages ordered by creation (chronological order)
