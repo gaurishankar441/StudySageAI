@@ -60,3 +60,39 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 *   @langchain/*
 *   ioredis
 *   @xenova/transformers
+
+## Recent Changes
+
+### Admin Panel Implementation (Phase 1-3)
+**Date: October 11, 2025**
+
+**✅ Core Infrastructure (Phase 1)**
+- Database tables: `admin_configs`, `config_audit_log`, `unity_builds`
+- Role-based middleware: `isAdmin`, `isSuperAdmin`, `hasPermission`, `logAdminAction`
+- Base API routes at `/api/admin/*`
+- Security: Encrypted API keys, full audit trail with IP/user/timestamp
+
+**✅ AI Tutor Configuration UI (Phase 2)** - `/admin/tutor`
+- Personas Tab: Add/Edit/Delete personas with Dialog/AlertDialog
+- System Prompts Tab: Language-aware prompt editor with intent overrides
+- First Messages Tab: Greeting templates and response variations (Hindi/English)
+- Form state management with local onChange handlers (architect-reviewed)
+
+**✅ Unity Build Manager (Phase 3)** - `/admin/unity`
+- ZIP upload UI with file validation and FormData POST
+- Backend: ZIP extraction → S3 upload → metadata storage → cleanup
+- Build history display with activation system
+- Audit logging for all build changes
+
+**🐛 Critical Bug Fixed: Unity Build Data Mismatch**
+- **Issue**: Frontend expected `fileName`, `fileSize`, `s3Keys`, `status`, `uploadedAt`
+- **Reality**: Database has `version`, `buildDate`, `files` (JSONB), `isActive`, `createdAt`
+- **Fix**: Updated interface to match schema, fixed display logic and file size calculation
+- **Status**: ✅ Tested, compiled successfully, HMR working
+
+**Testing Requirements:**
+- User testing needed with browser session (curl can't test auth endpoints)
+- Test admin access at `/admin` with admin user (vaktaai12@example.com)
+- Test persona Add/Edit/Delete flow
+- Test Unity build upload and activation
+- See `docs/admin-panel-testing.md` for comprehensive checklist

@@ -10,11 +10,19 @@ import { Badge } from "@/components/ui/badge";
 interface UnityBuild {
   id: string;
   version: string;
-  fileName: string;
-  fileSize: number;
-  s3Keys: string[];
-  status: 'active' | 'inactive' | 'uploading';
-  uploadedAt: string;
+  buildDate: string;
+  gameObjectName: string;
+  s3Prefix: string;
+  files: {
+    dataGz: { key: string; size: number; uploadedAt: string };
+    wasmGz: { key: string; size: number; uploadedAt: string };
+    frameworkJsGz: { key: string; size: number; uploadedAt: string };
+    loaderJs: { key: string; size: number; uploadedAt: string } | null;
+  };
+  isActive: boolean;
+  uploadedBy: string;
+  notes: string | null;
+  createdAt: string;
 }
 
 export default function AdminUnityBuild() {
@@ -103,6 +111,14 @@ export default function AdminUnityBuild() {
     }
   };
 
+  const getTotalFileSize = (build: UnityBuild) => {
+    const total = build.files.dataGz.size + 
+                  build.files.wasmGz.size + 
+                  build.files.frameworkJsGz.size +
+                  (build.files.loaderJs?.size || 0);
+    return total;
+  };
+
   const formatFileSize = (bytes: number) => {
     if (bytes < 1024 * 1024) {
       return `${(bytes / 1024).toFixed(2)} KB`;
@@ -126,7 +142,7 @@ export default function AdminUnityBuild() {
   }
 
   const currentBuilds = builds || [];
-  const activeBuild = currentBuilds.find(b => b.status === 'active');
+  const activeBuild = currentBuilds.find(b => b.isActive);
 
   return (
     <div className="p-8 space-y-6">
@@ -193,9 +209,10 @@ export default function AdminUnityBuild() {
               </div>
               <div className="space-y-1 text-sm">
                 <p><span className="font-medium">Version:</span> {activeBuild.version}</p>
-                <p><span className="font-medium">File:</span> {activeBuild.fileName}</p>
-                <p><span className="font-medium">Size:</span> {formatFileSize(activeBuild.fileSize)}</p>
-                <p><span className="font-medium">Activated:</span> {formatDate(activeBuild.uploadedAt)}</p>
+                <p><span className="font-medium">GameObject:</span> {activeBuild.gameObjectName}</p>
+                <p><span className="font-medium">Total Size:</span> {formatFileSize(getTotalFileSize(activeBuild))}</p>
+                <p><span className="font-medium">Build Date:</span> {formatDate(activeBuild.buildDate)}</p>
+                <p><span className="font-medium">Uploaded:</span> {formatDate(activeBuild.createdAt)}</p>
               </div>
             </div>
             <Badge variant="default" className="bg-green-500">Active</Badge>
@@ -216,7 +233,7 @@ export default function AdminUnityBuild() {
               <div
                 key={build.id}
                 className={`p-4 rounded-lg border transition-colors ${
-                  build.status === 'active'
+                  build.isActive
                     ? 'bg-green-500/5 border-green-500/20'
                     : 'bg-background hover:bg-accent'
                 }`}
@@ -226,24 +243,18 @@ export default function AdminUnityBuild() {
                   <div className="flex-1 space-y-1">
                     <div className="flex items-center gap-3">
                       <p className="font-medium">{build.version}</p>
-                      {build.status === 'active' && (
+                      {build.isActive && (
                         <Badge variant="default" className="bg-green-500">Active</Badge>
-                      )}
-                      {build.status === 'uploading' && (
-                        <Badge variant="secondary">
-                          <Clock className="w-3 h-3 mr-1" />
-                          Uploading
-                        </Badge>
                       )}
                     </div>
                     <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                      <span>{build.fileName}</span>
-                      <span>{formatFileSize(build.fileSize)}</span>
-                      <span>{formatDate(build.uploadedAt)}</span>
+                      <span>{build.gameObjectName}</span>
+                      <span>{formatFileSize(getTotalFileSize(build))}</span>
+                      <span>{formatDate(build.createdAt)}</span>
                     </div>
                   </div>
                   
-                  {build.status !== 'active' && build.status !== 'uploading' && (
+                  {!build.isActive && (
                     <Button
                       variant="outline"
                       size="sm"
