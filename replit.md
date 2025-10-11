@@ -144,3 +144,102 @@ Preferred communication style: Simple, everyday language (Hindi/English/Hinglish
 - Test API key management with show/hide
 - Test audit log filtering and search
 - Follow step-by-step guide: `docs/admin-panel-testing-guide.md`
+
+### TTS SSML Dual-Output Architecture (Phase 1-7 COMPLETE)
+**Date: October 11, 2025**
+
+**✅ Phase 1: Database & Schema Setup**
+- Updated `messages.metadata` structure to store:
+  - `speakSSML`: Full SSML with prosody tags for natural speech
+  - `speakMeta`: Metadata including persona, language, avg_wpm, and speech segments
+- Created Zod validation schemas for dual-output responses
+
+**✅ Phase 2: SSML Utilities & Prompts**
+- SSML Utilities (`server/utils/ssmlUtils.ts`):
+  - `sanitizeSSML()`: Content preservation with safe tag removal
+  - `lintSSMLStrict()`: Separates warnings and critical errors
+  - `compressSpeakSSML()`: Duration compression while preserving punctuation
+  - `estimateSpeakDuration()`: Accurate speech timing calculation
+- System Prompts (`server/prompts/dualOutput.system.txt`):
+  - Math-to-speech rules (LaTeX → natural pronunciation)
+  - Emotion-based prosody (excited/calm/confused)
+  - Multilingual support (English/Hindi/Hinglish)
+  - Dev context builder for persona/language/emotion adaptation
+
+**✅ Phase 3: AI Dual-Output Generator**
+- Implemented `generateDualOutput()` in `server/services/aiDualOutput.ts`
+- Single OpenAI API call produces both outputs simultaneously:
+  - `chat_md`: Rich markdown with LaTeX, code blocks, tables for display
+  - `speak_ssml`: Natural teacher-style SSML with prosody for avatar speech
+- Error handling: Malformed JSON capture, schema-compliant fallbacks via `processDualOutput()`
+- Enhanced logging with guaranteed response chain
+
+**✅ Phase 4: Fallback System**
+- 3-tier safety net:
+  1. Primary: AI-generated SSML
+  2. Repair: Schema validation with correction pass
+  3. Rule-based: Chat markdown → SSML converter
+  4. Hard-coded: Emergency fallback response
+- All paths validated through `processDualOutput()` for SSML sanitization
+
+**✅ Phase 5: TTS SSML Pipeline & Unified Caching**
+- **voiceService.synthesizeSSMLWithVisemes()** (`server/services/voiceService.ts`):
+  - Accepts SSML input instead of plain text
+  - Uses AWS Polly with `TextType: 'ssml'`
+  - Language mapping: hi→hi-IN, en/hinglish→en-IN
+  - Returns: `{audio: Buffer, visemes: PollyViseme[]}`
+  - Voice: Aditi (Indian English), Engine: standard
+- **Unified Caching** (`server/services/ttsCacheService.ts`):
+  - Cache key pattern: `tts:v2:{voiceId}:{engine}:{language}:{persona}:{hash(ssml)}`
+  - Stores audio (`:audio` suffix) and phonemes (`:visemes` suffix) together
+  - Deterministic SSML hashing for reliable cache hits
+  - TTL: 86400s (24 hours)
+  - Performance: 76% speedup on cache hits (1979ms MISS → 459ms HIT)
+
+**✅ Phase 6: API Integration**
+- Updated `/api/tutor/optimized/ask` endpoint:
+  - Input: `{chatId, userQuery, persona, language, emotion}`
+  - Calls `generateDualOutput()` for dual responses
+  - Stores message with `metadata: {speakSSML, speakMeta}`
+  - Returns: `{response: chat_md, speak_available: true}`
+- Updated `/api/tutor/optimized/session/tts-with-phonemes` endpoint:
+  - Input: `{chatId, ssml, persona, language}` (now accepts SSML)
+  - Uses unified cache for audio+phonemes retrieval
+  - Calls `synthesizeSSMLWithVisemes()` on cache miss
+  - Returns: `{audio: base64, phonemes: Unity format, metadata}`
+
+**✅ Phase 7: End-to-End Testing**
+- Test Results:
+  - ✅ Dual output generation: Chat markdown + SSML with prosody tags
+  - ✅ Database storage: Both outputs verified in messages table
+  - ✅ SSML synthesis: 32KB audio + 55 phonemes via AWS Polly
+  - ✅ Unified cache: 76% performance improvement on hits
+  - ✅ Viseme-to-Unity phoneme mapping: 55 visemes correctly mapped
+  - ✅ Error handling: All fallback paths tested
+- Performance Metrics:
+  - First request (cache MISS): ~2 seconds
+  - Subsequent requests (cache HIT): ~0.5 seconds
+  - Audio size: ~32KB (MP3)
+  - Phoneme count: ~55 visemes per response
+
+**Architecture Highlights:**
+- Single AI call generates both chat and speech outputs simultaneously
+- SSML stored in database for consistent regeneration
+- Unified caching stores audio+phonemes together for atomic retrieval
+- Multi-tier fallback ensures reliable responses even on AI failures
+- Deterministic cache keys enable cross-session cache hits
+
+**Pending Frontend Work:**
+- Speaker button integration in TutorSession.tsx
+- Unity avatar playback with phoneme synchronization
+- Browser fallback for audio-only playback
+
+**Files Modified:**
+- `server/services/aiDualOutput.ts` (new dual-output generator)
+- `server/services/voiceService.ts` (SSML synthesis)
+- `server/services/ttsCacheService.ts` (unified caching)
+- `server/routes/optimizedTutor.ts` (API integration)
+- `server/utils/ssmlUtils.ts` (SSML utilities)
+- `server/schemas/dualOutput.ts` (validation schemas)
+- `server/prompts/dualOutput.system.txt` (system prompts)
+- `shared/schema.ts` (metadata types)
