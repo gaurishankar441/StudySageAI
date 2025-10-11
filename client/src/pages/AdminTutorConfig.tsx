@@ -10,6 +10,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Plus, Save, Trash2, User } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 interface PersonaConfig {
   id: string;
@@ -49,6 +67,27 @@ export default function AdminTutorConfig() {
   const { toast } = useToast();
   const [selectedPersona, setSelectedPersona] = useState<string | null>(null);
   const [editedPersona, setEditedPersona] = useState<PersonaConfig | null>(null);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isDeleteAlertOpen, setIsDeleteAlertOpen] = useState(false);
+  const [newPersona, setNewPersona] = useState<Partial<PersonaConfig>>({
+    name: '',
+    gender: 'female',
+    subjects: [],
+    personality: {
+      traits: [],
+      toneOfVoice: '',
+      catchphrases: [],
+      errorHandling: '',
+      celebrationStyle: ''
+    },
+    voiceSettings: {},
+    languageStyle: {
+      hindiPercentage: 50,
+      englishPercentage: 50,
+      codeSwitch: 'Natural mixing based on topic complexity',
+      technicalTerms: 'English'
+    }
+  });
 
   // Fetch personas config
   const { data: personas, isLoading } = useQuery<PersonaConfig[]>({
@@ -96,6 +135,77 @@ export default function AdminTutorConfig() {
       key: 'personas',
       value: updatedPersonas
     });
+  };
+
+  const handleAddPersona = async () => {
+    if (!newPersona.name || !personas) return;
+
+    const personaToAdd: PersonaConfig = {
+      id: newPersona.name.toLowerCase().replace(/\s+/g, '-'),
+      name: newPersona.name,
+      gender: newPersona.gender || 'female',
+      subjects: newPersona.subjects || [],
+      personality: newPersona.personality || {
+        traits: [],
+        toneOfVoice: '',
+        catchphrases: [],
+        errorHandling: '',
+        celebrationStyle: ''
+      },
+      voiceSettings: newPersona.voiceSettings || {},
+      languageStyle: newPersona.languageStyle || {
+        hindiPercentage: 50,
+        englishPercentage: 50,
+        codeSwitch: 'Natural mixing based on topic complexity',
+        technicalTerms: 'English'
+      }
+    };
+
+    const updatedPersonas = [...personas, personaToAdd];
+
+    await updateMutation.mutateAsync({
+      category: 'tutor',
+      key: 'personas',
+      value: updatedPersonas
+    });
+
+    setIsAddDialogOpen(false);
+    setNewPersona({
+      name: '',
+      gender: 'female',
+      subjects: [],
+      personality: {
+        traits: [],
+        toneOfVoice: '',
+        catchphrases: [],
+        errorHandling: '',
+        celebrationStyle: ''
+      },
+      voiceSettings: {},
+      languageStyle: {
+        hindiPercentage: 50,
+        englishPercentage: 50,
+        codeSwitch: 'Natural mixing based on topic complexity',
+        technicalTerms: 'English'
+      }
+    });
+    setSelectedPersona(personaToAdd.id);
+  };
+
+  const handleDeletePersona = async () => {
+    if (!selectedPersona || !personas) return;
+
+    const updatedPersonas = personas.filter(p => p.id !== selectedPersona);
+
+    await updateMutation.mutateAsync({
+      category: 'tutor',
+      key: 'personas',
+      value: updatedPersonas
+    });
+
+    setIsDeleteAlertOpen(false);
+    setSelectedPersona(null);
+    setEditedPersona(null);
   };
 
   const updateField = (field: string, value: any) => {
@@ -155,10 +265,85 @@ export default function AdminTutorConfig() {
           <h1 className="text-3xl font-bold gradient-text">AI Tutor Configuration</h1>
           <p className="text-muted-foreground">Manage personas, prompts, and response settings</p>
         </div>
-        <Button data-testid="button-add-persona">
-          <Plus className="w-4 h-4 mr-2" />
-          Add Persona
-        </Button>
+        <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+          <DialogTrigger asChild>
+            <Button data-testid="button-add-persona">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Persona
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Persona</DialogTitle>
+              <DialogDescription>
+                Create a new AI tutor persona with custom settings
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Name</Label>
+                <Input
+                  value={newPersona.name || ''}
+                  onChange={(e) => setNewPersona({ ...newPersona, name: e.target.value })}
+                  placeholder="e.g., Rajesh"
+                  data-testid="input-new-persona-name"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Gender</Label>
+                <Select
+                  value={newPersona.gender}
+                  onValueChange={(value: 'male' | 'female') => setNewPersona({ ...newPersona, gender: value })}
+                >
+                  <SelectTrigger data-testid="select-new-persona-gender">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="male">Male</SelectItem>
+                    <SelectItem value="female">Female</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Subjects (comma-separated)</Label>
+                <Input
+                  value={newPersona.subjects?.join(', ') || ''}
+                  onChange={(e) => setNewPersona({ ...newPersona, subjects: e.target.value.split(',').map(s => s.trim()) })}
+                  placeholder="Physics, Chemistry, Mathematics"
+                  data-testid="input-new-persona-subjects"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Tone of Voice</Label>
+                <Input
+                  value={newPersona.personality?.toneOfVoice || ''}
+                  onChange={(e) => setNewPersona({
+                    ...newPersona,
+                    personality: { ...newPersona.personality!, toneOfVoice: e.target.value }
+                  })}
+                  placeholder="e.g., Friendly and supportive"
+                  data-testid="input-new-persona-tone"
+                />
+              </div>
+              <div className="flex justify-end gap-2 pt-4">
+                <Button
+                  variant="outline"
+                  onClick={() => setIsAddDialogOpen(false)}
+                  data-testid="button-cancel-add-persona"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleAddPersona}
+                  disabled={!newPersona.name || updateMutation.isPending}
+                  data-testid="button-confirm-add-persona"
+                >
+                  {updateMutation.isPending ? 'Adding...' : 'Add Persona'}
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="personas" className="space-y-6">
@@ -214,7 +399,12 @@ export default function AdminTutorConfig() {
                         <Save className="w-4 h-4 mr-2" />
                         {updateMutation.isPending ? 'Saving...' : 'Save'}
                       </Button>
-                      <Button variant="destructive" size="sm" data-testid="button-delete-persona">
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={() => setIsDeleteAlertOpen(true)}
+                        data-testid="button-delete-persona"
+                      >
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -321,6 +511,28 @@ export default function AdminTutorConfig() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={isDeleteAlertOpen} onOpenChange={setIsDeleteAlertOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Persona?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete {editedPersona?.name}? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel data-testid="button-cancel-delete">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePersona}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              data-testid="button-confirm-delete"
+            >
+              {updateMutation.isPending ? 'Deleting...' : 'Delete'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
