@@ -89,10 +89,77 @@ export default function AdminTutorConfig() {
     }
   });
 
+  // Prompts state
+  const [promptLanguage, setPromptLanguage] = useState<'hindi_hinglish' | 'english_pure'>('hindi_hinglish');
+  const [prompts, setPrompts] = useState({
+    hindi_hinglish: {
+      core: '',
+      request_explanation: '',
+      request_hint: '',
+      request_simplification: '',
+      submit_answer: '',
+      frustration: '',
+      celebration: ''
+    },
+    english_pure: {
+      core: '',
+      request_explanation: '',
+      request_hint: '',
+      request_simplification: '',
+      submit_answer: '',
+      frustration: '',
+      celebration: ''
+    }
+  });
+
+  // First messages state
+  const [messages, setMessages] = useState({
+    greetings: {
+      hindi: ['', '', ''],
+      english: ['', '', '']
+    },
+    templates: {
+      hindi: {
+        correct: '',
+        wrong: '',
+        check: ''
+      },
+      english: {
+        correct: '',
+        wrong: '',
+        check: ''
+      }
+    }
+  });
+
   // Fetch personas config
   const { data: personas, isLoading } = useQuery<PersonaConfig[]>({
     queryKey: ['/api/admin/configs/tutor/personas'],
   });
+
+  // Fetch prompts config
+  const { data: promptsData } = useQuery({
+    queryKey: ['/api/admin/configs/tutor/prompts'],
+  });
+
+  // Fetch messages config
+  const { data: messagesData } = useQuery({
+    queryKey: ['/api/admin/configs/tutor/messages'],
+  });
+
+  // Load prompts data when fetched
+  useEffect(() => {
+    if (promptsData && promptsData.value) {
+      setPrompts(promptsData.value);
+    }
+  }, [promptsData]);
+
+  // Load messages data when fetched
+  useEffect(() => {
+    if (messagesData && messagesData.value) {
+      setMessages(messagesData.value);
+    }
+  }, [messagesData]);
 
   // Update edited persona when selection changes
   useEffect(() => {
@@ -118,6 +185,56 @@ export default function AdminTutorConfig() {
       toast({
         title: "Error",
         description: "Failed to update persona",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Save prompts mutation
+  const savePromptsMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/admin/configs', {
+        category: 'tutor',
+        key: 'prompts',
+        value: prompts
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/configs/tutor/prompts'] });
+      toast({
+        title: "Success",
+        description: "System prompts saved successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save prompts",
+        variant: "destructive"
+      });
+    }
+  });
+
+  // Save messages mutation
+  const saveMessagesMutation = useMutation({
+    mutationFn: async () => {
+      return apiRequest('POST', '/api/admin/configs', {
+        category: 'tutor',
+        key: 'messages',
+        value: messages
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/configs/tutor/messages'] });
+      toast({
+        title: "Success",
+        description: "First messages saved successfully"
+      });
+    },
+    onError: () => {
+      toast({
+        title: "Error",
+        description: "Failed to save messages",
         variant: "destructive"
       });
     }
@@ -501,7 +618,7 @@ export default function AdminTutorConfig() {
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-xl font-semibold">System Prompts</h3>
-                  <Select defaultValue="hindi_hinglish">
+                  <Select value={promptLanguage} onValueChange={(val: 'hindi_hinglish' | 'english_pure') => setPromptLanguage(val)}>
                     <SelectTrigger className="w-48" data-testid="select-prompt-language">
                       <SelectValue />
                     </SelectTrigger>
@@ -516,6 +633,11 @@ export default function AdminTutorConfig() {
                   <Label>Core System Prompt</Label>
                   <Textarea
                     rows={12}
+                    value={prompts[promptLanguage].core}
+                    onChange={(e) => setPrompts({
+                      ...prompts,
+                      [promptLanguage]: { ...prompts[promptLanguage], core: e.target.value }
+                    })}
                     placeholder="Enter the main system prompt..."
                     className="font-mono text-sm"
                     data-testid="textarea-core-prompt"
@@ -545,6 +667,11 @@ export default function AdminTutorConfig() {
                     </div>
                     <Textarea
                       rows={4}
+                      value={prompts[promptLanguage][intent.key as keyof typeof prompts[typeof promptLanguage]]}
+                      onChange={(e) => setPrompts({
+                        ...prompts,
+                        [promptLanguage]: { ...prompts[promptLanguage], [intent.key]: e.target.value }
+                      })}
                       placeholder={`Enter ${intent.label.toLowerCase()} instructions...`}
                       className="font-mono text-sm"
                       data-testid={`textarea-intent-${intent.key}`}
@@ -554,9 +681,13 @@ export default function AdminTutorConfig() {
               </div>
 
               <div className="flex justify-end mt-6">
-                <Button data-testid="button-save-prompts">
+                <Button 
+                  onClick={() => savePromptsMutation.mutate()}
+                  disabled={savePromptsMutation.isPending}
+                  data-testid="button-save-prompts"
+                >
                   <Save className="w-4 h-4 mr-2" />
-                  Save Prompts
+                  {savePromptsMutation.isPending ? 'Saving...' : 'Save Prompts'}
                 </Button>
               </div>
             </Card>
@@ -570,12 +701,21 @@ export default function AdminTutorConfig() {
               <p className="text-muted-foreground mb-4">Configure greeting messages for Hindi/Hinglish mode</p>
               
               <div className="space-y-4">
-                {[1, 2, 3].map((num) => (
-                  <div key={num} className="space-y-2">
-                    <Label>Greeting Variation {num}</Label>
+                {[0, 1, 2].map((index) => (
+                  <div key={index} className="space-y-2">
+                    <Label>Greeting Variation {index + 1}</Label>
                     <Input
+                      value={messages.greetings.hindi[index]}
+                      onChange={(e) => {
+                        const newHindi = [...messages.greetings.hindi];
+                        newHindi[index] = e.target.value;
+                        setMessages({
+                          ...messages,
+                          greetings: { ...messages.greetings, hindi: newHindi }
+                        });
+                      }}
                       placeholder="e.g., Namaste {name}! Aaj kya padhna hai?"
-                      data-testid={`input-hindi-greeting-${num}`}
+                      data-testid={`input-hindi-greeting-${index + 1}`}
                     />
                     <p className="text-xs text-muted-foreground">
                       Use {'{name}'} as placeholder for student name
@@ -590,12 +730,21 @@ export default function AdminTutorConfig() {
               <p className="text-muted-foreground mb-4">Configure greeting messages for English mode</p>
               
               <div className="space-y-4">
-                {[1, 2, 3].map((num) => (
-                  <div key={num} className="space-y-2">
-                    <Label>Greeting Variation {num}</Label>
+                {[0, 1, 2].map((index) => (
+                  <div key={index} className="space-y-2">
+                    <Label>Greeting Variation {index + 1}</Label>
                     <Input
+                      value={messages.greetings.english[index]}
+                      onChange={(e) => {
+                        const newEnglish = [...messages.greetings.english];
+                        newEnglish[index] = e.target.value;
+                        setMessages({
+                          ...messages,
+                          greetings: { ...messages.greetings, english: newEnglish }
+                        });
+                      }}
                       placeholder="e.g., Hello {name}! What would you like to learn today?"
-                      data-testid={`input-english-greeting-${num}`}
+                      data-testid={`input-english-greeting-${index + 1}`}
                     />
                     <p className="text-xs text-muted-foreground">
                       Use {'{name}'} as placeholder for student name
@@ -620,6 +769,14 @@ export default function AdminTutorConfig() {
                     <Label>Correct Answer Responses</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.hindi.correct}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          hindi: { ...messages.templates.hindi, correct: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., Bilkul sahi! Bahut badhiya!"
                       className="text-sm"
                       data-testid="textarea-hindi-correct"
@@ -629,6 +786,14 @@ export default function AdminTutorConfig() {
                     <Label>Wrong Answer Responses</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.hindi.wrong}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          hindi: { ...messages.templates.hindi, wrong: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., Hmm, close tha! Ek baar aur try karo..."
                       className="text-sm"
                       data-testid="textarea-hindi-wrong"
@@ -638,6 +803,14 @@ export default function AdminTutorConfig() {
                     <Label>Understanding Check Phrases</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.hindi.check}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          hindi: { ...messages.templates.hindi, check: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., Samajh aa gaya? Koi doubt hai?"
                       className="text-sm"
                       data-testid="textarea-hindi-check"
@@ -650,6 +823,14 @@ export default function AdminTutorConfig() {
                     <Label>Correct Answer Responses</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.english.correct}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          english: { ...messages.templates.english, correct: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., That's absolutely correct! Well done!"
                       className="text-sm"
                       data-testid="textarea-english-correct"
@@ -659,6 +840,14 @@ export default function AdminTutorConfig() {
                     <Label>Wrong Answer Responses</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.english.wrong}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          english: { ...messages.templates.english, wrong: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., Not quite, but you're on the right track!"
                       className="text-sm"
                       data-testid="textarea-english-wrong"
@@ -668,6 +857,14 @@ export default function AdminTutorConfig() {
                     <Label>Understanding Check Phrases</Label>
                     <Textarea
                       rows={3}
+                      value={messages.templates.english.check}
+                      onChange={(e) => setMessages({
+                        ...messages,
+                        templates: {
+                          ...messages.templates,
+                          english: { ...messages.templates.english, check: e.target.value }
+                        }
+                      })}
                       placeholder="e.g., Does this make sense? Any questions?"
                       className="text-sm"
                       data-testid="textarea-english-check"
@@ -677,9 +874,13 @@ export default function AdminTutorConfig() {
               </Tabs>
 
               <div className="flex justify-end mt-6">
-                <Button data-testid="button-save-messages">
+                <Button 
+                  onClick={() => saveMessagesMutation.mutate()}
+                  disabled={saveMessagesMutation.isPending}
+                  data-testid="button-save-messages"
+                >
                   <Save className="w-4 h-4 mr-2" />
-                  Save Messages
+                  {saveMessagesMutation.isPending ? 'Saving...' : 'Save Messages'}
                 </Button>
               </div>
             </Card>
