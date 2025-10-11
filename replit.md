@@ -16,22 +16,33 @@ VaktaAI is an AI-powered educational platform offering an AI Tutor, Document Cha
 - API Routes: `/api/admin/*` with 10+ endpoints (configs, audit, unity builds)
 - Role-Based Access: Users table extended with `role` field (user/admin/super_admin)
 
-**✅ Phase 2 Partial - Admin UI Foundation:**
-- AdminDashboard: Main hub with 6 config sections (Tutor, Unity, Voice, API, System, Audit)
-- AdminTutorConfig: Fully functional persona editor with editable fields
-  - Lists 3 hardcoded personas (Priya, Amit, Garima) from `tutorPersonas.ts`
-  - Edit: name, gender, subjects, tone, catchphrases, language percentages
-  - Save mutation: POSTs updated personas to `/api/admin/configs`
-  - Query invalidation: Refreshes persona list after save
-  - Tabs: Personas (done), Prompts (TODO), First Messages (TODO)
-- Navigation: Admin link in sidebar (only visible to admin/super_admin users)
-- Routes: `/admin` (dashboard), `/admin/tutor` (persona config)
+**✅ Phase 2 Complete - AI Tutor Configuration:**
+- AdminTutorConfig: Complete persona management system (`/admin/tutor`)
+  - **Personas Tab**: Full CRUD operations with Add/Edit/Delete functionality
+    - Add dialog: Create new personas with name, gender, subjects, tone
+    - Edit: All persona fields editable (name, gender, subjects, tone, catchphrases, language mix)
+    - Delete: Confirmation dialog with AlertDialog component
+    - Save mutation: POSTs to `/api/admin/configs` with query invalidation
+  - **System Prompts Tab**: Language-specific prompt editor
+    - Core system prompt editor for Hindi/Hinglish and English modes
+    - Intent-specific prompts: explanation, hint, simplification, answer evaluation, frustration, celebration
+    - Monospace textarea for better prompt editing
+  - **First Messages Tab**: Greeting and response template configuration
+    - Hindi/English greeting variations (3 each) with {name} placeholder support
+    - Response templates: correct answer, wrong answer, understanding check
+    - Nested tabs for language-specific templates
+
+**✅ Phase 3 Partial - Unity Build Management:**
+- AdminUnityBuild: Unity WebGL build upload and management (`/admin/unity`)
+  - ZIP file upload UI with validation (.zip files only)
+  - Build history with version tracking, file size, upload date
+  - Active build indicator with green badge and gradient card
+  - Activate/deactivate functionality for build switching
+  - File upload mutation with FormData support
+  - **TODO**: Backend endpoints for `/api/admin/unity/upload` and `/api/admin/unity/:id/activate`
 
 **🔄 In Progress - Remaining Work:**
-- Persona CRUD: Add/Delete personas (currently only Edit works)
-- Prompt Editor: System prompt configuration UI
-- First Messages: Language-specific greeting message editor
-- Unity Build Manager: Upload/activate/rollback Unity WebGL builds
+- Unity Build Manager: Backend API endpoints (upload, activate, version management)
 - Voice Settings: TTS/STT provider config UI
 - API Key Manager: Encrypted key storage and testing
 - System Settings: Feature flags, cache, rate limits UI
