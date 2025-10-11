@@ -1,0 +1,189 @@
+let’s lock in the “Single‑call JSON dual‑output + SSML TTS + safe fallback” approach and flesh it out end‑to‑end so you can ship confidently.
+
+Overview
+
+Goal: From one user query, produce two optimized channels:
+chat_md: rich, reference‑quality markdown for the UI.
+speak_ssml: short, simple, teacher‑style SSML for TTS (natural speech, pauses, analogies, worked example).
+Why this: Best quality-per-cost, low latency, cleanly fits your Polly+viseme pipeline, and robust with validation + fallback.
+Contracts and data model
+DB migration
+
+Add fields to messages.metadata to persist the spoken form and its plan.
+SQL (Drizzle or raw)
+
+Add to messages table:
+metadata JSONB now includes:
+speakSSML string
+speakMeta object
+Zod schema (server/schemas/dualOutput.ts) import { z } from "zod";
+
+export const DualOutputSchema = z.object({ chat_md: z.string().min(10), speak_ssml: z.string().min(10), speak_meta: z.object({ persona: z.enum(["Priya","Amit"]).optional(), language: z.enum(["en","hi","hinglish"]).default("en"), avg_wpm: z.number().min(100).max(180).default(140), segments: z.array(z.object({ id: z.string(), purpose: z.enum(["hook","explain","example","step","recap","cta"]).optional(), text_preview: z.string(), approx_seconds: z.number().min(1).max(30) })).optional() }) });
+
+Prompting: one call, two channels
+System prompt (store in server/prompts/dualOutput.system.txt) You are VaktaAI’s empathetic teacher. For every user query, produce TWO coordinated outputs:
+
+chat_md: Rich, pedagogical markdown for on‑screen reading. Use concise headings, bullet points, numbered steps, and KaTeX for equations. Include one worked example and a short recap.
+speak_ssml: A natural, teacher‑like spoken version in SSML for Amazon Polly. Goals: simple language, short sentences, contractions, light signposting, 200–350 ms pauses, and at least one analogy or example. Convert math into words (“a squared”, “square root of x”, “divided by”). End with a quick check question. NO markdown or links in SSML. Keep total talk time ~25–45 seconds unless user asks for a longer mini‑lesson.
+Rules:
+
+Enclose speak output in <speak>…</speak>. Default: <prosody rate="medium" pitch="+0%">.
+Insert <break time="250ms"/> between steps; <break time="350–500ms"/> before example/recap.
+Use <emphasis level="moderate"> for 1–2 key terms.
+If user emotion = confused: rate="slow", add more breaks, use a simple analogy first.
+Language: en | hi | hinglish. Keep SSML valid even when code‑switching.
+Keep speak_ssml about 140–220 words (≈25–45s @ 140 wpm).
+Output JSON ONLY with keys: chat_md, speak_ssml, speak_meta.
+
+Developer message template (server/prompts/dualOutput.dev.ts) export function buildDevContext({persona, language, emotion, topicHints}:{persona:"Priya"|"Amit",language:"en"|"hi"|"hinglish",emotion?:string,topicHints?:string[]}) { return Persona: ${persona} Language: ${language} Emotion: ${emotion ?? "neutral"} Topic hints: ${topicHints?.join(", ") ?? "n/a"}; }
+
+AI service: generate dual output with validation and fallback
+server/services/aiService.generateDualOutput.ts import { DualOutputSchema } from "../schemas/dualOutput"; import { z } from "zod"; import { OpenAI } from "openai"; import { sanitizeSSML, estimateSpeechSeconds, compressSpeakSSML, lintSSMLStrict } from "../utils/ssmlUtils"; import { chatToSpeechSSML } from "../utils/chatToSpeechFallback";
+
+const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY! });
+
+export async function generateDualOutput({ userQuery, contextMessages, persona = "Priya", language = "en", emotion = "neutral" }:{ userQuery: string; contextMessages: {role:"system"|"user"|"assistant"; content:string}[]; persona?: "Priya"|"Amit"; language?: "en"|"hi"|"hinglish"; emotion?: string; }) { const systemPrompt = await fs.promises.readFile("server/prompts/dualOutput.system.txt","utf8"); const devNote = Persona=${persona}; Language=${language}; Emotion=${emotion};;
+
+const resp = await openai.chat.completions.create({ model: "gpt-4o-mini", temperature: 0.6, response_format: { type: "json_object" }, messages: [ { role: "system", content: systemPrompt }, { role: "system", content: devNote }, ...contextMessages, { role: "user", content: userQuery } ], max_tokens: 1800 });
+
+let raw = resp.choices[0]?.message?.content ?? "{}"; // JSON parse + Zod validation let parsed = DualOutputSchema.safeParse(JSON.parse(raw));
+
+// Repair pass if invalid if (!parsed.success) { const repair = await openai.chat.completions.create({ model: "gpt-4o-mini", temperature: 0.2, response_format: { type: "json_object" }, messages: [ { role: "system", content: "You are a JSON repair assistant. Fix structure to match {chat_md, speak_ssml, speak_meta} without adding content, only reformatting if needed." }, { role: "user", content: raw } ], max_tokens: 600 }); const repaired = DualOutputSchema.safeParse(JSON.parse(repair.choices[0].message.content!)); if (repaired.success) parsed = repaired; }
+
+// Fallback: rule-based conversion if still invalid if (!parsed.success) { // generate a simple chat answer with a quick LLM call const chatOnly = await openai.chat.completions.create({ model: "gpt-4o-mini", temperature: 0.5, messages: [ { role: "system", content: "Return a concise, well-structured markdown answer with a short example and recap. No preface." }, ...contextMessages, { role: "user", content: userQuery } ], max_tokens: 900 }); const chat_md = chatOnly.choices[0].message.content ?? "Sorry, couldn’t generate."; let speak_ssml = chatToSpeechSSML(chat_md, { language, emotion }); speak_ssml = sanitizeSSML(speak_ssml); const secs = estimateSpeechSeconds(speak_ssml, 140); if (secs > 60) speak_ssml = compressSpeakSSML(speak_ssml, { targetSeconds: 45 });
+
+text
+
+return { chat_md, speak_ssml, speak_meta: { language, avg_wpm: 140, persona } };
+}
+
+// SSML hygiene + duration guard let { chat_md, speak_ssml, speak_meta } = parsed.data; speak_ssml = sanitizeSSML(speak_ssml); const lint = lintSSMLStrict(speak_ssml); if (!lint.ok) { speak_ssml = sanitizeSSML(lint.fixed); } const secs = estimateSpeechSeconds(speak_ssml, speak_meta.avg_wpm ?? 140); if (secs > 60) { speak_ssml = compressSpeakSSML(speak_ssml, { targetSeconds: 45 }); }
+
+return { chat_md, speak_ssml, speak_meta }; }
+
+SSML utilities: sanitize, estimate, compress, lint
+server/utils/ssmlUtils.ts export function estimateSpeechSeconds(ssml: string, wpm = 140) { const text = ssml.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim(); const words = text.split(" ").filter(Boolean).length; return Math.round((words / wpm) * 60); }
+
+export function sanitizeSSML(ssml: string) { // Remove markdown, code fences, images, links let s = ssml .replace(/[\s\S]*?/g, "") .replace(/[^]+/g, "") .replace(/\[(.*?)\]\(.*?\)/g, "$1") .replace(/[#*_>|]/g, ""); // Ensure single <speak> root if (!/<\s*speak[^>]*>/i.test(s)) s = <speak>${s}</speak>`; // Drop unsupported tags s = s.replace(/<(audio|p|sub|mark)\b[^>]>.?</\1>/g, ""); return s; }
+
+export function lintSSMLStrict(ssml: string): { ok: boolean; fixed: string } { // naive well-formed check; plug in an XML parser if you prefer let fixed = ssml.replace(/&(?!amp;|lt;|gt;|quot;|apos;)/g, "&"); const hasSpeak = /<\sspeak[^>]>[\s\S]</\sspeak>/.test(fixed); if (!hasSpeak) fixed = <speak>${fixed}</speak>; // disallow markdown leftovers fixed = fixed.replace(/[*_`#]/g, ""); return { ok: true, fixed }; }
+
+export function compressSpeakSSML(ssml: string, { targetSeconds = 45 }: { targetSeconds?: number }) { // Strategy: keep hook, core concept, 1 example, 1 recap; remove tangents and long lists const sentences = ssml.split(/(?<=[.!?])\s+/); const keep: string[] = []; let words = 0; for (const s of sentences) { const w = s.replace(/<[^>]+>/g, " ").trim().split(/\s+/).length; // Keep until we approach targetSeconds at 140 wpm if (((words + w) / 140) * 60 < targetSeconds) { keep.push(s); words += w; } else break; } return keep.join(" ").replace(/\s+</speak>/, "</speak>"); }
+
+Rule‑based fallback: chat → SSML “teacherify”
+server/utils/chatToSpeechFallback.ts import { MathToSpeech } from "../voice/MathToSpeech"; // your existing util
+
+export function chatToSpeechSSML(chatMd: string, opts:{language:"en"|"hi"|"hinglish", emotion?:string}) { // 1) Strip markdown noise let text = chatMd .replace(/[\s\S]*?/g, "") .replace(/[^]+`/g, "") .replace(/^#+\s+/gm, "") .replace(/|.|/g, "") .replace(/[(.?)](.?)/g, "$1") .replace(/[_>]/g, "") .replace(/\n{2,}/g, "\n");
+
+// 2) Keep headings as signposts text = text.replace(/\n- /g, "\n• ");
+
+// 3) Convert math text = MathToSpeech.convert(text, opts.language === "hi" ? "hi" : opts.language === "hinglish" ? "en" : "en");
+
+// 4) Sentence split + wrap with SSML const sentences = text.split(/(?<=[.!?])\s+/).filter(Boolean).map(s => s.trim()); const chunks = sentences.map(s => <s>${escapeXml(s)}</s>).join('<break time="250ms"/>');
+
+const prosody = emotionToProsody(opts.emotion); return <speak><prosody rate="${prosody.rate}" pitch="${prosody.pitch}">${chunks}</prosody></speak>; }
+
+function escapeXml(s:string){return s.replace(/&/g,"&").replace(/</g,"<").replace(/>/g,">");} function emotionToProsody(e?:string){switch(e){ case "excited": return { rate:"fast", pitch:"+3%" }; case "confused": return { rate:"slow", pitch:"+1%" }; case "calm": return { rate:"slow", pitch:"-1%" }; default: return { rate:"medium", pitch:"+0%" }; }}
+
+TTS endpoint: accept SSML, cache audio+visemes with same key
+server/routes/optimizedTutor.ts (excerpt) optimizedTutorRouter.post('/session/tts-with-phonemes', async (req, res) => { const { chatId, ssml, persona, emotion, language } = req.body; if (!chatId || !ssml) return res.status(400).json({ error: 'chatId and ssml required' });
+
+const voiceId = language === 'hi' ? 'Aditi' : 'Aditi'; // Indian English/Hinglish; keep same for alignment const engine = 'standard'; const cacheKey = tts:v2:${voiceId}:${engine}:${language || 'en'}:${persona || 'Priya'}:${hash(ssml)};
+
+let cached = false; let audioBuffer = await redis.getBuffer(cacheKey + ":audio"); let visemes: Array<{time:number; type:string; value:string}> | null = await redis.get(cacheKey + ":visemes").then(j => j ? JSON.parse(j) : null);
+
+if (!audioBuffer || !visemes) { const { audio, marks } = await voiceService.synthesizeSSMLWithVisemes({ ssml, voiceId, engine, language }); audioBuffer = audio; visemes = marks; await redis.setex(cacheKey + ":audio", 86400, audioBuffer); await redis.setex(cacheKey + ":visemes", 86400, JSON.stringify(visemes)); } else { cached = true; }
+
+const phonemes = mapPollyVisemesToUnityPhonemes(visemes!); res.json({ audio: audioBuffer.toString('base64'), phonemes, metadata: { cached, audioSize: audioBuffer.length, phonemeCount: phonemes.length } }); });
+
+server/services/voiceService.ts (excerpt) export async function synthesizeSSMLWithVisemes({ ssml, voiceId, engine, language }:{ ssml: string, voiceId: string, engine: "standard", language: "en"|"hi"|"hinglish" }): Promise<{ audio: Buffer; marks: Array<{time:number; type:string; value:string}> }> { const audioCmd = new SynthesizeSpeechCommand({ Text: ssml, TextType: "ssml", OutputFormat: "mp3", VoiceId: voiceId, Engine: engine, LanguageCode: language === "hi" ? "hi-IN" : "en-IN" }); const marksCmd = new SynthesizeSpeechCommand({ Text: ssml, TextType: "ssml", OutputFormat: "json", VoiceId: voiceId, Engine: engine, LanguageCode: language === "hi" ? "hi-IN" : "en-IN", SpeechMarkTypes: ["viseme"] }); const [audioResp, marksResp] = await Promise.all([polly.send(audioCmd), polly.send(marksCmd)]); const audio = await streamToBuffer(audioResp.AudioStream as any); const lines = (await streamToString(marksResp.AudioStream as any)).trim().split("\n"); const marks = lines.filter(Boolean).map(l => JSON.parse(l)).filter((m:any)=>m.type==="viseme"); return { audio, marks }; }
+
+Tutor ask route: call dual output and persist
+server/routes/tutor.ts (excerpt) tutorRouter.post('/ask', async (req, res) => { const { chatId, message } = req.body; // …load context… const { chat_md, speak_ssml, speak_meta } = await generateDualOutput({ userQuery: message, contextMessages: buildContext(chatId), persona: "Priya", language: "hinglish", emotion: req.body.emotion || "neutral" });
+
+// Persist await db.insert(messages).values({ chatId, role: "assistant", content: chat_md, metadata: { speakSSML: speak_ssml, speakMeta: speak_meta } });
+
+// Stream chat_md via SSE if you want, then client can trigger audio on demand res.json({ chat_md, speak_available: true }); });
+
+Frontend wiring
+Display chat_md as usual.
+On “speaker” click: read speakSSML from message.metadata and call /tts-with-phonemes.
+Client snippet (TutorSession.tsx excerpt) async function handleSpeak(message) { const ssml = message.metadata?.speakSSML; if (!ssml) return; const res = await fetch('/api/tutor/optimized/session/tts-with-phonemes', { method: 'POST', credentials: 'include', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ chatId: message.chatId, ssml, persona: 'Priya', language: 'hinglish' }) }); const { audio, phonemes } = await res.json(); if (unityAvatarRef.current?.isReady) { unityAvatarRef.current.sendAudioWithPhonemesToAvatar(audio, phonemes, message.id); } else { const blob = new Blob([Uint8Array.from(atob(audio), c => c.charCodeAt(0))], { type: 'audio/mpeg' }); new Audio(URL.createObjectURL(blob)).play(); } }
+
+Guardrails and acceptance checks
+Validate before TTS
+
+JSON valid per DualOutputSchema.
+speak_ssml passes lintSSMLStrict.
+estimateSpeechSeconds <= 60; else compressSpeakSSML to ~45s.
+Reject if speak_ssml includes code/markdown artifacts.
+Runtime metrics (log + dashboard)
+
+dual_output.success_rate
+json.repair_rate
+ssml.validate_fail_rate
+tts.cache_hit_rate (audio/visemes)
+polly.latency_ms.p50/p95
+speech.duration_estimate_s.p50/p95
+replay_click_rate
+comprehension_self_report (if you collect)
+Behavior targets (teacher feel)
+Spoken micro‑structure
+
+Hook: 1–2 short lines introducing intuition.
+Explain: 2–3 lines core concept with simple words.
+Example/Analogy: 3–6 lines, numeric if possible.
+Quick check: 1 line question.
+Recap: 1–2 lines.
+Compression heuristics
+
+Spoken ≈ 35–55% of chat tokens.
+Sentence length ≤ 14 words avg.
+Keep 1 example, not 3; keep 1 analogy, not 2.
+Example outputs (same query)
+User: “Newton’s 2nd law, quick explanation with example.”
+
+chat_md (excerpt)
+
+Newton’s Second Law
+Statement: The net force on an object equals its mass times acceleration.
+Formula: 
+F
+=
+m
+t
+i
+m
+e
+s
+a
+F=m
+timesa
+Units: newton (N) = kg·m·s⁻²
+Worked Example
+m = 2 kg, a = 3 m/s² → F = 6 N
+Intuition
+Think of mass as “reluctance to accelerate” (inertia).
+
+Recap
+More force → more acceleration (if mass fixed).
+More mass → less acceleration (for same force).
+speak_ssml (excerpt) <speak> <prosody rate="medium" pitch="+0%"> Imagine pushing a shopping cart. <break time="250ms"/> Newton’s second law says: <emphasis level="moderate">acceleration depends on force and mass</emphasis>. <break time="250ms"/> More force, more acceleration. Heavier cart, less acceleration. <break time="350ms"/> Quick example: mass two kilograms, acceleration three meters per second squared. <break time="200ms"/> Force equals two times three, that’s six newtons. <break time="300ms"/> Your turn: if the mass doubles, what happens to acceleration for the same force? <break time="250ms"/> In short, F equals m times a. Keep the picture of the cart in mind. </prosody> </speak>
+
+Day‑0 checklist (ship this week)
+ Add DualOutputSchema + prompt files
+ Implement generateDualOutput with repair + fallback
+ Save chat_md + speakSSML in messages.metadata
+ Update tts-with-phonemes to accept SSML and cache audio+visemes by SSML key
+ Frontend: play from speakSSML on click
+ SSML lint + duration guard
+ Logs + metrics for validity, duration, cache hits
+When to add extras (next sprint)
+Streaming tagged mode (|chat|, |speak|) for earlier audio start
+Viseme smoothing (cross‑fade) or “audio-in-page + viseme‑only to Unity” transport
+Emotion→prosody mapping by real-time emotion detector
+A/B test: single‑call vs two‑pass “teacherify”
+Bottom line
+
+Is approach best right now? Yes—single LLM call producing chat_md + speak_ssml, validated + cached, with a deterministic fallback.
+You’ll get teacher‑style speech that’s short, simple, and effective—without doubling token costs or latency.
